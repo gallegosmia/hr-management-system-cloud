@@ -21,9 +21,10 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Find user
-        const users = await getAll('users');
-        const user = users.find((u: any) => u.username === username && u.is_active === 1);
+        // Find user - Optimized to not fetch all users
+        const { query } = require('@/lib/database');
+        const res = await query("SELECT * FROM users WHERE username = $1 AND is_active = 1", [username]);
+        const user = res.rows[0];
 
         if (!user) {
             return NextResponse.json(
