@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAll } from '@/lib/database';
 import { differenceInDays } from 'date-fns';
 
+export const dynamic = 'force-dynamic';
+
 interface Alert {
     id: string;
     employee_id: number;
