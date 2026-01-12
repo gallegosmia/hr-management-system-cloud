@@ -218,6 +218,24 @@ export default function LoginPage() {
                         >
                             {loading ? 'Signing in...' : 'Sign In'}
                         </button>
+                        <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                                Don't have an account?{' '}
+                                <button
+                                    type="button"
+                                    onClick={() => router.push('/register')}
+                                    style={{
+                                        color: '#0ea5e9',
+                                        fontWeight: '600',
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Create an account
+                                </button>
+                            </p>
+                        </div>
                     </form>
 
                 </div>
