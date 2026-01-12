@@ -4,7 +4,8 @@ import { hashPassword } from './auth';
 // Database connection configuration
 // In production, use DATABASE_URL from .env
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://postgres.kxwevzvztrdcksuvkwqf:HR-System-Cloud-2026!@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true",
+  // NUCLEAR OPTION: Ignore env var for now to force the correct string
+  connectionString: "postgresql://postgres.kxwevzvztrdcksuvkwqf:HR-System-Cloud-2026!@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true",
   ssl: { rejectUnauthorized: false }
 });
 
