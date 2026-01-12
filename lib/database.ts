@@ -4,8 +4,8 @@ import { hashPassword } from './auth';
 // Database connection configuration
 // In production, use DATABASE_URL from .env
 const pool = new Pool({
-  // Using simple password to rule out special char issues. User MUST reset Supabase password to 'admin123'
-  connectionString: "postgresql://postgres:admin123@db.kxwevzvztrdcksuvkwqf.supabase.co:5432/postgres",
+  // In production, prioritize the environment variable. Fallback to pooler connection for local/dev.
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres.kxwevzvztrdcksuvkwqf:HR-System-Cloud-2026!@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true",
   ssl: { rejectUnauthorized: false }
 });
 

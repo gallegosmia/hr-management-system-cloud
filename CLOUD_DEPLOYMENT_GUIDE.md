@@ -13,19 +13,16 @@
 *   **Status**: Your code is live at: `https://github.com/gallegosmia/hr-management-system-cloud`
 
 ### 3. Vercel (FINAL STEP)
-**I cannot click the button for you right now due to a connection limit, so please:**
-1.  Go to your Vercel tab (Configure Project).
+1.  Go to your Vercel Project Settings.
 2.  In **Environment Variables**:
     *   **Key**: `DATABASE_URL`
-    *   **Value**: `postgresql://postgres:HR-System-Cloud-2026!@db.kxwevzvztrdcksuvkwqf.supabase.co:5432/postgres`
+    *   **Value**: `postgresql://postgres.kxwevzvztrdcksuvkwqf:HR-System-Cloud-2026!@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true`
 3.  Click **Add**.
-4.  Click **Deploy**.
+4.  Click **Deploy** (or Redeploy if a build failed).
 
-### 4. Move your Data (AFTER DEPLOY)
-Once the site is live, run this command in your terminal:
-```bash
-$env:DATABASE_URL="postgresql://postgres:HR-System-Cloud-2026!@db.kxwevzvztrdcksuvkwqf.supabase.co:5432/postgres"; node migrate-to-cloud.js
-```
+### 4. Move your Data (COMPLETED ✅)
+We have already successfully migrated your data using the connection pooler.
+
 
 
 ### 📂 Important Note on Documents (201 Files)

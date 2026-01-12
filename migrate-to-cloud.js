@@ -29,7 +29,7 @@ async function migrate() {
         console.log('Migrating users...');
         for (const user of db.users) {
             await pool.query(
-                'INSERT INTO users (id, username, password, role, is_active, created_at) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO NOTHING',
+                'INSERT INTO users (id, username, password, role, is_active, created_at) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (username) DO NOTHING',
                 [user.id, user.username, user.password, user.role, user.is_active || 1, user.created_at || new Date()]
             );
         }
@@ -55,6 +55,18 @@ async function migrate() {
 
         // Migrate Settings
         console.log('Migrating settings...');
+
+        // Ensure settings table exists
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS settings (
+                id SERIAL PRIMARY KEY,
+                key VARCHAR(100) UNIQUE NOT NULL,
+                value JSONB NOT NULL,
+                description TEXT,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
         for (const s of db.settings) {
             await pool.query(
                 'INSERT INTO settings (key, value, description) VALUES ($1, $2, $3) ON CONFLICT (key) DO NOTHING',
