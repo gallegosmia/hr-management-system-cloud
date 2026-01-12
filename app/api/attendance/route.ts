@@ -1,0 +1,69 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getAll, query } from '@/lib/database';
+import { recordAttendance, getAttendanceByDate } from '@/lib/data';
+
+export async function GET(request: NextRequest) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const date = searchParams.get('date');
+        const employeeId = searchParams.get('employee_id');
+        const startDate = searchParams.get('start_date');
+        const endDate = searchParams.get('end_date');
+
+        if (date) {
+            const attendance = await getAttendanceByDate(date);
+            return NextResponse.json(attendance);
+        }
+
+        if (employeeId && startDate && endDate) {
+            const res = await query(
+                "SELECT * FROM attendance WHERE employee_id = $1 AND date >= $2 AND date <= $3",
+                [parseInt(employeeId), startDate, endDate]
+            );
+            return NextResponse.json(res.rows);
+        }
+
+        // Get all attendance
+        const attendance = await getAll('attendance');
+        return NextResponse.json(attendance);
+    } catch (error) {
+        console.error('Get attendance error:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch attendance' },
+            { status: 500 }
+        );
+    }
+}
+
+export async function POST(request: NextRequest) {
+    try {
+        const { date, records } = await request.json();
+
+        if (!date || !records || !Array.isArray(records)) {
+            return NextResponse.json(
+                { error: 'Invalid request data' },
+                { status: 400 }
+            );
+        }
+
+        // Save each attendance record
+        for (const record of records) {
+            await recordAttendance({
+                employee_id: record.employee_id,
+                date: date,
+                time_in: record.time_in || undefined,
+                time_out: record.time_out || undefined,
+                status: record.status,
+                remarks: record.remarks || undefined
+            });
+        }
+
+        return NextResponse.json({ success: true, count: records.length });
+    } catch (error) {
+        console.error('Save attendance error:', error);
+        return NextResponse.json(
+            { error: 'Failed to save attendance' },
+            { status: 500 }
+        );
+    }
+}

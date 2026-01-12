@@ -1,0 +1,5 @@
+/* Offline Font Overrides */
+:root {
+    --font-sans: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+    --font-display: 'Poppins', 'Segoe UI', system-ui, sans-serif !important;
+}

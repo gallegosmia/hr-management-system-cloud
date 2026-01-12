@@ -1,0 +1,540 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import DashboardLayout from '@/components/DashboardLayout';
+
+export default function SettingsPage() {
+    const [activeTab, setActiveTab] = useState('general');
+    const [settings, setSettings] = useState<any>({});
+    const [users, setUsers] = useState<any[]>([]);
+    const [employees, setEmployees] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState<any>(null);
+
+    const [showUserForm, setShowUserForm] = useState(false);
+    const [editingUserId, setEditingUserId] = useState<number | null>(null);
+    const [userForm, setUserForm] = useState({
+        username: '',
+        password: '',
+        role: 'Employee',
+        employee_id: ''
+    });
+
+    // Leave Settings State
+    const [leaveSettings, setLeaveSettings] = useState({
+        payroll_cutoff_day: 15,
+        filing_cutoff_days: 3,
+        approval_levels: {
+            level1_enabled: true,
+            level2_enabled: true,
+            level3_enabled: false
+        }
+    });
+
+    useEffect(() => {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            const parsedUser = JSON.parse(userData);
+            setUser(parsedUser);
+            // If and only if HR, Admin, Manager, President, or Vice President, allow fetching data
+            const masterRoles = ['Admin', 'HR', 'Manager', 'President', 'Vice President'];
+            if (masterRoles.includes(parsedUser.role)) {
+                fetchData();
+            } else {
+                setLoading(false);
+            }
+        } else {
+            setLoading(false);
+        }
+    }, []);
+
+    const fetchData = async () => {
+        try {
+            const [settingsRes, usersRes, employeesRes] = await Promise.all([
+                fetch('/api/settings'),
+                fetch('/api/users'),
+                fetch('/api/employees')
+            ]);
+
+            const settingsData = await settingsRes.json();
+            const usersData = await usersRes.json();
+            const employeesData = await employeesRes.json();
+
+            setSettings(settingsData);
+            if (settingsData.leave_config) {
+                setLeaveSettings(settingsData.leave_config);
+            }
+            setUsers(usersData);
+            setEmployees(employeesData);
+        } catch (error) {
+            console.error('Failed to fetch data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSaveLeaveSettings = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const response = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ leave_config: leaveSettings })
+            });
+
+            if (response.ok) {
+                alert('Leave configuration saved successfully!');
+                fetchData();
+            }
+        } catch (error) {
+            console.error('Failed to save leave settings:', error);
+        }
+    };
+
+    const handleSaveSettings = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const response = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings)
+            });
+
+            if (response.ok) {
+                alert('Settings saved successfully!');
+            }
+        } catch (error) {
+            console.error('Failed to save settings:', error);
+        }
+    };
+
+    const handleCreateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const method = editingUserId ? 'PUT' : 'POST';
+            const body: any = { ...userForm };
+
+            if (editingUserId) {
+                body.id = editingUserId;
+                // Don't send empty password during update
+                if (!body.password) {
+                    delete body.password;
+                }
+            }
+
+            const response = await fetch('/api/users', {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            if (response.ok) {
+                setShowUserForm(false);
+                setEditingUserId(null);
+                setUserForm({ username: '', password: '', role: 'Employee', employee_id: '' });
+                fetchData(); // Refresh list
+                alert(editingUserId ? 'User updated successfully!' : 'User created successfully!');
+            } else {
+                const error = await response.json();
+                alert(error.error || `Failed to ${editingUserId ? 'update' : 'create'} user`);
+            }
+        } catch (error) {
+            console.error('Failed to handle user form:', error);
+        }
+    };
+
+    const handleEditUser = (u: any) => {
+        setEditingUserId(u.id);
+        setUserForm({
+            username: u.username,
+            password: '', // Don't show hashed password
+            role: u.role,
+            employee_id: u.employee_id?.toString() || ''
+        });
+        setShowUserForm(true);
+        // Scroll to form
+        const formElement = document.getElementById('user-form');
+        if (formElement) {
+            formElement.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    const handleDeleteUser = async (id: number) => {
+        if (confirm('Are you sure you want to PERMANENTLY delete this user? This action cannot be undone.')) {
+            try {
+                const response = await fetch(`/api/users?id=${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    fetchData();
+                    alert('User deleted successfully.');
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Failed to delete user');
+                }
+            } catch (error) {
+                console.error('Failed to delete user:', error);
+            }
+        }
+    };
+
+    const toggleUserStatus = async (u: any) => {
+        if (confirm(`Are you sure you want to ${u.is_active ? 'deactivate' : 'activate'} this user?`)) {
+            try {
+                await fetch('/api/users', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: u.id, is_active: u.is_active ? 0 : 1 })
+                });
+                fetchData();
+            } catch (error) {
+                console.error('Failed to update user:', error);
+            }
+        }
+    };
+
+    if (loading) return <DashboardLayout><div className="p-5 text-center">Loading settings...</div></DashboardLayout>;
+
+    const masterRoles = ['Admin', 'HR', 'Manager', 'President', 'Vice President'];
+    if (!masterRoles.includes(user?.role)) {
+        return (
+            <DashboardLayout>
+                <div className="card">
+                    <div className="card-body text-center py-10">
+                        <div className="text-4xl mb-4">🚫</div>
+                        <h2 className="text-xl font-bold mb-2">Access Denied</h2>
+                        <p className="text-gray-500 mb-6">You do not have permission to view this page.</p>
+                        <a href="/dashboard" className="btn btn-primary">Return to Dashboard</a>
+                    </div>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
+    return (
+        <DashboardLayout>
+            <div className="card mb-4">
+                <div className="card-body">
+                    <h2 className="mb-2">System Settings</h2>
+                    <p className="text-gray-500">Configure system preferences and manage user access.</p>
+                </div>
+            </div>
+
+            <div className="flex mb-4 border-b border-gray-200">
+                <button
+                    className={`px-4 py-2 font-medium ${activeTab === 'general' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    onClick={() => setActiveTab('general')}
+                >
+                    General Settings
+                </button>
+                <button
+                    className={`px-4 py-2 font-medium ${activeTab === 'users' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    onClick={() => setActiveTab('users')}
+                >
+                    User Management
+                </button>
+                <button
+                    className={`px-4 py-2 font-medium ${activeTab === 'leave' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    onClick={() => setActiveTab('leave')}
+                >
+                    Leave Configuration
+                </button>
+            </div>
+
+            {activeTab === 'general' && (
+                <div className="card max-w-2xl">
+                    <div className="card-body">
+                        <form onSubmit={handleSaveSettings}>
+                            <div className="form-group mb-4">
+                                <label className="form-label">Company Name</label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    value={settings.company_name || ''}
+                                    onChange={e => setSettings({ ...settings, company_name: e.target.value })}
+                                />
+                            </div>
+                            <div className="form-group mb-4">
+                                <label className="form-label">Attendance Cut-off Time</label>
+                                <input
+                                    type="time"
+                                    className="form-input"
+                                    value={settings.attendance_cutoff || ''}
+                                    onChange={e => setSettings({ ...settings, attendance_cutoff: e.target.value })}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Employees timing in after this time will be marked as Late.</p>
+                            </div>
+                            <div className="form-group mb-4">
+                                <label className="form-label">Default User Password</label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    value={settings.default_password || ''}
+                                    onChange={e => setSettings({ ...settings, default_password: e.target.value })}
+                                />
+                            </div>
+                            <button type="submit" className="btn btn-primary">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'users' && (
+                <div>
+                    <div className="flex justify-end mb-4">
+                        <button
+                            onClick={() => {
+                                if (showUserForm) {
+                                    setEditingUserId(null);
+                                    setUserForm({ username: '', password: '', role: 'Employee', employee_id: '' });
+                                }
+                                setShowUserForm(!showUserForm);
+                            }}
+                            className="btn btn-primary"
+                        >
+                            {showUserForm ? 'Cancel' : '➕ Create New User'}
+                        </button>
+                    </div>
+
+                    {showUserForm && (
+                        <div id="user-form" className="card mb-4 animate-fade-in">
+                            <div className="card-header">
+                                <div className="card-title">{editingUserId ? 'Edit User' : 'Create New User'}</div>
+                            </div>
+                            <div className="card-body">
+                                <form onSubmit={handleCreateUser}>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="form-group">
+                                            <label className="form-label">Username</label>
+                                            <input
+                                                type="text"
+                                                className="form-input"
+                                                value={userForm.username}
+                                                onChange={e => setUserForm({ ...userForm, username: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">{editingUserId ? 'New Password (leave blank to keep current)' : 'Password'}</label>
+                                            <input
+                                                type="password"
+                                                className="form-input"
+                                                value={userForm.password}
+                                                onChange={e => setUserForm({ ...userForm, password: e.target.value })}
+                                                required={!editingUserId}
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Role</label>
+                                            <select
+                                                className="form-select"
+                                                value={userForm.role}
+                                                onChange={e => setUserForm({ ...userForm, role: e.target.value })}
+                                            >
+                                                <option>Admin</option>
+                                                <option>HR</option>
+                                                <option>President</option>
+                                                <option>Vice President</option>
+                                                <option>Manager</option>
+                                                <option>Employee</option>
+                                            </select>
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Link to Employee (Optional)</label>
+                                            <select
+                                                className="form-select"
+                                                value={userForm.employee_id}
+                                                onChange={e => setUserForm({ ...userForm, employee_id: e.target.value })}
+                                            >
+                                                <option value="">None</option>
+                                                {employees.map(emp => (
+                                                    <option key={emp.id} value={emp.id}>
+                                                        {emp.last_name}, {emp.first_name} ({emp.department})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 text-right">
+                                        <button type="submit" className="btn btn-success">
+                                            {editingUserId ? 'Update User' : 'Create User'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="card">
+                        <div className="table-container">
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Role</th>
+                                        <th>Employee Link</th>
+                                        <th>Status</th>
+                                        <th>Last Login</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {users.map(user => (
+                                        <tr key={user.id}>
+                                            <td className="font-medium">{user.username}</td>
+                                            <td>
+                                                <span className={`badge ${user.role === 'Admin' ? 'badge-primary' : 'badge-secondary'}`}>
+                                                    {user.role}
+                                                </span>
+                                            </td>
+                                            <td className="text-sm">
+                                                {user.employee_id ? (
+                                                    employees.find(e => e.id === user.employee_id)
+                                                        ? `${employees.find(e => e.id === user.employee_id).last_name}, ${employees.find(e => e.id === user.employee_id).first_name}`
+                                                        : `ID: ${user.employee_id}`
+                                                ) : <span className="text-gray-400">Not linked</span>}
+                                            </td>
+                                            <td>
+                                                <span className={`badge ${user.is_active ? 'badge-success' : 'badge-danger'}`}>
+                                                    {user.is_active ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td className="text-sm text-gray-500">
+                                                {user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}
+                                            </td>
+                                            <td>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => handleEditUser(user)}
+                                                        className="btn btn-sm btn-outline"
+                                                        title="Edit User"
+                                                        style={{ padding: '4px 8px' }}
+                                                    >
+                                                        ✏️
+                                                    </button>
+
+                                                    {user.username !== 'admin' && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => toggleUserStatus(user)}
+                                                                className={`btn btn-sm ${user.is_active ? 'btn-danger' : 'btn-success'}`}
+                                                                title={user.is_active ? 'Deactivate' : 'Activate'}
+                                                                style={{ padding: '4px 8px' }}
+                                                            >
+                                                                {user.is_active ? '🚫' : '✅'}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteUser(user.id)}
+                                                                className="btn btn-sm btn-outline"
+                                                                title="Delete User"
+                                                                style={{ padding: '4px 8px', color: 'var(--danger-600)', borderColor: 'var(--danger-200)' }}
+                                                            >
+                                                                🗑️
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'leave' && (
+                <div className="card max-w-2xl">
+                    <div className="card-body">
+                        <h3 className="text-lg font-medium mb-4">Leave Configuration</h3>
+                        <form onSubmit={handleSaveLeaveSettings}>
+                            <div className="mb-6">
+                                <h4 className="text-sm font-medium text-gray-700 mb-3">Cut-off Rules</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="form-group">
+                                        <label className="form-label">Payroll Cut-off Day</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="31"
+                                            className="form-input"
+                                            value={leaveSettings.payroll_cutoff_day}
+                                            onChange={e => setLeaveSettings({ ...leaveSettings, payroll_cutoff_day: parseInt(e.target.value) })}
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">Day of the month (e.g., 15th)</p>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Filing Cut-off (Days)</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            className="form-input"
+                                            value={leaveSettings.filing_cutoff_days}
+                                            onChange={e => setLeaveSettings({ ...leaveSettings, filing_cutoff_days: parseInt(e.target.value) })}
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">Days before payroll cut-off</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mb-6">
+                                <h4 className="text-sm font-medium text-gray-700 mb-3">Approval Workflow</h4>
+                                <div className="space-y-3">
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id="level1"
+                                            className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                                            checked={leaveSettings.approval_levels.level1_enabled}
+                                            onChange={e => setLeaveSettings({
+                                                ...leaveSettings,
+                                                approval_levels: { ...leaveSettings.approval_levels, level1_enabled: e.target.checked }
+                                            })}
+                                        />
+                                        <label htmlFor="level1" className="ml-2 text-sm text-gray-700">
+                                            Level 1: Immediate Supervisor / Manager
+                                        </label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id="level2"
+                                            className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                                            checked={leaveSettings.approval_levels.level2_enabled}
+                                            onChange={e => setLeaveSettings({
+                                                ...leaveSettings,
+                                                approval_levels: { ...leaveSettings.approval_levels, level2_enabled: e.target.checked }
+                                            })}
+                                        />
+                                        <label htmlFor="level2" className="ml-2 text-sm text-gray-700">
+                                            Level 2: HR Department
+                                        </label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id="level3"
+                                            className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                                            checked={leaveSettings.approval_levels.level3_enabled}
+                                            onChange={e => setLeaveSettings({
+                                                ...leaveSettings,
+                                                approval_levels: { ...leaveSettings.approval_levels, level3_enabled: e.target.checked }
+                                            })}
+                                        />
+                                        <label htmlFor="level3" className="ml-2 text-sm text-gray-700">
+                                            Level 3: Final Approver (Admin/Management)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" className="btn btn-primary">Save Configuration</button>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </DashboardLayout>
+    );
+}

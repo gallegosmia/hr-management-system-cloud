@@ -1,0 +1,1818 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "$2a$10$QGFm03nJ5NNtgMQi1J6zreAPHhWMO9M0EGMPtZf257D/Ardnculra",
+      "role": "Admin",
+      "employee_id": "",
+      "created_at": "2026-01-08T02:04:53.152Z",
+      "last_login": "2026-01-09T09:44:56.877Z",
+      "is_active": 1,
+      "last_updated": "2026-01-09T09:44:56.878Z"
+    },
+    {
+      "username": "mia",
+      "password": "$2a$10$Tfo1GCzWknoFlmbd/E9ZXexZo/NuCv7a3KPwF6DM3tdkINCLZdI3C",
+      "role": "HR",
+      "is_active": 1,
+      "employee_id": "",
+      "id": 5,
+      "created_at": "2026-01-09T06:13:35.334Z",
+      "last_login": "2026-01-12T03:19:39.302Z",
+      "last_updated": "2026-01-12T03:19:39.303Z"
+    },
+    {
+      "username": "shan",
+      "password": "$2a$10$Eq7U1U7fW2iIhgjJauHz1O5IIhuaMxuPGJ.b0w5QKfVo6/mFOWsyO",
+      "role": "Employee",
+      "is_active": 1,
+      "employee_id": "",
+      "id": 6,
+      "created_at": "2026-01-09T06:17:30.257Z",
+      "last_login": "2026-01-09T06:30:51.688Z",
+      "last_updated": "2026-01-10T08:37:22.171Z"
+    },
+    {
+      "username": "lhynn",
+      "password": "$2a$10$BAlN8oUoTx9XSMZUispCouDTKiMP9NvLiswP3OYNhU7VsHa8eci16",
+      "role": "Manager",
+      "is_active": 1,
+      "employee_id": null,
+      "id": 7,
+      "created_at": "2026-01-09T06:31:25.169Z",
+      "last_login": "2026-01-09T06:35:09.215Z",
+      "last_updated": "2026-01-09T06:35:09.215Z"
+    },
+    {
+      "username": "jhun",
+      "password": "$2a$10$LHTTOL2qLhWWdO/L9uoreeS0pHcmk6saPRaIoZegEgdKs0idgM1mW",
+      "role": "Manager",
+      "is_active": 1,
+      "employee_id": null,
+      "id": 8,
+      "created_at": "2026-01-09T06:36:55.944Z",
+      "last_login": "2026-01-09T06:37:48.728Z",
+      "last_updated": "2026-01-09T06:37:48.729Z"
+    },
+    {
+      "username": "ann",
+      "password": "$2a$10$bQnrTrCzgPbTuETSEkBPcuRpYp4GLVhru95.tqmk4vmchIZXL48Y.",
+      "role": "Vice President",
+      "is_active": 1,
+      "employee_id": null,
+      "id": 9,
+      "created_at": "2026-01-09T06:39:27.224Z"
+    }
+  ],
+  "employees": [
+    {
+      "employee_id": "2018-0001",
+      "last_name": "ARRADAZA",
+      "first_name": "JOSEPHINE",
+      "middle_name": "RELOBA",
+      "department": "Operations",
+      "position": "CASHIER",
+      "branch": "Ormoc Branch",
+      "employment_status": "Regular",
+      "date_hired": "2018-06-01",
+      "contact_number": "9099611758",
+      "email_address": "jarradaza73mlic@gmail.com",
+      "sss_number": "0614563535",
+      "philhealth_number": "130502009363",
+      "pagibig_number": "121227522486",
+      "tin": "499460757",
+      "civil_status": "Married",
+      "remarks": "",
+      "training_details": "",
+      "disciplinary_details": "",
+      "personal_info_complete": 1,
+      "preemployment_req_complete": 1,
+      "government_docs_complete": 1,
+      "employment_records_complete": 1,
+      "attendance_records_complete": 1,
+      "payroll_records_complete": 1,
+      "disciplinary_records": 0,
+      "training_records": 0,
+      "separation_records": 0,
+      "file_completion_status": "Complete",
+      "last_updated": "2026-01-10T08:43:00.587Z",
+      "created_by": 1,
+      "id": 1,
+      "created_at": "2026-01-10T04:30:28.909Z",
+      "salary_info": {
+        "basic_salary": 13710,
+        "daily_rate": 457,
+        "hourly_rate": 57.13,
+        "pay_frequency": "Semi-Monthly",
+        "allowances": {
+          "special": 1500
+        },
+        "deductions": {
+          "sss_contribution": 725,
+          "philhealth_contribution": 285,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "sss_loan": {
+            "balance": 20000,
+            "amortization": 1292.06
+          },
+          "pagibig_loan": {
+            "balance": 20000,
+            "amortization": 1783.16
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      },
+      "date_of_birth": "1973-03-19"
+    },
+    {
+      "employee_id": "2022-0001",
+      "last_name": "BAÑEZ",
+      "first_name": "BERNARDITO",
+      "middle_name": "ALVEZ",
+      "department": "Operations",
+      "position": "SUPERVISOR",
+      "branch": "Ormoc Branch",
+      "employment_status": "Regular",
+      "date_hired": "2022-07-04",
+      "contact_number": "9465429437",
+      "email_address": "",
+      "sss_number": "3406699850",
+      "philhealth_number": "130501016064",
+      "pagibig_number": "121150642064",
+      "tin": "",
+      "civil_status": "Married",
+      "remarks": "",
+      "training_details": "",
+      "disciplinary_details": "",
+      "personal_info_complete": 1,
+      "preemployment_req_complete": 1,
+      "government_docs_complete": 1,
+      "employment_records_complete": 1,
+      "attendance_records_complete": 1,
+      "payroll_records_complete": 1,
+      "disciplinary_records": 0,
+      "training_records": 0,
+      "separation_records": 0,
+      "file_completion_status": "Complete",
+      "last_updated": "2026-01-10T08:43:47.257Z",
+      "created_by": 1,
+      "id": 2,
+      "created_at": "2026-01-10T04:58:26.886Z",
+      "salary_info": {
+        "basic_salary": 13560,
+        "daily_rate": 452,
+        "hourly_rate": 56.5,
+        "pay_frequency": "Semi-Monthly",
+        "allowances": {
+          "special": 1800
+        },
+        "deductions": {
+          "sss_contribution": 700,
+          "philhealth_contribution": 281.25,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      },
+      "date_of_birth": "1984-02-10"
+    },
+    {
+      "employee_id": "2025-0001",
+      "last_name": "BORINAGA",
+      "first_name": "ALBERTO",
+      "middle_name": "GULIMAN",
+      "department": "Operations",
+      "position": "CI/COLLECTOR",
+      "branch": "Naval Branch",
+      "employment_status": "Regular",
+      "date_hired": "2025-02-03",
+      "contact_number": "09361198360",
+      "email_address": "",
+      "sss_number": "0633998398",
+      "philhealth_number": "130501492370",
+      "pagibig_number": "121168934317",
+      "tin": "",
+      "civil_status": "Married",
+      "remarks": "",
+      "training_details": "1. ROOKIE AWARD PAST DUE LOAN COLLECTION CATEGORY",
+      "disciplinary_details": "",
+      "personal_info_complete": 1,
+      "preemployment_req_complete": 1,
+      "government_docs_complete": 1,
+      "employment_records_complete": 1,
+      "attendance_records_complete": 1,
+      "payroll_records_complete": 1,
+      "disciplinary_records": 0,
+      "training_records": 1,
+      "separation_records": 0,
+      "file_completion_status": "Complete",
+      "last_updated": "2026-01-10T08:44:30.603Z",
+      "created_by": 1,
+      "id": 3,
+      "created_at": "2026-01-10T05:19:39.109Z",
+      "salary_info": {
+        "basic_salary": 13560,
+        "daily_rate": 452,
+        "hourly_rate": 56.5,
+        "pay_frequency": "Semi-Monthly",
+        "allowances": {
+          "special": 1000
+        },
+        "deductions": {
+          "sss_contribution": 700,
+          "philhealth_contribution": 281.25,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 15500,
+            "amortization": 1000
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      },
+      "date_of_birth": "1989-05-08"
+    },
+    {
+      "employee_id": "2024-0001",
+      "last_name": "DOMINGONO",
+      "first_name": "RENATO",
+      "middle_name": "TAGYAMON",
+      "department": "Operations",
+      "position": "CI/COLLECTOR",
+      "branch": "Ormoc Branch",
+      "employment_status": "Regular",
+      "date_hired": "2024-11-15",
+      "contact_number": "9126216782",
+      "email_address": "",
+      "sss_number": "0626378967",
+      "philhealth_number": "130500855135",
+      "pagibig_number": "121270197765",
+      "tin": "",
+      "civil_status": "Single",
+      "remarks": "",
+      "training_details": "",
+      "disciplinary_details": "1. Notice of Disciplinary Action (VERBAL WARNING) Related to Company Time and Attendance: Tardy/Late for Eleven (11) Times for January 2025",
+      "personal_info_complete": 1,
+      "preemployment_req_complete": 1,
+      "government_docs_complete": 1,
+      "employment_records_complete": 1,
+      "attendance_records_complete": 1,
+      "payroll_records_complete": 1,
+      "disciplinary_records": 1,
+      "training_records": 0,
+      "separation_records": 0,
+      "file_completion_status": "Complete",
+      "last_updated": "2026-01-10T08:45:03.761Z",
+      "created_by": 1,
+      "id": 4,
+      "created_at": "2026-01-10T07:06:22.684Z",
+      "salary_info": {
+        "basic_salary": 13560,
+        "daily_rate": 452,
+        "hourly_rate": 56.5,
+        "pay_frequency": "Semi-Monthly",
+        "allowances": {
+          "special": 1000
+        },
+        "deductions": {
+          "sss_contribution": 700,
+          "philhealth_contribution": 281.25,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 23500,
+            "amortization": 1000
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 530.67
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 370.98
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      },
+      "date_of_birth": "1985-02-16"
+    }
+  ],
+  "documents": [],
+  "attendance": [
+    {
+      "employee_id": 1,
+      "date": "2026-01-08",
+      "status": "Present",
+      "id": 1,
+      "created_at": "2026-01-08T02:56:58.319Z",
+      "last_updated": "2026-01-08T07:53:18.218Z",
+      "time_in": "08:00",
+      "time_out": "19:00"
+    },
+    {
+      "employee_id": 2,
+      "date": "2026-01-08",
+      "status": "Present",
+      "id": 2,
+      "created_at": "2026-01-08T05:53:08.769Z",
+      "time_in": "08:10",
+      "time_out": "17:13",
+      "last_updated": "2026-01-08T07:53:18.219Z"
+    },
+    {
+      "employee_id": 3,
+      "date": "2026-01-08",
+      "time_in": "08:00",
+      "time_out": "17:00",
+      "status": "Present",
+      "id": 3,
+      "created_at": "2026-01-08T07:53:18.220Z"
+    },
+    {
+      "employee_id": 1,
+      "date": "2026-01-09",
+      "time_in": "08:34",
+      "status": "Present",
+      "id": 4,
+      "created_at": "2026-01-08T23:46:10.872Z"
+    },
+    {
+      "employee_id": 3,
+      "date": "2026-01-10",
+      "time_in": "20:23",
+      "status": "Late",
+      "id": 5,
+      "created_at": "2026-01-10T04:23:14.825Z"
+    },
+    {
+      "employee_id": 2,
+      "date": "2026-01-10",
+      "status": "Absent",
+      "id": 6,
+      "created_at": "2026-01-10T04:23:14.827Z"
+    },
+    {
+      "employee_id": 1,
+      "date": "2026-01-10",
+      "status": "Absent",
+      "id": 7,
+      "created_at": "2026-01-10T04:23:14.829Z"
+    }
+  ],
+  "leave_requests": [],
+  "disciplinary_records": [],
+  "training_records": [],
+  "audit_logs": [
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"employee_id\":\"2023-01\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Human Resources\",\"position\":\"HR/IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-17\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"remarks\":\"\"}",
+      "id": 1,
+      "created_at": "2026-01-08T02:56:19.772Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"personal_info_complete\":1}",
+      "id": 2,
+      "created_at": "2026-01-08T02:56:25.743Z"
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "new_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\"}",
+      "id": 3,
+      "created_at": "2026-01-08T02:58:48.298Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "new_value": "{\"personal_info_complete\":1}",
+      "id": 4,
+      "created_at": "2026-01-08T02:58:49.952Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "new_value": "{\"preemployment_req_complete\":1}",
+      "id": 5,
+      "created_at": "2026-01-08T03:00:17.553Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "new_value": "{\"preemployment_req_complete\":0}",
+      "id": 6,
+      "created_at": "2026-01-08T03:00:18.808Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "new_value": "{\"preemployment_req_complete\":1}",
+      "id": 7,
+      "created_at": "2026-01-08T03:00:31.936Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "new_value": "{\"preemployment_req_complete\":0}",
+      "id": 8,
+      "created_at": "2026-01-08T03:00:32.095Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2023-01\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Human Resources\",\"position\":\"HR/IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-17\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"remarks\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T02:56:25.742Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T02:56:19.772Z\"}",
+      "new_value": "{\"employee_id\":\"2023-01\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"HR/IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-17\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"remarks\":\"\"}",
+      "id": 9,
+      "created_at": "2026-01-08T03:06:00.776Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "new_value": "{\"employment_records_complete\":1}",
+      "id": 10,
+      "created_at": "2026-01-08T03:06:50.482Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "new_value": "{\"employment_records_complete\":0}",
+      "id": 11,
+      "created_at": "2026-01-08T03:06:51.689Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T03:06:51.689Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-08T02:58:48.298Z\"}",
+      "new_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":1250},\"daily_rate\":616.36,\"hourly_rate\":77.05,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281,\"pagibig_contribution\":199,\"company_savings\":300,\"company_loan\":{\"balance\":15000,\"amortization\":500},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":3000,\"amortization\":0}}}}",
+      "id": 12,
+      "created_at": "2026-01-08T03:56:32.719Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T03:56:32.718Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-08T02:58:48.298Z\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":1250},\"daily_rate\":616.36,\"hourly_rate\":77.05,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281,\"pagibig_contribution\":199,\"company_savings\":300,\"company_loan\":{\"balance\":15000,\"amortization\":500},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":3000,\"amortization\":0}}}}",
+      "new_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"daily_rate\":616.36,\"hourly_rate\":77.05,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281,\"pagibig_contribution\":199,\"company_savings\":300,\"company_loan\":{\"balance\":15000,\"amortization\":500},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":3000,\"amortization\":0}}}}",
+      "id": 13,
+      "created_at": "2026-01-08T03:57:49.331Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T03:57:49.330Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-08T02:58:48.298Z\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"daily_rate\":616.36,\"hourly_rate\":77.05,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281,\"pagibig_contribution\":199,\"company_savings\":300,\"company_loan\":{\"balance\":15000,\"amortization\":500},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":3000,\"amortization\":0}}}}",
+      "new_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":282,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":15000,\"amortization\":500},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":3000,\"amortization\":0},\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}}",
+      "id": 14,
+      "created_at": "2026-01-08T04:11:19.089Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T04:11:19.088Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-08T02:58:48.298Z\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":282,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":15000,\"amortization\":500},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":3000,\"amortization\":0},\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}}",
+      "new_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"daily_rate\":616.36,\"hourly_rate\":77.05,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":15000,\"amortization\":500},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":3000,\"amortization\":0},\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}}",
+      "id": 15,
+      "created_at": "2026-01-08T05:02:42.381Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T05:02:42.380Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-08T02:58:48.298Z\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"daily_rate\":616.36,\"hourly_rate\":77.05,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":15000,\"amortization\":500},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":3000,\"amortization\":0},\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}}",
+      "new_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"daily_rate\":452,\"hourly_rate\":null,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":15000,\"amortization\":500},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":3000,\"amortization\":0},\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}}",
+      "id": 16,
+      "created_at": "2026-01-08T05:03:33.977Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T05:03:33.976Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-08T02:58:48.298Z\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"daily_rate\":452,\"hourly_rate\":null,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":15000,\"amortization\":500},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":3000,\"amortization\":0},\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}}",
+      "new_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2499},\"daily_rate\":452,\"hourly_rate\":null,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":15000,\"amortization\":500},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":3000,\"amortization\":0},\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}}",
+      "id": 17,
+      "created_at": "2026-01-08T05:04:42.529Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2023-01\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"HR/IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-17\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"remarks\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T03:06:00.775Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T02:56:19.772Z\"}",
+      "new_value": "{\"employee_id\":\"2023-01\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"HR/IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-17\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":13000,\"amortization\":587},\"cash_advance\":{\"balance\":0,\"amortization\":0},\"other_deductions\":[]}}}",
+      "id": 18,
+      "created_at": "2026-01-08T05:06:40.313Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T05:04:42.528Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-08T02:58:48.298Z\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2499},\"daily_rate\":452,\"hourly_rate\":null,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":15000,\"amortization\":500},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":3000,\"amortization\":0},\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}}",
+      "new_value": "{\"employee_id\":\"2023-02\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-30\",\"contact_number\":\"09468882951\",\"email_address\":\"shahaniemaelerio1@gmail.com\",\"sss_number\":\"\",\"philhealth_number\":\"\",\"pagibig_number\":\"\",\"tin\":\"\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2499},\"daily_rate\":452,\"hourly_rate\":null,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":15000,\"amortization\":500},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":3000,\"amortization\":0},\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}}",
+      "id": 19,
+      "created_at": "2026-01-08T05:50:26.596Z"
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "id": 20,
+      "created_at": "2026-01-08T06:02:49.528Z"
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "id": 21,
+      "created_at": "2026-01-08T06:02:56.658Z"
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"employee_id\":\"2018-0001\",\"last_name\":\"ARRADAZA\",\"first_name\":\"JOSEPHINE\",\"middle_name\":\"RELOBA\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"employment_status\":\"Regular\",\"date_hired\":\"2018-12-01\",\"contact_number\":\"09099611758\",\"email_address\":\"arradazajosephine1973@gmail.com\",\"sss_number\":\"0614563535\",\"philhealth_number\":\"130502009363\",\"pagibig_number\":\"121227522486\",\"tin\":\"499460757\",\"civil_status\":\"Married\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13710\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":1499.99},\"daily_rate\":457,\"hourly_rate\":null,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":725,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":1292.06},\"cash_advance\":{\"balance\":0,\"amortization\":0},\"other_deductions\":[{\"name\":\"PAG-IBIG LOAN\",\"amount\":1783.16}]}}}",
+      "id": 22,
+      "created_at": "2026-01-08T06:35:31.224Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"personal_info_complete\":1}",
+      "id": 23,
+      "created_at": "2026-01-08T06:35:40.965Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"payroll_records_complete\":1}",
+      "id": 24,
+      "created_at": "2026-01-08T06:35:45.523Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2018-0001\",\"last_name\":\"ARRADAZA\",\"first_name\":\"JOSEPHINE\",\"middle_name\":\"RELOBA\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"employment_status\":\"Regular\",\"date_hired\":\"2018-12-01\",\"contact_number\":\"09099611758\",\"email_address\":\"arradazajosephine1973@gmail.com\",\"sss_number\":\"0614563535\",\"philhealth_number\":\"130502009363\",\"pagibig_number\":\"121227522486\",\"tin\":\"499460757\",\"civil_status\":\"Married\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13710\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":1499.99},\"daily_rate\":457,\"hourly_rate\":null,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":725,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":1292.06},\"cash_advance\":{\"balance\":0,\"amortization\":0},\"other_deductions\":[{\"name\":\"PAG-IBIG LOAN\",\"amount\":1783.16}]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T06:35:45.522Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T06:35:31.224Z\"}",
+      "new_value": "{\"employee_id\":\"2018-0001\",\"last_name\":\"ARRADAZA\",\"first_name\":\"JOSEPHINE\",\"middle_name\":\"RELOBA\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"employment_status\":\"Regular\",\"date_hired\":\"2018-12-01\",\"contact_number\":\"09099611758\",\"email_address\":\"arradazajosephine1973@gmail.com\",\"sss_number\":\"0614563535\",\"philhealth_number\":\"130502009363\",\"pagibig_number\":\"121227522486\",\"tin\":\"499460757\",\"civil_status\":\"Married\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13710\",\"daily_rate\":457,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":1500},\"deductions\":{\"sss_contribution\":725,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":1292.06},\"pagibig_loan\":{\"balance\":0,\"amortization\":1783.15},\"emergency_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":0,\"amortization\":0},\"other_deductions\":[]}}}",
+      "id": 25,
+      "created_at": "2026-01-08T06:50:59.689Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2018-0001\",\"last_name\":\"ARRADAZA\",\"first_name\":\"JOSEPHINE\",\"middle_name\":\"RELOBA\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"employment_status\":\"Regular\",\"date_hired\":\"2018-12-01\",\"contact_number\":\"09099611758\",\"email_address\":\"arradazajosephine1973@gmail.com\",\"sss_number\":\"0614563535\",\"philhealth_number\":\"130502009363\",\"pagibig_number\":\"121227522486\",\"tin\":\"499460757\",\"civil_status\":\"Married\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13710\",\"daily_rate\":457,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":1500},\"deductions\":{\"sss_contribution\":725,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":1292.06},\"pagibig_loan\":{\"balance\":0,\"amortization\":1783.15},\"emergency_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":0,\"amortization\":0},\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T06:50:59.688Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T06:35:31.224Z\"}",
+      "new_value": "{\"employee_id\":\"2018-0001\",\"last_name\":\"ARRADAZA\",\"first_name\":\"JOSEPHINE\",\"middle_name\":\"RELOBA\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"employment_status\":\"Regular\",\"date_hired\":\"2018-12-01\",\"contact_number\":\"09099611758\",\"email_address\":\"arradazajosephine1973@gmail.com\",\"sss_number\":\"0614563535\",\"philhealth_number\":\"130502009363\",\"pagibig_number\":\"121227522486\",\"tin\":\"499460757\",\"civil_status\":\"Married\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13710\",\"daily_rate\":457,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":1500},\"deductions\":{\"sss_contribution\":725,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":1292.06},\"pagibig_loan\":{\"balance\":25000,\"amortization\":1783.15},\"emergency_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":0,\"amortization\":0},\"other_deductions\":[]}}}",
+      "id": 26,
+      "created_at": "2026-01-08T06:58:43.751Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2018-0001\",\"last_name\":\"ARRADAZA\",\"first_name\":\"JOSEPHINE\",\"middle_name\":\"RELOBA\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"employment_status\":\"Regular\",\"date_hired\":\"2018-12-01\",\"contact_number\":\"09099611758\",\"email_address\":\"arradazajosephine1973@gmail.com\",\"sss_number\":\"0614563535\",\"philhealth_number\":\"130502009363\",\"pagibig_number\":\"121227522486\",\"tin\":\"499460757\",\"civil_status\":\"Married\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13710\",\"daily_rate\":457,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":1500},\"deductions\":{\"sss_contribution\":725,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":1292.06},\"pagibig_loan\":{\"balance\":25000,\"amortization\":1783.15},\"emergency_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":0,\"amortization\":0},\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T06:58:43.750Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T06:35:31.224Z\"}",
+      "new_value": "{\"employee_id\":\"2018-0001\",\"last_name\":\"ARRADAZA\",\"first_name\":\"JOSEPHINE\",\"middle_name\":\"RELOBA\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"employment_status\":\"Regular\",\"date_hired\":\"2018-12-01\",\"contact_number\":\"09099611758\",\"email_address\":\"arradazajosephine1973@gmail.com\",\"sss_number\":\"0614563535\",\"philhealth_number\":\"130502009363\",\"pagibig_number\":\"121227522486\",\"tin\":\"499460757\",\"civil_status\":\"Married\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13710\",\"daily_rate\":457,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":1500},\"deductions\":{\"sss_contribution\":725,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":30000,\"amortization\":1292.06},\"pagibig_loan\":{\"balance\":25000,\"amortization\":1783.15},\"emergency_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":0,\"amortization\":0},\"other_deductions\":[]}}}",
+      "id": 27,
+      "created_at": "2026-01-08T07:03:03.993Z"
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "new_value": "{\"employee_id\":\"2023-0001\",\"last_name\":\"BAÑEZ\",\"first_name\":\"BERNARDITO\",\"middle_name\":\"ALVEZ\",\"department\":\"Operations\",\"position\":\"SUPERVISOR\",\"employment_status\":\"Regular\",\"date_hired\":\"2023-01-16\",\"contact_number\":\"094654299437\",\"email_address\":\"\",\"sss_number\":\"3406699850\",\"philhealth_number\":\"130501016064\",\"pagibig_number\":\"121150642064\",\"tin\":\"\",\"civil_status\":\"Married\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":\"13560\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":1800},\"daily_rate\":452,\"hourly_rate\":null,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"emergency_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":{\"balance\":0,\"amortization\":0},\"other_deductions\":[]}}}",
+      "id": 28,
+      "created_at": "2026-01-08T07:10:27.745Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "new_value": "{\"personal_info_complete\":1}",
+      "id": 29,
+      "created_at": "2026-01-08T07:10:35.942Z"
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 3,
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"CABALLES\",\"first_name\":\"EDDIE JR\",\"middle_name\":\"P.\",\"department\":\"Operations\",\"position\":\"COLLECTOR\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-08-16\",\"contact_number\":\"09513458506\",\"email_address\":\"\",\"sss_number\":\"0633443018\",\"philhealth_number\":\"130501485443\",\"pagibig_number\":\"121089280866\",\"tin\":\"733454732\",\"civil_status\":\"Single\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":13560,\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":1000},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":199.99,\"company_savings\":300,\"company_loan\":{\"balance\":30000,\"amortization\":1000},\"sss_loan\":{\"balance\":20000,\"amortization\":1199.77},\"pagibig_loan\":{\"balance\":20000,\"amortization\":1773.3},\"cash_advance\":{\"balance\":1000,\"amortization\":0},\"other_deductions\":[]}}}",
+      "id": 30,
+      "created_at": "2026-01-08T07:36:58.396Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 3,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"CABALLES\",\"first_name\":\"EDDIE JR\",\"middle_name\":\"P.\",\"department\":\"Operations\",\"position\":\"COLLECTOR\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-08-16\",\"contact_number\":\"09513458506\",\"email_address\":\"\",\"sss_number\":\"0633443018\",\"philhealth_number\":\"130501485443\",\"pagibig_number\":\"121089280866\",\"tin\":\"733454732\",\"civil_status\":\"Single\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":13560,\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":1000},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":199.99,\"company_savings\":300,\"company_loan\":{\"balance\":30000,\"amortization\":1000},\"sss_loan\":{\"balance\":20000,\"amortization\":1199.77},\"pagibig_loan\":{\"balance\":20000,\"amortization\":1773.3},\"cash_advance\":{\"balance\":1000,\"amortization\":0},\"other_deductions\":[]}},\"personal_info_complete\":0,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Incomplete\",\"last_updated\":\"2026-01-08T07:36:58.395Z\",\"created_by\":1,\"id\":3,\"created_at\":\"2026-01-08T07:36:58.395Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"CABALLES\",\"first_name\":\"EDDIE JR\",\"middle_name\":\"P.\",\"department\":\"Operations\",\"position\":\"COLLECTOR\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-08-16\",\"contact_number\":\"09513458506\",\"email_address\":\"\",\"sss_number\":\"0633443018\",\"philhealth_number\":\"130501485443\",\"pagibig_number\":\"121089280866\",\"tin\":\"733454732\",\"civil_status\":\"Single\",\"remarks\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":1000},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":199.99,\"company_savings\":300,\"company_loan\":{\"balance\":30000,\"amortization\":1000},\"sss_loan\":{\"balance\":20000,\"amortization\":1199.77},\"pagibig_loan\":{\"balance\":20000,\"amortization\":1773.3},\"cash_advance\":1000,\"other_deductions\":[]}}}",
+      "id": 31,
+      "created_at": "2026-01-08T07:38:13.026Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 3,
+      "new_value": "{\"personal_info_complete\":1}",
+      "id": 32,
+      "created_at": "2026-01-08T07:38:16.089Z"
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 4,
+      "new_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"ENTERO\",\"first_name\":\"MARISSA\",\"middle_name\":\"PATIGDAS\",\"department\":\"Operations\",\"position\":\"BRANCH MANAGER\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-10\",\"contact_number\":\"09300986174\",\"email_address\":\"\",\"sss_number\":\"3431675360\",\"philhealth_number\":\"132521267627\",\"pagibig_number\":\"121281691021\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13710,\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2499.99},\"daily_rate\":457,\"hourly_rate\":57.13,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":775,\"philhealth_contribution\":285,\"pagibig_contribution\":199.99,\"company_savings\":300,\"company_loan\":{\"balance\":30000,\"amortization\":1300},\"sss_loan\":{\"balance\":20000,\"amortization\":1259.98},\"pagibig_loan\":{\"balance\":20000,\"amortization\":1168.38},\"cash_advance\":3200,\"other_deductions\":[]}}}",
+      "id": 33,
+      "created_at": "2026-01-08T09:28:26.960Z"
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 5,
+      "new_value": "{\"employee_id\":\"2022-0003\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}}",
+      "id": 34,
+      "created_at": "2026-01-08T09:49:15.028Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 4,
+      "old_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"ENTERO\",\"first_name\":\"MARISSA\",\"middle_name\":\"PATIGDAS\",\"department\":\"Operations\",\"position\":\"BRANCH MANAGER\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-10\",\"contact_number\":\"09300986174\",\"email_address\":\"\",\"sss_number\":\"3431675360\",\"philhealth_number\":\"132521267627\",\"pagibig_number\":\"121281691021\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13710,\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2499.99},\"daily_rate\":457,\"hourly_rate\":57.13,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":775,\"philhealth_contribution\":285,\"pagibig_contribution\":199.99,\"company_savings\":300,\"company_loan\":{\"balance\":30000,\"amortization\":1300},\"sss_loan\":{\"balance\":20000,\"amortization\":1259.98},\"pagibig_loan\":{\"balance\":20000,\"amortization\":1168.38},\"cash_advance\":3200,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T09:28:26.959Z\",\"created_by\":1,\"id\":4,\"created_at\":\"2026-01-08T09:28:26.959Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"ENTERO\",\"first_name\":\"MARISSA\",\"middle_name\":\"PATIGDAS\",\"department\":\"Operations\",\"position\":\"BRANCH MANAGER\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-10\",\"contact_number\":\"09300986174\",\"email_address\":\"\",\"sss_number\":\"3431675360\",\"philhealth_number\":\"132521267627\",\"pagibig_number\":\"121281691021\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13710,\"daily_rate\":457,\"hourly_rate\":57.13,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2499.99},\"deductions\":{\"sss_contribution\":775,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":30000,\"amortization\":1300},\"sss_loan\":{\"balance\":20000,\"amortization\":1259.98},\"pagibig_loan\":{\"balance\":20000,\"amortization\":1168.38},\"cash_advance\":3200,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 35,
+      "created_at": "2026-01-08T10:04:33.361Z"
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "id": 36,
+      "created_at": "2026-01-08T10:07:12.995Z"
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "id": 37,
+      "created_at": "2026-01-08T10:07:18.579Z"
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 3,
+      "id": 38,
+      "created_at": "2026-01-08T10:07:21.416Z"
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 4,
+      "id": 39,
+      "created_at": "2026-01-08T10:07:24.665Z"
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 5,
+      "id": 40,
+      "created_at": "2026-01-08T10:07:27.864Z"
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":499.99},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}}",
+      "id": 41,
+      "created_at": "2026-01-08T10:12:26.583Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":499.99},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T10:12:26.581Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T10:12:26.582Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 42,
+      "created_at": "2026-01-08T10:13:18.445Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T10:13:18.443Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T10:12:26.582Z\"}",
+      "new_value": "{\"branch\":\"Naval Branch\"}",
+      "id": 43,
+      "created_at": "2026-01-08T23:45:48.534Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T23:45:48.533Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T10:12:26.582Z\"}",
+      "new_value": "{\"branch\":\"Ormoc Branch\"}",
+      "id": 44,
+      "created_at": "2026-01-08T23:45:48.994Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T23:45:48.993Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T10:12:26.582Z\"}",
+      "new_value": "{\"branch\":\"Naval Branch\"}",
+      "id": 45,
+      "created_at": "2026-01-08T23:45:50.172Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T23:45:50.172Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T10:12:26.582Z\"}",
+      "new_value": "{\"branch\":\"Ormoc Branch\"}",
+      "id": 46,
+      "created_at": "2026-01-08T23:45:50.635Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-08T23:45:50.634Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T10:12:26.582Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500,\"special\":2499.98},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 47,
+      "created_at": "2026-01-09T01:02:19.705Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500,\"special\":2499.98},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T01:02:19.703Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T10:12:26.582Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500,\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 48,
+      "created_at": "2026-01-09T01:03:25.807Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500,\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T01:03:25.805Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T10:12:26.582Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500,\"special\":1250},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 49,
+      "created_at": "2026-01-09T01:04:23.659Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500,\"special\":1250},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T01:04:23.658Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T10:12:26.582Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"rice\":0,\"laundry\":0,\"clothing\":0,\"other\":2500,\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 50,
+      "created_at": "2026-01-09T01:08:36.840Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"payroll_records_complete\":1}",
+      "id": 51,
+      "created_at": "2026-01-09T02:29:46.820Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"payroll_records_complete\":0}",
+      "id": 52,
+      "created_at": "2026-01-09T02:29:48.381Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"payroll_records_complete\":1}",
+      "id": 53,
+      "created_at": "2026-01-09T02:29:50.554Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"payroll_records_complete\":1}",
+      "id": 54,
+      "created_at": "2026-01-09T02:29:50.562Z"
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "new_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":0,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"allowances\":{\"special\":2500},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":199.99,\"company_savings\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}}",
+      "id": 55,
+      "created_at": "2026-01-09T02:48:48.075Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "new_value": "{\"personal_info_complete\":1}",
+      "id": 56,
+      "created_at": "2026-01-09T02:49:02.368Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "new_value": "{\"payroll_records_complete\":1}",
+      "id": 57,
+      "created_at": "2026-01-09T02:49:06.591Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"allowances\":{\"special\":2500},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":199.99,\"company_savings\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T02:49:06.590Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-09T02:48:48.073Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 58,
+      "created_at": "2026-01-09T02:50:25.744Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"payroll_records_complete\":0}",
+      "id": 59,
+      "created_at": "2026-01-09T03:15:26.527Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"payroll_records_complete\":0}",
+      "id": 60,
+      "created_at": "2026-01-09T03:15:26.568Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"payroll_records_complete\":0}",
+      "id": 61,
+      "created_at": "2026-01-09T03:15:26.582Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"attendance_records_complete\":0}",
+      "id": 62,
+      "created_at": "2026-01-09T03:15:28.115Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"payroll_records_complete\":1}",
+      "id": 63,
+      "created_at": "2026-01-09T03:15:31.590Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"payroll_records_complete\":0}",
+      "id": 64,
+      "created_at": "2026-01-09T03:15:33.012Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"personal_info_complete\":0}",
+      "id": 65,
+      "created_at": "2026-01-09T03:15:50.228Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"payroll_records_complete\":1}",
+      "id": 66,
+      "created_at": "2026-01-09T03:15:52.288Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"payroll_records_complete\":0}",
+      "id": 67,
+      "created_at": "2026-01-09T03:15:53.490Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"payroll_records_complete\":1}",
+      "id": 68,
+      "created_at": "2026-01-09T03:15:55.000Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T02:50:25.743Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-09T02:48:48.073Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 69,
+      "created_at": "2026-01-09T04:27:49.440Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":17700,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T04:44:35.374Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-09T02:48:48.073Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 70,
+      "created_at": "2026-01-09T04:49:01.834Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":18500,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T04:49:09.160Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-09T02:48:48.073Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 71,
+      "created_at": "2026-01-09T04:52:29.759Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":0,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":2000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T04:53:40.828Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T10:12:26.582Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":0,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 72,
+      "created_at": "2026-01-09T04:57:38.563Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":18500,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T04:53:40.826Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-09T02:48:48.073Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 73,
+      "created_at": "2026-01-09T04:58:55.296Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":0,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T04:57:38.561Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T10:12:26.582Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":0,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 74,
+      "created_at": "2026-01-09T04:59:09.087Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"personal_info_complete\":1}",
+      "id": 75,
+      "created_at": "2026-01-09T05:02:23.150Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":18500,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T06:04:02.195Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-09T02:48:48.073Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 76,
+      "created_at": "2026-01-09T06:04:31.804Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":3500,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T06:04:02.197Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T10:12:26.582Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 77,
+      "created_at": "2026-01-09T06:04:44.055Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":18500,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T06:53:36.336Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-09T02:48:48.073Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 78,
+      "created_at": "2026-01-09T06:55:07.574Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":3500,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T06:53:36.339Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T10:12:26.582Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 79,
+      "created_at": "2026-01-09T06:55:16.319Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":18500,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T06:59:54.218Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-09T02:48:48.073Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"LERIO\",\"first_name\":\"SHAHANIE MAE\",\"middle_name\":\"ROSALES\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"9468882951\",\"email_address\":\"shahanielerio1@gmail.com\",\"sss_number\":\"0643970445\",\"philhealth_number\":\"132509597093\",\"pagibig_number\":\"121298747125\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 80,
+      "created_at": "2026-01-09T07:04:59.978Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_savings\":300,\"company_loan\":{\"balance\":3500,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-09T06:59:54.221Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-08T10:12:26.582Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 81,
+      "created_at": "2026-01-09T07:05:15.623Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1250},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 82,
+      "created_at": "2026-01-09T07:33:35.737Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "1",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1250},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "id": 83,
+      "created_at": "2026-01-09T07:33:44.344Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 84,
+      "created_at": "2026-01-09T07:38:22.977Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":14100,\"daily_rate\":470,\"hourly_rate\":58.75,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 85,
+      "created_at": "2026-01-09T08:07:00.515Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":14100,\"daily_rate\":470,\"hourly_rate\":58.75,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 86,
+      "created_at": "2026-01-09T08:07:13.818Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":14100,\"daily_rate\":470,\"hourly_rate\":58.75,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 87,
+      "created_at": "2026-01-09T08:09:30.591Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":14100,\"daily_rate\":470,\"hourly_rate\":58.75,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 88,
+      "created_at": "2026-01-09T08:10:02.667Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 89,
+      "created_at": "2026-01-09T08:11:47.146Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "1",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "id": 90,
+      "created_at": "2026-01-09T08:12:52.773Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":14100,\"daily_rate\":470,\"hourly_rate\":58.75,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 91,
+      "created_at": "2026-01-09T08:14:17.996Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":14100,\"daily_rate\":470,\"hourly_rate\":58.75,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 92,
+      "created_at": "2026-01-09T08:29:00.514Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":14100,\"daily_rate\":470,\"hourly_rate\":58.75,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 93,
+      "created_at": "2026-01-09T08:38:42.709Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 94,
+      "created_at": "2026-01-09T08:46:14.063Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":13594.2,\"daily_rate\":453.14,\"hourly_rate\":56.64,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 95,
+      "created_at": "2026-01-09T08:46:32.069Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 96,
+      "created_at": "2026-01-09T08:46:43.757Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":14100,\"daily_rate\":470,\"hourly_rate\":58.75,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 97,
+      "created_at": "2026-01-09T08:48:27.688Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 98,
+      "created_at": "2026-01-09T08:53:06.473Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "1",
+      "new_value": "{\"basic_salary\":13500,\"daily_rate\":450,\"hourly_rate\":56.25,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "id": 99,
+      "created_at": "2026-01-09T08:53:27.182Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":14099.7,\"daily_rate\":469.99,\"hourly_rate\":58.75,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 100,
+      "created_at": "2026-01-09T08:53:38.047Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 101,
+      "created_at": "2026-01-09T09:09:27.896Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": "2",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 102,
+      "created_at": "2026-01-09T09:11:47.738Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 103,
+      "created_at": "2026-01-09T09:16:46.231Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":4000,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "id": 104,
+      "created_at": "2026-01-09T09:16:52.999Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":18500,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 105,
+      "created_at": "2026-01-09T09:47:51.211Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 106,
+      "created_at": "2026-01-09T09:48:00.345Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":19300,\"amortization\":800},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":1028.43},\"cash_advance\":2500,\"other_deductions\":[{\"name\":\"Motor\",\"amount\":500}]}}",
+      "id": 107,
+      "created_at": "2026-01-09T09:48:13.995Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"basic_salary\":13560,\"daily_rate\":470,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":3500,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":2500},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":3500,\"amortization\":500},\"sss_loan\":{\"balance\":12000,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "id": 108,
+      "created_at": "2026-01-09T09:48:18.904Z"
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 3,
+      "new_value": "{\"employee_id\":\"2022-0003\",\"last_name\":\"ENTERO\",\"first_name\":\"MARISSA\",\"middle_name\":\"PATIGDAS\",\"department\":\"Operations\",\"position\":\"BRANCH MANAGER\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-05-10\",\"contact_number\":\"9300986174\",\"email_address\":\"\",\"sss_number\":\"3431675360\",\"philhealth_number\":\"132521267627\",\"pagibig_number\":\"121281691021\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 109,
+      "created_at": "2026-01-09T09:56:00.853Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 3,
+      "new_value": "{\"basic_salary\":13710,\"allowances\":{\"special\":2500},\"daily_rate\":457,\"hourly_rate\":57.13,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":775,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":30300,\"amortization\":1300},\"sss_loan\":{\"balance\":30000,\"amortization\":1260},\"pagibig_loan\":{\"balance\":20000,\"amortization\":1168.38},\"cash_advance\":3200,\"other_deductions\":[]}}",
+      "id": 110,
+      "created_at": "2026-01-09T09:59:26.841Z"
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 3,
+      "id": 111,
+      "created_at": "2026-01-10T04:23:44.575Z"
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "id": 112,
+      "created_at": "2026-01-10T04:23:50.142Z"
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "id": 113,
+      "created_at": "2026-01-10T04:23:54.053Z"
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"employee_id\":\"2018-0001\",\"last_name\":\"ARRADAZA\",\"first_name\":\"JOSEPHINE\",\"middle_name\":\"RELOBA\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2018-06-01\",\"contact_number\":\"9099611758\",\"email_address\":\"jarradaza73mlic@gmail.com\",\"sss_number\":\"0614563535\",\"philhealth_number\":\"130502009363\",\"pagibig_number\":\"121227522486\",\"tin\":\"499460757\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":0,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 114,
+      "created_at": "2026-01-10T04:30:28.911Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "id": 115,
+      "created_at": "2026-01-10T04:45:14.635Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "id": 116,
+      "created_at": "2026-01-10T04:45:16.297Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "id": 117,
+      "created_at": "2026-01-10T04:45:17.473Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "id": 118,
+      "created_at": "2026-01-10T04:45:20.040Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "id": 119,
+      "created_at": "2026-01-10T04:45:20.722Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 1,
+      "new_value": "{\"basic_salary\":13710,\"allowances\":{\"special\":1500},\"daily_rate\":457,\"hourly_rate\":57.13,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":725,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":20000,\"amortization\":1292.06},\"pagibig_loan\":{\"balance\":20000,\"amortization\":1783.16},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "id": 120,
+      "created_at": "2026-01-10T04:51:36.920Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"basic_salary\":13710,\"allowances\":{\"special\":1500},\"daily_rate\":457,\"hourly_rate\":57.13,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":725,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":20000,\"amortization\":1292.06},\"pagibig_loan\":{\"balance\":20000,\"amortization\":1783.16},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "new_value": "{\"basic_salary\":13710,\"allowances\":{\"special\":1500},\"daily_rate\":457,\"hourly_rate\":57.13,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":725,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":20000,\"amortization\":1292.06},\"pagibig_loan\":{\"balance\":20000,\"amortization\":1783.16},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "id": 121,
+      "created_at": "2026-01-10T04:53:58.308Z"
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"BAÑEZ\",\"first_name\":\"BERNARDITO\",\"middle_name\":\"ALVEZ\",\"department\":\"Operations\",\"position\":\"SUPERVISOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-07-04\",\"contact_number\":\"9465429437\",\"email_address\":\"\",\"sss_number\":\"3406699850\",\"philhealth_number\":\"130501016064\",\"pagibig_number\":\"121150642064\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 122,
+      "created_at": "2026-01-10T04:58:26.887Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"BAÑEZ\",\"first_name\":\"BERNARDITO\",\"middle_name\":\"ALVEZ\",\"department\":\"Operations\",\"position\":\"SUPERVISOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-07-04\",\"contact_number\":\"9465429437\",\"email_address\":\"\",\"sss_number\":\"3406699850\",\"philhealth_number\":\"130501016064\",\"pagibig_number\":\"121150642064\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"last_updated\":\"2026-01-10T04:58:26.885Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-10T04:58:26.886Z\"}",
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"BAÑEZ\",\"first_name\":\"BERNARDITO\",\"middle_name\":\"ALVEZ\",\"department\":\"Operations\",\"position\":\"SUPERVISOR\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-07-04\",\"contact_number\":\"9465429437\",\"email_address\":\"\",\"sss_number\":\"3406699850\",\"philhealth_number\":\"130501016064\",\"pagibig_number\":\"121150642064\",\"tin\":\"\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 123,
+      "created_at": "2026-01-10T05:08:49.821Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1800},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "id": 124,
+      "created_at": "2026-01-10T05:14:25.560Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "id": 125,
+      "created_at": "2026-01-10T05:15:02.971Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "id": 126,
+      "created_at": "2026-01-10T05:15:03.272Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "id": 127,
+      "created_at": "2026-01-10T05:15:03.695Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "id": 128,
+      "created_at": "2026-01-10T05:15:04.074Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "id": 129,
+      "created_at": "2026-01-10T05:15:04.568Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "id": 130,
+      "created_at": "2026-01-10T05:15:05.290Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "id": 131,
+      "created_at": "2026-01-10T05:15:05.963Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 2,
+      "id": 132,
+      "created_at": "2026-01-10T05:15:06.794Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "id": 133,
+      "created_at": "2026-01-10T05:15:17.113Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 1,
+      "id": 134,
+      "created_at": "2026-01-10T05:15:17.418Z"
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 3,
+      "new_value": "{\"employee_id\":\"2025-0001\",\"last_name\":\"BORINAGA\",\"first_name\":\"ALBERTO\",\"middle_name\":\"GULIMAN\",\"department\":\"Operations\",\"position\":\"CI/COLLECTOR\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2025-02-03\",\"contact_number\":\"09361198360\",\"email_address\":\"\",\"sss_number\":\"0633998398\",\"philhealth_number\":\"130501492370\",\"pagibig_number\":\"121168934317\",\"tin\":\"\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"1. ROOKIE AWARD PAST DUE LOAN COLLECTION CATEGORY\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 135,
+      "created_at": "2026-01-10T05:19:39.111Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 3,
+      "id": 136,
+      "created_at": "2026-01-10T06:00:07.060Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 3,
+      "id": 137,
+      "created_at": "2026-01-10T06:00:07.359Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 3,
+      "id": 138,
+      "created_at": "2026-01-10T06:00:08.640Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 3,
+      "new_value": "{\"basic_salary\":13560,\"allowances\":{\"special\":1000},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":15500,\"amortization\":1000},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "id": 139,
+      "created_at": "2026-01-10T07:01:17.454Z"
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 4,
+      "new_value": "{\"employee_id\":\"2024-0001\",\"last_name\":\"DOMINGONO\",\"first_name\":\"RENATO\",\"middle_name\":\"TAGYAMON\",\"department\":\"Operations\",\"position\":\"COLLECTOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-11-15\",\"contact_number\":\"9126216782\",\"email_address\":\"\",\"sss_number\":\"0626378967\",\"philhealth_number\":\"130500855135\",\"pagibig_number\":\"121270197765\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"1. Notice of Disciplinary Action (VERBAL WARNING) Related to Company Time and Attendance: Tardy/Late for Eleven (11) Times for January 2025\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":0,\"employment_records_complete\":0,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 140,
+      "created_at": "2026-01-10T07:06:22.685Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 4,
+      "id": 141,
+      "created_at": "2026-01-10T07:10:18.276Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 4,
+      "id": 142,
+      "created_at": "2026-01-10T07:10:18.958Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 4,
+      "id": 143,
+      "created_at": "2026-01-10T07:10:20.662Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 4,
+      "id": 144,
+      "created_at": "2026-01-10T07:10:21.311Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 4,
+      "id": 145,
+      "created_at": "2026-01-10T07:10:26.389Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 4,
+      "old_value": "{\"employee_id\":\"2024-0001\",\"last_name\":\"DOMINGONO\",\"first_name\":\"RENATO\",\"middle_name\":\"TAGYAMON\",\"department\":\"Operations\",\"position\":\"COLLECTOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-11-15\",\"contact_number\":\"9126216782\",\"email_address\":\"\",\"sss_number\":\"0626378967\",\"philhealth_number\":\"130500855135\",\"pagibig_number\":\"121270197765\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"1. Notice of Disciplinary Action (VERBAL WARNING) Related to Company Time and Attendance: Tardy/Late for Eleven (11) Times for January 2025\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":1,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"last_updated\":\"2026-01-10T07:10:26.388Z\",\"created_by\":1,\"id\":4,\"created_at\":\"2026-01-10T07:06:22.684Z\"}",
+      "new_value": "{\"employee_id\":\"2024-0001\",\"last_name\":\"DOMINGONO\",\"first_name\":\"RENATO\",\"middle_name\":\"TAGYAMON\",\"department\":\"Operations\",\"position\":\"CI/COLLECTOR\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-11-15\",\"contact_number\":\"9126216782\",\"email_address\":\"\",\"sss_number\":\"0626378967\",\"philhealth_number\":\"130500855135\",\"pagibig_number\":\"121270197765\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"1. Notice of Disciplinary Action (VERBAL WARNING) Related to Company Time and Attendance: Tardy/Late for Eleven (11) Times for January 2025\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":1,\"training_records\":0,\"separation_records\":0}",
+      "id": 146,
+      "created_at": "2026-01-10T07:57:31.269Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 4,
+      "old_value": "{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1000},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":23500,\"amortization\":1000},\"sss_loan\":{\"balance\":0,\"amortization\":530.67},\"pagibig_loan\":{\"balance\":0,\"amortization\":370.98},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "id": 147,
+      "created_at": "2026-01-10T08:11:58.469Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2018-0001\",\"last_name\":\"ARRADAZA\",\"first_name\":\"JOSEPHINE\",\"middle_name\":\"RELOBA\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2018-06-01\",\"contact_number\":\"9099611758\",\"email_address\":\"jarradaza73mlic@gmail.com\",\"sss_number\":\"0614563535\",\"philhealth_number\":\"130502009363\",\"pagibig_number\":\"121227522486\",\"tin\":\"499460757\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"last_updated\":\"2026-01-10T05:15:17.417Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-10T04:30:28.909Z\",\"salary_info\":{\"basic_salary\":13710,\"allowances\":{\"special\":1500},\"daily_rate\":457,\"hourly_rate\":57.13,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":725,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":20000,\"amortization\":1292.06},\"pagibig_loan\":{\"balance\":20000,\"amortization\":1783.16},\"cash_advance\":0,\"other_deductions\":[]}}}",
+      "new_value": "{\"employee_id\":\"2018-0001\",\"last_name\":\"ARRADAZA\",\"first_name\":\"JOSEPHINE\",\"middle_name\":\"RELOBA\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"employment_status\":\"Regular\",\"date_hired\":\"2018-06-01\",\"date_of_birth\":\"1973-03-19\",\"contact_number\":\"9099611758\",\"email_address\":\"jarradaza73mlic@gmail.com\",\"sss_number\":\"0614563535\",\"philhealth_number\":\"130502009363\",\"pagibig_number\":\"121227522486\",\"tin\":\"499460757\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13710,\"daily_rate\":457,\"hourly_rate\":57.13,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1500},\"deductions\":{\"sss_contribution\":725,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":20000,\"amortization\":1292.06},\"pagibig_loan\":{\"balance\":20000,\"amortization\":1783.16},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 148,
+      "created_at": "2026-01-10T08:43:00.589Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"BAÑEZ\",\"first_name\":\"BERNARDITO\",\"middle_name\":\"ALVEZ\",\"department\":\"Operations\",\"position\":\"SUPERVISOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-07-04\",\"contact_number\":\"9465429437\",\"email_address\":\"\",\"sss_number\":\"3406699850\",\"philhealth_number\":\"130501016064\",\"pagibig_number\":\"121150642064\",\"tin\":\"\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"last_updated\":\"2026-01-10T05:15:06.793Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-10T04:58:26.886Z\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1800},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}}",
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"BAÑEZ\",\"first_name\":\"BERNARDITO\",\"middle_name\":\"ALVEZ\",\"department\":\"Operations\",\"position\":\"SUPERVISOR\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-07-04\",\"date_of_birth\":\"1984-02-10\",\"contact_number\":\"9465429437\",\"email_address\":\"\",\"sss_number\":\"3406699850\",\"philhealth_number\":\"130501016064\",\"pagibig_number\":\"121150642064\",\"tin\":\"\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1800},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "id": 149,
+      "created_at": "2026-01-10T08:43:47.259Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 3,
+      "old_value": "{\"employee_id\":\"2025-0001\",\"last_name\":\"BORINAGA\",\"first_name\":\"ALBERTO\",\"middle_name\":\"GULIMAN\",\"department\":\"Operations\",\"position\":\"CI/COLLECTOR\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2025-02-03\",\"contact_number\":\"09361198360\",\"email_address\":\"\",\"sss_number\":\"0633998398\",\"philhealth_number\":\"130501492370\",\"pagibig_number\":\"121168934317\",\"tin\":\"\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"1. ROOKIE AWARD PAST DUE LOAN COLLECTION CATEGORY\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":1,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"last_updated\":\"2026-01-10T07:01:17.451Z\",\"created_by\":1,\"id\":3,\"created_at\":\"2026-01-10T05:19:39.109Z\",\"salary_info\":{\"basic_salary\":13560,\"allowances\":{\"special\":1000},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":15500,\"amortization\":1000},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}}",
+      "new_value": "{\"employee_id\":\"2025-0001\",\"last_name\":\"BORINAGA\",\"first_name\":\"ALBERTO\",\"middle_name\":\"GULIMAN\",\"department\":\"Operations\",\"position\":\"CI/COLLECTOR\",\"employment_status\":\"Regular\",\"date_hired\":\"2025-02-03\",\"date_of_birth\":\"1989-05-08\",\"contact_number\":\"09361198360\",\"email_address\":\"\",\"sss_number\":\"0633998398\",\"philhealth_number\":\"130501492370\",\"pagibig_number\":\"121168934317\",\"tin\":\"\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"1. ROOKIE AWARD PAST DUE LOAN COLLECTION CATEGORY\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1000},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":15500,\"amortization\":1000},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":1,\"separation_records\":0}",
+      "id": 150,
+      "created_at": "2026-01-10T08:44:30.605Z"
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 4,
+      "old_value": "{\"employee_id\":\"2024-0001\",\"last_name\":\"DOMINGONO\",\"first_name\":\"RENATO\",\"middle_name\":\"TAGYAMON\",\"department\":\"Operations\",\"position\":\"CI/COLLECTOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-11-15\",\"contact_number\":\"9126216782\",\"email_address\":\"\",\"sss_number\":\"0626378967\",\"philhealth_number\":\"130500855135\",\"pagibig_number\":\"121270197765\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"1. Notice of Disciplinary Action (VERBAL WARNING) Related to Company Time and Attendance: Tardy/Late for Eleven (11) Times for January 2025\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":1,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"last_updated\":\"2026-01-10T08:11:58.466Z\",\"created_by\":1,\"id\":4,\"created_at\":\"2026-01-10T07:06:22.684Z\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1000},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":23500,\"amortization\":1000},\"sss_loan\":{\"balance\":0,\"amortization\":530.67},\"pagibig_loan\":{\"balance\":0,\"amortization\":370.98},\"cash_advance\":0,\"other_deductions\":[]}}}",
+      "new_value": "{\"employee_id\":\"2024-0001\",\"last_name\":\"DOMINGONO\",\"first_name\":\"RENATO\",\"middle_name\":\"TAGYAMON\",\"department\":\"Operations\",\"position\":\"CI/COLLECTOR\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-11-15\",\"date_of_birth\":\"1985-02-16\",\"contact_number\":\"9126216782\",\"email_address\":\"\",\"sss_number\":\"0626378967\",\"philhealth_number\":\"130500855135\",\"pagibig_number\":\"121270197765\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"1. Notice of Disciplinary Action (VERBAL WARNING) Related to Company Time and Attendance: Tardy/Late for Eleven (11) Times for January 2025\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1000},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":23500,\"amortization\":1000},\"sss_loan\":{\"balance\":0,\"amortization\":530.67},\"pagibig_loan\":{\"balance\":0,\"amortization\":370.98},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":1,\"training_records\":0,\"separation_records\":0}",
+      "id": 151,
+      "created_at": "2026-01-10T08:45:03.765Z"
+    }
+  ],
+  "settings": [
+    {
+      "id": 1,
+      "key": "company_name",
+      "value": "Melann Lending Investor Corporation",
+      "description": "Company Name displayed in reports",
+      "updated_at": "2026-01-08T02:44:05.978Z",
+      "last_updated": "2026-01-09T06:27:49.401Z"
+    },
+    {
+      "id": 2,
+      "key": "attendance_cutoff",
+      "value": "08:00",
+      "description": "Time after which an employee is marked late",
+      "updated_at": "2026-01-08T02:44:05.978Z",
+      "last_updated": "2026-01-09T06:27:49.403Z"
+    },
+    {
+      "id": 3,
+      "key": "default_password",
+      "value": "HR123",
+      "description": "Default password for new user accounts",
+      "updated_at": "2026-01-08T02:44:05.978Z",
+      "last_updated": "2026-01-09T06:27:49.404Z"
+    },
+    {
+      "key": "leave_config",
+      "value": {
+        "payroll_cutoff_day": 15,
+        "filing_cutoff_days": 15,
+        "approval_levels": {
+          "level1_enabled": true,
+          "level2_enabled": true,
+          "level3_enabled": true
+        }
+      },
+      "description": "User defined setting",
+      "id": 4,
+      "created_at": "2026-01-08T03:42:47.619Z",
+      "last_updated": "2026-01-09T06:27:49.405Z"
+    }
+  ],
+  "payroll_runs": [],
+  "payslips": []
+}

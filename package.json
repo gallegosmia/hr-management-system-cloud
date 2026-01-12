@@ -1,0 +1,32 @@
+{
+    "name": "hr-management-system",
+    "version": "1.0.0",
+    "description": "Digital 201 File HR Management System for Philippine Companies",
+    "private": true,
+    "scripts": {
+        "dev": "next dev -H 0.0.0.0 -p 3001",
+        "build": "next build",
+        "start": "next start -H 0.0.0.0 -p 3001",
+        "lint": "next lint"
+    },
+    "dependencies": {
+        "@neondatabase/serverless": "^1.0.2",
+        "bcryptjs": "^2.4.3",
+        "date-fns": "^3.3.0",
+        "jspdf": "^2.5.1",
+        "jspdf-autotable": "^3.8.2",
+        "next": "^14.2.0",
+        "pg": "^8.16.3",
+        "react": "^18.3.0",
+        "react-dom": "^18.3.0",
+        "xlsx": "^0.18.5"
+    },
+    "devDependencies": {
+        "@types/bcryptjs": "^2.4.6",
+        "@types/node": "^20.11.0",
+        "@types/pg": "^8.16.0",
+        "@types/react": "^18.2.0",
+        "@types/react-dom": "^18.2.0",
+        "typescript": "^5.3.0"
+    }
+}
