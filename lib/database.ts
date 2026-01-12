@@ -4,8 +4,8 @@ import { hashPassword } from './auth';
 // Database connection configuration
 // In production, use DATABASE_URL from .env
 const pool = new Pool({
-  // Reverting to DIRECT connection (no pooler alias) to fix "Tenant not found"
-  connectionString: "postgresql://postgres:HR-System-Cloud-2026!@db.kxwevzvztrdcksuvkwqf.supabase.co:5432/postgres",
+  // Using simple password to rule out special char issues. User MUST reset Supabase password to 'admin123'
+  connectionString: "postgresql://postgres:admin123@db.kxwevzvztrdcksuvkwqf.supabase.co:5432/postgres",
   ssl: { rejectUnauthorized: false }
 });
 
