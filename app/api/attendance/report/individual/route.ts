@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
         }
 
         const id = parseInt(employeeId);
-        const attendance = getAll('attendance');
-        const leaves = getAll('leave_requests');
+        const attendance = await getAll('attendance') as any[];
+        const leaves = await getAll('leave_requests') as any[];
 
         const startDate = new Date(start);
         const endDate = new Date(end);
