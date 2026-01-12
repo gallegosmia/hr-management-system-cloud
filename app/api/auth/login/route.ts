@@ -41,8 +41,12 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Update last login
-        await update('users', user.id, { last_login: new Date().toISOString() });
+        // Update last login (Non-blocking)
+        try {
+            await update('users', user.id, { last_login: new Date().toISOString() });
+        } catch (updateError) {
+            console.error('Failed to update last_login (non-fatal):', updateError);
+        }
 
         // Create session
         const sessionId = await createSession({
@@ -60,10 +64,10 @@ export async function POST(request: NextRequest) {
             sessionId,
             user: userWithoutPassword
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Login error:', error);
         return NextResponse.json(
-            { error: 'An error occurred during login' },
+            { error: 'Login failed: ' + (error.message || 'Unknown error'), details: error.stack },
             { status: 500 }
         );
     }
