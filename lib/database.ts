@@ -4,8 +4,8 @@ import { hashPassword } from './auth';
 // Database connection configuration
 // In production, use DATABASE_URL from .env
 const pool = new Pool({
-  // FORCING Connection Pooler (IPv4) to bypass Vercel Env Var issues
-  connectionString: "postgresql://postgres.kxwevzvztrdcksuvkwqf:HR-System-Cloud-2026!@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true",
+  // Use environment variable, fallback to the pooler connection string if not set (e.g. local dev without .env)
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres.kxwevzvztrdcksuvkwqf:HR-System-Cloud-2026!@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true",
   ssl: { rejectUnauthorized: false }
 });
 
