@@ -4,8 +4,8 @@ import { hashPassword } from './auth';
 // Database connection configuration
 // In production, use DATABASE_URL from .env
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || "postgres://dummy:dummy@localhost:5432/dummy",
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres:HR-System-Cloud-2026!@db.kxwevzvztrdcksuvkwqf.supabase.co:6543/postgres?pgbouncer=true",
+  ssl: { rejectUnauthorized: false } // Force SSL for Supabase
 });
 
 export async function query(text: string, params?: any[]) {
