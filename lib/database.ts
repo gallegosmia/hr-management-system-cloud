@@ -42,7 +42,15 @@ export async function update(table: string, id: number, data: any): Promise<void
   const keys = Object.keys(data);
   const values = Object.values(data);
   const setClause = keys.map((key, i) => `${key} = $${i + 2}`).join(', ');
-  const sql = `UPDATE ${table} SET ${setClause}, last_updated = CURRENT_TIMESTAMP WHERE id = $1`;
+
+  let timeStampClause = '';
+  if (table === 'employees' || table === 'users') { // users now has last_updated
+    timeStampClause = ', last_updated = CURRENT_TIMESTAMP';
+  } else if (table === 'leave_requests' || table === 'settings') {
+    timeStampClause = ', updated_at = CURRENT_TIMESTAMP';
+  }
+
+  const sql = `UPDATE ${table} SET ${setClause}${timeStampClause} WHERE id = $1`;
 
   await query(sql, [id, ...values]);
 }

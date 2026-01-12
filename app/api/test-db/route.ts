@@ -7,6 +7,10 @@ export async function GET() {
         const users = await query('SELECT username, role, is_active FROM users');
         const adminUser = await query("SELECT * FROM users WHERE username = 'Mel'");
 
+        // Check tables
+        const tables = await query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
+        const tableList = tables.rows.map((r: any) => r.table_name);
+
         let passwordCheck = 'Not checked';
         if (adminUser.rows.length > 0) {
             const bcrypt = require('bcryptjs');
