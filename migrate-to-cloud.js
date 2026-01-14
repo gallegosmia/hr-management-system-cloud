@@ -25,6 +25,21 @@ async function migrate() {
         const db = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
         console.log('✅ Loaded database.json');
 
+        // Apply Schema
+        console.log('⏳ Applying database schema...');
+        const schemaFile = path.join(process.cwd(), 'data', 'schema.sql');
+        if (fs.existsSync(schemaFile)) {
+            const schema = fs.readFileSync(schemaFile, 'utf-8');
+            // Split by semicolon and filter out empty strings to run queries one by one
+            const queries = schema.split(';').filter(q => q.trim() !== '');
+            for (let q of queries) {
+                await pool.query(q);
+            }
+            console.log('✅ Schema applied successfully');
+        } else {
+            console.warn('⚠️ schema.sql not found, skipping schema application.');
+        }
+
         // Migrate Users
         console.log('Migrating users...');
         for (const user of db.users) {
