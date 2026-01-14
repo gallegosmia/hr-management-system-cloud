@@ -303,7 +303,6 @@ export default function EmployeeDetailPage() {
     const [education, setEducation] = useState<Education[]>([]);
     const [generatingReport, setGeneratingReport] = useState(false);
     const [generatingProfile, setGeneratingProfile] = useState(false);
-    const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [showEducationModal, setShowEducationModal] = useState(false);
     const [educationForm, setEducationForm] = useState<Partial<Education>>({
         level: 'College',
@@ -429,26 +428,10 @@ export default function EmployeeDetailPage() {
             doc.roundedRect(14, yPos, pageWidth - 28, 50, 3, 3, 'FD');
 
             // Picture
-            if (employee.profile_picture) {
-                try {
-                    const img = new Image();
-                    img.src = employee.profile_picture;
-                    await new Promise((resolve, reject) => {
-                        img.onload = resolve;
-                        img.onerror = reject;
-                    });
-                    // Try to detect type or default to PNG
-                    doc.addImage(img, 'PNG', 20, yPos + 5, 40, 40);
-                } catch (e) {
-                    doc.setFontSize(10);
-                    doc.setTextColor(150);
-                    doc.text('No Photo', 28, yPos + 25);
-                }
-            } else {
-                doc.setFontSize(10);
-                doc.setTextColor(150);
-                doc.text('No Photo', 28, yPos + 25);
-            }
+            // Picture removed
+            doc.setFontSize(10);
+            doc.setTextColor(150);
+            // doc.text('No Photo', 28, yPos + 25); 
 
             // Name & ID
             doc.setTextColor(40);
@@ -700,36 +683,6 @@ export default function EmployeeDetailPage() {
         }
     };
 
-    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files?.[0] || !employee) return;
-
-        const file = e.target.files[0];
-        if (!file.type.startsWith('image/')) return alert('Please select an image file');
-
-        setUploadingPhoto(true);
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('employeeId', employee.id.toString());
-
-        try {
-            const res = await fetch('/api/employees/upload-photo', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                setEmployee(prev => prev ? { ...prev, profile_picture: data.url } : null);
-            } else {
-                alert('Failed to upload photo');
-            }
-        } catch (error) {
-            console.error('Error uploading photo:', error);
-            alert('Error uploading photo');
-        } finally {
-            setUploadingPhoto(false);
-        }
-    };
 
     const handleDelete = () => {
         showConfirm('Are you sure you want to delete this employee? This action cannot be undone.', async () => {
@@ -926,62 +879,8 @@ export default function EmployeeDetailPage() {
                 <div className="card-body">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--spacing-md)' }}>
                         <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center' }}>
-                            {/* Profile Picture */}
-                            <div style={{ position: 'relative', width: '80px', height: '80px' }}>
-                                <div
-                                    style={{
-                                        width: '100%',
-                                        height: '100%',
-                                        borderRadius: '50%',
-                                        overflow: 'hidden',
-                                        border: '3px solid var(--primary-100)',
-                                        background: 'var(--bg-secondary)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '2rem'
-                                    }}
-                                >
-                                    {employee.profile_picture ? (
-                                        <img
-                                            src={employee.profile_picture}
-                                            alt="Profile"
-                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        />
-                                    ) : (
-                                        <span>👤</span>
-                                    )}
-                                </div>
-                                <label
-                                    style={{
-                                        position: 'absolute',
-                                        bottom: 0,
-                                        right: 0,
-                                        background: 'var(--primary-600)',
-                                        color: 'white',
-                                        borderRadius: '50%',
-                                        width: '28px',
-                                        height: '28px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        cursor: 'pointer',
-                                        fontSize: '0.75rem',
-                                        border: '2px solid white',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                    }}
-                                    title="Upload Photo"
-                                >
-                                    {uploadingPhoto ? '⏳' : '📷'}
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        style={{ display: 'none' }}
-                                        onChange={handlePhotoUpload}
-                                        disabled={uploadingPhoto}
-                                    />
-                                </label>
-                            </div>
+                            {/* Profile Picture Removed */}
+                            {/* Profile Picture Removed */}
 
                             <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-sm)' }}>

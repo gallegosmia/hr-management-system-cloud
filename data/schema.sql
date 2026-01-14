@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS employees (
     remarks TEXT,
     training_details TEXT,
     disciplinary_details TEXT,
+    profile_picture VARCHAR(255),
     created_by INTEGER REFERENCES users(id)
 );
 
@@ -90,6 +91,15 @@ CREATE TABLE IF NOT EXISTS leave_requests (
     status VARCHAR(50) DEFAULT 'Pending',
     approvals JSONB DEFAULT '[]',
     current_approval_level INTEGER DEFAULT 1,
+    remarks TEXT,
+    rejected_by VARCHAR(100),
+    branch_manager_approved_at TIMESTAMP WITH TIME ZONE,
+    branch_manager_approved_by INTEGER,
+    branch_manager_remarks TEXT,
+    evp_approved_at TIMESTAMP WITH TIME ZONE,
+    evp_approved_by INTEGER,
+    evp_remarks TEXT,
+    final_approved_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

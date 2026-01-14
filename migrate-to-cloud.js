@@ -56,14 +56,14 @@ async function migrate() {
                 `INSERT INTO employees (
           id, employee_id, last_name, first_name, middle_name, department, position, branch, 
           employment_status, date_hired, date_of_birth, sss_number, philhealth_number, 
-          pagibig_number, tin, civil_status, salary_info, file_completion_status
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) 
+          pagibig_number, tin, civil_status, salary_info, file_completion_status, profile_picture
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) 
         ON CONFLICT (id) DO NOTHING`,
                 [
                     emp.id, emp.employee_id, emp.last_name, emp.first_name, emp.middle_name, emp.department,
                     emp.position, emp.branch, emp.employment_status, emp.date_hired, emp.date_of_birth,
                     emp.sss_number, emp.philhealth_number, emp.pagibig_number, emp.tin, emp.civil_status,
-                    JSON.stringify(emp.salary_info), emp.file_completion_status
+                    JSON.stringify(emp.salary_info), emp.file_completion_status, emp.profile_picture
                 ]
             );
         }
