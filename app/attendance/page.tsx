@@ -35,6 +35,17 @@ export default function AttendancePage() {
     const [filterDepartment, setFilterDepartment] = useState('');
     const [filterBranch, setFilterBranch] = useState('');
     const [departments, setDepartments] = useState<string[]>([]);
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            setUser(JSON.parse(userData));
+        }
+    }, []);
+
+    const isEmployee = user?.role === 'Employee';
+    const canManageAttendance = user && ['Admin', 'HR', 'Manager', 'President', 'Vice President'].includes(user.role);
 
     useEffect(() => {
         fetchEmployees();
@@ -133,6 +144,63 @@ export default function AttendancePage() {
         }));
     };
 
+    const handleClockAction = async (type: 'in' | 'out') => {
+        if (!user?.employee_id) {
+            alert('Your user account is not linked to an employee record.');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const currentTime = format(new Date(), 'HH:mm');
+            const empId = typeof user.employee_id === 'string' ? parseInt(user.employee_id) : user.employee_id;
+
+            // Find current record
+            const currentRecord = attendance.find(a => a.employee_id === empId);
+
+            const record = {
+                employee_id: empId,
+                date: selectedDate,
+                time_in: type === 'in' ? currentTime : (currentRecord?.time_in || ''),
+                time_out: type === 'out' ? currentTime : (currentRecord?.time_out || ''),
+                status: currentRecord?.status || 'Present',
+                remarks: currentRecord?.remarks || ''
+            };
+
+            // If clocking in, auto-calculate status
+            if (type === 'in') {
+                const cutoff = new Date(`2000-01-01 09:00`);
+                const timeIn = new Date(`2000-01-01 ${currentTime}`);
+                if (timeIn > cutoff) {
+                    record.status = 'Late';
+                } else {
+                    record.status = 'Present';
+                }
+            }
+
+            const response = await fetch('/api/attendance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    date: selectedDate,
+                    records: [record]
+                })
+            });
+
+            if (response.ok) {
+                alert(`Successfully clocked ${type}! Current time: ${currentTime}`);
+                fetchAttendance();
+            } else {
+                alert('Failed to record attendance');
+            }
+        } catch (error) {
+            console.error('Clock error:', error);
+            alert('Error recording attendance');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const saveAttendance = async () => {
         setSaving(true);
         try {
@@ -171,6 +239,9 @@ export default function AttendancePage() {
     };
 
     const filteredAttendance = attendance.filter(att => {
+        if (user?.role === 'Employee') {
+            return att.employee_id === user.employee_id || att.employee_id === parseInt(user.employee_id);
+        }
         const emp = employees.find(e => e.id === att.employee_id);
         if (!emp) return false;
         if (filterDepartment && emp.department !== filterDepartment) return false;
@@ -263,102 +334,138 @@ export default function AttendancePage() {
                             <button onClick={generatePDF} className="btn btn-secondary">
                                 📄 Download PDF
                             </button>
-                            <button onClick={saveAttendance} disabled={saving} className="btn btn-primary">
-                                {saving ? 'Saving...' : '💾 Save Attendance'}
+                            {canManageAttendance && (
+                                <button onClick={saveAttendance} disabled={saving} className="btn btn-primary">
+                                    {saving ? 'Saving...' : '💾 Save Attendance'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Employee Clock In/Out */}
+            {isEmployee && selectedDate === format(new Date(), 'yyyy-MM-dd') && (
+                <div className="card mb-3" style={{ borderLeft: '4px solid var(--primary-600)' }}>
+                    <div className="card-body" style={{ display: 'flex', gap: 'var(--spacing-lg)', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div>
+                            <h3 style={{ margin: 0 }}>🕒 Clock In / Out</h3>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Record your attendance for today ({format(new Date(), 'MMMM dd, yyyy')})</p>
+                        </div>
+                        <div style={{ marginLeft: 'auto', display: 'flex', gap: 'var(--spacing-md)' }}>
+                            <button
+                                onClick={() => handleClockAction('in')}
+                                className="btn btn-primary"
+                                disabled={saving}
+                                style={{ background: '#10b981', borderColor: '#10b981' }}
+                            >
+                                Clock In
+                            </button>
+                            <button
+                                onClick={() => handleClockAction('out')}
+                                className="btn btn-secondary"
+                                disabled={saving}
+                                style={{ background: '#64748b' }}
+                            >
+                                Clock Out
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Statistics */}
-            <div className="stats-grid mb-3">
-                <div className="stat-card">
-                    <div className="stat-card-header">
-                        <div>
-                            <div className="stat-card-value">{stats.present}</div>
-                            <div className="stat-card-label">Present</div>
-                        </div>
-                        <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #dcfce7, #bbf7d0)', color: '#16a34a' }}>
-                            ✅
+            {canManageAttendance && (
+                <div className="stats-grid mb-3">
+                    <div className="stat-card">
+                        <div className="stat-card-header">
+                            <div>
+                                <div className="stat-card-value">{stats.present}</div>
+                                <div className="stat-card-label">Present</div>
+                            </div>
+                            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #dcfce7, #bbf7d0)', color: '#16a34a' }}>
+                                ✅
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div className="stat-card">
-                    <div className="stat-card-header">
-                        <div>
-                            <div className="stat-card-value">{stats.late}</div>
-                            <div className="stat-card-label">Late</div>
-                        </div>
-                        <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #fef3c7, #fde68a)', color: '#d97706' }}>
-                            ⚠️
+                    <div className="stat-card">
+                        <div className="stat-card-header">
+                            <div>
+                                <div className="stat-card-value">{stats.late}</div>
+                                <div className="stat-card-label">Late</div>
+                            </div>
+                            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #fef3c7, #fde68a)', color: '#d97706' }}>
+                                ⚠️
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div className="stat-card">
-                    <div className="stat-card-header">
-                        <div>
-                            <div className="stat-card-value">{stats.absent}</div>
-                            <div className="stat-card-label">Absent</div>
-                        </div>
-                        <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #fee2e2, #fecaca)', color: '#dc2626' }}>
-                            ❌
+                    <div className="stat-card">
+                        <div className="stat-card-header">
+                            <div>
+                                <div className="stat-card-value">{stats.absent}</div>
+                                <div className="stat-card-label">Absent</div>
+                            </div>
+                            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #fee2e2, #fecaca)', color: '#dc2626' }}>
+                                ❌
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div className="stat-card">
-                    <div className="stat-card-header">
-                        <div>
-                            <div className="stat-card-value">{stats.onLeave}</div>
-                            <div className="stat-card-label">On Leave</div>
-                        </div>
-                        <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #e0e7ff, #c7d2fe)', color: '#4f46e5' }}>
-                            🏖️
+                    <div className="stat-card">
+                        <div className="stat-card-header">
+                            <div>
+                                <div className="stat-card-value">{stats.onLeave}</div>
+                                <div className="stat-card-label">On Leave</div>
+                            </div>
+                            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #e0e7ff, #c7d2fe)', color: '#4f46e5' }}>
+                                🏖️
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Filters */}
-            <div className="card mb-3">
-                <div className="card-body">
-                    <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
-                            <label style={{ fontWeight: '600', fontSize: '0.875rem' }}>Branch:</label>
-                            <select
-                                value={filterBranch}
-                                onChange={(e) => setFilterBranch(e.target.value)}
-                                className="form-select"
-                                style={{ width: '200px' }}
-                            >
-                                <option value="">All Branches</option>
-                                <option value="Ormoc Branch">Ormoc Branch</option>
-                                <option value="Naval Branch">Naval Branch</option>
-                            </select>
+            {canManageAttendance && (
+                <div className="card mb-3">
+                    <div className="card-body">
+                        <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+                                <label style={{ fontWeight: '600', fontSize: '0.875rem' }}>Branch:</label>
+                                <select
+                                    value={filterBranch}
+                                    onChange={(e) => setFilterBranch(e.target.value)}
+                                    className="form-select"
+                                    style={{ width: '200px' }}
+                                >
+                                    <option value="">All Branches</option>
+                                    <option value="Ormoc Branch">Ormoc Branch</option>
+                                    <option value="Naval Branch">Naval Branch</option>
+                                </select>
+                            </div>
+                            <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+                                <label style={{ fontWeight: '600', fontSize: '0.875rem' }}>Department:</label>
+                                <select
+                                    value={filterDepartment}
+                                    onChange={(e) => setFilterDepartment(e.target.value)}
+                                    className="form-select"
+                                    style={{ width: '200px' }}
+                                >
+                                    <option value="">All Departments</option>
+                                    {departments.map(dept => (
+                                        <option key={dept} value={dept}>{dept}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                                Showing {filteredAttendance.length} employees
+                            </span>
                         </div>
-                        <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
-                            <label style={{ fontWeight: '600', fontSize: '0.875rem' }}>Department:</label>
-                            <select
-                                value={filterDepartment}
-                                onChange={(e) => setFilterDepartment(e.target.value)}
-                                className="form-select"
-                                style={{ width: '200px' }}
-                            >
-                                <option value="">All Departments</option>
-                                {departments.map(dept => (
-                                    <option key={dept} value={dept}>{dept}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                            Showing {filteredAttendance.length} employees
-                        </span>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Attendance Table */}
             <div className="card">
@@ -405,6 +512,7 @@ export default function AttendancePage() {
                                                     onChange={(e) => handleAttendanceChange(att.employee_id, 'time_in', e.target.value)}
                                                     className="form-input"
                                                     style={{ width: '120px' }}
+                                                    readOnly={!canManageAttendance}
                                                 />
                                             </td>
                                             <td>
@@ -414,21 +522,28 @@ export default function AttendancePage() {
                                                     onChange={(e) => handleAttendanceChange(att.employee_id, 'time_out', e.target.value)}
                                                     className="form-input"
                                                     style={{ width: '120px' }}
+                                                    readOnly={!canManageAttendance}
                                                 />
                                             </td>
                                             <td>
-                                                <select
-                                                    value={att.status}
-                                                    onChange={(e) => handleAttendanceChange(att.employee_id, 'status', e.target.value)}
-                                                    className={`badge ${getStatusBadgeClass(att.status)}`}
-                                                    style={{ border: 'none', cursor: 'pointer', padding: 'var(--spacing-xs) var(--spacing-md)' }}
-                                                >
-                                                    <option value="Present">Present</option>
-                                                    <option value="Late">Late</option>
-                                                    <option value="Absent">Absent</option>
-                                                    <option value="Half-Day">Half-Day</option>
-                                                    <option value="On Leave">On Leave</option>
-                                                </select>
+                                                {canManageAttendance ? (
+                                                    <select
+                                                        value={att.status}
+                                                        onChange={(e) => handleAttendanceChange(att.employee_id, 'status', e.target.value)}
+                                                        className={`badge ${getStatusBadgeClass(att.status)}`}
+                                                        style={{ border: 'none', cursor: 'pointer', padding: 'var(--spacing-xs) var(--spacing-md)' }}
+                                                    >
+                                                        <option value="Present">Present</option>
+                                                        <option value="Late">Late</option>
+                                                        <option value="Absent">Absent</option>
+                                                        <option value="Half-Day">Half-Day</option>
+                                                        <option value="On Leave">On Leave</option>
+                                                    </select>
+                                                ) : (
+                                                    <span className={`badge ${getStatusBadgeClass(att.status)}`}>
+                                                        {att.status}
+                                                    </span>
+                                                )}
                                             </td>
                                             <td>
                                                 <input
@@ -438,6 +553,7 @@ export default function AttendancePage() {
                                                     className="form-input"
                                                     placeholder="Optional notes"
                                                     style={{ width: '200px' }}
+                                                    readOnly={!canManageAttendance}
                                                 />
                                             </td>
                                         </tr>
