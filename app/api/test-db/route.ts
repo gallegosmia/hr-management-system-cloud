@@ -15,7 +15,8 @@ export async function GET() {
         }
 
         return NextResponse.json({
-            status: 'Connected (Local JSON Mode)',
+            status: process.env.DATABASE_URL ? 'Connected (PostgreSQL Mode)' : 'Connected (Local JSON Mode)',
+            mode: process.env.DATABASE_URL ? 'Cloud' : 'Local',
             users: users.map((u: any) => ({ username: u.username, role: u.role, is_active: u.is_active })),
             adminUserFound: !!adminUser,
             passwordCheck
