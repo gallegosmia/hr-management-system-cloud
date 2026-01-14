@@ -43,27 +43,20 @@ export async function POST(request: NextRequest) {
         // Create user
         const hashedPassword = hashPassword(password);
         // We'll set employee_id to null for now, or 0.
-        // Also ensure is_active is 1.
+        // Set is_active to 0 (Pending Approval)
 
         const insertResult = await query(
-            "INSERT INTO users (username, password, role, is_active, created_at) VALUES ($1, $2, $3, 1, NOW()) RETURNING id, username, role",
-            [username, hashedPassword, role]
+            "INSERT INTO users (username, password, role, is_active, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, role",
+            [username, hashedPassword, role, 0, new Date().toISOString()]
         );
 
         const newUser = insertResult.rows[0];
 
-        // Auto-login: Create session
-        const sessionId = await createSession({
-            id: newUser.id,
-            username: newUser.username,
-            role: newUser.role,
-            employee_id: 0, // Placeholder
-            is_active: 1
-        });
+        // NO Auto-login: Do not create session
 
         return NextResponse.json({
             success: true,
-            sessionId,
+            message: 'Registration successful! Your account is pending admin approval.',
             user: {
                 id: newUser.id,
                 username: newUser.username,

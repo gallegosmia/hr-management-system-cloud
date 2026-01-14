@@ -10,6 +10,7 @@ export default function RegisterPage() {
     const [role, setRole] = useState('Employee');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -26,10 +27,8 @@ export default function RegisterPage() {
             const data = await response.json();
 
             if (response.ok) {
-                // Store session
-                localStorage.setItem('sessionId', data.sessionId);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                router.push('/dashboard');
+                setSuccess(true);
+                // Do not auto-login
             } else {
                 setError(data.error || 'Registration failed');
             }
@@ -97,70 +96,91 @@ export default function RegisterPage() {
 
                 {/* Form */}
                 <div style={{ padding: '2rem' }}>
-                    <form onSubmit={handleSubmit}>
-                        {error && (
-                            <div style={{
-                                background: '#fee2e2',
-                                color: '#b91c1c',
-                                padding: '0.75rem 1rem',
-                                borderRadius: '0.5rem',
-                                marginBottom: '1.5rem',
-                                fontSize: '0.875rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                            }}>
-                                <span>⚠️</span>
-                                {error}
+                    {success ? (
+                        <div className="text-center">
+                            <div className="mb-4 text-green-500">
+                                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
                             </div>
-                        )}
-
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Username</label>
-                            <input
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                required
-                                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-sky-500 focus:ring-0 transition-colors"
-                                placeholder="Choose a username"
-                            />
-                        </div>
-
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-sky-500 focus:ring-0 transition-colors"
-                                placeholder="Choose a strong password"
-                            />
-                        </div>
-
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Role</label>
-                            <select
-                                value={role}
-                                onChange={(e) => setRole(e.target.value)}
-                                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-sky-500 focus:ring-0 transition-colors bg-white"
+                            <h2 className="text-xl font-bold mb-2 text-gray-800">Registration Successful!</h2>
+                            <p className="text-gray-600 mb-6">
+                                Your account has been created and is pending approval from the administrator.
+                                Please check back later.
+                            </p>
+                            <button
+                                onClick={() => router.push('/')}
+                                className="w-full py-3 px-6 text-white font-semibold rounded-lg bg-sky-600 hover:bg-sky-700 transition-colors"
                             >
-                                <option value="Employee">Employee</option>
-                                <option value="HR">HR Officer</option>
-                                <option value="Manager">Manager</option>
-                                <option value="Executive">Executive</option>
-                            </select>
+                                Return to Login
+                            </button>
                         </div>
+                    ) : (
+                        <form onSubmit={handleSubmit}>
+                            {error && (
+                                <div style={{
+                                    background: '#fee2e2',
+                                    color: '#b91c1c',
+                                    padding: '0.75rem 1rem',
+                                    borderRadius: '0.5rem',
+                                    marginBottom: '1.5rem',
+                                    fontSize: '0.875rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                }}>
+                                    <span>⚠️</span>
+                                    {error}
+                                </div>
+                            )}
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-3 px-6 text-white font-semibold rounded-lg bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transform transition-all active:scale-95 shadow-md"
-                        >
-                            {loading ? 'Creating Account...' : 'Register'}
-                        </button>
-                    </form>
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Username</label>
+                                <input
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    required
+                                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-sky-500 focus:ring-0 transition-colors"
+                                    placeholder="Choose a username"
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-sky-500 focus:ring-0 transition-colors"
+                                    placeholder="Choose a strong password"
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Role</label>
+                                <select
+                                    value={role}
+                                    onChange={(e) => setRole(e.target.value)}
+                                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-sky-500 focus:ring-0 transition-colors bg-white"
+                                >
+                                    <option value="Employee">Employee</option>
+                                    <option value="HR">HR Officer</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="Executive">Executive</option>
+                                </select>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full py-3 px-6 text-white font-semibold rounded-lg bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transform transition-all active:scale-95 shadow-md"
+                            >
+                                {loading ? 'Creating Account...' : 'Register'}
+                            </button>
+                        </form>
+                    )}
 
                     <div className="mt-6 text-center">
                         <p className="text-sm text-gray-600">

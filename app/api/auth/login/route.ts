@@ -23,12 +23,20 @@ export async function POST(request: NextRequest) {
 
         // Find user
         const users = await getAll('users');
-        const user = users.find((u: any) => u.username === username && u.is_active === 1);
+        const user = users.find((u: any) => u.username === username);
 
         if (!user) {
             return NextResponse.json(
                 { error: 'Invalid username or password' },
                 { status: 401 }
+            );
+        }
+
+        // Check active status
+        if (user.is_active !== 1) {
+            return NextResponse.json(
+                { error: 'Your account is pending approval or inactive. Please contact the administrator.' },
+                { status: 403 }
             );
         }
 
