@@ -35,7 +35,7 @@ export default function EmployeesPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [departmentFilter, setDepartmentFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
-    const [completionFilter, setCompletionFilter] = useState('');
+
     const [departments, setDepartments] = useState<string[]>([]);
 
     useEffect(() => {
@@ -45,7 +45,7 @@ export default function EmployeesPage() {
 
     useEffect(() => {
         filterEmployees();
-    }, [employees, searchQuery, departmentFilter, statusFilter, completionFilter]);
+    }, [employees, searchQuery, departmentFilter, statusFilter]);
 
     const fetchEmployees = async () => {
         try {
@@ -92,21 +92,12 @@ export default function EmployeesPage() {
             filtered = filtered.filter(emp => emp.employment_status === statusFilter);
         }
 
-        if (completionFilter) {
-            filtered = filtered.filter(emp => emp.file_completion_status === completionFilter);
-        }
+
 
         setFilteredEmployees(filtered);
     };
 
-    const getStatusBadgeClass = (status: string) => {
-        switch (status) {
-            case 'Complete': return 'badge-success';
-            case 'Partial': return 'badge-warning';
-            case 'Incomplete': return 'badge-danger';
-            default: return 'badge-gray';
-        }
-    };
+
 
     const getEmploymentStatusBadge = (status: string) => {
         switch (status) {
@@ -258,18 +249,7 @@ export default function EmployeesPage() {
                                 <option value="Terminated">Terminated</option>
                             </select>
                         </div>
-                        <div>
-                            <select
-                                value={completionFilter}
-                                onChange={(e) => setCompletionFilter(e.target.value)}
-                                className="form-select"
-                            >
-                                <option value="">All 201 File Status</option>
-                                <option value="Complete">Complete</option>
-                                <option value="Partial">Partial</option>
-                                <option value="Incomplete">Incomplete</option>
-                            </select>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -286,7 +266,7 @@ export default function EmployeesPage() {
                                 <th>Position</th>
                                 <th>Employment Status</th>
                                 <th>Date Hired</th>
-                                <th>201 File Status</th>
+
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -294,7 +274,7 @@ export default function EmployeesPage() {
                             {filteredEmployees.length === 0 ? (
                                 <tr>
                                     <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                                        {searchQuery || departmentFilter || statusFilter || completionFilter
+                                        {searchQuery || departmentFilter || statusFilter
                                             ? 'No employees match your filters'
                                             : 'No employees found. Add your first employee to get started.'}
                                     </td>
@@ -323,12 +303,7 @@ export default function EmployeesPage() {
                                             </span>
                                         </td>
                                         <td>{new Date(employee.date_hired).toLocaleDateString('en-PH')}</td>
-                                        <td>
-                                            <span className={`badge ${getStatusBadgeClass(employee.file_completion_status)}`}>
-                                                <span className={`status-indicator status-${employee.file_completion_status.toLowerCase()}`} />
-                                                {employee.file_completion_status}
-                                            </span>
-                                        </td>
+
                                         <td>
                                             <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
                                                 <Link href={`/employees/${employee.id}`} className="btn btn-sm btn-primary">

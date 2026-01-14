@@ -19,11 +19,13 @@ export default function EditEmployeePage() {
         middle_name: '',
         department: '',
         position: '',
+        branch: '',
         employment_status: '',
         date_hired: '',
         date_of_birth: '',
         contact_number: '',
         email_address: '',
+        address: '',
         sss_number: '',
         philhealth_number: '',
         pagibig_number: '',
@@ -62,6 +64,13 @@ export default function EditEmployeePage() {
             }
         }
     });
+    const [education, setEducation] = useState<{
+        level: string;
+        school_name: string;
+        degree_course: string;
+        year_graduated: string;
+        honors_awards: string;
+    }[]>([]);
 
     useEffect(() => {
         if (params.id) {
@@ -82,11 +91,13 @@ export default function EditEmployeePage() {
                     middle_name: data.middle_name || '',
                     department: data.department || '',
                     position: data.position || '',
+                    branch: data.branch || '',
                     employment_status: data.employment_status || 'Probationary',
                     date_hired: data.date_hired || '',
                     date_of_birth: data.date_of_birth || '',
                     contact_number: data.contact_number || '',
                     email_address: data.email_address || '',
+                    address: data.address || '',
                     sss_number: data.sss_number || '',
                     philhealth_number: data.philhealth_number || '',
                     pagibig_number: data.pagibig_number || '',
@@ -138,6 +149,20 @@ export default function EditEmployeePage() {
                     training_records: data.training_records || 0,
                     separation_records: data.separation_records || 0
                 });
+
+
+                // Fetch education
+                const eduRes = await fetch(`/api/employees/education?employee_id=${params.id}`);
+                if (eduRes.ok) {
+                    const eduData = await eduRes.json();
+                    setEducation(eduData.map((e: any) => ({
+                        level: e.level,
+                        school_name: e.school_name,
+                        degree_course: e.degree_course || '',
+                        year_graduated: e.year_graduated,
+                        honors_awards: e.honors_awards || ''
+                    })));
+                }
             } else {
                 setError('Failed to fetch employee details');
             }
@@ -256,6 +281,30 @@ export default function EditEmployeePage() {
         }
     };
 
+
+
+    const handleEducationChange = (index: number, field: string, value: string) => {
+        setEducation(prev => {
+            const newEdu = [...prev];
+            newEdu[index] = { ...newEdu[index], [field]: value };
+            return newEdu;
+        });
+    };
+
+    const handleAddEducation = () => {
+        setEducation(prev => [...prev, {
+            level: 'College',
+            school_name: '',
+            degree_course: '',
+            year_graduated: '',
+            honors_awards: ''
+        }]);
+    };
+
+    const handleRemoveEducation = (index: number) => {
+        setEducation(prev => prev.filter((_, i) => i !== index));
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         setFormData({
             ...formData,
@@ -281,6 +330,16 @@ export default function EditEmployeePage() {
             const data = await response.json();
 
             if (response.ok) {
+                // Update Education
+                await fetch('/api/employees/education', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        employee_id: parseInt(params.id as string),
+                        education: education
+                    })
+                });
+
                 router.push(`/employees/${params.id}`);
             } else {
                 setError(data.error || 'Failed to update employee');
@@ -444,6 +503,20 @@ export default function EditEmployeePage() {
                                 </div>
 
                                 <div className="form-group">
+                                    <label className="form-label">Branch</label>
+                                    <select
+                                        name="branch"
+                                        value={(formData as any).branch}
+                                        onChange={handleChange}
+                                        className="form-select"
+                                    >
+                                        <option value="">Not Assigned</option>
+                                        <option value="Ormoc Branch">Ormoc Branch</option>
+                                        <option value="Naval Branch">Naval Branch</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
                                     <label className="form-label form-label-required">Employment Status</label>
                                     <select
                                         name="employment_status"
@@ -482,186 +555,309 @@ export default function EditEmployeePage() {
                                     />
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Contact Information Section */}
-                        <div style={{
-                            background: 'var(--bg-secondary)',
-                            padding: 'var(--spacing-lg)',
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: 'var(--spacing-xl)'
-                        }}>
-                            <h3 style={{ marginBottom: 'var(--spacing-lg)', fontSize: '1.125rem' }}>
-                                📞 Contact Information
-                            </h3>
-
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label className="form-label">Contact Number</label>
-                                    <input
-                                        type="tel"
-                                        name="contact_number"
-                                        value={formData.contact_number}
-                                        onChange={handleChange}
-                                        className="form-input"
-                                    />
+                            {/* Educational Attainment Section */}
+                            <div style={{
+                                background: 'var(--bg-secondary)',
+                                padding: 'var(--spacing-lg)',
+                                borderRadius: 'var(--radius-md)',
+                                marginBottom: 'var(--spacing-xl)'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
+                                    <h3 style={{ fontSize: '1.125rem', margin: 0 }}>
+                                        🎓 Educational Attainment
+                                    </h3>
+                                    <button type="button" onClick={handleAddEducation} className="btn btn-sm btn-primary">
+                                        + Add Item
+                                    </button>
                                 </div>
 
-                                <div className="form-group">
-                                    <label className="form-label">Email Address</label>
-                                    <input
-                                        type="email"
-                                        name="email_address"
-                                        value={formData.email_address}
-                                        onChange={handleChange}
-                                        className="form-input"
-                                    />
+                                <div style={{ display: 'grid', gap: 'var(--spacing-md)' }}>
+                                    {education.length === 0 && (
+                                        <p style={{ color: 'var(--text-tertiary)', fontStyle: 'italic', textAlign: 'center' }}>
+                                            No education records added.
+                                        </p>
+                                    )}
+                                    {education.map((edu, index) => (
+                                        <div key={index} style={{
+                                            background: 'white',
+                                            padding: 'var(--spacing-md)',
+                                            borderRadius: 'var(--radius-sm)',
+                                            border: '1px solid var(--border-color)',
+                                            position: 'relative'
+                                        }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveEducation(index)}
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: 'var(--spacing-sm)',
+                                                    right: 'var(--spacing-sm)',
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    color: 'var(--danger-500)',
+                                                    cursor: 'pointer',
+                                                    fontSize: '1.25rem'
+                                                }}
+                                                title="Remove"
+                                            >
+                                                ×
+                                            </button>
+                                            <div className="form-row">
+                                                <div className="form-group" style={{ flex: 1 }}>
+                                                    <label className="form-label form-label-required">Level</label>
+                                                    <select
+                                                        value={edu.level}
+                                                        onChange={e => handleEducationChange(index, 'level', e.target.value)}
+                                                        className="form-select"
+                                                    >
+                                                        <option value="Elementary">Elementary</option>
+                                                        <option value="High School">High School</option>
+                                                        <option value="Senior High">Senior High</option>
+                                                        <option value="Vocational">Vocational</option>
+                                                        <option value="College Level">College Level</option>
+                                                        <option value="College">College</option>
+                                                        <option value="Post Graduate">Post Graduate</option>
+                                                    </select>
+                                                </div>
+                                                <div className="form-group" style={{ flex: 2 }}>
+                                                    <label className="form-label form-label-required">School Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={edu.school_name}
+                                                        onChange={e => handleEducationChange(index, 'school_name', e.target.value)}
+                                                        className="form-input"
+                                                        placeholder="School / University"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="form-row">
+                                                <div className="form-group" style={{ flex: 2 }}>
+                                                    <label className="form-label">Degree / Course</label>
+                                                    <input
+                                                        type="text"
+                                                        value={edu.degree_course}
+                                                        onChange={e => handleEducationChange(index, 'degree_course', e.target.value)}
+                                                        className="form-input"
+                                                        placeholder="e.g. BS Computer Science"
+                                                    />
+                                                </div>
+                                                <div className="form-group" style={{ flex: 1 }}>
+                                                    <label className="form-label form-label-required">Year</label>
+                                                    <input
+                                                        type="text"
+                                                        value={edu.year_graduated}
+                                                        onChange={e => handleEducationChange(index, 'year_graduated', e.target.value)}
+                                                        className="form-input"
+                                                        placeholder="YYYY"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Honors / Awards</label>
+                                                <input
+                                                    type="text"
+                                                    value={edu.honors_awards}
+                                                    onChange={e => handleEducationChange(index, 'honors_awards', e.target.value)}
+                                                    className="form-input"
+                                                    placeholder="Optional"
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Government & Statutory Details Section */}
-                        <div style={{
-                            background: 'var(--bg-secondary)',
-                            padding: 'var(--spacing-lg)',
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: 'var(--spacing-xl)'
-                        }}>
-                            <h3 style={{ marginBottom: 'var(--spacing-lg)', fontSize: '1.125rem' }}>
-                                🇵🇭 Government & Statutory Details
-                            </h3>
+                            {/* Contact Information Section */}
+                            <div style={{
+                                background: 'var(--bg-secondary)',
+                                padding: 'var(--spacing-lg)',
+                                borderRadius: 'var(--radius-md)',
+                                marginBottom: 'var(--spacing-xl)'
+                            }}>
+                                <h3 style={{ marginBottom: 'var(--spacing-lg)', fontSize: '1.125rem' }}>
+                                    📞 Contact Information
+                                </h3>
 
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label className="form-label">SSS Number</label>
-                                    <input
-                                        type="text"
-                                        name="sss_number"
-                                        value={formData.sss_number}
-                                        onChange={handleChange}
-                                        className="form-input"
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label className="form-label">PhilHealth Number</label>
-                                    <input
-                                        type="text"
-                                        name="philhealth_number"
-                                        value={formData.philhealth_number}
-                                        onChange={handleChange}
-                                        className="form-input"
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label className="form-label">Pag-IBIG Number</label>
-                                    <input
-                                        type="text"
-                                        name="pagibig_number"
-                                        value={formData.pagibig_number}
-                                        onChange={handleChange}
-                                        className="form-input"
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label className="form-label">TIN</label>
-                                    <input
-                                        type="text"
-                                        name="tin"
-                                        value={formData.tin}
-                                        onChange={handleChange}
-                                        className="form-input"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 201 File Checklist Section */}
-                        <div style={{
-                            background: 'var(--bg-secondary)',
-                            padding: 'var(--spacing-lg)',
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: 'var(--spacing-xl)'
-                        }}>
-                            <h3 style={{ marginBottom: 'var(--spacing-lg)', fontSize: '1.125rem' }}>
-                                📋 Digital 201 File Checklist
-                            </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'var(--spacing-md)' }}>
-                                {[
-                                    { name: 'personal_info_complete', label: 'Personal Information Complete' },
-                                    { name: 'preemployment_req_complete', label: 'Pre-Employment Requirements Complete' },
-                                    { name: 'government_docs_complete', label: 'Government Documents Complete' },
-                                    { name: 'employment_records_complete', label: 'Employment Records Complete' },
-                                    { name: 'attendance_records_complete', label: 'Attendance Records Complete' },
-                                    { name: 'payroll_records_complete', label: 'Payroll Records Complete' },
-                                    { name: 'disciplinary_records', label: 'Violations & Warnings' },
-                                    { name: 'training_records', label: 'Training & Certificate Records' },
-                                    { name: 'separation_records', label: 'Separation Records' },
-                                ].map((item) => (
-                                    <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label className="form-label">Contact Number</label>
                                         <input
-                                            type="checkbox"
-                                            id={item.name}
-                                            checked={(formData as any)[item.name] === 1}
-                                            onChange={(e) => setFormData({ ...formData, [item.name]: e.target.checked ? 1 : 0 })}
-                                            style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }}
+                                            type="tel"
+                                            name="contact_number"
+                                            value={formData.contact_number}
+                                            onChange={handleChange}
+                                            className="form-input"
                                         />
-                                        <label htmlFor={item.name} style={{ fontSize: '0.875rem', cursor: 'pointer' }}>
-                                            {item.label}
-                                        </label>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
 
-                        {/* 201 Information Section */}
-                        <div style={{
-                            background: 'var(--bg-secondary)',
-                            padding: 'var(--spacing-lg)',
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: 'var(--spacing-xl)'
-                        }}>
-                            <h3 style={{ marginBottom: 'var(--spacing-lg)', fontSize: '1.125rem' }}>
-                                📄 201 Information
-                            </h3>
-                            <div className="form-group" style={{ marginBottom: 'var(--spacing-md)' }}>
-                                <label className="form-label">Trainings & Certificates</label>
-                                <textarea
-                                    name="training_details"
-                                    value={formData.training_details}
-                                    onChange={handleChange}
-                                    className="form-textarea"
-                                    rows={3}
-                                    placeholder="List down trainings, seminars, and certificates earned..."
-                                />
+                                    <div className="form-group">
+                                        <label className="form-label">Email Address</label>
+                                        <input
+                                            type="email"
+                                            name="email_address"
+                                            value={formData.email_address}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="form-group" style={{ marginTop: 'var(--spacing-md)' }}>
+                                    <label className="form-label">Address</label>
+                                    <input
+                                        type="text"
+                                        name="address"
+                                        value={(formData as any).address || ''}
+                                        onChange={handleChange}
+                                        className="form-input"
+                                        placeholder="123 Example Street, City, Province"
+                                    />
+                                </div>
                             </div>
+
+                            {/* Government & Statutory Details Section */}
+                            <div style={{
+                                background: 'var(--bg-secondary)',
+                                padding: 'var(--spacing-lg)',
+                                borderRadius: 'var(--radius-md)',
+                                marginBottom: 'var(--spacing-xl)'
+                            }}>
+                                <h3 style={{ marginBottom: 'var(--spacing-lg)', fontSize: '1.125rem' }}>
+                                    🇵🇭 Government & Statutory Details
+                                </h3>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label className="form-label">SSS Number</label>
+                                        <input
+                                            type="text"
+                                            name="sss_number"
+                                            value={formData.sss_number}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">PhilHealth Number</label>
+                                        <input
+                                            type="text"
+                                            name="philhealth_number"
+                                            value={formData.philhealth_number}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">Pag-IBIG Number</label>
+                                        <input
+                                            type="text"
+                                            name="pagibig_number"
+                                            value={formData.pagibig_number}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">TIN</label>
+                                        <input
+                                            type="text"
+                                            name="tin"
+                                            value={formData.tin}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 201 File Checklist Section */}
+                            <div style={{
+                                background: 'var(--bg-secondary)',
+                                padding: 'var(--spacing-lg)',
+                                borderRadius: 'var(--radius-md)',
+                                marginBottom: 'var(--spacing-xl)'
+                            }}>
+                                <h3 style={{ marginBottom: 'var(--spacing-lg)', fontSize: '1.125rem' }}>
+                                    📋 Digital 201 File Checklist
+                                </h3>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'var(--spacing-md)' }}>
+                                    {[
+                                        { name: 'personal_info_complete', label: 'Personal Information Complete' },
+                                        { name: 'preemployment_req_complete', label: 'Pre-Employment Requirements Complete' },
+                                        { name: 'government_docs_complete', label: 'Government Documents Complete' },
+                                        { name: 'employment_records_complete', label: 'Employment Records Complete' },
+                                        { name: 'attendance_records_complete', label: 'Attendance Records Complete' },
+                                        { name: 'payroll_records_complete', label: 'Payroll Records Complete' },
+                                        { name: 'disciplinary_records', label: 'Violations & Warnings' },
+                                        { name: 'training_records', label: 'Training & Certificate Records' },
+                                        { name: 'separation_records', label: 'Separation Records' },
+                                    ].map((item) => (
+                                        <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+                                            <input
+                                                type="checkbox"
+                                                id={item.name}
+                                                checked={(formData as any)[item.name] === 1}
+                                                onChange={(e) => setFormData({ ...formData, [item.name]: e.target.checked ? 1 : 0 })}
+                                                style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }}
+                                            />
+                                            <label htmlFor={item.name} style={{ fontSize: '0.875rem', cursor: 'pointer' }}>
+                                                {item.label}
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 201 Information Section */}
+                            <div style={{
+                                background: 'var(--bg-secondary)',
+                                padding: 'var(--spacing-lg)',
+                                borderRadius: 'var(--radius-md)',
+                                marginBottom: 'var(--spacing-xl)'
+                            }}>
+                                <h3 style={{ marginBottom: 'var(--spacing-lg)', fontSize: '1.125rem' }}>
+                                    📄 201 Information
+                                </h3>
+                                <div className="form-group" style={{ marginBottom: 'var(--spacing-md)' }}>
+                                    <label className="form-label">Trainings & Certificates</label>
+                                    <textarea
+                                        name="training_details"
+                                        value={formData.training_details}
+                                        onChange={handleChange}
+                                        className="form-textarea"
+                                        rows={3}
+                                        placeholder="List down trainings, seminars, and certificates earned..."
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Violations & Warnings</label>
+                                    <textarea
+                                        name="disciplinary_details"
+                                        value={formData.disciplinary_details}
+                                        onChange={handleChange}
+                                        className="form-textarea"
+                                        rows={3}
+                                        placeholder="Record any disciplinary actions, violations, or warnings..."
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Remarks Section */}
                             <div className="form-group">
-                                <label className="form-label">Violations & Warnings</label>
+                                <label className="form-label">Remarks / HR Notes</label>
                                 <textarea
-                                    name="disciplinary_details"
-                                    value={formData.disciplinary_details}
+                                    name="remarks"
+                                    value={formData.remarks}
                                     onChange={handleChange}
                                     className="form-textarea"
-                                    rows={3}
-                                    placeholder="Record any disciplinary actions, violations, or warnings..."
                                 />
                             </div>
                         </div>
 
-                        {/* Remarks Section */}
-                        <div className="form-group">
-                            <label className="form-label">Remarks / HR Notes</label>
-                            <textarea
-                                name="remarks"
-                                value={formData.remarks}
-                                onChange={handleChange}
-                                className="form-textarea"
-                            />
-                        </div>
                     </div>
-
                     <div className="card-footer">
                         <div style={{ display: 'flex', gap: 'var(--spacing-md)', justifyContent: 'flex-end' }}>
                             <Link href={`/employees/${params.id}`} className="btn btn-secondary">
@@ -672,8 +868,8 @@ export default function EditEmployeePage() {
                             </button>
                         </div>
                     </div>
-                </form>
-            </div>
-        </DashboardLayout>
+                </form >
+            </div >
+        </DashboardLayout >
     );
 }

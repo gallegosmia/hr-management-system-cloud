@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS employees (
     date_separated DATE,
     contact_number VARCHAR(50),
     email_address VARCHAR(100),
+    address TEXT,
     sss_number VARCHAR(50),
     philhealth_number VARCHAR(50),
     pagibig_number VARCHAR(50),
@@ -142,6 +143,18 @@ CREATE TABLE IF NOT EXISTS settings (
     value JSONB NOT NULL,
     description TEXT,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 10. Education table
+CREATE TABLE IF NOT EXISTS education (
+    id SERIAL PRIMARY KEY,
+    employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+    level VARCHAR(100),
+    school_name VARCHAR(255),
+    degree_course VARCHAR(255),
+    year_graduated VARCHAR(50),
+    honors_awards TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 10. Sessions table (for serverless persistence)

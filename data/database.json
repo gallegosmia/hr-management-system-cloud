@@ -7,9 +7,9 @@
       "role": "Admin",
       "employee_id": "",
       "created_at": "2026-01-08T02:04:53.152Z",
-      "last_login": "2026-01-09T09:44:56.877Z",
+      "last_login": "2026-01-12T10:53:57.670Z",
       "is_active": 1,
-      "last_updated": "2026-01-09T09:44:56.878Z"
+      "last_updated": "2026-01-12T10:53:57.671Z"
     },
     {
       "username": "mia",
@@ -19,8 +19,8 @@
       "employee_id": "",
       "id": 5,
       "created_at": "2026-01-09T06:13:35.334Z",
-      "last_login": "2026-01-12T03:19:39.302Z",
-      "last_updated": "2026-01-12T03:19:39.303Z"
+      "last_login": "2026-01-13T02:38:47.588Z",
+      "last_updated": "2026-01-13T02:38:47.589Z"
     },
     {
       "username": "shan",
@@ -63,6 +63,18 @@
       "employee_id": null,
       "id": 9,
       "created_at": "2026-01-09T06:39:27.224Z"
+    },
+    {
+      "username": "Mel",
+      "password": "$2a$10$0WO8Hv/SZUiUXN.tf6Kcsu/5QHnlVeE3Il/i.kEhBI.M6Q25LqjKq",
+      "role": "HR",
+      "id": 10
+    },
+    {
+      "username": "admin2",
+      "password": "$2a$10$vXTuG8Rd8fALPp3aNHo.UeRzHJOF6LRV0nz1BQGKOkz3.Ue/.OySu",
+      "role": "Executive",
+      "id": 11
     }
   ],
   "employees": [
@@ -96,7 +108,7 @@
       "training_records": 0,
       "separation_records": 0,
       "file_completion_status": "Complete",
-      "last_updated": "2026-01-10T08:43:00.587Z",
+      "last_updated": "2026-01-13T05:22:51.569Z",
       "created_by": 1,
       "id": 1,
       "created_at": "2026-01-10T04:30:28.909Z",
@@ -129,7 +141,9 @@
           "other_deductions": []
         }
       },
-      "date_of_birth": "1973-03-19"
+      "date_of_birth": "1973-03-19",
+      "profile_picture": "/uploads/profile_pictures/1_1768213186797.png",
+      "address": "BRGY. SUMANGGA, ORMOC CITY"
     },
     {
       "employee_id": "2022-0001",
@@ -161,7 +175,7 @@
       "training_records": 0,
       "separation_records": 0,
       "file_completion_status": "Complete",
-      "last_updated": "2026-01-10T08:43:47.257Z",
+      "last_updated": "2026-01-13T05:21:23.855Z",
       "created_by": 1,
       "id": 2,
       "created_at": "2026-01-10T04:58:26.886Z",
@@ -194,7 +208,9 @@
           "other_deductions": []
         }
       },
-      "date_of_birth": "1984-02-10"
+      "date_of_birth": "1984-02-10",
+      "profile_picture": "/uploads/profile_pictures/2_1768213174862.jpg",
+      "address": "BRGY. DONGHOL, ORMOC CITY"
     },
     {
       "employee_id": "2025-0001",
@@ -226,7 +242,7 @@
       "training_records": 1,
       "separation_records": 0,
       "file_completion_status": "Complete",
-      "last_updated": "2026-01-10T08:44:30.603Z",
+      "last_updated": "2026-01-13T05:19:48.649Z",
       "created_by": 1,
       "id": 3,
       "created_at": "2026-01-10T05:19:39.109Z",
@@ -259,7 +275,9 @@
           "other_deductions": []
         }
       },
-      "date_of_birth": "1989-05-08"
+      "date_of_birth": "1989-05-08",
+      "profile_picture": "/uploads/profile_pictures/3_1768213217120.jpg",
+      "address": "BRGY. SAN PABLO, NAVAL, BILIRAN"
     },
     {
       "employee_id": "2024-0001",
@@ -291,7 +309,7 @@
       "training_records": 0,
       "separation_records": 0,
       "file_completion_status": "Complete",
-      "last_updated": "2026-01-10T08:45:03.761Z",
+      "last_updated": "2026-01-13T05:14:42.161Z",
       "created_by": 1,
       "id": 4,
       "created_at": "2026-01-10T07:06:22.684Z",
@@ -324,7 +342,478 @@
           "other_deductions": []
         }
       },
-      "date_of_birth": "1985-02-16"
+      "date_of_birth": "1985-02-16",
+      "profile_picture": "/uploads/profile_pictures/4_1768213231461.png",
+      "address": "Purok 7, Brgy. Bagong Buhay, Ormoc City"
+    },
+    {
+      "employee_id": "2024-0002",
+      "last_name": "EWAY",
+      "first_name": "JUSALINE",
+      "middle_name": "ALICO",
+      "department": "Operations",
+      "position": "IT/ACCOUNTING CLERK",
+      "branch": "Naval Branch",
+      "employment_status": "Regular",
+      "date_hired": "2024-08-01",
+      "date_of_birth": "1998-05-07",
+      "contact_number": "09121062148",
+      "email_address": "jusaline09@gmail.com",
+      "sss_number": "0649136018",
+      "philhealth_number": " 132028792739",
+      "pagibig_number": "121345976133",
+      "tin": "",
+      "civil_status": "Single",
+      "remarks": "",
+      "training_details": "1. Branch Social Media Excellence Award (Naval)",
+      "disciplinary_details": "",
+      "personal_info_complete": 1,
+      "preemployment_req_complete": 1,
+      "government_docs_complete": 1,
+      "employment_records_complete": 1,
+      "attendance_records_complete": 1,
+      "payroll_records_complete": 1,
+      "disciplinary_records": 0,
+      "training_records": 1,
+      "separation_records": 0,
+      "file_completion_status": "Complete",
+      "created_by": 1,
+      "id": 5,
+      "profile_picture": "/uploads/profile_pictures/5_1768265099487.jfif",
+      "last_updated": "2026-01-13T08:34:28.071Z",
+      "salary_info": {
+        "basic_salary": 13560,
+        "daily_rate": 452,
+        "hourly_rate": 56.5,
+        "pay_frequency": "Semi-Monthly",
+        "allowances": {
+          "special": 1000
+        },
+        "deductions": {
+          "sss_contribution": 700,
+          "philhealth_contribution": 281.25,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 20500,
+            "amortization": 2000
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      },
+      "address": "Waterloo, Matalom, Leyte"
+    },
+    {
+      "employee_id": "2022-0002",
+      "last_name": "CABALLES",
+      "first_name": "EDDIE JR.",
+      "middle_name": "PARENA",
+      "department": "Operations",
+      "position": "CI/COLLECTOR",
+      "branch": "Ormoc Branch",
+      "employment_status": "Regular",
+      "date_hired": "2022-02-11",
+      "date_of_birth": "1993-06-10",
+      "contact_number": "09513458506",
+      "email_address": "JSYRRcaballes@yahoo.com",
+      "sss_number": "0633443018",
+      "philhealth_number": "130501485443",
+      "pagibig_number": "121089280866",
+      "tin": "733454732",
+      "civil_status": "Single",
+      "remarks": "",
+      "training_details": "1. Collection Excellence and Professionalism Award (2nd Place)",
+      "disciplinary_details": "",
+      "personal_info_complete": 1,
+      "preemployment_req_complete": 1,
+      "government_docs_complete": 1,
+      "employment_records_complete": 1,
+      "attendance_records_complete": 1,
+      "payroll_records_complete": 1,
+      "disciplinary_records": 0,
+      "training_records": 1,
+      "separation_records": 0,
+      "file_completion_status": "Complete",
+      "created_by": 1,
+      "id": 6,
+      "last_updated": "2026-01-13T08:32:35.741Z",
+      "profile_picture": "/uploads/profile_pictures/6_1768270355188.jpg",
+      "address": "SITIO IPIL, BRGY. CURVA, ORMOC CITY",
+      "salary_info": {
+        "basic_salary": 13560,
+        "daily_rate": 452,
+        "hourly_rate": 56.5,
+        "pay_frequency": "Semi-Monthly",
+        "allowances": {
+          "special": 1000
+        },
+        "deductions": {
+          "sss_contribution": 675,
+          "philhealth_contribution": 281.25,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 17386,
+            "amortization": 2000
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 1199.77
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 1773.3
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      }
+    },
+    {
+      "employee_id": "2022-0003",
+      "last_name": "ENTERO",
+      "first_name": "MARISSA",
+      "middle_name": "PATIGDAS",
+      "department": "Operations",
+      "position": "BRANCH MANAGER",
+      "branch": "Naval Branch",
+      "employment_status": "Regular",
+      "date_hired": "2022-06-01",
+      "date_of_birth": "1994-07-05",
+      "contact_number": "09300986174",
+      "email_address": "marissaentero3@gmail.com",
+      "sss_number": "3431675360",
+      "philhealth_number": "132521267627",
+      "pagibig_number": "121281691021",
+      "tin": "",
+      "civil_status": "Single",
+      "remarks": "",
+      "training_details": "1. Branch Social Media Excellence Award (Naval)",
+      "disciplinary_details": "",
+      "personal_info_complete": 1,
+      "preemployment_req_complete": 1,
+      "government_docs_complete": 1,
+      "employment_records_complete": 1,
+      "attendance_records_complete": 1,
+      "payroll_records_complete": 1,
+      "disciplinary_records": 0,
+      "training_records": 1,
+      "separation_records": 0,
+      "file_completion_status": "Complete",
+      "created_by": 1,
+      "id": 7,
+      "last_updated": "2026-01-13T08:28:30.628Z",
+      "profile_picture": "/uploads/profile_pictures/7_1768275585951.png",
+      "salary_info": {
+        "basic_salary": 13710,
+        "allowances": {
+          "special": 2500
+        },
+        "daily_rate": 457,
+        "hourly_rate": 57.13,
+        "pay_frequency": "Semi-Monthly",
+        "deductions": {
+          "sss_contribution": 800,
+          "philhealth_contribution": 285,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 26700,
+            "amortization": 2600
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 1260
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 1168.38
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      }
+    },
+    {
+      "employee_id": "2024-0003",
+      "last_name": "FELICIA",
+      "first_name": "MA. VICTORIA",
+      "middle_name": "SAMBITAN",
+      "department": "Operations",
+      "position": "CASHIER",
+      "branch": "Naval Branch",
+      "employment_status": "Regular",
+      "date_hired": "2024-08-01",
+      "date_of_birth": "1996-08-24",
+      "contact_number": "09536487191",
+      "email_address": "sambitanmavictoria@gmail.com",
+      "sss_number": "3458722937",
+      "philhealth_number": "132518185229",
+      "pagibig_number": "121169040535",
+      "tin": "334721262",
+      "civil_status": "Married",
+      "remarks": "",
+      "training_details": "1. Branch Social Media Excellence Award (Naval)",
+      "disciplinary_details": "",
+      "personal_info_complete": 1,
+      "preemployment_req_complete": 1,
+      "government_docs_complete": 1,
+      "employment_records_complete": 1,
+      "attendance_records_complete": 1,
+      "payroll_records_complete": 1,
+      "disciplinary_records": 0,
+      "training_records": 1,
+      "separation_records": 0,
+      "file_completion_status": "Complete",
+      "created_by": 1,
+      "id": 8,
+      "profile_picture": "/uploads/profile_pictures/8_1768276383111.png",
+      "last_updated": "2026-01-13T05:37:23.879Z",
+      "address": "BRGY. LUCSOON, NAVAL, BILIRAN",
+      "salary_info": {
+        "basic_salary": 0,
+        "daily_rate": 0,
+        "hourly_rate": 0,
+        "pay_frequency": "Semi-Monthly",
+        "allowances": {
+          "special": 0
+        },
+        "deductions": {
+          "sss_contribution": 0,
+          "philhealth_contribution": 0,
+          "pagibig_contribution": 0,
+          "company_cash_fund": 0,
+          "company_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      }
+    },
+    {
+      "employee_id": "2022-0004",
+      "last_name": "YBAÑEZ",
+      "first_name": "MIA",
+      "middle_name": "SOLAÑA",
+      "department": "Information Technology",
+      "position": "IT/ACCOUNTING CLERK/HR ASSISTANT",
+      "branch": "Ormoc Branch",
+      "employment_status": "Regular",
+      "date_hired": "2022-06-01",
+      "date_of_birth": "1999-05-19",
+      "contact_number": "09382193358",
+      "email_address": "gmia0519@gmail.com",
+      "address": "ABC ST. BRGY. ALEGRIA, ORMOC CITY",
+      "sss_number": "0641029369",
+      "philhealth_number": "132507053479",
+      "pagibig_number": "121222917604",
+      "tin": "64435695200000",
+      "civil_status": "Married",
+      "remarks": "",
+      "training_details": "1. IT ADMINISTRATOR WITH SECURITY RESPONSIBILITIES\n2. SSS TRAINING FOR EMPLOYER-MEMBERS (SSSTEM) PROGRAM\n3. 3-DAY TRAINING FOR STANDARD FIRST-AID AND BASIC LIFE SUPPORT",
+      "disciplinary_details": "",
+      "personal_info_complete": 1,
+      "preemployment_req_complete": 1,
+      "government_docs_complete": 1,
+      "employment_records_complete": 1,
+      "attendance_records_complete": 1,
+      "payroll_records_complete": 1,
+      "disciplinary_records": 0,
+      "training_records": 1,
+      "separation_records": 0,
+      "file_completion_status": "Complete",
+      "created_by": 1,
+      "id": 9,
+      "profile_picture": "/uploads/profile_pictures/9_1768283022772.png",
+      "last_updated": "2026-01-13T08:28:44.789Z",
+      "salary_info": {
+        "basic_salary": 13560,
+        "allowances": {
+          "special": 2500
+        },
+        "daily_rate": 452,
+        "hourly_rate": 56.5,
+        "pay_frequency": "Semi-Monthly",
+        "deductions": {
+          "sss_contribution": 700,
+          "philhealth_contribution": 281.25,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 4000,
+            "amortization": 1000
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 587.95
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      }
+    },
+    {
+      "employee_id": "2023-0001",
+      "last_name": "ITONA",
+      "first_name": "GERARD",
+      "middle_name": "GARCIA",
+      "department": "Operations",
+      "position": "CI/COLLECTOR",
+      "branch": "Naval Branch",
+      "employment_status": "Regular",
+      "date_hired": "2023-09-19",
+      "date_of_birth": "1989-11-09",
+      "contact_number": "09815286665",
+      "email_address": "",
+      "address": "CARAYCARAY, NAVAL, BILIRAN",
+      "sss_number": "0645382345",
+      "philhealth_number": "130255848977",
+      "pagibig_number": "",
+      "tin": "",
+      "civil_status": "Single",
+      "remarks": "",
+      "training_details": "",
+      "disciplinary_details": "1. Disciplinary Action (February 4, 2025) -  Against Company Interest No. 13.1- Mahitungod sa Adlaw-Adlaw nga Kakulangan sa Koleksyon nga Mogikan sa Koleksyon, Reloan o Remittance.\n2. Notice of the Violation of the Code of Conduct and Discipline (January 22, 2025)\n3. Notice of Disciplinary Action (Written Warning) December 5, 2025",
+      "personal_info_complete": 1,
+      "preemployment_req_complete": 1,
+      "government_docs_complete": 1,
+      "employment_records_complete": 1,
+      "attendance_records_complete": 1,
+      "payroll_records_complete": 1,
+      "disciplinary_records": 1,
+      "training_records": 0,
+      "separation_records": 0,
+      "file_completion_status": "Complete",
+      "created_by": 1,
+      "id": 10,
+      "profile_picture": "/uploads/profile_pictures/10_1768288195208.jpg",
+      "last_updated": "2026-01-13T08:29:30.570Z",
+      "salary_info": {
+        "basic_salary": 0,
+        "daily_rate": 0,
+        "hourly_rate": 0,
+        "pay_frequency": "Semi-Monthly",
+        "allowances": {
+          "special": 0
+        },
+        "deductions": {
+          "sss_contribution": 0,
+          "philhealth_contribution": 0,
+          "pagibig_contribution": 0,
+          "company_cash_fund": 0,
+          "company_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      }
+    },
+    {
+      "employee_id": "2025-0002",
+      "last_name": "JUGAR",
+      "first_name": "NOEL",
+      "middle_name": "JABILLES",
+      "department": "Operations",
+      "position": "CI/COLLECTOR",
+      "branch": "Ormoc Branch",
+      "employment_status": "Regular",
+      "date_hired": "2025-03-28",
+      "date_of_birth": "1975-12-08",
+      "contact_number": "09815553195",
+      "email_address": "",
+      "address": "BRGY. ALTAVISTA, ORMOC CITY",
+      "sss_number": "0621061538",
+      "philhealth_number": "130500309750",
+      "pagibig_number": "121047822047",
+      "tin": "",
+      "civil_status": "Single",
+      "remarks": "",
+      "training_details": "",
+      "disciplinary_details": "",
+      "personal_info_complete": 1,
+      "preemployment_req_complete": 1,
+      "government_docs_complete": 1,
+      "employment_records_complete": 1,
+      "attendance_records_complete": 1,
+      "payroll_records_complete": 1,
+      "disciplinary_records": 0,
+      "training_records": 0,
+      "separation_records": 0,
+      "file_completion_status": "Complete",
+      "created_by": 1,
+      "id": 11,
+      "profile_picture": "/uploads/profile_pictures/11_1768292574184.png",
+      "last_updated": "2026-01-13T08:22:54.187Z"
+    },
+    {
+      "employee_id": "2016-0001",
+      "last_name": "LAHOYLAHOY",
+      "first_name": "WILFREDO JR.",
+      "middle_name": "SABARES",
+      "department": "Operations",
+      "position": "SUPERVISOR/GENERAL STAFF SERVICES",
+      "branch": "Ormoc Branch",
+      "employment_status": "Regular",
+      "date_hired": "2016-12-21",
+      "date_of_birth": "1979-11-29",
+      "contact_number": "09855864840",
+      "email_address": "",
+      "address": "BRGY. STO. NIÑO, ORMOC CITY",
+      "sss_number": "0616610211",
+      "philhealth_number": "130500483688",
+      "pagibig_number": "170000153571",
+      "tin": "",
+      "civil_status": "Married",
+      "remarks": "",
+      "training_details": "",
+      "disciplinary_details": "",
+      "personal_info_complete": 1,
+      "preemployment_req_complete": 1,
+      "government_docs_complete": 1,
+      "employment_records_complete": 1,
+      "attendance_records_complete": 1,
+      "payroll_records_complete": 0,
+      "disciplinary_records": 0,
+      "training_records": 0,
+      "separation_records": 0,
+      "file_completion_status": "Partial",
+      "created_by": 1,
+      "id": 12,
+      "profile_picture": "/uploads/profile_pictures/12_1768292392947.jpg",
+      "last_updated": "2026-01-13T08:19:52.949Z"
     }
   ],
   "documents": [],
@@ -1769,15 +2258,581 @@
       "new_value": "{\"employee_id\":\"2024-0001\",\"last_name\":\"DOMINGONO\",\"first_name\":\"RENATO\",\"middle_name\":\"TAGYAMON\",\"department\":\"Operations\",\"position\":\"CI/COLLECTOR\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-11-15\",\"date_of_birth\":\"1985-02-16\",\"contact_number\":\"9126216782\",\"email_address\":\"\",\"sss_number\":\"0626378967\",\"philhealth_number\":\"130500855135\",\"pagibig_number\":\"121270197765\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"1. Notice of Disciplinary Action (VERBAL WARNING) Related to Company Time and Attendance: Tardy/Late for Eleven (11) Times for January 2025\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1000},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":23500,\"amortization\":1000},\"sss_loan\":{\"balance\":0,\"amortization\":530.67},\"pagibig_loan\":{\"balance\":0,\"amortization\":370.98},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":1,\"training_records\":0,\"separation_records\":0}",
       "id": 151,
       "created_at": "2026-01-10T08:45:03.765Z"
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 5,
+      "new_value": "{\"employee_id\":\"2024-0002\",\"last_name\":\"EWAY\",\"first_name\":\"JUSALINE\",\"middle_name\":\"ALICO\",\"department\":\"Operations\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-08-01\",\"date_of_birth\":\"1998-05-07\",\"contact_number\":\"09121062148\",\"email_address\":\"jusaline09@gmail.com\",\"sss_number\":\"0649136018\",\"philhealth_number\":\" 132028792739\",\"pagibig_number\":\"121345976133\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"new_value\":\"{\\\"employee_id\\\":\\\"2024-0002\\\",\\\"last_name\\\":\\\"EWAY\\\",\\\"first_name\\\":\\\"JUSALINE\\\",\\\"middle_name\\\":\\\"ALICO\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"IT/ACCOUNTING CLERK\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2024-08-01\\\",\\\"date_of_birth\\\":\\\"1998-05-07\\\",\\\"contact_number\\\":\\\"09121062148\\\",\\\"email_address\\\":\\\"jusaline09@gmail.com\\\",\\\"sss_number\\\":\\\"0649136018\\\",\\\"philhealth_number\\\":\\\" 132028792739\\\",\\\"pagibig_number\\\":\\\"121345976133\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":0,\\\"payroll_records_complete\\\":0,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 152
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 6,
+      "new_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"CABALLES\",\"first_name\":\"EDDIE JR.\",\"middle_name\":\"PARENA\",\"department\":\"Operations\",\"position\":\"COLLECTOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-02-11\",\"date_of_birth\":\"1993-06-10\",\"contact_number\":\"09513458506\",\"email_address\":\"JSYRRcaballes@yahoo.com\",\"sss_number\":\"0633443018\",\"philhealth_number\":\"130501485443\",\"pagibig_number\":\"121089280866\",\"tin\":\"733454732\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"1. Collection Excellence and Professionalism Award (2nd Place)\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"new_value\":\"{\\\"employee_id\\\":\\\"2022-0002\\\",\\\"last_name\\\":\\\"CABALLES\\\",\\\"first_name\\\":\\\"EDDIE JR.\\\",\\\"middle_name\\\":\\\"PARENA\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"COLLECTOR\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2022-02-11\\\",\\\"date_of_birth\\\":\\\"1993-06-10\\\",\\\"contact_number\\\":\\\"09513458506\\\",\\\"email_address\\\":\\\"JSYRRcaballes@yahoo.com\\\",\\\"sss_number\\\":\\\"0633443018\\\",\\\"philhealth_number\\\":\\\"130501485443\\\",\\\"pagibig_number\\\":\\\"121089280866\\\",\\\"tin\\\":\\\"733454732\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Collection Excellence and Professionalism Award (2nd Place)\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":0,\\\"payroll_records_complete\\\":0,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 153
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 6,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 154
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 6,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 155
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 5,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 156
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 5,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 157
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 5,
+      "old_value": "{\"employee_id\":\"2024-0002\",\"last_name\":\"EWAY\",\"first_name\":\"JUSALINE\",\"middle_name\":\"ALICO\",\"department\":\"Operations\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-08-01\",\"date_of_birth\":\"1998-05-07\",\"contact_number\":\"09121062148\",\"email_address\":\"jusaline09@gmail.com\",\"sss_number\":\"0649136018\",\"philhealth_number\":\" 132028792739\",\"pagibig_number\":\"121345976133\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"created_by\":1,\"id\":5,\"profile_picture\":\"/uploads/profile_pictures/5_1768265099487.jfif\",\"last_updated\":\"2026-01-13T02:11:31.468Z\"}",
+      "new_value": "{\"employee_id\":\"2024-0002\",\"last_name\":\"EWAY\",\"first_name\":\"JUSALINE\",\"middle_name\":\"ALICO\",\"department\":\"Operations\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-08-01\",\"date_of_birth\":\"1998-05-07\",\"contact_number\":\"09121062148\",\"email_address\":\"jusaline09@gmail.com\",\"sss_number\":\"0649136018\",\"philhealth_number\":\" 132028792739\",\"pagibig_number\":\"121345976133\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"1. Branch Social Media Excellence Award (Naval)\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"employee_id\\\":\\\"2024-0002\\\",\\\"last_name\\\":\\\"EWAY\\\",\\\"first_name\\\":\\\"JUSALINE\\\",\\\"middle_name\\\":\\\"ALICO\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"IT/ACCOUNTING CLERK\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2024-08-01\\\",\\\"date_of_birth\\\":\\\"1998-05-07\\\",\\\"contact_number\\\":\\\"09121062148\\\",\\\"email_address\\\":\\\"jusaline09@gmail.com\\\",\\\"sss_number\\\":\\\"0649136018\\\",\\\"philhealth_number\\\":\\\" 132028792739\\\",\\\"pagibig_number\\\":\\\"121345976133\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0,\\\"file_completion_status\\\":\\\"Complete\\\",\\\"created_by\\\":1,\\\"id\\\":5,\\\"profile_picture\\\":\\\"/uploads/profile_pictures/5_1768265099487.jfif\\\",\\\"last_updated\\\":\\\"2026-01-13T02:11:31.468Z\\\"}\",\"new_value\":\"{\\\"employee_id\\\":\\\"2024-0002\\\",\\\"last_name\\\":\\\"EWAY\\\",\\\"first_name\\\":\\\"JUSALINE\\\",\\\"middle_name\\\":\\\"ALICO\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"IT/ACCOUNTING CLERK\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2024-08-01\\\",\\\"date_of_birth\\\":\\\"1998-05-07\\\",\\\"contact_number\\\":\\\"09121062148\\\",\\\"email_address\\\":\\\"jusaline09@gmail.com\\\",\\\"sss_number\\\":\\\"0649136018\\\",\\\"philhealth_number\\\":\\\" 132028792739\\\",\\\"pagibig_number\\\":\\\"121345976133\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Branch Social Media Excellence Award (Naval)\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 158
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 7,
+      "new_value": "{\"employee_id\":\"2022-0003\",\"last_name\":\"ENTERO\",\"first_name\":\"MARISSA\",\"middle_name\":\"PATIGDAS\",\"department\":\"Operations\",\"position\":\"BRANCH MANAGER\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"date_of_birth\":\"1994-07-05\",\"contact_number\":\"09300986174\",\"email_address\":\"marissaentero3@gmail.com\",\"sss_number\":\"3431675360\",\"philhealth_number\":\"132521267627\",\"pagibig_number\":\"121281691021\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"1. Branch Social Media Excellence Award (Naval)\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"new_value\":\"{\\\"employee_id\\\":\\\"2022-0003\\\",\\\"last_name\\\":\\\"ENTERO\\\",\\\"first_name\\\":\\\"MARISSA\\\",\\\"middle_name\\\":\\\"PATIGDAS\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"BRANCH MANAGER\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2022-06-01\\\",\\\"date_of_birth\\\":\\\"1994-07-05\\\",\\\"contact_number\\\":\\\"09300986174\\\",\\\"email_address\\\":\\\"marissaentero3@gmail.com\\\",\\\"sss_number\\\":\\\"3431675360\\\",\\\"philhealth_number\\\":\\\"132521267627\\\",\\\"pagibig_number\\\":\\\"121281691021\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Branch Social Media Excellence Award (Naval)\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":0,\\\"payroll_records_complete\\\":0,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 159
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 7,
+      "new_value": "[{\"level\":\"College\",\"school_name\":\"BILIRAN PROVINCE STATE UNIVERSITY-MAIN CAMPUS\",\"degree_course\":\"BACHELOR OF SCIENCE IN BUSINESS ADMINISTRATION\",\"year_graduated\":\"2020\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"College\\\",\\\"school_name\\\":\\\"BILIRAN PROVINCE STATE UNIVERSITY-MAIN CAMPUS\\\",\\\"degree_course\\\":\\\"BACHELOR OF SCIENCE IN BUSINESS ADMINISTRATION\\\",\\\"year_graduated\\\":\\\"2020\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 160
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 7,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 161
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 7,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 162
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 7,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 163
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 8,
+      "new_value": "{\"employee_id\":\"2024-0003\",\"last_name\":\"FELICIA\",\"first_name\":\"MA. VICTORIA\",\"middle_name\":\"SAMBITAN\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-08-01\",\"date_of_birth\":\"1996-08-24\",\"contact_number\":\"09536487191\",\"email_address\":\"sambitanmavictoria@gmail.com\",\"sss_number\":\"3458722937\",\"philhealth_number\":\"132518185229\",\"pagibig_number\":\"121169040535\",\"tin\":\"334721262\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"1. Branch Social Media Excellence Award (Naval)\",\"disciplinary_details\":\" \",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"new_value\":\"{\\\"employee_id\\\":\\\"2024-0003\\\",\\\"last_name\\\":\\\"FELICIA\\\",\\\"first_name\\\":\\\"MA. VICTORIA\\\",\\\"middle_name\\\":\\\"SAMBITAN\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CASHIER\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2024-08-01\\\",\\\"date_of_birth\\\":\\\"1996-08-24\\\",\\\"contact_number\\\":\\\"09536487191\\\",\\\"email_address\\\":\\\"sambitanmavictoria@gmail.com\\\",\\\"sss_number\\\":\\\"3458722937\\\",\\\"philhealth_number\\\":\\\"132518185229\\\",\\\"pagibig_number\\\":\\\"121169040535\\\",\\\"tin\\\":\\\"334721262\\\",\\\"civil_status\\\":\\\"Married\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Branch Social Media Excellence Award (Naval)\\\",\\\"disciplinary_details\\\":\\\" \\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":0,\\\"payroll_records_complete\\\":0,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 164
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 8,
+      "new_value": "[{\"level\":\"College\",\"school_name\":\"BILIRAN PROVINCE STATE UNIVERSITY\",\"degree_course\":\"BACHELOR OF SCIENCE IN FINANCE AND MARKETING\",\"year_graduated\":\"2016\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"College\\\",\\\"school_name\\\":\\\"BILIRAN PROVINCE STATE UNIVERSITY\\\",\\\"degree_course\\\":\\\"BACHELOR OF SCIENCE IN FINANCE AND MARKETING\\\",\\\"year_graduated\\\":\\\"2016\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 165
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 5,
+      "old_value": "{\"employee_id\":\"2024-0002\",\"last_name\":\"EWAY\",\"first_name\":\"JUSALINE\",\"middle_name\":\"ALICO\",\"department\":\"Operations\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-08-01\",\"date_of_birth\":\"1998-05-07\",\"contact_number\":\"09121062148\",\"email_address\":\"jusaline09@gmail.com\",\"sss_number\":\"0649136018\",\"philhealth_number\":\" 132028792739\",\"pagibig_number\":\"121345976133\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"1. Branch Social Media Excellence Award (Naval)\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"created_by\":1,\"id\":5,\"profile_picture\":\"/uploads/profile_pictures/5_1768265099487.jfif\",\"last_updated\":\"2026-01-13T02:12:08.911Z\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}}",
+      "new_value": "{\"employee_id\":\"2024-0002\",\"last_name\":\"EWAY\",\"first_name\":\"JUSALINE\",\"middle_name\":\"ALICO\",\"department\":\"Operations\",\"position\":\"IT/ACCOUNTING CLERK\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-08-01\",\"date_of_birth\":\"1998-05-07\",\"contact_number\":\"09121062148\",\"email_address\":\"jusaline09@gmail.com\",\"sss_number\":\"0649136018\",\"philhealth_number\":\" 132028792739\",\"pagibig_number\":\"121345976133\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"1. Branch Social Media Excellence Award (Naval)\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"employee_id\\\":\\\"2024-0002\\\",\\\"last_name\\\":\\\"EWAY\\\",\\\"first_name\\\":\\\"JUSALINE\\\",\\\"middle_name\\\":\\\"ALICO\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"IT/ACCOUNTING CLERK\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2024-08-01\\\",\\\"date_of_birth\\\":\\\"1998-05-07\\\",\\\"contact_number\\\":\\\"09121062148\\\",\\\"email_address\\\":\\\"jusaline09@gmail.com\\\",\\\"sss_number\\\":\\\"0649136018\\\",\\\"philhealth_number\\\":\\\" 132028792739\\\",\\\"pagibig_number\\\":\\\"121345976133\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Branch Social Media Excellence Award (Naval)\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0,\\\"file_completion_status\\\":\\\"Complete\\\",\\\"created_by\\\":1,\\\"id\\\":5,\\\"profile_picture\\\":\\\"/uploads/profile_pictures/5_1768265099487.jfif\\\",\\\"last_updated\\\":\\\"2026-01-13T02:12:08.911Z\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}}\",\"new_value\":\"{\\\"employee_id\\\":\\\"2024-0002\\\",\\\"last_name\\\":\\\"EWAY\\\",\\\"first_name\\\":\\\"JUSALINE\\\",\\\"middle_name\\\":\\\"ALICO\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"IT/ACCOUNTING CLERK\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2024-08-01\\\",\\\"date_of_birth\\\":\\\"1998-05-07\\\",\\\"contact_number\\\":\\\"09121062148\\\",\\\"email_address\\\":\\\"jusaline09@gmail.com\\\",\\\"sss_number\\\":\\\"0649136018\\\",\\\"philhealth_number\\\":\\\" 132028792739\\\",\\\"pagibig_number\\\":\\\"121345976133\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Branch Social Media Excellence Award (Naval)\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 166
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 5,
+      "new_value": "[{\"level\":\"College\",\"school_name\":\"Southern Leyte State University- Main Campus\",\"degree_course\":\"Bachelor of Science in Information Technology\",\"year_graduated\":\"2024\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"College\\\",\\\"school_name\\\":\\\"Southern Leyte State University- Main Campus\\\",\\\"degree_course\\\":\\\"Bachelor of Science in Information Technology\\\",\\\"year_graduated\\\":\\\"2024\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 167
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 5,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 168
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 5,
+      "old_value": "{\"employee_id\":\"2024-0002\",\"last_name\":\"EWAY\",\"first_name\":\"JUSALINE\",\"middle_name\":\"ALICO\",\"department\":\"Operations\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-08-01\",\"date_of_birth\":\"1998-05-07\",\"contact_number\":\"09121062148\",\"email_address\":\"jusaline09@gmail.com\",\"sss_number\":\"0649136018\",\"philhealth_number\":\" 132028792739\",\"pagibig_number\":\"121345976133\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"1. Branch Social Media Excellence Award (Naval)\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":1,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"created_by\":1,\"id\":5,\"profile_picture\":\"/uploads/profile_pictures/5_1768265099487.jfif\",\"last_updated\":\"2026-01-13T05:04:59.502Z\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}}",
+      "new_value": "{\"employee_id\":\"2024-0002\",\"last_name\":\"EWAY\",\"first_name\":\"JUSALINE\",\"middle_name\":\"ALICO\",\"department\":\"Operations\",\"position\":\"IT/ACCOUNTING CLERK\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-08-01\",\"date_of_birth\":\"1998-05-07\",\"contact_number\":\"09121062148\",\"email_address\":\"jusaline09@gmail.com\",\"address\":\"Waterloo, Matalom, Leyte\",\"sss_number\":\"0649136018\",\"philhealth_number\":\" 132028792739\",\"pagibig_number\":\"121345976133\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"1. Branch Social Media Excellence Award (Naval)\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":1,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"employee_id\\\":\\\"2024-0002\\\",\\\"last_name\\\":\\\"EWAY\\\",\\\"first_name\\\":\\\"JUSALINE\\\",\\\"middle_name\\\":\\\"ALICO\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"IT/ACCOUNTING CLERK\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2024-08-01\\\",\\\"date_of_birth\\\":\\\"1998-05-07\\\",\\\"contact_number\\\":\\\"09121062148\\\",\\\"email_address\\\":\\\"jusaline09@gmail.com\\\",\\\"sss_number\\\":\\\"0649136018\\\",\\\"philhealth_number\\\":\\\" 132028792739\\\",\\\"pagibig_number\\\":\\\"121345976133\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Branch Social Media Excellence Award (Naval)\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":1,\\\"separation_records\\\":0,\\\"file_completion_status\\\":\\\"Complete\\\",\\\"created_by\\\":1,\\\"id\\\":5,\\\"profile_picture\\\":\\\"/uploads/profile_pictures/5_1768265099487.jfif\\\",\\\"last_updated\\\":\\\"2026-01-13T05:04:59.502Z\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}}\",\"new_value\":\"{\\\"employee_id\\\":\\\"2024-0002\\\",\\\"last_name\\\":\\\"EWAY\\\",\\\"first_name\\\":\\\"JUSALINE\\\",\\\"middle_name\\\":\\\"ALICO\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"IT/ACCOUNTING CLERK\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2024-08-01\\\",\\\"date_of_birth\\\":\\\"1998-05-07\\\",\\\"contact_number\\\":\\\"09121062148\\\",\\\"email_address\\\":\\\"jusaline09@gmail.com\\\",\\\"address\\\":\\\"Waterloo, Matalom, Leyte\\\",\\\"sss_number\\\":\\\"0649136018\\\",\\\"philhealth_number\\\":\\\" 132028792739\\\",\\\"pagibig_number\\\":\\\"121345976133\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Branch Social Media Excellence Award (Naval)\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":1,\\\"separation_records\\\":0}\"}",
+      "id": 169
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 5,
+      "new_value": "[{\"level\":\"College\",\"school_name\":\"Southern Leyte State University- Main Campus\",\"degree_course\":\"Bachelor of Science in Information Technology\",\"year_graduated\":\"2024\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"College\\\",\\\"school_name\\\":\\\"Southern Leyte State University- Main Campus\\\",\\\"degree_course\\\":\\\"Bachelor of Science in Information Technology\\\",\\\"year_graduated\\\":\\\"2024\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 170
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 8,
+      "old_value": "{\"employee_id\":\"2024-0003\",\"last_name\":\"FELICIA\",\"first_name\":\"MA. VICTORIA\",\"middle_name\":\"SAMBITAN\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-08-01\",\"date_of_birth\":\"1996-08-24\",\"contact_number\":\"09536487191\",\"email_address\":\"sambitanmavictoria@gmail.com\",\"sss_number\":\"3458722937\",\"philhealth_number\":\"132518185229\",\"pagibig_number\":\"121169040535\",\"tin\":\"334721262\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"1. Branch Social Media Excellence Award (Naval)\",\"disciplinary_details\":\" \",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"created_by\":1,\"id\":8,\"profile_picture\":\"/uploads/profile_pictures/8_1768276383111.png\",\"last_updated\":\"2026-01-13T03:53:03.114Z\"}",
+      "new_value": "{\"employee_id\":\"2024-0003\",\"last_name\":\"FELICIA\",\"first_name\":\"MA. VICTORIA\",\"middle_name\":\"SAMBITAN\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-08-01\",\"date_of_birth\":\"1996-08-24\",\"contact_number\":\"09536487191\",\"email_address\":\"sambitanmavictoria@gmail.com\",\"address\":\"\",\"sss_number\":\"3458722937\",\"philhealth_number\":\"132518185229\",\"pagibig_number\":\"121169040535\",\"tin\":\"334721262\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"1. Branch Social Media Excellence Award (Naval)\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"employee_id\\\":\\\"2024-0003\\\",\\\"last_name\\\":\\\"FELICIA\\\",\\\"first_name\\\":\\\"MA. VICTORIA\\\",\\\"middle_name\\\":\\\"SAMBITAN\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CASHIER\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2024-08-01\\\",\\\"date_of_birth\\\":\\\"1996-08-24\\\",\\\"contact_number\\\":\\\"09536487191\\\",\\\"email_address\\\":\\\"sambitanmavictoria@gmail.com\\\",\\\"sss_number\\\":\\\"3458722937\\\",\\\"philhealth_number\\\":\\\"132518185229\\\",\\\"pagibig_number\\\":\\\"121169040535\\\",\\\"tin\\\":\\\"334721262\\\",\\\"civil_status\\\":\\\"Married\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Branch Social Media Excellence Award (Naval)\\\",\\\"disciplinary_details\\\":\\\" \\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":0,\\\"payroll_records_complete\\\":0,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0,\\\"file_completion_status\\\":\\\"Partial\\\",\\\"created_by\\\":1,\\\"id\\\":8,\\\"profile_picture\\\":\\\"/uploads/profile_pictures/8_1768276383111.png\\\",\\\"last_updated\\\":\\\"2026-01-13T03:53:03.114Z\\\"}\",\"new_value\":\"{\\\"employee_id\\\":\\\"2024-0003\\\",\\\"last_name\\\":\\\"FELICIA\\\",\\\"first_name\\\":\\\"MA. VICTORIA\\\",\\\"middle_name\\\":\\\"SAMBITAN\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CASHIER\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2024-08-01\\\",\\\"date_of_birth\\\":\\\"1996-08-24\\\",\\\"contact_number\\\":\\\"09536487191\\\",\\\"email_address\\\":\\\"sambitanmavictoria@gmail.com\\\",\\\"address\\\":\\\"\\\",\\\"sss_number\\\":\\\"3458722937\\\",\\\"philhealth_number\\\":\\\"132518185229\\\",\\\"pagibig_number\\\":\\\"121169040535\\\",\\\"tin\\\":\\\"334721262\\\",\\\"civil_status\\\":\\\"Married\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Branch Social Media Excellence Award (Naval)\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":0,\\\"payroll_records_complete\\\":0,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 171
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 8,
+      "new_value": "[{\"level\":\"College\",\"school_name\":\"BILIRAN PROVINCE STATE UNIVERSITY\",\"degree_course\":\"BACHELOR OF SCIENCE IN FINANCE AND MARKETING\",\"year_graduated\":\"2016\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"College\\\",\\\"school_name\\\":\\\"BILIRAN PROVINCE STATE UNIVERSITY\\\",\\\"degree_course\\\":\\\"BACHELOR OF SCIENCE IN FINANCE AND MARKETING\\\",\\\"year_graduated\\\":\\\"2016\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 172
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 4,
+      "old_value": "{\"employee_id\":\"2024-0001\",\"last_name\":\"DOMINGONO\",\"first_name\":\"RENATO\",\"middle_name\":\"TAGYAMON\",\"department\":\"Operations\",\"position\":\"CI/COLLECTOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-11-15\",\"contact_number\":\"9126216782\",\"email_address\":\"\",\"sss_number\":\"0626378967\",\"philhealth_number\":\"130500855135\",\"pagibig_number\":\"121270197765\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"1. Notice of Disciplinary Action (VERBAL WARNING) Related to Company Time and Attendance: Tardy/Late for Eleven (11) Times for January 2025\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":1,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"last_updated\":\"2026-01-12T10:20:31.462Z\",\"created_by\":1,\"id\":4,\"created_at\":\"2026-01-10T07:06:22.684Z\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1000},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":23500,\"amortization\":1000},\"sss_loan\":{\"balance\":0,\"amortization\":530.67},\"pagibig_loan\":{\"balance\":0,\"amortization\":370.98},\"cash_advance\":0,\"other_deductions\":[]}},\"date_of_birth\":\"1985-02-16\",\"profile_picture\":\"/uploads/profile_pictures/4_1768213231461.png\"}",
+      "new_value": "{\"employee_id\":\"2024-0001\",\"last_name\":\"DOMINGONO\",\"first_name\":\"RENATO\",\"middle_name\":\"TAGYAMON\",\"department\":\"Operations\",\"position\":\"CI/COLLECTOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-11-15\",\"date_of_birth\":\"1985-02-16\",\"contact_number\":\"9126216782\",\"email_address\":\"\",\"address\":\"Purok 7, Brgy. Bagong Buhay, Ormoc City\",\"sss_number\":\"0626378967\",\"philhealth_number\":\"130500855135\",\"pagibig_number\":\"121270197765\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"1. Notice of Disciplinary Action (VERBAL WARNING) Related to Company Time and Attendance: Tardy/Late for Eleven (11) Times for January 2025\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1000},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":23500,\"amortization\":1000},\"sss_loan\":{\"balance\":0,\"amortization\":530.67},\"pagibig_loan\":{\"balance\":0,\"amortization\":370.98},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":1,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"employee_id\\\":\\\"2024-0001\\\",\\\"last_name\\\":\\\"DOMINGONO\\\",\\\"first_name\\\":\\\"RENATO\\\",\\\"middle_name\\\":\\\"TAGYAMON\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CI/COLLECTOR\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2024-11-15\\\",\\\"contact_number\\\":\\\"9126216782\\\",\\\"email_address\\\":\\\"\\\",\\\"sss_number\\\":\\\"0626378967\\\",\\\"philhealth_number\\\":\\\"130500855135\\\",\\\"pagibig_number\\\":\\\"121270197765\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"1. Notice of Disciplinary Action (VERBAL WARNING) Related to Company Time and Attendance: Tardy/Late for Eleven (11) Times for January 2025\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":1,\\\"training_records\\\":0,\\\"separation_records\\\":0,\\\"file_completion_status\\\":\\\"Complete\\\",\\\"last_updated\\\":\\\"2026-01-12T10:20:31.462Z\\\",\\\"created_by\\\":1,\\\"id\\\":4,\\\"created_at\\\":\\\"2026-01-10T07:06:22.684Z\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":23500,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":530.67},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":370.98},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"date_of_birth\\\":\\\"1985-02-16\\\",\\\"profile_picture\\\":\\\"/uploads/profile_pictures/4_1768213231461.png\\\"}\",\"new_value\":\"{\\\"employee_id\\\":\\\"2024-0001\\\",\\\"last_name\\\":\\\"DOMINGONO\\\",\\\"first_name\\\":\\\"RENATO\\\",\\\"middle_name\\\":\\\"TAGYAMON\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CI/COLLECTOR\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2024-11-15\\\",\\\"date_of_birth\\\":\\\"1985-02-16\\\",\\\"contact_number\\\":\\\"9126216782\\\",\\\"email_address\\\":\\\"\\\",\\\"address\\\":\\\"Purok 7, Brgy. Bagong Buhay, Ormoc City\\\",\\\"sss_number\\\":\\\"0626378967\\\",\\\"philhealth_number\\\":\\\"130500855135\\\",\\\"pagibig_number\\\":\\\"121270197765\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"1. Notice of Disciplinary Action (VERBAL WARNING) Related to Company Time and Attendance: Tardy/Late for Eleven (11) Times for January 2025\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":23500,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":530.67},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":370.98},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":1,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 173
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 4,
+      "new_value": "[{\"level\":\"High School\",\"school_name\":\"NEW ORMOC CITY NATIONAL HIGH SCHOOL\",\"degree_course\":\"\",\"year_graduated\":\"N/A\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"High School\\\",\\\"school_name\\\":\\\"NEW ORMOC CITY NATIONAL HIGH SCHOOL\\\",\\\"degree_course\\\":\\\"\\\",\\\"year_graduated\\\":\\\"N/A\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 174
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 6,
+      "old_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"CABALLES\",\"first_name\":\"EDDIE JR.\",\"middle_name\":\"PARENA\",\"department\":\"Operations\",\"position\":\"COLLECTOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-02-11\",\"date_of_birth\":\"1993-06-10\",\"contact_number\":\"09513458506\",\"email_address\":\"JSYRRcaballes@yahoo.com\",\"sss_number\":\"0633443018\",\"philhealth_number\":\"130501485443\",\"pagibig_number\":\"121089280866\",\"tin\":\"733454732\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"1. Collection Excellence and Professionalism Award (2nd Place)\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"created_by\":1,\"id\":6,\"last_updated\":\"2026-01-13T02:12:35.190Z\",\"profile_picture\":\"/uploads/profile_pictures/6_1768270355188.jpg\"}",
+      "new_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"CABALLES\",\"first_name\":\"EDDIE JR.\",\"middle_name\":\"PARENA\",\"department\":\"Operations\",\"position\":\"COLLECTOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-02-11\",\"date_of_birth\":\"1993-06-10\",\"contact_number\":\"09513458506\",\"email_address\":\"JSYRRcaballes@yahoo.com\",\"address\":\"SITIO IPIL, BRGY. CURVA, ORMOC CITY\",\"sss_number\":\"0633443018\",\"philhealth_number\":\"130501485443\",\"pagibig_number\":\"121089280866\",\"tin\":\"733454732\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"1. Collection Excellence and Professionalism Award (2nd Place)\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"employee_id\\\":\\\"2022-0002\\\",\\\"last_name\\\":\\\"CABALLES\\\",\\\"first_name\\\":\\\"EDDIE JR.\\\",\\\"middle_name\\\":\\\"PARENA\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"COLLECTOR\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2022-02-11\\\",\\\"date_of_birth\\\":\\\"1993-06-10\\\",\\\"contact_number\\\":\\\"09513458506\\\",\\\"email_address\\\":\\\"JSYRRcaballes@yahoo.com\\\",\\\"sss_number\\\":\\\"0633443018\\\",\\\"philhealth_number\\\":\\\"130501485443\\\",\\\"pagibig_number\\\":\\\"121089280866\\\",\\\"tin\\\":\\\"733454732\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Collection Excellence and Professionalism Award (2nd Place)\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0,\\\"file_completion_status\\\":\\\"Complete\\\",\\\"created_by\\\":1,\\\"id\\\":6,\\\"last_updated\\\":\\\"2026-01-13T02:12:35.190Z\\\",\\\"profile_picture\\\":\\\"/uploads/profile_pictures/6_1768270355188.jpg\\\"}\",\"new_value\":\"{\\\"employee_id\\\":\\\"2022-0002\\\",\\\"last_name\\\":\\\"CABALLES\\\",\\\"first_name\\\":\\\"EDDIE JR.\\\",\\\"middle_name\\\":\\\"PARENA\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"COLLECTOR\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2022-02-11\\\",\\\"date_of_birth\\\":\\\"1993-06-10\\\",\\\"contact_number\\\":\\\"09513458506\\\",\\\"email_address\\\":\\\"JSYRRcaballes@yahoo.com\\\",\\\"address\\\":\\\"SITIO IPIL, BRGY. CURVA, ORMOC CITY\\\",\\\"sss_number\\\":\\\"0633443018\\\",\\\"philhealth_number\\\":\\\"130501485443\\\",\\\"pagibig_number\\\":\\\"121089280866\\\",\\\"tin\\\":\\\"733454732\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Collection Excellence and Professionalism Award (2nd Place)\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 175
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 6,
+      "new_value": "[{\"level\":\"Vocational\",\"school_name\":\"UNIC TRAINING CENTER TACLOBAN\",\"degree_course\":\"ELECTRICAL INSTALLATION MAINTENANCE\",\"year_graduated\":\"2011\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"Vocational\\\",\\\"school_name\\\":\\\"UNIC TRAINING CENTER TACLOBAN\\\",\\\"degree_course\\\":\\\"ELECTRICAL INSTALLATION MAINTENANCE\\\",\\\"year_graduated\\\":\\\"2011\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 176
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 6,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 177
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 3,
+      "old_value": "{\"employee_id\":\"2025-0001\",\"last_name\":\"BORINAGA\",\"first_name\":\"ALBERTO\",\"middle_name\":\"GULIMAN\",\"department\":\"Operations\",\"position\":\"CI/COLLECTOR\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2025-02-03\",\"contact_number\":\"09361198360\",\"email_address\":\"\",\"sss_number\":\"0633998398\",\"philhealth_number\":\"130501492370\",\"pagibig_number\":\"121168934317\",\"tin\":\"\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"1. ROOKIE AWARD PAST DUE LOAN COLLECTION CATEGORY\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":1,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"last_updated\":\"2026-01-12T10:20:17.122Z\",\"created_by\":1,\"id\":3,\"created_at\":\"2026-01-10T05:19:39.109Z\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1000},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":15500,\"amortization\":1000},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"date_of_birth\":\"1989-05-08\",\"profile_picture\":\"/uploads/profile_pictures/3_1768213217120.jpg\"}",
+      "new_value": "{\"employee_id\":\"2025-0001\",\"last_name\":\"BORINAGA\",\"first_name\":\"ALBERTO\",\"middle_name\":\"GULIMAN\",\"department\":\"Operations\",\"position\":\"CI/COLLECTOR\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2025-02-03\",\"date_of_birth\":\"1989-05-08\",\"contact_number\":\"09361198360\",\"email_address\":\"\",\"address\":\"BRGY. SAN PABLO, NAVAL, BILIRAN\",\"sss_number\":\"0633998398\",\"philhealth_number\":\"130501492370\",\"pagibig_number\":\"121168934317\",\"tin\":\"\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"1. ROOKIE AWARD PAST DUE LOAN COLLECTION CATEGORY\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1000},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":15500,\"amortization\":1000},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":1,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"employee_id\\\":\\\"2025-0001\\\",\\\"last_name\\\":\\\"BORINAGA\\\",\\\"first_name\\\":\\\"ALBERTO\\\",\\\"middle_name\\\":\\\"GULIMAN\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CI/COLLECTOR\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2025-02-03\\\",\\\"contact_number\\\":\\\"09361198360\\\",\\\"email_address\\\":\\\"\\\",\\\"sss_number\\\":\\\"0633998398\\\",\\\"philhealth_number\\\":\\\"130501492370\\\",\\\"pagibig_number\\\":\\\"121168934317\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Married\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. ROOKIE AWARD PAST DUE LOAN COLLECTION CATEGORY\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":1,\\\"separation_records\\\":0,\\\"file_completion_status\\\":\\\"Complete\\\",\\\"last_updated\\\":\\\"2026-01-12T10:20:17.122Z\\\",\\\"created_by\\\":1,\\\"id\\\":3,\\\"created_at\\\":\\\"2026-01-10T05:19:39.109Z\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":15500,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"date_of_birth\\\":\\\"1989-05-08\\\",\\\"profile_picture\\\":\\\"/uploads/profile_pictures/3_1768213217120.jpg\\\"}\",\"new_value\":\"{\\\"employee_id\\\":\\\"2025-0001\\\",\\\"last_name\\\":\\\"BORINAGA\\\",\\\"first_name\\\":\\\"ALBERTO\\\",\\\"middle_name\\\":\\\"GULIMAN\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CI/COLLECTOR\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2025-02-03\\\",\\\"date_of_birth\\\":\\\"1989-05-08\\\",\\\"contact_number\\\":\\\"09361198360\\\",\\\"email_address\\\":\\\"\\\",\\\"address\\\":\\\"BRGY. SAN PABLO, NAVAL, BILIRAN\\\",\\\"sss_number\\\":\\\"0633998398\\\",\\\"philhealth_number\\\":\\\"130501492370\\\",\\\"pagibig_number\\\":\\\"121168934317\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Married\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. ROOKIE AWARD PAST DUE LOAN COLLECTION CATEGORY\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":15500,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":1,\\\"separation_records\\\":0}\"}",
+      "id": 178
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 3,
+      "new_value": "[{\"level\":\"Vocational\",\"school_name\":\"TECHNICAL EDUCATIONAL AND SKILLS DEVELOPMENT AUTHORITY (TESDA)\",\"degree_course\":\"MICROSOFT OFFICE\",\"year_graduated\":\"2010-2011\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"Vocational\\\",\\\"school_name\\\":\\\"TECHNICAL EDUCATIONAL AND SKILLS DEVELOPMENT AUTHORITY (TESDA)\\\",\\\"degree_course\\\":\\\"MICROSOFT OFFICE\\\",\\\"year_graduated\\\":\\\"2010-2011\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 179
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 2,
+      "old_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"BAÑEZ\",\"first_name\":\"BERNARDITO\",\"middle_name\":\"ALVEZ\",\"department\":\"Operations\",\"position\":\"SUPERVISOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-07-04\",\"contact_number\":\"9465429437\",\"email_address\":\"\",\"sss_number\":\"3406699850\",\"philhealth_number\":\"130501016064\",\"pagibig_number\":\"121150642064\",\"tin\":\"\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"last_updated\":\"2026-01-12T10:19:34.864Z\",\"created_by\":1,\"id\":2,\"created_at\":\"2026-01-10T04:58:26.886Z\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1800},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"date_of_birth\":\"1984-02-10\",\"profile_picture\":\"/uploads/profile_pictures/2_1768213174862.jpg\"}",
+      "new_value": "{\"employee_id\":\"2022-0001\",\"last_name\":\"BAÑEZ\",\"first_name\":\"BERNARDITO\",\"middle_name\":\"ALVEZ\",\"department\":\"Operations\",\"position\":\"SUPERVISOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-07-04\",\"date_of_birth\":\"1984-02-10\",\"contact_number\":\"9465429437\",\"email_address\":\"\",\"address\":\"BRGY. DONGHOL, ORMOC CITY\",\"sss_number\":\"3406699850\",\"philhealth_number\":\"130501016064\",\"pagibig_number\":\"121150642064\",\"tin\":\"\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1800},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"employee_id\\\":\\\"2022-0001\\\",\\\"last_name\\\":\\\"BAÑEZ\\\",\\\"first_name\\\":\\\"BERNARDITO\\\",\\\"middle_name\\\":\\\"ALVEZ\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"SUPERVISOR\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2022-07-04\\\",\\\"contact_number\\\":\\\"9465429437\\\",\\\"email_address\\\":\\\"\\\",\\\"sss_number\\\":\\\"3406699850\\\",\\\"philhealth_number\\\":\\\"130501016064\\\",\\\"pagibig_number\\\":\\\"121150642064\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Married\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0,\\\"file_completion_status\\\":\\\"Complete\\\",\\\"last_updated\\\":\\\"2026-01-12T10:19:34.864Z\\\",\\\"created_by\\\":1,\\\"id\\\":2,\\\"created_at\\\":\\\"2026-01-10T04:58:26.886Z\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1800},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"date_of_birth\\\":\\\"1984-02-10\\\",\\\"profile_picture\\\":\\\"/uploads/profile_pictures/2_1768213174862.jpg\\\"}\",\"new_value\":\"{\\\"employee_id\\\":\\\"2022-0001\\\",\\\"last_name\\\":\\\"BAÑEZ\\\",\\\"first_name\\\":\\\"BERNARDITO\\\",\\\"middle_name\\\":\\\"ALVEZ\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"SUPERVISOR\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2022-07-04\\\",\\\"date_of_birth\\\":\\\"1984-02-10\\\",\\\"contact_number\\\":\\\"9465429437\\\",\\\"email_address\\\":\\\"\\\",\\\"address\\\":\\\"BRGY. DONGHOL, ORMOC CITY\\\",\\\"sss_number\\\":\\\"3406699850\\\",\\\"philhealth_number\\\":\\\"130501016064\\\",\\\"pagibig_number\\\":\\\"121150642064\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Married\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1800},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 180
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 2,
+      "new_value": "[{\"level\":\"High School\",\"school_name\":\"LINAO NATIONAL HIGH SCHOOL\",\"degree_course\":\"\",\"year_graduated\":\"N/A\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"High School\\\",\\\"school_name\\\":\\\"LINAO NATIONAL HIGH SCHOOL\\\",\\\"degree_course\\\":\\\"\\\",\\\"year_graduated\\\":\\\"N/A\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 181
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 1,
+      "old_value": "{\"employee_id\":\"2018-0001\",\"last_name\":\"ARRADAZA\",\"first_name\":\"JOSEPHINE\",\"middle_name\":\"RELOBA\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2018-06-01\",\"contact_number\":\"9099611758\",\"email_address\":\"jarradaza73mlic@gmail.com\",\"sss_number\":\"0614563535\",\"philhealth_number\":\"130502009363\",\"pagibig_number\":\"121227522486\",\"tin\":\"499460757\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"last_updated\":\"2026-01-12T10:19:46.798Z\",\"created_by\":1,\"id\":1,\"created_at\":\"2026-01-10T04:30:28.909Z\",\"salary_info\":{\"basic_salary\":13710,\"daily_rate\":457,\"hourly_rate\":57.13,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1500},\"deductions\":{\"sss_contribution\":725,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":20000,\"amortization\":1292.06},\"pagibig_loan\":{\"balance\":20000,\"amortization\":1783.16},\"cash_advance\":0,\"other_deductions\":[]}},\"date_of_birth\":\"1973-03-19\",\"profile_picture\":\"/uploads/profile_pictures/1_1768213186797.png\"}",
+      "new_value": "{\"employee_id\":\"2018-0001\",\"last_name\":\"ARRADAZA\",\"first_name\":\"JOSEPHINE\",\"middle_name\":\"RELOBA\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2018-06-01\",\"date_of_birth\":\"1973-03-19\",\"contact_number\":\"9099611758\",\"email_address\":\"jarradaza73mlic@gmail.com\",\"address\":\"BRGY. SUMANGGA, ORMOC CITY\",\"sss_number\":\"0614563535\",\"philhealth_number\":\"130502009363\",\"pagibig_number\":\"121227522486\",\"tin\":\"499460757\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":13710,\"daily_rate\":457,\"hourly_rate\":57.13,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1500},\"deductions\":{\"sss_contribution\":725,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":20000,\"amortization\":1292.06},\"pagibig_loan\":{\"balance\":20000,\"amortization\":1783.16},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"employee_id\\\":\\\"2018-0001\\\",\\\"last_name\\\":\\\"ARRADAZA\\\",\\\"first_name\\\":\\\"JOSEPHINE\\\",\\\"middle_name\\\":\\\"RELOBA\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CASHIER\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2018-06-01\\\",\\\"contact_number\\\":\\\"9099611758\\\",\\\"email_address\\\":\\\"jarradaza73mlic@gmail.com\\\",\\\"sss_number\\\":\\\"0614563535\\\",\\\"philhealth_number\\\":\\\"130502009363\\\",\\\"pagibig_number\\\":\\\"121227522486\\\",\\\"tin\\\":\\\"499460757\\\",\\\"civil_status\\\":\\\"Married\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0,\\\"file_completion_status\\\":\\\"Complete\\\",\\\"last_updated\\\":\\\"2026-01-12T10:19:46.798Z\\\",\\\"created_by\\\":1,\\\"id\\\":1,\\\"created_at\\\":\\\"2026-01-10T04:30:28.909Z\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":13710,\\\"daily_rate\\\":457,\\\"hourly_rate\\\":57.13,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1500},\\\"deductions\\\":{\\\"sss_contribution\\\":725,\\\"philhealth_contribution\\\":285,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":20000,\\\"amortization\\\":1292.06},\\\"pagibig_loan\\\":{\\\"balance\\\":20000,\\\"amortization\\\":1783.16},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"date_of_birth\\\":\\\"1973-03-19\\\",\\\"profile_picture\\\":\\\"/uploads/profile_pictures/1_1768213186797.png\\\"}\",\"new_value\":\"{\\\"employee_id\\\":\\\"2018-0001\\\",\\\"last_name\\\":\\\"ARRADAZA\\\",\\\"first_name\\\":\\\"JOSEPHINE\\\",\\\"middle_name\\\":\\\"RELOBA\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CASHIER\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2018-06-01\\\",\\\"date_of_birth\\\":\\\"1973-03-19\\\",\\\"contact_number\\\":\\\"9099611758\\\",\\\"email_address\\\":\\\"jarradaza73mlic@gmail.com\\\",\\\"address\\\":\\\"BRGY. SUMANGGA, ORMOC CITY\\\",\\\"sss_number\\\":\\\"0614563535\\\",\\\"philhealth_number\\\":\\\"130502009363\\\",\\\"pagibig_number\\\":\\\"121227522486\\\",\\\"tin\\\":\\\"499460757\\\",\\\"civil_status\\\":\\\"Married\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":13710,\\\"daily_rate\\\":457,\\\"hourly_rate\\\":57.13,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1500},\\\"deductions\\\":{\\\"sss_contribution\\\":725,\\\"philhealth_contribution\\\":285,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":20000,\\\"amortization\\\":1292.06},\\\"pagibig_loan\\\":{\\\"balance\\\":20000,\\\"amortization\\\":1783.16},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 182
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 1,
+      "new_value": "[{\"level\":\"College\",\"school_name\":\"ST. PETER'S COLLEGE OF ORMOC\",\"degree_course\":\"BACHELOR OF SCIENCE IN ELEMENTARY EDUCATION\",\"year_graduated\":\"1995\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"College\\\",\\\"school_name\\\":\\\"ST. PETER'S COLLEGE OF ORMOC\\\",\\\"degree_course\\\":\\\"BACHELOR OF SCIENCE IN ELEMENTARY EDUCATION\\\",\\\"year_graduated\\\":\\\"1995\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 183
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 8,
+      "old_value": "{\"employee_id\":\"2024-0003\",\"last_name\":\"FELICIA\",\"first_name\":\"MA. VICTORIA\",\"middle_name\":\"SAMBITAN\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-08-01\",\"date_of_birth\":\"1996-08-24\",\"contact_number\":\"09536487191\",\"email_address\":\"sambitanmavictoria@gmail.com\",\"sss_number\":\"3458722937\",\"philhealth_number\":\"132518185229\",\"pagibig_number\":\"121169040535\",\"tin\":\"334721262\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"1. Branch Social Media Excellence Award (Naval)\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Partial\",\"created_by\":1,\"id\":8,\"profile_picture\":\"/uploads/profile_pictures/8_1768276383111.png\",\"last_updated\":\"2026-01-13T05:13:27.760Z\",\"address\":\"\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}}",
+      "new_value": "{\"employee_id\":\"2024-0003\",\"last_name\":\"FELICIA\",\"first_name\":\"MA. VICTORIA\",\"middle_name\":\"SAMBITAN\",\"department\":\"Operations\",\"position\":\"CASHIER\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2024-08-01\",\"date_of_birth\":\"1996-08-24\",\"contact_number\":\"09536487191\",\"email_address\":\"sambitanmavictoria@gmail.com\",\"address\":\"BRGY. LUCSOON, NAVAL, BILIRAN\",\"sss_number\":\"3458722937\",\"philhealth_number\":\"132518185229\",\"pagibig_number\":\"121169040535\",\"tin\":\"334721262\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"1. Branch Social Media Excellence Award (Naval)\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"employee_id\\\":\\\"2024-0003\\\",\\\"last_name\\\":\\\"FELICIA\\\",\\\"first_name\\\":\\\"MA. VICTORIA\\\",\\\"middle_name\\\":\\\"SAMBITAN\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CASHIER\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2024-08-01\\\",\\\"date_of_birth\\\":\\\"1996-08-24\\\",\\\"contact_number\\\":\\\"09536487191\\\",\\\"email_address\\\":\\\"sambitanmavictoria@gmail.com\\\",\\\"sss_number\\\":\\\"3458722937\\\",\\\"philhealth_number\\\":\\\"132518185229\\\",\\\"pagibig_number\\\":\\\"121169040535\\\",\\\"tin\\\":\\\"334721262\\\",\\\"civil_status\\\":\\\"Married\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Branch Social Media Excellence Award (Naval)\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":0,\\\"payroll_records_complete\\\":0,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0,\\\"file_completion_status\\\":\\\"Partial\\\",\\\"created_by\\\":1,\\\"id\\\":8,\\\"profile_picture\\\":\\\"/uploads/profile_pictures/8_1768276383111.png\\\",\\\"last_updated\\\":\\\"2026-01-13T05:13:27.760Z\\\",\\\"address\\\":\\\"\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}}\",\"new_value\":\"{\\\"employee_id\\\":\\\"2024-0003\\\",\\\"last_name\\\":\\\"FELICIA\\\",\\\"first_name\\\":\\\"MA. VICTORIA\\\",\\\"middle_name\\\":\\\"SAMBITAN\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CASHIER\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2024-08-01\\\",\\\"date_of_birth\\\":\\\"1996-08-24\\\",\\\"contact_number\\\":\\\"09536487191\\\",\\\"email_address\\\":\\\"sambitanmavictoria@gmail.com\\\",\\\"address\\\":\\\"BRGY. LUCSOON, NAVAL, BILIRAN\\\",\\\"sss_number\\\":\\\"3458722937\\\",\\\"philhealth_number\\\":\\\"132518185229\\\",\\\"pagibig_number\\\":\\\"121169040535\\\",\\\"tin\\\":\\\"334721262\\\",\\\"civil_status\\\":\\\"Married\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Branch Social Media Excellence Award (Naval)\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":0,\\\"payroll_records_complete\\\":0,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 184
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 8,
+      "new_value": "[{\"level\":\"College\",\"school_name\":\"BILIRAN PROVINCE STATE UNIVERSITY\",\"degree_course\":\"BACHELOR OF SCIENCE IN FINANCE AND MARKETING\",\"year_graduated\":\"2016\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"College\\\",\\\"school_name\\\":\\\"BILIRAN PROVINCE STATE UNIVERSITY\\\",\\\"degree_course\\\":\\\"BACHELOR OF SCIENCE IN FINANCE AND MARKETING\\\",\\\"year_graduated\\\":\\\"2016\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 185
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 8,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 186
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 8,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 187
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 8,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 188
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 8,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 189
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 8,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 190
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 9,
+      "new_value": "{\"employee_id\":\"2022-0004\",\"last_name\":\"YBAÑEZ\",\"first_name\":\"MIA\",\"middle_name\":\"SOLAÑA\",\"department\":\"Information Technology\",\"position\":\"IT/ACCOUNTING CLERK/HR ASSISTANT\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-06-01\",\"date_of_birth\":\"1999-05-19\",\"contact_number\":\"09382193358\",\"email_address\":\"gmia0519@gmail.com\",\"address\":\"ABC ST. BRGY. ALEGRIA, ORMOC CITY\",\"sss_number\":\"0641029369\",\"philhealth_number\":\"132507053479\",\"pagibig_number\":\"121222917604\",\"tin\":\"64435695200000\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"1. IT ADMINISTRATOR WITH SECURITY RESPONSIBILITIES\\n2. SSS TRAINING FOR EMPLOYER-MEMBERS (SSSTEM) PROGRAM\\n3. 3-DAY TRAINING FOR STANDARD FIRST-AID AND BASIC LIFE SUPPORT\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":1,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"new_value\":\"{\\\"employee_id\\\":\\\"2022-0004\\\",\\\"last_name\\\":\\\"YBAÑEZ\\\",\\\"first_name\\\":\\\"MIA\\\",\\\"middle_name\\\":\\\"SOLAÑA\\\",\\\"department\\\":\\\"Information Technology\\\",\\\"position\\\":\\\"IT/ACCOUNTING CLERK/HR ASSISTANT\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2022-06-01\\\",\\\"date_of_birth\\\":\\\"1999-05-19\\\",\\\"contact_number\\\":\\\"09382193358\\\",\\\"email_address\\\":\\\"gmia0519@gmail.com\\\",\\\"address\\\":\\\"ABC ST. BRGY. ALEGRIA, ORMOC CITY\\\",\\\"sss_number\\\":\\\"0641029369\\\",\\\"philhealth_number\\\":\\\"132507053479\\\",\\\"pagibig_number\\\":\\\"121222917604\\\",\\\"tin\\\":\\\"64435695200000\\\",\\\"civil_status\\\":\\\"Married\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. IT ADMINISTRATOR WITH SECURITY RESPONSIBILITIES\\\\n2. SSS TRAINING FOR EMPLOYER-MEMBERS (SSSTEM) PROGRAM\\\\n3. 3-DAY TRAINING FOR STANDARD FIRST-AID AND BASIC LIFE SUPPORT\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":0,\\\"disciplinary_records\\\":0,\\\"training_records\\\":1,\\\"separation_records\\\":0}\"}",
+      "id": 191
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 9,
+      "new_value": "[{\"level\":\"College\",\"school_name\":\"EASTERN VISAYAS STATE UNIVERSITY-ORMOC CAMPUS\",\"degree_course\":\"BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY\",\"year_graduated\":\"2022\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"College\\\",\\\"school_name\\\":\\\"EASTERN VISAYAS STATE UNIVERSITY-ORMOC CAMPUS\\\",\\\"degree_course\\\":\\\"BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY\\\",\\\"year_graduated\\\":\\\"2022\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 192
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 9,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 193
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 10,
+      "new_value": "{\"employee_id\":\"2023-0001\",\"last_name\":\"ITONA\",\"first_name\":\"GERARD\",\"middle_name\":\"GARCIA\",\"department\":\"Operations\",\"position\":\"COLLECTOR\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2023-09-19\",\"date_of_birth\":\"1989-11-09\",\"contact_number\":\"09815286665\",\"email_address\":\"\",\"address\":\"CARAYCARAY, NAVA, BILIRAN\",\"sss_number\":\"0645382345\",\"philhealth_number\":\"130255848977\",\"pagibig_number\":\"\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"1. Disciplinary Action (February 4, 2025) -  Against Company Interest No. 13.1- Mahitungod sa Adlaw-Adlaw nga Kakulangan sa Koleksyon nga Mogikan sa Koleksyon, Reloan o Remittance.\\n2. Notice of the Violation of the Code of Conduct and Discipline (January 22, 2025)\\n3. Notice of Disciplinary Action (Written Warning) December 5, 2025\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":0,\"employment_records_complete\":1,\"attendance_records_complete\":0,\"payroll_records_complete\":0,\"disciplinary_records\":1,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"new_value\":\"{\\\"employee_id\\\":\\\"2023-0001\\\",\\\"last_name\\\":\\\"ITONA\\\",\\\"first_name\\\":\\\"GERARD\\\",\\\"middle_name\\\":\\\"GARCIA\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"COLLECTOR\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2023-09-19\\\",\\\"date_of_birth\\\":\\\"1989-11-09\\\",\\\"contact_number\\\":\\\"09815286665\\\",\\\"email_address\\\":\\\"\\\",\\\"address\\\":\\\"CARAYCARAY, NAVA, BILIRAN\\\",\\\"sss_number\\\":\\\"0645382345\\\",\\\"philhealth_number\\\":\\\"130255848977\\\",\\\"pagibig_number\\\":\\\"\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"1. Disciplinary Action (February 4, 2025) -  Against Company Interest No. 13.1- Mahitungod sa Adlaw-Adlaw nga Kakulangan sa Koleksyon nga Mogikan sa Koleksyon, Reloan o Remittance.\\\\n2. Notice of the Violation of the Code of Conduct and Discipline (January 22, 2025)\\\\n3. Notice of Disciplinary Action (Written Warning) December 5, 2025\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":0,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":0,\\\"payroll_records_complete\\\":0,\\\"disciplinary_records\\\":1,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 194
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 10,
+      "new_value": "[{\"level\":\"College\",\"school_name\":\"NAVAL STATE UNIVERSITY\",\"degree_course\":\"UNDERGRADUATE\",\"year_graduated\":\"\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"College\\\",\\\"school_name\\\":\\\"NAVAL STATE UNIVERSITY\\\",\\\"degree_course\\\":\\\"UNDERGRADUATE\\\",\\\"year_graduated\\\":\\\"\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 195
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 10,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 196
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 10,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 197
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_201_CHECKLIST",
+      "table_name": "employees",
+      "record_id": 10,
+      "details": "{\"table_name\":\"employees\"}",
+      "id": 198
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 10,
+      "old_value": "{\"employee_id\":\"2023-0001\",\"last_name\":\"ITONA\",\"first_name\":\"GERARD\",\"middle_name\":\"GARCIA\",\"department\":\"Operations\",\"position\":\"COLLECTOR\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2023-09-19\",\"date_of_birth\":\"1989-11-09\",\"contact_number\":\"09815286665\",\"email_address\":\"\",\"address\":\"CARAYCARAY, NAVA, BILIRAN\",\"sss_number\":\"0645382345\",\"philhealth_number\":\"130255848977\",\"pagibig_number\":\"\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"1. Disciplinary Action (February 4, 2025) -  Against Company Interest No. 13.1- Mahitungod sa Adlaw-Adlaw nga Kakulangan sa Koleksyon nga Mogikan sa Koleksyon, Reloan o Remittance.\\n2. Notice of the Violation of the Code of Conduct and Discipline (January 22, 2025)\\n3. Notice of Disciplinary Action (Written Warning) December 5, 2025\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":1,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"created_by\":1,\"id\":10,\"profile_picture\":\"/uploads/profile_pictures/10_1768288195208.jpg\",\"last_updated\":\"2026-01-13T07:10:05.816Z\"}",
+      "new_value": "{\"employee_id\":\"2023-0001\",\"last_name\":\"ITONA\",\"first_name\":\"GERARD\",\"middle_name\":\"GARCIA\",\"department\":\"Operations\",\"position\":\"COLLECTOR\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2023-09-19\",\"date_of_birth\":\"1989-11-09\",\"contact_number\":\"09815286665\",\"email_address\":\"\",\"address\":\"CARAYCARAY, NAVAL, BILIRAN\",\"sss_number\":\"0645382345\",\"philhealth_number\":\"130255848977\",\"pagibig_number\":\"\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"1. Disciplinary Action (February 4, 2025) -  Against Company Interest No. 13.1- Mahitungod sa Adlaw-Adlaw nga Kakulangan sa Koleksyon nga Mogikan sa Koleksyon, Reloan o Remittance.\\n2. Notice of the Violation of the Code of Conduct and Discipline (January 22, 2025)\\n3. Notice of Disciplinary Action (Written Warning) December 5, 2025\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":1,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"employee_id\\\":\\\"2023-0001\\\",\\\"last_name\\\":\\\"ITONA\\\",\\\"first_name\\\":\\\"GERARD\\\",\\\"middle_name\\\":\\\"GARCIA\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"COLLECTOR\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2023-09-19\\\",\\\"date_of_birth\\\":\\\"1989-11-09\\\",\\\"contact_number\\\":\\\"09815286665\\\",\\\"email_address\\\":\\\"\\\",\\\"address\\\":\\\"CARAYCARAY, NAVA, BILIRAN\\\",\\\"sss_number\\\":\\\"0645382345\\\",\\\"philhealth_number\\\":\\\"130255848977\\\",\\\"pagibig_number\\\":\\\"\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"1. Disciplinary Action (February 4, 2025) -  Against Company Interest No. 13.1- Mahitungod sa Adlaw-Adlaw nga Kakulangan sa Koleksyon nga Mogikan sa Koleksyon, Reloan o Remittance.\\\\n2. Notice of the Violation of the Code of Conduct and Discipline (January 22, 2025)\\\\n3. Notice of Disciplinary Action (Written Warning) December 5, 2025\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":1,\\\"training_records\\\":0,\\\"separation_records\\\":0,\\\"file_completion_status\\\":\\\"Complete\\\",\\\"created_by\\\":1,\\\"id\\\":10,\\\"profile_picture\\\":\\\"/uploads/profile_pictures/10_1768288195208.jpg\\\",\\\"last_updated\\\":\\\"2026-01-13T07:10:05.816Z\\\"}\",\"new_value\":\"{\\\"employee_id\\\":\\\"2023-0001\\\",\\\"last_name\\\":\\\"ITONA\\\",\\\"first_name\\\":\\\"GERARD\\\",\\\"middle_name\\\":\\\"GARCIA\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"COLLECTOR\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2023-09-19\\\",\\\"date_of_birth\\\":\\\"1989-11-09\\\",\\\"contact_number\\\":\\\"09815286665\\\",\\\"email_address\\\":\\\"\\\",\\\"address\\\":\\\"CARAYCARAY, NAVAL, BILIRAN\\\",\\\"sss_number\\\":\\\"0645382345\\\",\\\"philhealth_number\\\":\\\"130255848977\\\",\\\"pagibig_number\\\":\\\"\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"1. Disciplinary Action (February 4, 2025) -  Against Company Interest No. 13.1- Mahitungod sa Adlaw-Adlaw nga Kakulangan sa Koleksyon nga Mogikan sa Koleksyon, Reloan o Remittance.\\\\n2. Notice of the Violation of the Code of Conduct and Discipline (January 22, 2025)\\\\n3. Notice of Disciplinary Action (Written Warning) December 5, 2025\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":1,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 199
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 10,
+      "new_value": "[{\"level\":\"College\",\"school_name\":\"NAVAL STATE UNIVERSITY\",\"degree_course\":\"UNDERGRADUATE\",\"year_graduated\":\"\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"College\\\",\\\"school_name\\\":\\\"NAVAL STATE UNIVERSITY\\\",\\\"degree_course\\\":\\\"UNDERGRADUATE\\\",\\\"year_graduated\\\":\\\"\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 200
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 11,
+      "new_value": "{\"employee_id\":\"2025-0002\",\"last_name\":\"JUGAR\",\"first_name\":\"NOEL\",\"middle_name\":\"JABILLES\",\"department\":\"Operations\",\"position\":\"CI/COLLECTOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2025-03-28\",\"date_of_birth\":\"1975-12-08\",\"contact_number\":\"09815553195\",\"email_address\":\"\",\"address\":\"BRGY. ALTAVISTA, ORMOC CITY\",\"sss_number\":\"0621061538\",\"philhealth_number\":\"130500309750\",\"pagibig_number\":\"121047822047\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"new_value\":\"{\\\"employee_id\\\":\\\"2025-0002\\\",\\\"last_name\\\":\\\"JUGAR\\\",\\\"first_name\\\":\\\"NOEL\\\",\\\"middle_name\\\":\\\"JABILLES\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CI/COLLECTOR\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2025-03-28\\\",\\\"date_of_birth\\\":\\\"1975-12-08\\\",\\\"contact_number\\\":\\\"09815553195\\\",\\\"email_address\\\":\\\"\\\",\\\"address\\\":\\\"BRGY. ALTAVISTA, ORMOC CITY\\\",\\\"sss_number\\\":\\\"0621061538\\\",\\\"philhealth_number\\\":\\\"130500309750\\\",\\\"pagibig_number\\\":\\\"121047822047\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 201
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 11,
+      "new_value": "[{\"level\":\"College Level\",\"school_name\":\"VISAYAS STATE UNIVERSITY\",\"degree_course\":\"AGRICULTURE\",\"year_graduated\":\"\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"College Level\\\",\\\"school_name\\\":\\\"VISAYAS STATE UNIVERSITY\\\",\\\"degree_course\\\":\\\"AGRICULTURE\\\",\\\"year_graduated\\\":\\\"\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 202
+    },
+    {
+      "user_id": 1,
+      "action": "CREATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 12,
+      "new_value": "{\"employee_id\":\"2016-0001\",\"last_name\":\"LAHOYLAHOY\",\"first_name\":\"WILFREDO JR.\",\"middle_name\":\"SABARES\",\"department\":\"Operations\",\"position\":\"SUPERVISOR/GENERAL STAFF SERVICES\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2016-12-21\",\"date_of_birth\":\"1979-11-29\",\"contact_number\":\"09855864840\",\"email_address\":\"\",\"address\":\"BRGY. STO. NIÑO, ORMOC CITY\",\"sss_number\":\"0616610211\",\"philhealth_number\":\"130500483688\",\"pagibig_number\":\"170000153571\",\"tin\":\"\",\"civil_status\":\"Married\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":0,\"disciplinary_records\":0,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"new_value\":\"{\\\"employee_id\\\":\\\"2016-0001\\\",\\\"last_name\\\":\\\"LAHOYLAHOY\\\",\\\"first_name\\\":\\\"WILFREDO JR.\\\",\\\"middle_name\\\":\\\"SABARES\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"SUPERVISOR/GENERAL STAFF SERVICES\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2016-12-21\\\",\\\"date_of_birth\\\":\\\"1979-11-29\\\",\\\"contact_number\\\":\\\"09855864840\\\",\\\"email_address\\\":\\\"\\\",\\\"address\\\":\\\"BRGY. STO. NIÑO, ORMOC CITY\\\",\\\"sss_number\\\":\\\"0616610211\\\",\\\"philhealth_number\\\":\\\"130500483688\\\",\\\"pagibig_number\\\":\\\"170000153571\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Married\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":0,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 203
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 12,
+      "new_value": "[{\"level\":\"College Level\",\"school_name\":\"ST. PETER'S COLLEGE OF ORMOC\",\"degree_course\":\"ACCOUNTING MANAGEMENT\",\"year_graduated\":\"\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"College Level\\\",\\\"school_name\\\":\\\"ST. PETER'S COLLEGE OF ORMOC\\\",\\\"degree_course\\\":\\\"ACCOUNTING MANAGEMENT\\\",\\\"year_graduated\\\":\\\"\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 204
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 9,
+      "new_value": "{\"basic_salary\":13560,\"allowances\":{\"special\":1250},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":4000,\"amortization\":1000},\"sss_loan\":{\"balance\":0,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "details": "{\"table_name\":\"employees\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1250},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":4000,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":587.95},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 205
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 7,
+      "new_value": "{\"basic_salary\":13710,\"allowances\":{\"special\":2500},\"daily_rate\":457,\"hourly_rate\":57.13,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":800,\"philhealth_contribution\":285,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":26700,\"amortization\":2600},\"sss_loan\":{\"balance\":0,\"amortization\":1260},\"pagibig_loan\":{\"balance\":0,\"amortization\":1168.38},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "details": "{\"table_name\":\"employees\",\"new_value\":\"{\\\"basic_salary\\\":13710,\\\"allowances\\\":{\\\"special\\\":2500},\\\"daily_rate\\\":457,\\\"hourly_rate\\\":57.13,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":800,\\\"philhealth_contribution\\\":285,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":26700,\\\"amortization\\\":2600},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1260},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1168.38},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 206
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 9,
+      "old_value": "{\"basic_salary\":13560,\"allowances\":{\"special\":1250},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":4000,\"amortization\":1000},\"sss_loan\":{\"balance\":0,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "new_value": "{\"basic_salary\":13560,\"allowances\":{\"special\":2500},\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":4000,\"amortization\":1000},\"sss_loan\":{\"balance\":0,\"amortization\":587.95},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1250},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":4000,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":587.95},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":2500},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":4000,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":587.95},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 207
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 6,
+      "old_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"CABALLES\",\"first_name\":\"EDDIE JR.\",\"middle_name\":\"PARENA\",\"department\":\"Operations\",\"position\":\"COLLECTOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-02-11\",\"date_of_birth\":\"1993-06-10\",\"contact_number\":\"09513458506\",\"email_address\":\"JSYRRcaballes@yahoo.com\",\"sss_number\":\"0633443018\",\"philhealth_number\":\"130501485443\",\"pagibig_number\":\"121089280866\",\"tin\":\"733454732\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"1. Collection Excellence and Professionalism Award (2nd Place)\",\"disciplinary_details\":\"\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":1,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"created_by\":1,\"id\":6,\"last_updated\":\"2026-01-13T05:16:35.468Z\",\"profile_picture\":\"/uploads/profile_pictures/6_1768270355188.jpg\",\"address\":\"SITIO IPIL, BRGY. CURVA, ORMOC CITY\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}}",
+      "new_value": "{\"employee_id\":\"2022-0002\",\"last_name\":\"CABALLES\",\"first_name\":\"EDDIE JR.\",\"middle_name\":\"PARENA\",\"department\":\"Operations\",\"position\":\"CI/COLLECTOR\",\"branch\":\"Ormoc Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2022-02-11\",\"date_of_birth\":\"1993-06-10\",\"contact_number\":\"09513458506\",\"email_address\":\"JSYRRcaballes@yahoo.com\",\"address\":\"SITIO IPIL, BRGY. CURVA, ORMOC CITY\",\"sss_number\":\"0633443018\",\"philhealth_number\":\"130501485443\",\"pagibig_number\":\"121089280866\",\"tin\":\"733454732\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"1. Collection Excellence and Professionalism Award (2nd Place)\",\"disciplinary_details\":\"\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":0,\"training_records\":1,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"employee_id\\\":\\\"2022-0002\\\",\\\"last_name\\\":\\\"CABALLES\\\",\\\"first_name\\\":\\\"EDDIE JR.\\\",\\\"middle_name\\\":\\\"PARENA\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"COLLECTOR\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2022-02-11\\\",\\\"date_of_birth\\\":\\\"1993-06-10\\\",\\\"contact_number\\\":\\\"09513458506\\\",\\\"email_address\\\":\\\"JSYRRcaballes@yahoo.com\\\",\\\"sss_number\\\":\\\"0633443018\\\",\\\"philhealth_number\\\":\\\"130501485443\\\",\\\"pagibig_number\\\":\\\"121089280866\\\",\\\"tin\\\":\\\"733454732\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Collection Excellence and Professionalism Award (2nd Place)\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":1,\\\"separation_records\\\":0,\\\"file_completion_status\\\":\\\"Complete\\\",\\\"created_by\\\":1,\\\"id\\\":6,\\\"last_updated\\\":\\\"2026-01-13T05:16:35.468Z\\\",\\\"profile_picture\\\":\\\"/uploads/profile_pictures/6_1768270355188.jpg\\\",\\\"address\\\":\\\"SITIO IPIL, BRGY. CURVA, ORMOC CITY\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}}\",\"new_value\":\"{\\\"employee_id\\\":\\\"2022-0002\\\",\\\"last_name\\\":\\\"CABALLES\\\",\\\"first_name\\\":\\\"EDDIE JR.\\\",\\\"middle_name\\\":\\\"PARENA\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CI/COLLECTOR\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2022-02-11\\\",\\\"date_of_birth\\\":\\\"1993-06-10\\\",\\\"contact_number\\\":\\\"09513458506\\\",\\\"email_address\\\":\\\"JSYRRcaballes@yahoo.com\\\",\\\"address\\\":\\\"SITIO IPIL, BRGY. CURVA, ORMOC CITY\\\",\\\"sss_number\\\":\\\"0633443018\\\",\\\"philhealth_number\\\":\\\"130501485443\\\",\\\"pagibig_number\\\":\\\"121089280866\\\",\\\"tin\\\":\\\"733454732\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"1. Collection Excellence and Professionalism Award (2nd Place)\\\",\\\"disciplinary_details\\\":\\\"\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":0,\\\"training_records\\\":1,\\\"separation_records\\\":0}\"}",
+      "id": 208
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 6,
+      "new_value": "[{\"level\":\"Vocational\",\"school_name\":\"UNIC TRAINING CENTER TACLOBAN\",\"degree_course\":\"ELECTRICAL INSTALLATION MAINTENANCE\",\"year_graduated\":\"2011\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"Vocational\\\",\\\"school_name\\\":\\\"UNIC TRAINING CENTER TACLOBAN\\\",\\\"degree_course\\\":\\\"ELECTRICAL INSTALLATION MAINTENANCE\\\",\\\"year_graduated\\\":\\\"2011\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 209
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EMPLOYEE",
+      "table_name": "employees",
+      "record_id": 10,
+      "old_value": "{\"employee_id\":\"2023-0001\",\"last_name\":\"ITONA\",\"first_name\":\"GERARD\",\"middle_name\":\"GARCIA\",\"department\":\"Operations\",\"position\":\"COLLECTOR\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2023-09-19\",\"date_of_birth\":\"1989-11-09\",\"contact_number\":\"09815286665\",\"email_address\":\"\",\"address\":\"CARAYCARAY, NAVAL, BILIRAN\",\"sss_number\":\"0645382345\",\"philhealth_number\":\"130255848977\",\"pagibig_number\":\"\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"1. Disciplinary Action (February 4, 2025) -  Against Company Interest No. 13.1- Mahitungod sa Adlaw-Adlaw nga Kakulangan sa Koleksyon nga Mogikan sa Koleksyon, Reloan o Remittance.\\n2. Notice of the Violation of the Code of Conduct and Discipline (January 22, 2025)\\n3. Notice of Disciplinary Action (Written Warning) December 5, 2025\",\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":1,\"training_records\":0,\"separation_records\":0,\"file_completion_status\":\"Complete\",\"created_by\":1,\"id\":10,\"profile_picture\":\"/uploads/profile_pictures/10_1768288195208.jpg\",\"last_updated\":\"2026-01-13T07:27:10.658Z\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}}",
+      "new_value": "{\"employee_id\":\"2023-0001\",\"last_name\":\"ITONA\",\"first_name\":\"GERARD\",\"middle_name\":\"GARCIA\",\"department\":\"Operations\",\"position\":\"CI/COLLECTOR\",\"branch\":\"Naval Branch\",\"employment_status\":\"Regular\",\"date_hired\":\"2023-09-19\",\"date_of_birth\":\"1989-11-09\",\"contact_number\":\"09815286665\",\"email_address\":\"\",\"address\":\"CARAYCARAY, NAVAL, BILIRAN\",\"sss_number\":\"0645382345\",\"philhealth_number\":\"130255848977\",\"pagibig_number\":\"\",\"tin\":\"\",\"civil_status\":\"Single\",\"remarks\":\"\",\"training_details\":\"\",\"disciplinary_details\":\"1. Disciplinary Action (February 4, 2025) -  Against Company Interest No. 13.1- Mahitungod sa Adlaw-Adlaw nga Kakulangan sa Koleksyon nga Mogikan sa Koleksyon, Reloan o Remittance.\\n2. Notice of the Violation of the Code of Conduct and Discipline (January 22, 2025)\\n3. Notice of Disciplinary Action (Written Warning) December 5, 2025\",\"salary_info\":{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}},\"personal_info_complete\":1,\"preemployment_req_complete\":1,\"government_docs_complete\":1,\"employment_records_complete\":1,\"attendance_records_complete\":1,\"payroll_records_complete\":1,\"disciplinary_records\":1,\"training_records\":0,\"separation_records\":0}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"employee_id\\\":\\\"2023-0001\\\",\\\"last_name\\\":\\\"ITONA\\\",\\\"first_name\\\":\\\"GERARD\\\",\\\"middle_name\\\":\\\"GARCIA\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"COLLECTOR\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2023-09-19\\\",\\\"date_of_birth\\\":\\\"1989-11-09\\\",\\\"contact_number\\\":\\\"09815286665\\\",\\\"email_address\\\":\\\"\\\",\\\"address\\\":\\\"CARAYCARAY, NAVAL, BILIRAN\\\",\\\"sss_number\\\":\\\"0645382345\\\",\\\"philhealth_number\\\":\\\"130255848977\\\",\\\"pagibig_number\\\":\\\"\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"1. Disciplinary Action (February 4, 2025) -  Against Company Interest No. 13.1- Mahitungod sa Adlaw-Adlaw nga Kakulangan sa Koleksyon nga Mogikan sa Koleksyon, Reloan o Remittance.\\\\n2. Notice of the Violation of the Code of Conduct and Discipline (January 22, 2025)\\\\n3. Notice of Disciplinary Action (Written Warning) December 5, 2025\\\",\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":1,\\\"training_records\\\":0,\\\"separation_records\\\":0,\\\"file_completion_status\\\":\\\"Complete\\\",\\\"created_by\\\":1,\\\"id\\\":10,\\\"profile_picture\\\":\\\"/uploads/profile_pictures/10_1768288195208.jpg\\\",\\\"last_updated\\\":\\\"2026-01-13T07:27:10.658Z\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}}\",\"new_value\":\"{\\\"employee_id\\\":\\\"2023-0001\\\",\\\"last_name\\\":\\\"ITONA\\\",\\\"first_name\\\":\\\"GERARD\\\",\\\"middle_name\\\":\\\"GARCIA\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CI/COLLECTOR\\\",\\\"branch\\\":\\\"Naval Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2023-09-19\\\",\\\"date_of_birth\\\":\\\"1989-11-09\\\",\\\"contact_number\\\":\\\"09815286665\\\",\\\"email_address\\\":\\\"\\\",\\\"address\\\":\\\"CARAYCARAY, NAVAL, BILIRAN\\\",\\\"sss_number\\\":\\\"0645382345\\\",\\\"philhealth_number\\\":\\\"130255848977\\\",\\\"pagibig_number\\\":\\\"\\\",\\\"tin\\\":\\\"\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":\\\"\\\",\\\"training_details\\\":\\\"\\\",\\\"disciplinary_details\\\":\\\"1. Disciplinary Action (February 4, 2025) -  Against Company Interest No. 13.1- Mahitungod sa Adlaw-Adlaw nga Kakulangan sa Koleksyon nga Mogikan sa Koleksyon, Reloan o Remittance.\\\\n2. Notice of the Violation of the Code of Conduct and Discipline (January 22, 2025)\\\\n3. Notice of Disciplinary Action (Written Warning) December 5, 2025\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}},\\\"personal_info_complete\\\":1,\\\"preemployment_req_complete\\\":1,\\\"government_docs_complete\\\":1,\\\"employment_records_complete\\\":1,\\\"attendance_records_complete\\\":1,\\\"payroll_records_complete\\\":1,\\\"disciplinary_records\\\":1,\\\"training_records\\\":0,\\\"separation_records\\\":0}\"}",
+      "id": 210
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_EDUCATION_BULK",
+      "table_name": "education",
+      "record_id": 10,
+      "new_value": "[{\"level\":\"College\",\"school_name\":\"NAVAL STATE UNIVERSITY\",\"degree_course\":\"UNDERGRADUATE\",\"year_graduated\":\"\",\"honors_awards\":\"\"}]",
+      "details": "{\"table_name\":\"education\",\"new_value\":\"[{\\\"level\\\":\\\"College\\\",\\\"school_name\\\":\\\"NAVAL STATE UNIVERSITY\\\",\\\"degree_course\\\":\\\"UNDERGRADUATE\\\",\\\"year_graduated\\\":\\\"\\\",\\\"honors_awards\\\":\\\"\\\"}]\"}",
+      "id": 211
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 6,
+      "old_value": "{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "new_value": "{\"basic_salary\":0,\"daily_rate\":452,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":0,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 212
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 6,
+      "old_value": "{\"basic_salary\":0,\"daily_rate\":452,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1000},\"deductions\":{\"sss_contribution\":675,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":17386,\"amortization\":2000},\"sss_loan\":{\"balance\":0,\"amortization\":1199.77},\"pagibig_loan\":{\"balance\":0,\"amortization\":1773.3},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"basic_salary\\\":0,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":675,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":17386,\\\"amortization\\\":2000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1199.77},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1773.3},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 213
+    },
+    {
+      "user_id": 1,
+      "action": "UPDATE_SALARY_INFO",
+      "table_name": "employees",
+      "record_id": 5,
+      "old_value": "{\"basic_salary\":0,\"daily_rate\":0,\"hourly_rate\":0,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":0},\"deductions\":{\"sss_contribution\":0,\"philhealth_contribution\":0,\"pagibig_contribution\":0,\"company_cash_fund\":0,\"company_loan\":{\"balance\":0,\"amortization\":0},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "new_value": "{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1000},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":20500,\"amortization\":2000},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
+      "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":20500,\\\"amortization\\\":2000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 214
     }
   ],
   "settings": [
     {
       "id": 1,
       "key": "company_name",
-      "value": "Melann Lending Investor Corporation",
+      "value": "Melann HR System Test Update",
       "description": "Company Name displayed in reports",
-      "updated_at": "2026-01-08T02:44:05.978Z",
+      "updated_at": "2026-01-12T10:50:26.112Z",
       "last_updated": "2026-01-09T06:27:49.401Z"
     },
     {
@@ -1785,7 +2840,7 @@
       "key": "attendance_cutoff",
       "value": "08:00",
       "description": "Time after which an employee is marked late",
-      "updated_at": "2026-01-08T02:44:05.978Z",
+      "updated_at": "2026-01-12T10:22:04.351Z",
       "last_updated": "2026-01-09T06:27:49.403Z"
     },
     {
@@ -1793,7 +2848,7 @@
       "key": "default_password",
       "value": "HR123",
       "description": "Default password for new user accounts",
-      "updated_at": "2026-01-08T02:44:05.978Z",
+      "updated_at": "2026-01-12T10:22:04.353Z",
       "last_updated": "2026-01-09T06:27:49.404Z"
     },
     {
@@ -1810,9 +2865,275 @@
       "description": "User defined setting",
       "id": 4,
       "created_at": "2026-01-08T03:42:47.619Z",
-      "last_updated": "2026-01-09T06:27:49.405Z"
+      "last_updated": "2026-01-09T06:27:49.405Z",
+      "updated_at": "2026-01-12T10:22:04.355Z"
     }
   ],
   "payroll_runs": [],
-  "payslips": []
+  "payslips": [
+    {
+      "payroll_run_id": 1,
+      "employee_id": 1,
+      "gross_pay": 6855,
+      "net_pay": 6595,
+      "total_deductions": 1010,
+      "total_allowances": 750,
+      "days_present": 15,
+      "double_pay_days": 0,
+      "double_pay_amount": 0,
+      "deduction_details": "{\"philhealth\":285,\"sss\":725}",
+      "allowance_details": "{\"standard\":750}",
+      "id": 1
+    },
+    {
+      "payroll_run_id": 1,
+      "employee_id": 2,
+      "gross_pay": 6780,
+      "net_pay": 6698.75,
+      "total_deductions": 981.25,
+      "total_allowances": 900,
+      "days_present": 15,
+      "double_pay_days": 0,
+      "double_pay_amount": 0,
+      "deduction_details": "{\"philhealth\":281.25,\"sss\":700}",
+      "allowance_details": "{\"standard\":900}",
+      "id": 2
+    },
+    {
+      "payroll_run_id": 1,
+      "employee_id": 3,
+      "gross_pay": 6780,
+      "net_pay": 6298.75,
+      "total_deductions": 981.25,
+      "total_allowances": 500,
+      "days_present": 15,
+      "double_pay_days": 0,
+      "double_pay_amount": 0,
+      "deduction_details": "{\"philhealth\":281.25,\"sss\":700}",
+      "allowance_details": "{\"standard\":500}",
+      "id": 3
+    },
+    {
+      "payroll_run_id": 1,
+      "employee_id": 4,
+      "gross_pay": 6780,
+      "net_pay": 6298.75,
+      "total_deductions": 981.25,
+      "total_allowances": 500,
+      "days_present": 15,
+      "double_pay_days": 0,
+      "double_pay_amount": 0,
+      "deduction_details": "{\"philhealth\":281.25,\"sss\":700}",
+      "allowance_details": "{\"standard\":500}",
+      "id": 4
+    },
+    {
+      "payroll_run_id": 1,
+      "employee_id": 1,
+      "gross_pay": 6855,
+      "net_pay": 6595,
+      "total_deductions": 1010,
+      "total_allowances": 750,
+      "days_present": 15,
+      "double_pay_days": 0,
+      "double_pay_amount": 0,
+      "deduction_details": "{\"philhealth\":285,\"sss\":725}",
+      "allowance_details": "{\"standard\":750}",
+      "id": 5
+    },
+    {
+      "payroll_run_id": 1,
+      "employee_id": 2,
+      "gross_pay": 6780,
+      "net_pay": 6698.75,
+      "total_deductions": 981.25,
+      "total_allowances": 900,
+      "days_present": 15,
+      "double_pay_days": 0,
+      "double_pay_amount": 0,
+      "deduction_details": "{\"philhealth\":281.25,\"sss\":700}",
+      "allowance_details": "{\"standard\":900}",
+      "id": 6
+    },
+    {
+      "payroll_run_id": 1,
+      "employee_id": 3,
+      "gross_pay": 6780,
+      "net_pay": 6298.75,
+      "total_deductions": 981.25,
+      "total_allowances": 500,
+      "days_present": 15,
+      "double_pay_days": 0,
+      "double_pay_amount": 0,
+      "deduction_details": "{\"philhealth\":281.25,\"sss\":700}",
+      "allowance_details": "{\"standard\":500}",
+      "id": 7
+    },
+    {
+      "payroll_run_id": 1,
+      "employee_id": 4,
+      "gross_pay": 6780,
+      "net_pay": 6298.75,
+      "total_deductions": 981.25,
+      "total_allowances": 500,
+      "days_present": 15,
+      "double_pay_days": 0,
+      "double_pay_amount": 0,
+      "deduction_details": "{\"philhealth\":281.25,\"sss\":700}",
+      "allowance_details": "{\"standard\":500}",
+      "id": 8
+    }
+  ],
+  "sessions": [
+    {
+      "id": "f518bd36666131800ce19ef4fb052f9f",
+      "user_id": 5,
+      "expires_at": "2026-01-13T09:36:17.327Z"
+    },
+    {
+      "id": "932ee64f0ef4278bf3108b50d7031a8d",
+      "user_id": 10,
+      "expires_at": "2026-01-13T10:37:04.273Z"
+    },
+    {
+      "id": "9ad43409587f3fae3c72e62c9a4b1981",
+      "user_id": 11,
+      "expires_at": "2026-01-13T10:42:24.224Z"
+    },
+    {
+      "id": "4a414ecef8d1958d734fe80f7fb41587",
+      "user_id": 1,
+      "expires_at": "2026-01-13T10:53:57.672Z"
+    },
+    {
+      "id": "e1332894ad91195d5259c6337a718683",
+      "user_id": 5,
+      "expires_at": "2026-01-14T02:20:32.292Z"
+    },
+    {
+      "id": "68191bbcaa25791d0b81c15309af0b08",
+      "user_id": 5,
+      "expires_at": "2026-01-14T02:28:26.964Z"
+    },
+    {
+      "id": "38b69331d106d2b9ced2af20fa312f5a",
+      "user_id": 5,
+      "expires_at": "2026-01-14T02:34:01.758Z"
+    },
+    {
+      "id": "c771619c6d345568c814baa8989dabab",
+      "user_id": 5,
+      "expires_at": "2026-01-14T02:38:47.590Z"
+    }
+  ],
+  "education": [
+    {
+      "level": "College",
+      "school_name": "BILIRAN PROVINCE STATE UNIVERSITY-MAIN CAMPUS",
+      "degree_course": "BACHELOR OF SCIENCE IN BUSINESS ADMINISTRATION",
+      "year_graduated": "2020",
+      "honors_awards": "",
+      "employee_id": 7,
+      "id": 1
+    },
+    {
+      "level": "College",
+      "school_name": "Southern Leyte State University- Main Campus",
+      "degree_course": "Bachelor of Science in Information Technology",
+      "year_graduated": "2024",
+      "honors_awards": "",
+      "employee_id": 5,
+      "id": 3
+    },
+    {
+      "level": "High School",
+      "school_name": "NEW ORMOC CITY NATIONAL HIGH SCHOOL",
+      "degree_course": "",
+      "year_graduated": "N/A",
+      "honors_awards": "",
+      "employee_id": 4,
+      "id": 5
+    },
+    {
+      "level": "Vocational",
+      "school_name": "TECHNICAL EDUCATIONAL AND SKILLS DEVELOPMENT AUTHORITY (TESDA)",
+      "degree_course": "MICROSOFT OFFICE",
+      "year_graduated": "2010-2011",
+      "honors_awards": "",
+      "employee_id": 3,
+      "id": 7
+    },
+    {
+      "level": "High School",
+      "school_name": "LINAO NATIONAL HIGH SCHOOL",
+      "degree_course": "",
+      "year_graduated": "N/A",
+      "honors_awards": "",
+      "employee_id": 2,
+      "id": 8
+    },
+    {
+      "level": "College",
+      "school_name": "ST. PETER'S COLLEGE OF ORMOC",
+      "degree_course": "BACHELOR OF SCIENCE IN ELEMENTARY EDUCATION",
+      "year_graduated": "1995",
+      "honors_awards": "",
+      "employee_id": 1,
+      "id": 9
+    },
+    {
+      "level": "College",
+      "school_name": "BILIRAN PROVINCE STATE UNIVERSITY",
+      "degree_course": "BACHELOR OF SCIENCE IN FINANCE AND MARKETING",
+      "year_graduated": "2016",
+      "honors_awards": "",
+      "employee_id": 8,
+      "id": 10
+    },
+    {
+      "level": "College",
+      "school_name": "EASTERN VISAYAS STATE UNIVERSITY-ORMOC CAMPUS",
+      "degree_course": "BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY",
+      "year_graduated": "2022",
+      "honors_awards": "",
+      "employee_id": 9,
+      "id": 11
+    },
+    {
+      "level": "College Level",
+      "school_name": "VISAYAS STATE UNIVERSITY",
+      "degree_course": "AGRICULTURE",
+      "year_graduated": "",
+      "honors_awards": "",
+      "employee_id": 11,
+      "id": 13
+    },
+    {
+      "level": "College Level",
+      "school_name": "ST. PETER'S COLLEGE OF ORMOC",
+      "degree_course": "ACCOUNTING MANAGEMENT",
+      "year_graduated": "",
+      "honors_awards": "",
+      "employee_id": 12,
+      "id": 14
+    },
+    {
+      "level": "Vocational",
+      "school_name": "UNIC TRAINING CENTER TACLOBAN",
+      "degree_course": "ELECTRICAL INSTALLATION MAINTENANCE",
+      "year_graduated": "2011",
+      "honors_awards": "",
+      "employee_id": 6,
+      "id": 15
+    },
+    {
+      "level": "College",
+      "school_name": "NAVAL STATE UNIVERSITY",
+      "degree_course": "UNDERGRADUATE",
+      "year_graduated": "",
+      "honors_awards": "",
+      "employee_id": 10,
+      "id": 16
+    }
+  ]
 }

@@ -76,3 +76,27 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to list files' }, { status: 500 });
     }
 }
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const employeeId = searchParams.get('employeeId');
+        const filename = searchParams.get('filename');
+
+        if (!employeeId || !filename) {
+            return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
+        }
+
+        const filePath = path.join(UPLOAD_DIR, employeeId, filename);
+
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            return NextResponse.json({ success: true });
+        } else {
+            return NextResponse.json({ error: 'File not found' }, { status: 404 });
+        }
+    } catch (error) {
+        console.error('Delete file error:', error);
+        return NextResponse.json({ error: 'Failed to delete file' }, { status: 500 });
+    }
+}

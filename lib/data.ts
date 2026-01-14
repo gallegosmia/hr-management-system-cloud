@@ -48,6 +48,7 @@ export interface Employee {
     date_separated?: string;
     contact_number?: string;
     email_address?: string;
+    address?: string;
     sss_number?: string;
     philhealth_number?: string;
     pagibig_number?: string;
@@ -70,6 +71,16 @@ export interface Employee {
     disciplinary_details?: string;
 }
 
+export interface Education {
+    id: number;
+    employee_id: number;
+    level: string;
+    school_name: string;
+    degree_course?: string;
+    year_graduated: string;
+    honors_awards?: string;
+}
+
 export interface EmployeeFormData {
     employee_id: string;
     last_name: string;
@@ -84,6 +95,7 @@ export interface EmployeeFormData {
     date_separated?: string;
     contact_number?: string;
     email_address?: string;
+    address?: string;
     sss_number?: string;
     philhealth_number?: string;
     pagibig_number?: string;
@@ -600,6 +612,35 @@ export interface Document {
 export async function getEmployeeDocuments(employeeId: number): Promise<Document[]> {
     const res = await query("SELECT * FROM documents WHERE employee_id = $1", [employeeId]);
     return res.rows;
+}
+
+export async function getEducationByEmployeeId(employeeId: number): Promise<Education[]> {
+    const res = await query("SELECT * FROM education WHERE employee_id = $1 ORDER BY year_graduated DESC", [employeeId]);
+    return res.rows;
+}
+
+export async function addEducation(data: Omit<Education, 'id'>): Promise<number> {
+    return await insert('education', data);
+}
+
+export async function deleteEducation(id: number): Promise<void> {
+    await remove('education', id);
+}
+
+export async function replaceEmployeeEducation(employeeId: number, educationList: Omit<Education, 'id'>[]): Promise<void> {
+    // Get existing to delete
+    const res = await query("SELECT id FROM education WHERE employee_id = $1", [employeeId]);
+    const existingIds = res.rows.map(r => r.id);
+
+    // Delete all existing
+    for (const id of existingIds) {
+        await remove('education', id);
+    }
+
+    // Insert new
+    for (const edu of educationList) {
+        await insert('education', { ...edu, employee_id: employeeId });
+    }
 }
 
 export async function addDocument(data: {

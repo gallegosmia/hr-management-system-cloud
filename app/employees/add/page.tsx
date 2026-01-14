@@ -22,6 +22,7 @@ export default function AddEmployeePage() {
         date_of_birth: '',
         contact_number: '',
         email_address: '',
+        address: '',
         sss_number: '',
         philhealth_number: '',
         pagibig_number: '',
@@ -40,6 +41,37 @@ export default function AddEmployeePage() {
         training_records: 0,
         separation_records: 0
     });
+
+    // Education State
+    const [education, setEducation] = useState([{
+        level: 'College',
+        school_name: '',
+        degree_course: '',
+        year_graduated: '',
+        honors_awards: ''
+    }]);
+
+    const handleEducationChange = (index: number, field: string, value: string) => {
+        setEducation(prev => {
+            const newEdu = [...prev];
+            (newEdu[index] as any)[field] = value;
+            return newEdu;
+        });
+    };
+
+    const handleAddEducation = () => {
+        setEducation(prev => [...prev, {
+            level: 'College',
+            school_name: '',
+            degree_course: '',
+            year_graduated: '',
+            honors_awards: ''
+        }]);
+    };
+
+    const handleRemoveEducation = (index: number) => {
+        setEducation(prev => prev.filter((_, i) => i !== index));
+    };
 
     useEffect(() => {
         const fetchNextId = async () => {
@@ -80,6 +112,17 @@ export default function AddEmployeePage() {
             const data = await response.json();
 
             if (response.ok) {
+                // Save Education Records
+                if (education.length > 0 && education.some(e => e.school_name)) {
+                    await fetch('/api/employees/education', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            employee_id: data.id,
+                            education: education.filter(e => e.school_name) // Filter out empty entries
+                        })
+                    });
+                }
                 router.push(`/employees/${data.id}`);
             } else {
                 setError(data.error || 'Failed to create employee');
@@ -294,6 +337,107 @@ export default function AddEmployeePage() {
                             </div>
                         </div>
 
+                        {/* Educational Attainment Section */}
+                        <div style={{
+                            background: 'var(--bg-secondary)',
+                            padding: 'var(--spacing-lg)',
+                            borderRadius: 'var(--radius-md)',
+                            marginBottom: 'var(--spacing-xl)'
+                        }}>
+                            <h3 style={{ marginBottom: 'var(--spacing-lg)', fontSize: '1.125rem' }}>
+                                🎓 Educational Attainment
+                            </h3>
+
+                            {education.map((edu, index) => (
+                                <div key={index} style={{
+                                    background: 'var(--bg-primary)',
+                                    padding: 'var(--spacing-md)',
+                                    borderRadius: 'var(--radius-md)',
+                                    marginBottom: 'var(--spacing-md)',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--spacing-md)' }}>
+                                        <h4 style={{ fontSize: '0.875rem', fontWeight: '600' }}>Entry #{index + 1}</h4>
+                                        {education.length > 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveEducation(index)}
+                                                className="text-danger"
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}
+                                            >
+                                                × Remove
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label className="form-label">Level</label>
+                                            <select
+                                                className="form-select"
+                                                value={edu.level}
+                                                onChange={(e) => handleEducationChange(index, 'level', e.target.value)}
+                                            >
+                                                <option value="Elementary">Elementary</option>
+                                                <option value="High School">High School</option>
+                                                <option value="Senior High">Senior High</option>
+                                                <option value="Vocational">Vocational</option>
+                                                <option value="College Level">College Level</option>
+                                                <option value="College">College</option>
+                                                <option value="Post Graduate">Post Graduate</option>
+                                            </select>
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">School Name</label>
+                                            <input
+                                                type="text"
+                                                className="form-input"
+                                                value={edu.school_name}
+                                                onChange={(e) => handleEducationChange(index, 'school_name', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Degree / Course</label>
+                                            <input
+                                                type="text"
+                                                className="form-input"
+                                                value={edu.degree_course}
+                                                onChange={(e) => handleEducationChange(index, 'degree_course', e.target.value)}
+                                                placeholder="Optional for Elem/HS"
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Year Graduated</label>
+                                            <input
+                                                type="number"
+                                                className="form-input"
+                                                value={edu.year_graduated}
+                                                onChange={(e) => handleEducationChange(index, 'year_graduated', e.target.value)}
+                                                placeholder="YYYY"
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Honors / Awards</label>
+                                            <input
+                                                type="text"
+                                                className="form-input"
+                                                value={edu.honors_awards}
+                                                onChange={(e) => handleEducationChange(index, 'honors_awards', e.target.value)}
+                                                placeholder="Optional"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={handleAddEducation}
+                                className="btn btn-sm btn-secondary"
+                                style={{ width: '100%' }}
+                            >
+                                + Add Another Education Record
+                            </button>
+                        </div>
+
                         {/* Contact Information Section */}
                         <div style={{
                             background: 'var(--bg-secondary)',
@@ -329,6 +473,17 @@ export default function AddEmployeePage() {
                                         placeholder="juan.delacruz@company.com"
                                     />
                                 </div>
+                            </div>
+                            <div className="form-group" style={{ marginTop: 'var(--spacing-md)' }}>
+                                <label className="form-label">Address</label>
+                                <input
+                                    type="text"
+                                    name="address"
+                                    value={(formData as any).address || ''}
+                                    onChange={handleChange}
+                                    className="form-input"
+                                    placeholder="123 Example Street, City, Province"
+                                />
                             </div>
                         </div>
 

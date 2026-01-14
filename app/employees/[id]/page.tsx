@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { format } from 'date-fns';
+import Modal from '@/components/Modal';
 
 interface Employee {
     id: number;
@@ -20,6 +24,7 @@ interface Employee {
     date_separated?: string;
     contact_number?: string;
     email_address?: string;
+    address?: string;
     sss_number?: string;
     philhealth_number?: string;
     pagibig_number?: string;
@@ -39,11 +44,85 @@ interface Employee {
     remarks?: string;
     training_details?: string;
     disciplinary_details?: string;
+    profile_picture?: string;
+    salary_info?: any;
+    education?: Education[];
 }
 
-function FileList({ employeeId }: { employeeId: string }) {
+interface Education {
+    id: number;
+    employee_id: number;
+    level: string;
+    school_name: string;
+    degree_course?: string;
+    year_graduated: string;
+    honors_awards?: string;
+}
+
+function LeaveCreditsWidget({ used, total = 5 }: { used: number, total?: number }) {
+    const percentage = Math.min((used / total) * 100, 100);
+    const radius = 30;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+    return (
+        <div style={{
+            background: 'white',
+            padding: 'var(--spacing-md)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-color)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--spacing-md)'
+        }}>
+            <div style={{ position: 'relative', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="80" height="80" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle
+                        cx="40"
+                        cy="40"
+                        r={radius}
+                        fill="transparent"
+                        stroke="var(--gray-200)"
+                        strokeWidth="8"
+                    />
+                    <circle
+                        cx="40"
+                        cy="40"
+                        r={radius}
+                        fill="transparent"
+                        stroke={percentage > 80 ? 'var(--danger-500)' : 'var(--success-500)'}
+                        strokeWidth="8"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={strokeDashoffset}
+                        strokeLinecap="round"
+                        style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+                    />
+                </svg>
+                <div style={{ position: 'absolute', textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{used}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>USED</div>
+                </div>
+            </div>
+            <div>
+                <div style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-primary)' }}>Paid Leaves</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-xs)' }}>Service Incentive Leave</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                    {total - used} days remaining
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function FileList({ employeeId, showAlert, showConfirm, refreshTrigger }: {
+    employeeId: string;
+    showAlert: (msg: string) => void;
+    showConfirm: (msg: string, onConfirmAction: () => void) => void;
+    refreshTrigger?: number;
+}) {
     const [files, setFiles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('All');
 
     useEffect(() => {
         const fetchFiles = async () => {
@@ -60,73 +139,195 @@ function FileList({ employeeId }: { employeeId: string }) {
             }
         };
         fetchFiles();
-    }, [employeeId]);
+    }, [employeeId, refreshTrigger]);
+
+    const tabs = ['All', 'Medical', 'Legal', 'Identification', 'Employment', 'Other'];
+
+    const getCategory = (type: string) => {
+        if (['Medical'].includes(type)) return 'Medical';
+        if (['NBI'].includes(type)) return 'Legal';
+        if (['SSS', 'PhilHealth', 'Pag-IBIG', 'TIN'].includes(type)) return 'Identification';
+        if (['Contract', 'Resume', 'Training', 'Disciplinary'].includes(type)) return 'Employment';
+        return 'Other';
+    };
+
+    const filteredFiles = files.filter(f => activeTab === 'All' || getCategory(f.type) === activeTab);
+
+    // ... existing handlers ...
+
+    const handleDelete = (filename: string) => {
+        showConfirm('Are you sure you want to delete this file?', async () => {
+            try {
+                const res = await fetch(`/api/employees/documents?employeeId=${employeeId}&filename=${filename}`, {
+                    method: 'DELETE'
+                });
+                if (res.ok) {
+                    setFiles(prev => prev.filter(f => f.filename !== filename));
+                    showAlert('File deleted successfully');
+                } else {
+                    showAlert('Failed to delete file');
+                }
+            } catch (err) {
+                console.error('Delete error:', err);
+                showAlert('An error occurred');
+            }
+        });
+    };
 
     if (loading) return <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Loading files...</p>;
     if (files.length === 0) return <p style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>No documents uploaded yet.</p>;
 
     return (
-        <div style={{ display: 'grid', gap: 'var(--spacing-sm)' }}>
-            {files.map((file) => (
-                <div
-                    key={file.filename}
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: 'var(--spacing-sm) var(--spacing-md)',
-                        background: 'var(--bg-secondary)',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border-color)'
-                    }}
-                >
-                    <div>
-                        <div style={{ fontSize: '0.875rem', fontWeight: '600' }}>
-                            {file.type} - {file.filename.split('_').slice(2).join('_')}
+        <div>
+            <div style={{ display: 'flex', gap: 'var(--spacing-xs)', marginBottom: 'var(--spacing-md)', overflowX: 'auto', paddingBottom: '4px' }}>
+                {tabs.map(tab => (
+                    <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        style={{
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: 'var(--radius-full)',
+                            fontSize: '0.75rem',
+                            fontWeight: '500',
+                            border: 'none',
+                            background: activeTab === tab ? 'var(--primary-500)' : 'var(--bg-secondary)',
+                            color: activeTab === tab ? 'white' : 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        {tab}
+                    </button>
+                ))}
+            </div>
+
+            <div style={{ display: 'grid', gap: 'var(--spacing-sm)' }}>
+                {filteredFiles.map((file) => (
+                    <div
+                        key={file.filename}
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: 'var(--spacing-sm) var(--spacing-md)',
+                            background: 'var(--bg-secondary)',
+                            borderRadius: 'var(--radius-sm)',
+                            border: '1px solid var(--border-color)'
+                        }}
+                    >
+                        <div>
+                            <div style={{ fontSize: '0.875rem', fontWeight: '600' }}>
+                                {file.type} - {file.filename.split('_').slice(2).join('_')}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                {(file.size / 1024).toFixed(1)} KB • {new Date(file.uploadedAt).toLocaleDateString()}
+                            </div>
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                            {(file.size / 1024).toFixed(1)} KB • {new Date(file.uploadedAt).toLocaleDateString()}
+                        <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+                            <a
+                                href={`${file.url}&view=true`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-sm btn-outline"
+                                style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}
+                            >
+                                👁️ View
+                            </a>
+                            <a
+                                href={file.url}
+                                download
+                                className="btn btn-sm btn-outline"
+                                style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}
+                            >
+                                ⬇️ Download
+                            </a>
+                            <button
+                                onClick={() => handleDelete(file.filename)}
+                                className="btn btn-sm"
+                                style={{
+                                    padding: '0.25rem 0.75rem',
+                                    fontSize: '0.75rem',
+                                    background: 'white',
+                                    color: 'var(--danger-500)',
+                                    border: '1px solid var(--danger-500)',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                🗑️ Delete
+                            </button>
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
-                        <a
-                            href={`${file.url}&view=true`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-sm btn-outline"
-                            style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}
-                        >
-                            👁️ View
-                        </a>
-                        <a
-                            href={file.url}
-                            download
-                            className="btn btn-sm btn-outline"
-                            style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}
-                        >
-                            ⬇️ Download
-                        </a>
-                    </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     );
 }
+
+
 
 export default function EmployeeDetailPage() {
     const params = useParams();
     const router = useRouter();
     const [employee, setEmployee] = useState<Employee | null>(null);
+
+    // Modal State
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalTitle, setModalTitle] = useState('Melann Lending');
+    const [modalMessage, setModalMessage] = useState('');
+    const [modalType, setModalType] = useState<'alert' | 'confirm'>('alert');
+    const [onConfirm, setOnConfirm] = useState<() => void>(() => { });
+
+    const showAlert = (message: string, title = 'Melann Lending') => {
+        setModalTitle(title);
+        setModalMessage(message);
+        setModalType('alert');
+        setModalOpen(true);
+    };
+
+    const showConfirm = (message: string, onConfirmAction: () => void, title = 'Confirm Action') => {
+        setModalTitle(title);
+        setModalMessage(message);
+        setModalType('confirm');
+        setOnConfirm(() => onConfirmAction);
+        setModalOpen(true);
+    };
+
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
     const [attendanceSummary, setAttendanceSummary] = useState({ late: 0, absent: 0, onLeave: 0, totalPaidLeaves: 0 });
 
-    useEffect(() => {
-        if (params.id) {
-            fetchEmployee();
-            fetchAttendanceSummary();
+    // New state for report generation
+    const [reportStartDate, setReportStartDate] = useState(format(new Date(new Date().getFullYear(), 0, 1), 'yyyy-MM-dd')); // Jan 1st of current year
+    const [reportEndDate, setReportEndDate] = useState(format(new Date(), 'yyyy-MM-dd')); // Today
+    const [education, setEducation] = useState<Education[]>([]);
+    const [generatingReport, setGeneratingReport] = useState(false);
+    const [generatingProfile, setGeneratingProfile] = useState(false);
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+    const [showEducationModal, setShowEducationModal] = useState(false);
+    const [educationForm, setEducationForm] = useState<Partial<Education>>({
+        level: 'College',
+        school_name: '',
+        degree_course: '',
+        year_graduated: '',
+        honors_awards: ''
+    });
+    const [refreshFiles, setRefreshFiles] = useState(0);
+    const [dragActive, setDragActive] = useState(false);
+
+
+
+    const fetchEmployee = async () => {
+        try {
+            const response = await fetch(`/api/employees?id=${params.id}`);
+            const data = await response.json();
+            setEmployee(data);
+        } catch (error) {
+            console.error('Failed to fetch employee:', error);
+        } finally {
+            setLoading(false);
         }
-    }, [params.id]);
+    };
 
     const fetchAttendanceSummary = async () => {
         try {
@@ -147,17 +348,333 @@ export default function EmployeeDetailPage() {
         }
     };
 
-    const fetchEmployee = async () => {
+    const fetchEducation = async () => {
         try {
-            const response = await fetch(`/api/employees?id=${params.id}`);
-            const data = await response.json();
-            setEmployee(data);
+            const response = await fetch(`/api/employees/education?employee_id=${params.id}`);
+            if (response.ok) {
+                const data = await response.json();
+                setEducation(data);
+            }
         } catch (error) {
-            console.error('Failed to fetch employee:', error);
+            console.error('Failed to fetch education:', error);
+        }
+    }
+
+    useEffect(() => {
+        if (employee?.id) {
+            fetchEducation();
+        }
+    }, [employee?.id]);
+
+    useEffect(() => {
+        if (params.id) {
+            fetchEmployee();
+            fetchAttendanceSummary();
+        }
+    }, [params.id]);
+
+    const generateProfilePDF = async () => {
+        if (!employee) return;
+        setGeneratingProfile(true);
+
+        try {
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
+            const primaryColor = [33, 150, 243] as [number, number, number]; // Blue
+
+            // Helper for date formatting
+            const formatDate = (dateStr?: string) => {
+                if (!dateStr) return '-';
+                try {
+                    return format(new Date(dateStr), 'MMM dd, yyyy');
+                } catch (e) {
+                    return dateStr;
+                }
+            };
+
+            // Helper for section headers
+            const addSectionHeader = (text: string, y: number) => {
+                doc.setFontSize(14);
+                doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                doc.setFont('helvetica', 'bold');
+                doc.text(text, 14, y);
+                doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                doc.setLineWidth(0.5);
+                doc.line(14, y + 2, pageWidth - 14, y + 2);
+                doc.setFont('helvetica', 'normal');
+                return y + 10;
+            };
+
+            // --- HEADER ---
+            // Branding Bar
+            doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+            doc.rect(0, 0, pageWidth, 20, 'F');
+
+            doc.setFontSize(18);
+            doc.setTextColor(255, 255, 255);
+            doc.text('EMPLOYEE 201 PROFILE', pageWidth / 2, 13, { align: 'center' });
+
+            doc.setFontSize(9);
+            doc.setTextColor(150);
+            doc.text(`Generated on: ${format(new Date(), 'MMM dd, yyyy HH:mm')}`, 14, 28);
+            doc.text('CONFIDENTIAL', pageWidth - 14, 28, { align: 'right' });
+
+            // --- PROFILE PICTURE & BASIC INFO ---
+            let yPos = 35;
+
+            // Profile Box Background
+            doc.setDrawColor(220);
+            doc.setFillColor(250, 250, 250);
+            doc.roundedRect(14, yPos, pageWidth - 28, 50, 3, 3, 'FD');
+
+            // Picture
+            if (employee.profile_picture) {
+                try {
+                    const img = new Image();
+                    img.src = employee.profile_picture;
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                    });
+                    // Try to detect type or default to PNG
+                    doc.addImage(img, 'PNG', 20, yPos + 5, 40, 40);
+                } catch (e) {
+                    doc.setFontSize(10);
+                    doc.setTextColor(150);
+                    doc.text('No Photo', 28, yPos + 25);
+                }
+            } else {
+                doc.setFontSize(10);
+                doc.setTextColor(150);
+                doc.text('No Photo', 28, yPos + 25);
+            }
+
+            // Name & ID
+            doc.setTextColor(40);
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${employee.last_name}, ${employee.first_name} ${employee.middle_name || ''}`, 70, yPos + 12);
+
+            doc.setFontSize(10);
+            doc.setTextColor(80);
+            doc.setFont('helvetica', 'normal');
+
+            const infoStartX = 70;
+            const infoGapY = 6;
+            let currentInfoY = yPos + 20;
+
+            doc.text(`ID Reference:`, infoStartX, currentInfoY);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${employee.employee_id}`, infoStartX + 30, currentInfoY);
+            currentInfoY += infoGapY;
+
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Department:`, infoStartX, currentInfoY);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${employee.department}`, infoStartX + 30, currentInfoY);
+            currentInfoY += infoGapY;
+
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Position:`, infoStartX, currentInfoY);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${employee.position}`, infoStartX + 30, currentInfoY);
+            currentInfoY += infoGapY;
+
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Status:`, infoStartX, currentInfoY);
+            doc.setFont('helvetica', 'bold');
+            const statusColor = (employee.employment_status === 'Active' || employee.employment_status === 'Regular') ? [0, 128, 0] : [80, 80, 80];
+            doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+            doc.text(`${employee.employment_status}`, infoStartX + 30, currentInfoY);
+
+            yPos += 60;
+
+            // --- PERSONAL INFORMATION ---
+            yPos = addSectionHeader('Personal Information', yPos);
+
+            autoTable(doc, {
+                startY: yPos,
+                body: [
+                    ['Date Hired', formatDate(employee.date_hired)],
+                    ['Date of Birth', formatDate(employee.date_of_birth)],
+                    ['Contact Number', employee.contact_number || '-'],
+                    ['Email Address', employee.email_address || '-'],
+                    ['Address', employee.address || '-'],
+                    ['Civil Status', employee.civil_status || '-'],
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: primaryColor, textColor: 255 },
+                styles: { fontSize: 10, cellPadding: 3, textColor: 50 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50, fillColor: [245, 247, 250] } }
+            });
+
+            yPos = (doc as any).lastAutoTable.finalY + 15;
+
+            // --- GOVERNMENT IDS ---
+            yPos = addSectionHeader('Government & Statutory', yPos);
+
+            autoTable(doc, {
+                startY: yPos,
+                body: [
+                    ['SSS Number', employee.sss_number || '-'],
+                    ['PhilHealth Number', employee.philhealth_number || '-'],
+                    ['Pag-IBIG Number', employee.pagibig_number || '-'],
+                    ['TIN', employee.tin || '-'],
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: primaryColor, textColor: 255 },
+                styles: { fontSize: 10, cellPadding: 3, textColor: 50 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50, fillColor: [245, 247, 250] } }
+            });
+
+            yPos = (doc as any).lastAutoTable.finalY + 15;
+
+            // --- EDUCATIONAL ATTAINMENT ---
+            yPos = addSectionHeader('Educational Attainment', yPos);
+
+            if (education.length > 0) {
+                const eduRows = education.map(edu => [
+                    edu.level,
+                    edu.school_name,
+                    edu.degree_course || '-',
+                    edu.year_graduated,
+                    edu.honors_awards || '-'
+                ]);
+
+                autoTable(doc, {
+                    startY: yPos,
+                    head: [['Level', 'School', 'Degree/Course', 'Year', 'Honors']],
+                    body: eduRows,
+                    theme: 'grid',
+                    headStyles: { fillColor: primaryColor, textColor: 255, fontStyle: 'bold' },
+                    styles: { fontSize: 9, cellPadding: 3, textColor: 50 },
+                    alternateRowStyles: { fillColor: [250, 250, 250] }
+                });
+                yPos = (doc as any).lastAutoTable.finalY + 15;
+            } else {
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text('No education records recorded.', 14, yPos + 5);
+                yPos += 15;
+            }
+
+            // --- COMPENSATION & BENEFITS ---
+            if (yPos > pageHeight - 60) { doc.addPage(); yPos = 20; }
+            yPos = addSectionHeader('Compensation & Benefits', yPos);
+
+            if (employee.salary_info) {
+                const salary = employee.salary_info;
+                autoTable(doc, {
+                    startY: yPos,
+                    body: [
+                        ['Basic Salary', `P ${salary.basic_salary?.toLocaleString() || '0.00'}`],
+                        ['Daily Rate', `P ${salary.daily_rate?.toLocaleString() || '0.00'}`],
+                        ['Pay Frequency', salary.pay_frequency || '-'],
+                        ['Special Allowance', `P ${salary.allowances?.special?.toLocaleString() || '0.00'}`],
+                    ],
+                    theme: 'grid',
+                    headStyles: { fillColor: primaryColor, textColor: 255 },
+                    styles: { fontSize: 10, cellPadding: 3, textColor: 50 },
+                    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50, fillColor: [245, 247, 250] } }
+                });
+                yPos = (doc as any).lastAutoTable.finalY + 15;
+            } else {
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text('No salary information available.', 14, yPos + 5);
+                yPos += 15;
+            }
+
+            // --- ATTENDANCE SUMMARY ---
+            if (yPos > pageHeight - 60) { doc.addPage(); yPos = 20; }
+            yPos = addSectionHeader('Attendance Summary (YTD)', yPos);
+
+            autoTable(doc, {
+                startY: yPos,
+                body: [
+                    ['Total Lates', attendanceSummary.late.toString()],
+                    ['Total Absences', attendanceSummary.absent.toString()],
+                    ['Total Leaves Taken', attendanceSummary.onLeave.toString()],
+                    ['Paid Leaves Used', `${attendanceSummary.totalPaidLeaves} / 5`],
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: primaryColor, textColor: 255 },
+                styles: { fontSize: 10, cellPadding: 3, textColor: 50 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50, fillColor: [245, 247, 250] } }
+            });
+            yPos = (doc as any).lastAutoTable.finalY + 15;
+
+            // --- TRAININGS & CERTIFICATES ---
+            if (yPos > pageHeight - 60) { doc.addPage(); yPos = 20; }
+            yPos = addSectionHeader('Trainings & Certificates', yPos);
+
+            if (employee.training_details) {
+                doc.setFontSize(10);
+                doc.setTextColor(50);
+                const splitText = doc.splitTextToSize(employee.training_details, pageWidth - 28);
+                doc.text(splitText, 14, yPos + 5);
+                yPos += (splitText.length * 5) + 15;
+            } else {
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text('No training records available.', 14, yPos + 5);
+                yPos += 15;
+            }
+
+            // --- VIOLATIONS & WARNINGS ---
+            if (yPos > pageHeight - 60) { doc.addPage(); yPos = 20; }
+            yPos = addSectionHeader('Violations & Warnings', yPos);
+
+            if (employee.disciplinary_details) {
+                doc.setFontSize(10);
+                doc.setTextColor(50);
+                const splitText = doc.splitTextToSize(employee.disciplinary_details, pageWidth - 28);
+                doc.text(splitText, 14, yPos + 5);
+                yPos += (splitText.length * 5) + 15;
+            } else {
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text('No disciplinary records available.', 14, yPos + 5);
+                yPos += 15;
+            }
+
+            // --- ATTENDANCE SUMMARY ---
+            if (yPos > pageHeight - 60) { doc.addPage(); yPos = 20; }
+            yPos = addSectionHeader('Attendance Summary (YTD)', yPos);
+
+            autoTable(doc, {
+                startY: yPos,
+                body: [
+                    ['Total Lates', attendanceSummary.late.toString()],
+                    ['Total Absences', attendanceSummary.absent.toString()],
+                    ['Total Leaves Taken', attendanceSummary.onLeave.toString()],
+                    ['Paid Leaves Used', `${attendanceSummary.totalPaidLeaves} / 5`],
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: primaryColor, textColor: 255 },
+                styles: { fontSize: 10, cellPadding: 3, textColor: 50 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50, fillColor: [245, 247, 250] } }
+            });
+            yPos = (doc as any).lastAutoTable.finalY + 15;
+            const pageCount = doc.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+            }
+
+            doc.save(`201_File_${employee.last_name}_${employee.employee_id}.pdf`);
+
+        } catch (error) {
+            console.error('Error generating profile PDF:', error);
+            showAlert(`Failed to generate profile PDF: ${error instanceof Error ? error.message : String(error)}`);
         } finally {
-            setLoading(false);
+            setGeneratingProfile(false);
         }
     };
+
 
     const handleChecklistUpdate = async (field: string, value: number) => {
         if (!employee) return;
@@ -183,24 +700,168 @@ export default function EmployeeDetailPage() {
         }
     };
 
-    const handleDelete = async () => {
-        if (!confirm('Are you sure you want to delete this employee? This action cannot be undone.')) {
-            return;
-        }
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files?.[0] || !employee) return;
+
+        const file = e.target.files[0];
+        if (!file.type.startsWith('image/')) return alert('Please select an image file');
+
+        setUploadingPhoto(true);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('employeeId', employee.id.toString());
 
         try {
-            const response = await fetch(`/api/employees?id=${employee?.id}`, {
-                method: 'DELETE'
+            const res = await fetch('/api/employees/upload-photo', {
+                method: 'POST',
+                body: formData
             });
 
-            if (response.ok) {
-                router.push('/employees');
+            if (res.ok) {
+                const data = await res.json();
+                setEmployee(prev => prev ? { ...prev, profile_picture: data.url } : null);
             } else {
-                alert('Failed to delete employee');
+                alert('Failed to upload photo');
             }
         } catch (error) {
-            console.error('Failed to delete employee:', error);
-            alert('An error occurred while deleting the employee');
+            console.error('Error uploading photo:', error);
+            alert('Error uploading photo');
+        } finally {
+            setUploadingPhoto(false);
+        }
+    };
+
+    const handleDelete = () => {
+        showConfirm('Are you sure you want to delete this employee? This action cannot be undone.', async () => {
+            try {
+                const response = await fetch(`/api/employees?id=${employee?.id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    router.push('/employees');
+                } else {
+                    showAlert('Failed to delete employee');
+                }
+            } catch (error) {
+                console.error('Failed to delete employee:', error);
+                showAlert('An error occurred while deleting the employee');
+            }
+        }, 'Delete Employee');
+    };
+
+    const handleAddEducation = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const res = await fetch('/api/employees/education', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...educationForm, employee_id: employee?.id })
+            });
+
+            if (res.ok) {
+                setShowEducationModal(false);
+                setEducationForm({
+                    level: 'College',
+                    school_name: '',
+                    degree_course: '',
+                    year_graduated: '',
+                    honors_awards: ''
+                });
+                fetchEducation();
+            } else {
+                alert('Failed to add education record');
+            }
+        } catch (error) {
+            console.error('Failed to add education:', error);
+        }
+    };
+
+    const handleDeleteEducation = (id: number) => {
+        showConfirm('Delete this education record?', async () => {
+            try {
+                const res = await fetch(`/api/employees/education?id=${id}`, {
+                    method: 'DELETE'
+                });
+                if (res.ok) fetchEducation();
+            } catch (error) {
+                console.error('Failed to delete education:', error);
+            }
+        }, 'Delete Education');
+    };
+
+    const generateAttendanceReport = async () => {
+        if (!employee) return;
+        setGeneratingReport(true);
+
+        try {
+            // Fetch detailed records
+            const res = await fetch(`/api/attendance?employee_id=${employee.id}&start_date=${reportStartDate}&end_date=${reportEndDate}`);
+            if (!res.ok) throw new Error('Failed to fetch attendance records');
+
+            const records: any[] = await res.json();
+
+            // Sort records by date descending
+            records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+            const doc = new jsPDF();
+
+            // Header
+            doc.setFontSize(18);
+            doc.setTextColor(40);
+            doc.text('Individual Attendance Report', 14, 20);
+
+            doc.setFontSize(11);
+            doc.setTextColor(100);
+            doc.text(`Employee: ${employee.first_name} ${employee.last_name} (${employee.employee_id})`, 14, 30);
+            doc.text(`Department: ${employee.department}`, 14, 36);
+            doc.text(`Period: ${format(new Date(reportStartDate), 'MMM dd, yyyy')} to ${format(new Date(reportEndDate), 'MMM dd, yyyy')}`, 14, 42);
+            doc.text(`Generated on: ${format(new Date(), 'MMM dd, yyyy HH:mm')}`, 14, 48);
+
+            // Summary for the period
+            const periodStats = {
+                present: records.filter(r => r.status === 'Present').length,
+                late: records.filter(r => r.status === 'Late').length,
+                absent: records.filter(r => r.status === 'Absent').length,
+                onLeave: records.filter(r => r.status === 'On Leave').length,
+                halfDay: records.filter(r => r.status === 'Half-Day').length
+            };
+
+            doc.setDrawColor(200);
+            doc.line(14, 54, 196, 54);
+            doc.setFontSize(10);
+            doc.setTextColor(40);
+            doc.text(`Summary for selected period:`, 14, 60);
+            doc.text(`Present: ${periodStats.present}   Late: ${periodStats.late}   Absent: ${periodStats.absent}   On Leave: ${periodStats.onLeave}`, 14, 66);
+
+            // Table
+            const tableData = records.map(att => [
+                format(new Date(att.date), 'MMM dd, yyyy (EEE)'),
+                att.time_in || '-',
+                att.time_out || '-',
+                att.status,
+                att.remarks || ''
+            ]);
+
+            autoTable(doc, {
+                startY: 75,
+                head: [['Date', 'Time In', 'Time Out', 'Status', 'Remarks']],
+                body: tableData,
+                theme: 'striped',
+                headStyles: { fillColor: [41, 128, 185] },
+                styles: { fontSize: 10 },
+                columnStyles: {
+                    0: { fontStyle: 'bold' }
+                }
+            });
+
+            doc.save(`Attendance_${employee.last_name}_${reportStartDate}_to_${reportEndDate}.pdf`);
+
+        } catch (error) {
+            console.error('Error generating report:', error);
+            alert('Failed to generate attendance report');
+        } finally {
+            setGeneratingReport(false);
         }
     };
 
@@ -264,19 +925,78 @@ export default function EmployeeDetailPage() {
             <div className="card mb-3">
                 <div className="card-body">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--spacing-md)' }}>
-                        <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-sm)' }}>
-                                <h2 style={{ margin: 0 }}>{fullName}</h2>
-                                <span className={`badge ${employee.employment_status === 'Regular' ? 'badge-success' :
-                                    employee.employment_status === 'Probationary' ? 'badge-warning' :
-                                        employee.employment_status === 'Contractual' ? 'badge-info' : 'badge-gray'
-                                    }`}>
-                                    {employee.employment_status}
-                                </span>
+                        <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center' }}>
+                            {/* Profile Picture */}
+                            <div style={{ position: 'relative', width: '80px', height: '80px' }}>
+                                <div
+                                    style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        borderRadius: '50%',
+                                        overflow: 'hidden',
+                                        border: '3px solid var(--primary-100)',
+                                        background: 'var(--bg-secondary)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '2rem'
+                                    }}
+                                >
+                                    {employee.profile_picture ? (
+                                        <img
+                                            src={employee.profile_picture}
+                                            alt="Profile"
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        />
+                                    ) : (
+                                        <span>👤</span>
+                                    )}
+                                </div>
+                                <label
+                                    style={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        right: 0,
+                                        background: 'var(--primary-600)',
+                                        color: 'white',
+                                        borderRadius: '50%',
+                                        width: '28px',
+                                        height: '28px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        fontSize: '0.75rem',
+                                        border: '2px solid white',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                    }}
+                                    title="Upload Photo"
+                                >
+                                    {uploadingPhoto ? '⏳' : '📷'}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                        onChange={handlePhotoUpload}
+                                        disabled={uploadingPhoto}
+                                    />
+                                </label>
                             </div>
-                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                                {employee.employee_id} • {employee.position} • {employee.department}
-                            </p>
+
+                            <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-sm)' }}>
+                                    <h2 style={{ margin: 0 }}>{fullName}</h2>
+                                    <span className={`badge ${employee.employment_status === 'Regular' ? 'badge-success' :
+                                        employee.employment_status === 'Probationary' ? 'badge-warning' :
+                                            employee.employment_status === 'Contractual' ? 'badge-info' : 'badge-gray'
+                                        }`}>
+                                        {employee.employment_status}
+                                    </span>
+                                </div>
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                                    {employee.employee_id} • {employee.position} • {employee.department}
+                                </p>
+                            </div>
                         </div>
                         <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
                             <button
@@ -285,6 +1005,14 @@ export default function EmployeeDetailPage() {
                                 style={{ background: 'var(--danger-600)', color: 'white', border: 'none' }}
                             >
                                 🗑️ Delete
+                            </button>
+                            <button
+                                onClick={generateProfilePDF}
+                                disabled={generatingProfile}
+                                className="btn btn-secondary"
+                                style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }}
+                            >
+                                {generatingProfile ? '⏳ Generating...' : '📄 Export 201 File'}
                             </button>
                             <Link href={`/employees/${employee.id}/edit`} className="btn btn-primary">
                                 ✏️ Edit
@@ -380,13 +1108,19 @@ export default function EmployeeDetailPage() {
                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-xs)' }}>
                                         Contact Number
                                     </div>
-                                    <div style={{ fontWeight: '600' }}>{employee.contact_number || 'Not provided'}</div>
+                                    <div style={{ fontWeight: '600' }}>{employee.contact_number || '-'}</div>
                                 </div>
                                 <div>
                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-xs)' }}>
                                         Email Address
                                     </div>
-                                    <div style={{ fontWeight: '600' }}>{employee.email_address || 'Not provided'}</div>
+                                    <div style={{ fontWeight: '600' }}>{employee.email_address || '-'}</div>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 'var(--spacing-xs)' }}>
+                                        Address
+                                    </div>
+                                    <div style={{ fontWeight: '600' }}>{employee.address || '-'}</div>
                                 </div>
                             </div>
                         </div>
@@ -430,113 +1164,9 @@ export default function EmployeeDetailPage() {
                         </div>
                     </div>
 
-                    {/* Branch Assignment */}
-                    <div className="card mb-3">
-                        <div className="card-header">
-                            <div className="card-title">
-                                <span>🏢</span>
-                                Branch Assignment
-                            </div>
-                        </div>
-                        <div className="card-body">
-                            <div style={{ marginBottom: 'var(--spacing-md)' }}>
-                                <label style={{ fontSize: '0.875rem', fontWeight: '600', display: 'block', marginBottom: 'var(--spacing-sm)' }}>
-                                    Assign Employee to Branch
-                                </label>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-                                    <label style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        padding: 'var(--spacing-md)',
-                                        background: employee.branch === 'Ormoc Branch' ? 'var(--primary-50)' : 'var(--bg-secondary)',
-                                        border: `2px solid ${employee.branch === 'Ormoc Branch' ? 'var(--primary-500)' : 'var(--border-color)'}`,
-                                        borderRadius: 'var(--radius-md)',
-                                        cursor: 'pointer',
-                                        transition: 'all var(--transition-fast)'
-                                    }}>
-                                        <input
-                                            type="radio"
-                                            name="branch"
-                                            value="Ormoc Branch"
-                                            checked={employee.branch === 'Ormoc Branch'}
-                                            onChange={async (e) => {
-                                                try {
-                                                    const response = await fetch('/api/employees', {
-                                                        method: 'PUT',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({
-                                                            id: employee.id,
-                                                            branch: e.target.value
-                                                        })
-                                                    });
-                                                    if (response.ok) {
-                                                        await fetchEmployee();
-                                                    }
-                                                } catch (error) {
-                                                    console.error('Failed to update branch:', error);
-                                                }
-                                            }}
-                                            style={{ marginRight: 'var(--spacing-sm)', width: '20px', height: '20px' }}
-                                        />
-                                        <span style={{ fontWeight: employee.branch === 'Ormoc Branch' ? '600' : '500' }}>
-                                            Ormoc Branch
-                                        </span>
-                                    </label>
-                                    <label style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        padding: 'var(--spacing-md)',
-                                        background: employee.branch === 'Naval Branch' ? 'var(--primary-50)' : 'var(--bg-secondary)',
-                                        border: `2px solid ${employee.branch === 'Naval Branch' ? 'var(--primary-500)' : 'var(--border-color)'}`,
-                                        borderRadius: 'var(--radius-md)',
-                                        cursor: 'pointer',
-                                        transition: 'all var(--transition-fast)'
-                                    }}>
-                                        <input
-                                            type="radio"
-                                            name="branch"
-                                            value="Naval Branch"
-                                            checked={employee.branch === 'Naval Branch'}
-                                            onChange={async (e) => {
-                                                try {
-                                                    const response = await fetch('/api/employees', {
-                                                        method: 'PUT',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({
-                                                            id: employee.id,
-                                                            branch: e.target.value
-                                                        })
-                                                    });
-                                                    if (response.ok) {
-                                                        await fetchEmployee();
-                                                    }
-                                                } catch (error) {
-                                                    console.error('Failed to update branch:', error);
-                                                }
-                                            }}
-                                            style={{ marginRight: 'var(--spacing-sm)', width: '20px', height: '20px' }}
-                                        />
-                                        <span style={{ fontWeight: employee.branch === 'Naval Branch' ? '600' : '500' }}>
-                                            Naval Branch
-                                        </span>
-                                    </label>
-                                </div>
-                                {employee.branch && (
-                                    <div style={{
-                                        marginTop: 'var(--spacing-md)',
-                                        padding: 'var(--spacing-sm)',
-                                        background: 'var(--success-50)',
-                                        borderRadius: 'var(--radius-md)',
-                                        fontSize: '0.75rem',
-                                        color: 'var(--success-700)',
-                                        textAlign: 'center'
-                                    }}>
-                                        ✓ Employee assigned to {employee.branch}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+
+
+
 
                     {/* Attendance Summary */}
                     <div className="card mb-3">
@@ -545,8 +1175,35 @@ export default function EmployeeDetailPage() {
                                 <span>📅</span>
                                 Attendance Summary
                             </div>
+                            <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+                                <input
+                                    type="date"
+                                    value={reportStartDate}
+                                    onChange={(e) => setReportStartDate(e.target.value)}
+                                    className="form-input"
+                                    style={{ padding: '0.25rem 0.5rem', fontSize: '0.875rem', width: 'auto' }}
+                                />
+                                <span style={{ color: 'var(--text-tertiary)' }}>to</span>
+                                <input
+                                    type="date"
+                                    value={reportEndDate}
+                                    onChange={(e) => setReportEndDate(e.target.value)}
+                                    className="form-input"
+                                    style={{ padding: '0.25rem 0.5rem', fontSize: '0.875rem', width: 'auto' }}
+                                />
+                                <button
+                                    onClick={generateAttendanceReport}
+                                    disabled={generatingReport}
+                                    className="btn btn-sm btn-outline"
+                                >
+                                    {generatingReport ? '⏳' : '📥 Report'}
+                                </button>
+                            </div>
                         </div>
                         <div className="card-body">
+                            <div style={{ marginBottom: 'var(--spacing-md)' }}>
+                                <LeaveCreditsWidget used={attendanceSummary.totalPaidLeaves} total={5} />
+                            </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--spacing-md)', textAlign: 'center' }}>
                                 <div style={{ padding: 'var(--spacing-sm)', background: 'var(--warning-50)', borderRadius: 'var(--radius-md)' }}>
                                     <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--warning-700)' }}>{attendanceSummary.late}</div>
@@ -585,63 +1242,104 @@ export default function EmployeeDetailPage() {
                                 <label style={{ fontSize: '0.875rem', fontWeight: '600', display: 'block', marginBottom: 'var(--spacing-sm)' }}>
                                     Upload New Document
                                 </label>
-                                <div style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
-                                    <select
-                                        id="docType"
-                                        className="form-input"
-                                        style={{ width: 'auto', minWidth: '150px' }}
-                                    >
-                                        <option value="Medical">Medical</option>
-                                        <option value="NBI">NBI Clearance</option>
-                                        <option value="SSS">SSS ID/E1</option>
-                                        <option value="PhilHealth">PhilHealth ID/MDR</option>
-                                        <option value="Pag-IBIG">Pag-IBIG ID/MDF</option>
-                                        <option value="Contract">Contract / Appointment</option>
-                                        <option value="Training">Training & Certificates</option>
-                                        <option value="Disciplinary">Violations & Warnings</option>
-                                        <option value="Resume">Resume / CV</option>
-                                        <option value="Other">Other Document</option>
-                                    </select>
-                                    <input
-                                        type="file"
-                                        id="fileInput"
-                                        className="form-input"
-                                        style={{ width: 'auto' }}
-                                        accept=".pdf"
-                                    />
-                                    <button
-                                        onClick={async () => {
-                                            const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-                                            const docType = (document.getElementById('docType') as HTMLSelectElement).value;
-                                            if (!fileInput.files?.[0]) return alert('Please select a file');
 
-                                            const file = fileInput.files[0];
-                                            if (file.type !== 'application/pdf') {
-                                                return alert('Only PDF files are allowed for the Digital 201 File.');
-                                            }
+                                <div
+                                    onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setDragActive(true); }}
+                                    onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragActive(false); }}
+                                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragActive(true); }}
+                                    onDrop={async (e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setDragActive(false);
 
-                                            const formData = new FormData();
-                                            formData.append('file', file);
-                                            formData.append('employeeId', employee.employee_id);
-                                            formData.append('documentType', docType);
+                                        const file = e.dataTransfer.files?.[0];
+                                        if (!file) return;
+                                        if (file.type !== 'application/pdf') return showAlert('Only PDF files are allowed.');
 
-                                            const res = await fetch('/api/employees/documents', {
-                                                method: 'POST',
-                                                body: formData
-                                            });
-                                            if (res.ok) {
-                                                alert('Uploaded successfully!');
-                                                fileInput.value = '';
-                                                // Trigger a refresh of the file list
-                                                window.location.reload();
-                                            } else {
-                                                alert('Upload failed');
-                                            }
-                                        }}
-                                        className="btn btn-primary"
-                                    >
-                                        📤 Upload
-                                    </button>
+                                        const docType = (document.getElementById('docType') as HTMLSelectElement).value;
+                                        const formData = new FormData();
+                                        formData.append('file', file);
+                                        formData.append('employeeId', employee.employee_id);
+                                        formData.append('documentType', docType);
+
+                                        const res = await fetch('/api/employees/documents', { method: 'POST', body: formData });
+                                        if (res.ok) {
+                                            showAlert('Uploaded successfully!');
+                                            setRefreshFiles(prev => prev + 1);
+                                        } else {
+                                            showAlert('Upload failed');
+                                        }
+                                    }}
+                                    style={{
+                                        border: `2px dashed ${dragActive ? 'var(--primary-500)' : 'var(--border-color)'}`,
+                                        borderRadius: 'var(--radius-md)',
+                                        padding: 'var(--spacing-lg)',
+                                        textAlign: 'center',
+                                        background: dragActive ? 'var(--primary-50)' : 'var(--bg-secondary)',
+                                        transition: 'all 0.2s ease',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <div style={{ marginBottom: 'var(--spacing-md)' }}>
+                                        <div style={{ fontSize: '2rem', marginBottom: 'var(--spacing-sm)' }}>☁️</div>
+                                        <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
+                                            Drag & Drop your file here
+                                        </div>
+                                        <div style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)' }}>
+                                            or click to browse
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: 'var(--spacing-sm)', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+                                        <select
+                                            id="docType"
+                                            className="form-input"
+                                            style={{ width: 'auto', minWidth: '150px' }}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <option value="Medical">Medical</option>
+                                            <option value="NBI">NBI Clearance</option>
+                                            <option value="SSS">SSS ID/E1</option>
+                                            <option value="PhilHealth">PhilHealth ID/MDR</option>
+                                            <option value="Pag-IBIG">Pag-IBIG ID/MDF</option>
+                                            <option value="Contract">Contract / Appointment</option>
+                                            <option value="Training">Training & Certificates</option>
+                                            <option value="Disciplinary">Violations & Warnings</option>
+                                            <option value="Resume">Resume / CV</option>
+                                            <option value="Other">Other Document</option>
+                                        </select>
+                                        <input
+                                            type="file"
+                                            id="fileInput"
+                                            style={{ display: 'none' }}
+                                            accept=".pdf"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+                                                const docType = (document.getElementById('docType') as HTMLSelectElement).value;
+
+                                                const formData = new FormData();
+                                                formData.append('file', file);
+                                                formData.append('employeeId', employee.employee_id);
+                                                formData.append('documentType', docType);
+
+                                                const res = await fetch('/api/employees/documents', { method: 'POST', body: formData });
+                                                if (res.ok) {
+                                                    showAlert('Uploaded successfully!');
+                                                    setRefreshFiles(prev => prev + 1);
+                                                    e.target.value = ''; // Reset
+                                                } else {
+                                                    showAlert('Upload failed');
+                                                }
+                                            }}
+                                        />
+                                        <button
+                                            onClick={() => document.getElementById('fileInput')?.click()}
+                                            className="btn btn-primary"
+                                        >
+                                            Browse Files
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -650,144 +1348,13 @@ export default function EmployeeDetailPage() {
                                     Uploaded Files
                                 </h4>
                                 <div id="fileList">
-                                    {/* This would ideally be populated via a separate state, but for now we'll show a placeholder or use a quick fetch */}
-                                    <FileList employeeId={employee.employee_id} />
+                                    <FileList employeeId={employee.employee_id} showAlert={showAlert} showConfirm={showConfirm} refreshTrigger={refreshFiles} />
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="card">
-                        <div className="card-header">
-                            <div className="card-title">
-                                <span>📋</span>
-                                201 File Document Tracking
-                            </div>
-                            <div className="card-subtitle">
-                                Track completion status of all required documents
-                            </div>
-                        </div>
-                        <div className="card-body">
-                            {/* Completion Status */}
-                            <div style={{
-                                background: employee.file_completion_status === 'Complete' ? 'var(--success-50)' :
-                                    employee.file_completion_status === 'Partial' ? 'var(--warning-50)' : 'var(--danger-50)',
-                                padding: 'var(--spacing-lg)',
-                                borderRadius: 'var(--radius-md)',
-                                marginBottom: 'var(--spacing-lg)',
-                                border: `2px solid ${employee.file_completion_status === 'Complete' ? 'var(--success-500)' :
-                                    employee.file_completion_status === 'Partial' ? 'var(--warning-500)' : 'var(--danger-500)'
-                                    }`
-                            }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
-                                    <div>
-                                        <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: 'var(--spacing-xs)' }}>
-                                            Overall Completion Status
-                                        </div>
-                                        <div style={{ fontSize: '2rem', fontWeight: '700', fontFamily: 'var(--font-display)' }}>
-                                            {completionPercentage}%
-                                        </div>
-                                    </div>
-                                    <span className={`badge ${employee.file_completion_status === 'Complete' ? 'badge-success' :
-                                        employee.file_completion_status === 'Partial' ? 'badge-warning' : 'badge-danger'
-                                        }`} style={{ fontSize: '1rem', padding: 'var(--spacing-sm) var(--spacing-lg)' }}>
-                                        {employee.file_completion_status}
-                                    </span>
-                                </div>
-                                <div style={{
-                                    height: '12px',
-                                    background: 'rgba(0, 0, 0, 0.1)',
-                                    borderRadius: 'var(--radius-full)',
-                                    overflow: 'hidden'
-                                }}>
-                                    <div style={{
-                                        height: '100%',
-                                        width: `${completionPercentage}%`,
-                                        background: employee.file_completion_status === 'Complete' ? 'var(--success-500)' :
-                                            employee.file_completion_status === 'Partial' ? 'var(--warning-500)' : 'var(--danger-500)',
-                                        transition: 'width 0.5s ease'
-                                    }} />
-                                </div>
-                                <div style={{ fontSize: '0.75rem', marginTop: 'var(--spacing-sm)', opacity: 0.8 }}>
-                                    {completedCount} of {checklistItems.length} items completed
-                                </div>
-                            </div>
 
-                            {/* Checklist Items */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-                                {checklistItems.map((item) => (
-                                    <div
-                                        key={item.field}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            padding: 'var(--spacing-md)',
-                                            background: item.value === 1 ? 'var(--success-50)' : 'var(--bg-secondary)',
-                                            borderRadius: 'var(--radius-md)',
-                                            border: `2px solid ${item.value === 1 ? 'var(--success-500)' : 'var(--border-color)'}`,
-                                            transition: 'all var(--transition-fast)',
-                                            cursor: 'pointer'
-                                        }}
-                                        onClick={() => handleChecklistUpdate(item.field, item.value === 1 ? 0 : 1)}
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
-                                            <div style={{
-                                                width: '24px',
-                                                height: '24px',
-                                                borderRadius: 'var(--radius-sm)',
-                                                background: item.value === 1 ? 'var(--success-500)' : 'white',
-                                                border: `2px solid ${item.value === 1 ? 'var(--success-500)' : 'var(--gray-300)'}`,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                color: 'white',
-                                                fontSize: '0.75rem',
-                                                fontWeight: '700'
-                                            }}>
-                                                {item.value === 1 && '✓'}
-                                            </div>
-                                            <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
-                                                {item.label}
-                                            </span>
-                                        </div>
-                                        <span style={{
-                                            fontSize: '0.75rem',
-                                            fontWeight: '600',
-                                            color: item.value === 1 ? 'var(--success-700)' : 'var(--text-secondary)'
-                                        }}>
-                                            {item.value === 1 ? 'YES' : 'NO'}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {updating && (
-                                <div style={{
-                                    marginTop: 'var(--spacing-md)',
-                                    padding: 'var(--spacing-sm)',
-                                    background: 'var(--primary-50)',
-                                    color: 'var(--primary-700)',
-                                    borderRadius: 'var(--radius-md)',
-                                    fontSize: '0.75rem',
-                                    textAlign: 'center'
-                                }}>
-                                    Updating checklist...
-                                </div>
-                            )}
-
-                            <div style={{
-                                marginTop: 'var(--spacing-lg)',
-                                padding: 'var(--spacing-md)',
-                                background: 'var(--bg-secondary)',
-                                borderRadius: 'var(--radius-md)',
-                                fontSize: '0.75rem',
-                                color: 'var(--text-secondary)'
-                            }}>
-                                <strong>Last Updated:</strong> {new Date(employee.last_updated).toLocaleString('en-PH')}
-                            </div>
-                        </div>
-                    </div>
 
                     {(employee.training_details || employee.disciplinary_details) && (
                         <div className="card" style={{ marginTop: 'var(--spacing-lg)' }}>
@@ -892,6 +1459,101 @@ export default function EmployeeDetailPage() {
           to { transform: rotate(360deg); }
         }
       `}</style>
-        </DashboardLayout>
+            {
+                showEducationModal && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000
+                    }}>
+                        <div className="card" style={{ width: '500px', maxWidth: '90%' }}>
+                            <div className="card-header">
+                                <div className="card-title">Add Educational Attainment</div>
+                                <button onClick={() => setShowEducationModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer' }}>×</button>
+                            </div>
+                            <div className="card-body">
+                                <form onSubmit={handleAddEducation}>
+                                    <div className="form-group">
+                                        <label className="form-label">Level</label>
+                                        <select
+                                            className="form-input"
+                                            value={educationForm.level}
+                                            onChange={e => setEducationForm({ ...educationForm, level: e.target.value })}
+                                            required
+                                        >
+                                            <option value="Elementary">Elementary</option>
+                                            <option value="High School">High School</option>
+                                            <option value="Senior High">Senior High</option>
+                                            <option value="Vocational">Vocational</option>
+                                            <option value="College Level">College Level</option>
+                                            <option value="College">College</option>
+                                            <option value="Post Graduate">Post Graduate</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">School Name</label>
+                                        <input
+                                            className="form-input"
+                                            value={educationForm.school_name}
+                                            onChange={e => setEducationForm({ ...educationForm, school_name: e.target.value })}
+                                            required
+                                            placeholder="e.g. University of the Philippines"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Degree / Course</label>
+                                        <input
+                                            className="form-input"
+                                            value={educationForm.degree_course}
+                                            onChange={e => setEducationForm({ ...educationForm, degree_course: e.target.value })}
+                                            placeholder="e.g. BS Computer Science (Optional for Elem/HS)"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Year Graduated</label>
+                                        <input
+                                            className="form-input"
+                                            type="number"
+                                            value={educationForm.year_graduated}
+                                            onChange={e => setEducationForm({ ...educationForm, year_graduated: e.target.value })}
+                                            required
+                                            placeholder="YYYY"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Honors / Awards</label>
+                                        <input
+                                            className="form-input"
+                                            value={educationForm.honors_awards}
+                                            onChange={e => setEducationForm({ ...educationForm, honors_awards: e.target.value })}
+                                            placeholder="Optional"
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--spacing-sm)', marginTop: 'var(--spacing-lg)' }}>
+                                        <button type="button" onClick={() => setShowEducationModal(false)} className="btn btn-secondary">Cancel</button>
+                                        <button type="submit" className="btn btn-primary">Save</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+            <Modal
+                isOpen={modalOpen}
+                title={modalTitle}
+                message={modalMessage}
+                onClose={() => setModalOpen(false)}
+                type={modalType}
+                onConfirm={onConfirm}
+            />
+        </DashboardLayout >
     );
 }

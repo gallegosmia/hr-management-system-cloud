@@ -1,27 +1,23 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/lib/database';
-import { hashPassword } from '@/lib/auth';
+import { getAll } from '@/lib/database';
 
 export async function GET() {
     try {
-        const users = await query('SELECT username, role, is_active FROM users');
-        const adminUser = await query("SELECT * FROM users WHERE username = 'Mel'");
-
-        // Check tables
-        const tables = await query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
-        const tableList = tables.rows.map((r: any) => r.table_name);
+        const users = await getAll('users');
+        const adminUser = users.find((u: any) => u.username === 'Mel');
 
         let passwordCheck = 'Not checked';
-        if (adminUser.rows.length > 0) {
+        if (adminUser) {
             const bcrypt = require('bcryptjs');
-            const match = bcrypt.compareSync('admin123', adminUser.rows[0].password);
+            // In JSON DB we don't know the exact hash algo used previously but usually bcrypt
+            const match = bcrypt.compareSync('admin123', adminUser.password);
             passwordCheck = match ? 'Password Match' : 'Password Mismatch';
         }
 
         return NextResponse.json({
-            status: 'Connected',
-            users: users.rows,
-            adminUserFound: adminUser.rows.length > 0,
+            status: 'Connected (Local JSON Mode)',
+            users: users.map((u: any) => ({ username: u.username, role: u.role, is_active: u.is_active })),
+            adminUserFound: !!adminUser,
             passwordCheck
         });
     } catch (error: any) {

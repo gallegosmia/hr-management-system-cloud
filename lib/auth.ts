@@ -37,31 +37,28 @@ export async function createSession(user: User): Promise<string> {
 }
 
 export async function getSession(sessionId: string): Promise<{ user: User; expiresAt: number } | null> {
-    const res = await query(
-        `SELECT s.id, s.expires_at, u.id as user_id, u.username, u.role, u.employee_id, u.is_active 
-         FROM sessions s 
-         JOIN users u ON s.user_id = u.id 
-         WHERE s.id = $1`,
-        [sessionId]
-    );
+    const sessionRes = await query("SELECT * FROM sessions WHERE id = $1", [sessionId]);
+    if (sessionRes.rows.length === 0) return null;
 
-    if (res.rows.length === 0) return null;
-
-    const row = res.rows[0];
-    const expiresAt = new Date(row.expires_at).getTime();
+    const session = sessionRes.rows[0];
+    const expiresAt = new Date(session.expires_at).getTime();
 
     if (Date.now() > expiresAt) {
         await deleteSession(sessionId);
         return null;
     }
 
+    const userRes = await query("SELECT * FROM users WHERE id = $1", [session.user_id]);
+    if (userRes.rows.length === 0) return null;
+    const user = userRes.rows[0];
+
     return {
         user: {
-            id: row.user_id,
-            username: row.username,
-            role: row.role,
-            employee_id: row.employee_id,
-            is_active: row.is_active
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            employee_id: user.employee_id,
+            is_active: user.is_active
         },
         expiresAt
     };
