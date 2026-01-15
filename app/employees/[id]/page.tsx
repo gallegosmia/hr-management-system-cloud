@@ -314,6 +314,39 @@ export default function EmployeeDetailPage() {
     const [refreshFiles, setRefreshFiles] = useState(0);
     const [dragActive, setDragActive] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [pendingFile, setPendingFile] = useState<File | null>(null);
+    const [selectedDocType, setSelectedDocType] = useState('Contract');
+
+    const handleFileSelect = (file: File) => {
+        if (file.type !== 'application/pdf') {
+            showAlert('Only PDF files are allowed.');
+            return;
+        }
+        setPendingFile(file);
+    };
+
+    const confirmUpload = async () => {
+        if (!pendingFile || !employee) return;
+
+        const formData = new FormData();
+        formData.append('file', pendingFile);
+        formData.append('employeeId', employee.employee_id);
+        formData.append('documentType', selectedDocType);
+
+        try {
+            const res = await fetch('/api/employees/documents', { method: 'POST', body: formData });
+            if (res.ok) {
+                showAlert('Uploaded successfully!');
+                setRefreshFiles(prev => prev + 1);
+                setPendingFile(null); // Reset
+            } else {
+                showAlert('Upload failed');
+            }
+        } catch (error) {
+            console.error(error);
+            showAlert('An error occurred');
+        }
+    };
 
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -1230,22 +1263,7 @@ export default function EmployeeDetailPage() {
                                         setDragActive(false);
 
                                         const file = e.dataTransfer.files?.[0];
-                                        if (!file) return;
-                                        if (file.type !== 'application/pdf') return showAlert('Only PDF files are allowed.');
-
-                                        const docType = (document.getElementById('docType') as HTMLSelectElement).value;
-                                        const formData = new FormData();
-                                        formData.append('file', file);
-                                        formData.append('employeeId', employee.employee_id);
-                                        formData.append('documentType', docType);
-
-                                        const res = await fetch('/api/employees/documents', { method: 'POST', body: formData });
-                                        if (res.ok) {
-                                            showAlert('Uploaded successfully!');
-                                            setRefreshFiles(prev => prev + 1);
-                                        } else {
-                                            showAlert('Upload failed');
-                                        }
+                                        if (file) handleFileSelect(file);
                                     }}
                                     style={{
                                         border: `2px dashed ${dragActive ? 'var(--primary-500)' : 'var(--border-color)'}`,
@@ -1267,56 +1285,76 @@ export default function EmployeeDetailPage() {
                                         </div>
                                     </div>
 
-                                    <div style={{ display: 'flex', gap: 'var(--spacing-sm)', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
-                                        <select
-                                            id="docType"
-                                            className="form-input"
-                                            style={{ width: 'auto', minWidth: '150px' }}
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <option value="Medical">Medical</option>
-                                            <option value="NBI">NBI Clearance</option>
-                                            <option value="SSS">SSS ID/E1</option>
-                                            <option value="PhilHealth">PhilHealth ID/MDR</option>
-                                            <option value="Pag-IBIG">Pag-IBIG ID/MDF</option>
-                                            <option value="Contract">Contract / Appointment</option>
-                                            <option value="Training">Training & Certificates</option>
-                                            <option value="Disciplinary">Violations & Warnings</option>
-                                            <option value="Resume">Resume / CV</option>
-                                            <option value="Other">Other Document</option>
-                                        </select>
-                                        <input
-                                            type="file"
-                                            id="fileInput"
-                                            style={{ display: 'none' }}
-                                            accept=".pdf"
-                                            onChange={async (e) => {
-                                                const file = e.target.files?.[0];
-                                                if (!file) return;
-                                                const docType = (document.getElementById('docType') as HTMLSelectElement).value;
+                                    {pendingFile ? (
+                                        <div style={{
+                                            marginTop: 'var(--spacing-md)',
+                                            padding: 'var(--spacing-md)',
+                                            background: '#fff',
+                                            border: '1px solid var(--primary-200)',
+                                            borderRadius: 'var(--radius-md)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: 'var(--spacing-md)',
+                                            alignItems: 'center'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+                                                <span style={{ fontSize: '1.5rem' }}>📄</span>
+                                                <span style={{ fontWeight: '500' }}>{pendingFile.name}</span>
+                                                <button
+                                                    onClick={() => setPendingFile(null)}
+                                                    style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-tertiary)' }}
+                                                >
+                                                    ❌
+                                                </button>
+                                            </div>
 
-                                                const formData = new FormData();
-                                                formData.append('file', file);
-                                                formData.append('employeeId', employee.employee_id);
-                                                formData.append('documentType', docType);
-
-                                                const res = await fetch('/api/employees/documents', { method: 'POST', body: formData });
-                                                if (res.ok) {
-                                                    showAlert('Uploaded successfully!');
-                                                    setRefreshFiles(prev => prev + 1);
-                                                    e.target.value = ''; // Reset
-                                                } else {
-                                                    showAlert('Upload failed');
-                                                }
-                                            }}
-                                        />
-                                        <button
-                                            onClick={() => document.getElementById('fileInput')?.click()}
-                                            className="btn btn-primary"
-                                        >
-                                            Browse Files
-                                        </button>
-                                    </div>
+                                            <div style={{ display: 'flex', gap: 'var(--spacing-sm)', width: '100%', justifyContent: 'center' }}>
+                                                <select
+                                                    value={selectedDocType}
+                                                    onChange={(e) => setSelectedDocType(e.target.value)}
+                                                    className="form-input"
+                                                    style={{ width: 'auto', minWidth: '200px' }}
+                                                >
+                                                    <option value="Medical">Medical</option>
+                                                    <option value="NBI">NBI Clearance</option>
+                                                    <option value="SSS">SSS ID/E1</option>
+                                                    <option value="PhilHealth">PhilHealth ID/MDR</option>
+                                                    <option value="Pag-IBIG">Pag-IBIG ID/MDF</option>
+                                                    <option value="Contract">Contract / Appointment</option>
+                                                    <option value="Training">Training & Certificates</option>
+                                                    <option value="Disciplinary">Violations & Warnings</option>
+                                                    <option value="Resume">Resume / CV</option>
+                                                    <option value="Other">Other Document</option>
+                                                </select>
+                                                <button
+                                                    onClick={confirmUpload}
+                                                    className="btn btn-primary"
+                                                >
+                                                    Upload Now
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', gap: 'var(--spacing-sm)', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+                                            <input
+                                                type="file"
+                                                id="fileInput"
+                                                style={{ display: 'none' }}
+                                                accept=".pdf"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) handleFileSelect(file);
+                                                    e.target.value = ''; // Reset input
+                                                }}
+                                            />
+                                            <button
+                                                onClick={() => document.getElementById('fileInput')?.click()}
+                                                className="btn btn-primary"
+                                            >
+                                                Browse Files
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
