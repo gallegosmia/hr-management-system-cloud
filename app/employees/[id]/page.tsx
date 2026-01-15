@@ -492,10 +492,20 @@ export default function EmployeeDetailPage() {
             doc.roundedRect(14, yPos, pageWidth - 28, 50, 3, 3, 'FD');
 
             // Picture
-            // Picture removed
-            doc.setFontSize(10);
-            doc.setTextColor(150);
-            // doc.text('No Photo', 28, yPos + 25); 
+            if (employee.profile_picture) {
+                try {
+                    doc.addImage(employee.profile_picture, 'JPEG', 28, yPos + 10, 30, 30);
+                } catch (e) {
+                    console.error('Error adding image to PDF:', e);
+                    doc.setFontSize(10);
+                    doc.setTextColor(150);
+                    doc.text('Photo Error', 28, yPos + 25);
+                }
+            } else {
+                doc.setFontSize(10);
+                doc.setTextColor(150);
+                doc.text('No Photo', 28, yPos + 25);
+            }
 
             // Name & ID
             doc.setTextColor(40);
@@ -686,24 +696,6 @@ export default function EmployeeDetailPage() {
                 yPos += 15;
             }
 
-            // --- ATTENDANCE SUMMARY ---
-            if (yPos > pageHeight - 60) { doc.addPage(); yPos = 20; }
-            yPos = addSectionHeader('Attendance Summary (YTD)', yPos);
-
-            autoTable(doc, {
-                startY: yPos,
-                body: [
-                    ['Total Lates', attendanceSummary.late.toString()],
-                    ['Total Absences', attendanceSummary.absent.toString()],
-                    ['Total Leaves Taken', attendanceSummary.onLeave.toString()],
-                    ['Paid Leaves Used', `${attendanceSummary.totalPaidLeaves} / 5`],
-                ],
-                theme: 'grid',
-                headStyles: { fillColor: primaryColor, textColor: 255 },
-                styles: { fontSize: 10, cellPadding: 3, textColor: 50 },
-                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50, fillColor: [245, 247, 250] } }
-            });
-            yPos = (doc as any).lastAutoTable.finalY + 15;
             const pageCount = doc.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
                 doc.setPage(i);
