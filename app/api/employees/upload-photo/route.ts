@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { update } from '@/lib/database';
-import fs from 'fs';
-import path from 'path';
 
 export async function POST(request: NextRequest) {
     try {
@@ -18,29 +16,23 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Only image files are allowed' }, { status: 400 });
         }
 
-        // Create directory if it doesn't exist
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'profile_pictures');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
+        // Validate file size (e.g., max 1MB for base64 storage)
+        // Note: Base64 increases size by ~33%. 1MB limit keeps DB reasonably light.
+        if (file.size > 1024 * 1024) {
+            return NextResponse.json({ error: 'Image too large. Please resize to under 1MB.' }, { status: 400 });
         }
 
-        // Generate unique filename
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const timestamp = Date.now();
-        const extension = file.name.split('.').pop();
-        const filename = `${employeeId}_${timestamp}.${extension}`;
-        const filepath = path.join(uploadDir, filename);
+        // Convert file to buffer then base64
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const base64Image = `data:${file.type};base64,${buffer.toString('base64')}`;
 
-        // Write file
-        fs.writeFileSync(filepath, buffer);
-
-        // Update database
-        const profilePictureUrl = `/uploads/profile_pictures/${filename}`;
-        await update('employees', parseInt(employeeId), { profile_picture: profilePictureUrl });
+        // Update database directly with base64 string
+        await update('employees', parseInt(employeeId), { profile_picture: base64Image });
 
         return NextResponse.json({
             success: true,
-            url: profilePictureUrl
+            url: base64Image
         });
 
     } catch (error: any) {
