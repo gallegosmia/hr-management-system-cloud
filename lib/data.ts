@@ -818,9 +818,12 @@ export async function logAudit(data: {
     ip_address?: string;
 }): Promise<number> {
     return await insert('audit_logs', {
-        ...data,
+        user_id: data.user_id,
+        action: data.action,
+        ip_address: data.ip_address,
         details: JSON.stringify({
             table_name: data.table_name,
+            record_id: data.record_id,
             old_value: data.old_value,
             new_value: data.new_value
         })
