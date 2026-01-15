@@ -879,10 +879,27 @@ export default function EmployeeDetailPage() {
                 <div className="card-body">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--spacing-md)' }}>
                         <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center' }}>
-                            {/* Profile Picture Removed */}
-                            {/* Profile Picture Removed */}
-
-                            <div>
+                            <div style={{ position: 'relative' }}>
+                                <img
+                                    src={employee.profile_picture || "/images/profile_placeholder.png"}
+                                    alt="Profile"
+                                    style={{
+                                        width: '80px',
+                                        height: '80px',
+                                        borderRadius: '50%',
+                                        objectFit: 'cover',
+                                        border: '4px solid white',
+                                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                        backgroundColor: 'var(--gray-100)'
+                                    }}
+                                    onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        if (target.src !== window.location.origin + "/images/profile_placeholder.png") {
+                                            target.src = "/images/profile_placeholder.png";
+                                        }
+                                    }}
+                                />
+                            </div>                            <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-sm)' }}>
                                     <h2 style={{ margin: 0 }}>{fullName}</h2>
                                     <span className={`badge ${employee.employment_status === 'Regular' ? 'badge-success' :
