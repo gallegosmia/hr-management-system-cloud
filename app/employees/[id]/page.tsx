@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
@@ -313,9 +313,40 @@ export default function EmployeeDetailPage() {
     });
     const [refreshFiles, setRefreshFiles] = useState(0);
     const [dragActive, setDragActive] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !employee) return;
 
+        if (file.size > 5 * 1024 * 1024) {
+            showAlert('File size too large. Max 5MB.');
+            return;
+        }
 
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('employeeId', employee.id.toString());
+
+        try {
+            const res = await fetch('/api/employees/upload-photo', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setEmployee(prev => prev ? { ...prev, profile_picture: data.url } : null);
+                showAlert('Profile picture updated successfully!');
+            } else {
+                const err = await res.json();
+                showAlert(err.error || 'Failed to upload photo');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            showAlert('An error occurred during upload');
+        }
+    };
     const fetchEmployee = async () => {
         try {
             const response = await fetch(`/api/employees?id=${params.id}`);
@@ -898,6 +929,36 @@ export default function EmployeeDetailPage() {
                                             target.src = "/images/profile_placeholder.png";
                                         }
                                     }}
+                                />
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    style={{
+                                        position: 'absolute',
+                                        bottom: '0',
+                                        right: '0',
+                                        background: 'var(--primary-600)',
+                                        color: 'white',
+                                        border: '2px solid white',
+                                        borderRadius: '50%',
+                                        width: '28px',
+                                        height: '28px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        fontSize: '0.75rem',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                    }}
+                                    title="Update Profile Picture"
+                                >
+                                    📷
+                                </button>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    style={{ display: 'none' }}
+                                    accept="image/*"
+                                    onChange={handlePhotoUpload}
                                 />
                             </div>                            <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-sm)' }}>
