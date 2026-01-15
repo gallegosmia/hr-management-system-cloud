@@ -1,4 +1,4 @@
-import { getAll, getById, insert, update, query, remove } from './database';
+import { getAll, getById, insert, update, query, remove, resetTableSequence } from './database';
 
 export interface SalaryInfo {
     basic_salary: number;
@@ -254,7 +254,17 @@ export async function createEmployee(data: EmployeeFormData, userId: number): Pr
     };
 
     employeeData.file_completion_status = calculateCompletionStatus(employeeData as any);
-    return await insert('employees', employeeData);
+    try {
+        return await insert('employees', employeeData);
+    } catch (error: any) {
+        // Auto-heal: If Primary Key violation, reset sequence and retry
+        if (error?.code === '23505' && error?.constraint === 'employees_pkey') {
+            console.warn('❌ Primary Key collision detected. Attempting to auto-heal sequence...');
+            await resetTableSequence('employees');
+            return await insert('employees', employeeData);
+        }
+        throw error;
+    }
 }
 
 export async function updateEmployee(id: number, data: Partial<EmployeeFormData>): Promise<void> {

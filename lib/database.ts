@@ -307,5 +307,38 @@ export default {
   insert,
   update,
   remove,
-  initializeDatabase
+  initializeDatabase,
+  resetTableSequence
 };
+
+// Helper to reset sequence if out of sync
+export async function resetTableSequence(table: string) {
+  if (pool) {
+    try {
+      // Robust reset: find max ID, set sequence to max+1
+      // Use pg_get_serial_sequence to be safe about sequence naming
+      const query = `
+        SELECT setval(
+          pg_get_serial_sequence($1, 'id'),
+          COALESCE((SELECT MAX(id) FROM ${table}), 0) + 1,
+          false
+        )
+      `;
+      // Check if table name is safe (simple validation)
+      if (!/^[a-zA-Z0-9_]+$/.test(table)) throw new Error("Invalid table name");
+
+      await pool.query(query, [table]);
+      console.log(`Sequence for ${table} reset successfully.`);
+    } catch (e) {
+      console.error(`Failed to reset sequence for ${table}:`, e);
+      // Fallback: try standard naming convention if pg_get_serial_sequence fails
+      try {
+        const fallbackQuery = `SELECT setval('${table}_id_seq', COALESCE((SELECT MAX(id) FROM ${table}), 0) + 1, false)`;
+        await pool.query(fallbackQuery);
+        console.log(`Fallback sequence reset for ${table} success.`);
+      } catch (e2) {
+        console.error(`Fallback reset failed for ${table}:`, e2);
+      }
+    }
+  }
+}
