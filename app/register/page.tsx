@@ -45,7 +45,7 @@ export default function RegisterPage() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #0c4a6e 0%, #0369a1 50%, #0ea5e9 100%)',
+            background: 'linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%)',
             padding: '1rem'
         }}>
             <div style={{
@@ -58,7 +58,7 @@ export default function RegisterPage() {
             }}>
                 {/* Header */}
                 <div style={{
-                    background: 'linear-gradient(135deg, #0369a1, #0ea5e9)',
+                    background: 'linear-gradient(135deg, #059669, #10b981)',
                     padding: '2rem',
                     textAlign: 'center',
                     color: 'white'
@@ -110,7 +110,7 @@ export default function RegisterPage() {
                             </p>
                             <button
                                 onClick={() => router.push('/')}
-                                className="w-full py-3 px-6 text-white font-semibold rounded-lg bg-sky-600 hover:bg-sky-700 transition-colors"
+                                className="w-full py-3 px-6 text-white font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors"
                             >
                                 Return to Login
                             </button>
@@ -141,7 +141,7 @@ export default function RegisterPage() {
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     required
-                                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-sky-500 focus:ring-0 transition-colors"
+                                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-0 transition-colors"
                                     placeholder="Choose a username"
                                 />
                             </div>
@@ -153,7 +153,7 @@ export default function RegisterPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-sky-500 focus:ring-0 transition-colors"
+                                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-0 transition-colors"
                                     placeholder="Choose a strong password"
                                 />
                             </div>
@@ -163,7 +163,7 @@ export default function RegisterPage() {
                                 <select
                                     value={role}
                                     onChange={(e) => setRole(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-sky-500 focus:ring-0 transition-colors bg-white"
+                                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-0 transition-colors bg-white"
                                 >
                                     <option value="Employee">Employee</option>
                                     <option value="HR">HR Officer</option>
@@ -175,7 +175,7 @@ export default function RegisterPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-3 px-6 text-white font-semibold rounded-lg bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transform transition-all active:scale-95 shadow-md"
+                                className="w-full py-3 px-6 text-white font-semibold rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transform transition-all active:scale-95 shadow-md"
                             >
                                 {loading ? 'Creating Account...' : 'Register'}
                             </button>
@@ -187,7 +187,7 @@ export default function RegisterPage() {
                             Already have an account?{' '}
                             <button
                                 onClick={() => router.push('/')}
-                                className="text-sky-600 font-semibold hover:text-sky-700 hover:underline"
+                                className="text-emerald-600 font-semibold hover:text-emerald-700 hover:underline"
                             >
                                 Sign in
                             </button>
