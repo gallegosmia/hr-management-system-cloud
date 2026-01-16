@@ -9,6 +9,7 @@ export default function TransportationAllowancePage() {
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState('');
     const [selectedYear, setSelectedYear] = useState('');
+    const [selectedBranch, setSelectedBranch] = useState('All');
     const [showPreview, setShowPreview] = useState(false);
 
     useEffect(() => {
@@ -16,8 +17,11 @@ export default function TransportationAllowancePage() {
         const now = new Date();
         setSelectedMonth(String(now.getMonth() + 1).padStart(2, '0'));
         setSelectedYear(String(now.getFullYear()));
-        fetchEmployees();
     }, []);
+
+    useEffect(() => {
+        fetchEmployees();
+    }, [selectedBranch]);
 
     const fetchEmployees = async () => {
         try {
@@ -25,9 +29,14 @@ export default function TransportationAllowancePage() {
             if (response.ok) {
                 const data = await response.json();
                 // Filter only active employees
-                const activeEmployees = data.filter((emp: any) =>
+                let activeEmployees = data.filter((emp: any) =>
                     emp.employment_status !== 'Resigned' && emp.employment_status !== 'Terminated'
                 );
+
+                if (selectedBranch !== 'All') {
+                    activeEmployees = activeEmployees.filter((emp: any) => emp.branch === selectedBranch);
+                }
+
                 setEmployees(activeEmployees);
             }
         } catch (error) {
@@ -132,6 +141,25 @@ export default function TransportationAllowancePage() {
                                     {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
                                         <option key={year} value={year}>{year}</option>
                                     ))}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Branch</label>
+                                <select
+                                    value={selectedBranch}
+                                    onChange={(e) => {
+                                        setSelectedBranch(e.target.value);
+                                        // Trigger refetch or re-filter
+                                        // Since we fetch all, we should probably refetch to apply filter properly or move filtering client side
+                                        // For now, let's just trigger effect by adding it to dependency, but effect is []
+                                        // Better: make fetchEmployees depend on selectedBranch or filter client side.
+                                        // Let's modify useEffect to depend on selectedBranch
+                                    }}
+                                    className="form-select"
+                                >
+                                    <option value="All">All Branches</option>
+                                    <option value="Ormoc Branch">Ormoc Branch</option>
+                                    <option value="Naval Branch">Naval Branch</option>
                                 </select>
                             </div>
                         </div>
@@ -291,7 +319,7 @@ export default function TransportationAllowancePage() {
                                     <p style={{ fontSize: '0.875rem', marginBottom: '2.5rem' }}>Reviewed By:</p>
                                     <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>VICTORIO RELOBA JR.</div>
                                     <div style={{ borderTop: '1px solid #333', width: '200px', marginTop: '0.25rem' }}></div>
-                                    <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>General Manager</p>
+                                    <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>Operations Manager</p>
                                 </div>
                                 <div>
                                     <p style={{ fontSize: '0.875rem', marginBottom: '2.5rem' }}>Approved By:</p>
@@ -383,7 +411,7 @@ export default function TransportationAllowancePage() {
                             <p style={{ fontSize: '0.875rem', marginBottom: '2.5rem' }}>Reviewed By:</p>
                             <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>VICTORIO RELOBA JR.</div>
                             <div style={{ borderTop: '1px solid #333', width: '200px', marginTop: '0.25rem' }}></div>
-                            <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>General Manager</p>
+                            <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>Operations Manager</p>
                         </div>
                         <div>
                             <p style={{ fontSize: '0.875rem', marginBottom: '2.5rem' }}>Approved By:</p>

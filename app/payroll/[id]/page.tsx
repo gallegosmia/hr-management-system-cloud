@@ -727,7 +727,7 @@ export default function PayrollDetailsPage() {
                             <p style={{ fontSize: '0.8rem', marginBottom: '2.5rem', fontWeight: 600 }}>Reviewed By:</p>
                             <div style={{ fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase' }}>VICTORIO RELOBA JR.</div>
                             <div style={{ borderBottom: '1.5px solid #333', width: '200px', marginBottom: '0.25rem' }}></div>
-                            <p style={{ fontSize: '0.75rem', fontWeight: 600 }}>General Manager</p>
+                            <p style={{ fontSize: '0.75rem', fontWeight: 600 }}>Operations Manager</p>
                         </div>
                         <div>
                             <p style={{ fontSize: '0.8rem', marginBottom: '2.5rem', fontWeight: 600 }}>Approved By:</p>
