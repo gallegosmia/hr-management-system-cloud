@@ -27,22 +27,27 @@ export default function BonusesPage() {
             const response = await fetch('/api/employees');
             if (response.ok) {
                 const data = await response.json();
-                let activeEmployees = data.filter((emp: any) =>
-                    emp.employment_status !== 'Resigned' && emp.employment_status !== 'Terminated'
-                );
+                if (Array.isArray(data)) {
+                    let activeEmployees = data.filter((emp: any) =>
+                        emp.employment_status !== 'Resigned' && emp.employment_status !== 'Terminated'
+                    );
 
-                if (selectedBranch !== 'All') {
-                    activeEmployees = activeEmployees.filter((emp: any) => emp.branch === selectedBranch);
+                    if (selectedBranch !== 'All') {
+                        activeEmployees = activeEmployees.filter((emp: any) => emp.branch === selectedBranch);
+                    }
+
+                    // Initialize individual months to 12
+                    const monthMap: Record<number, number> = {};
+                    activeEmployees.forEach((emp: any) => {
+                        monthMap[emp.id] = 12;
+                    });
+
+                    setEmployeeMonths(monthMap);
+                    setEmployees(activeEmployees);
+                } else {
+                    console.error('Fetched data is not an array:', data);
+                    setEmployees([]);
                 }
-
-                // Initialize individual months to 12
-                const monthMap: Record<number, number> = {};
-                activeEmployees.forEach((emp: any) => {
-                    monthMap[emp.id] = 12;
-                });
-
-                setEmployeeMonths(monthMap);
-                setEmployees(activeEmployees);
             }
         } catch (error) {
             console.error('Error fetching employees:', error);
@@ -179,7 +184,7 @@ export default function BonusesPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {employees.map((emp, idx) => {
+                                {(employees || []).map((emp, idx) => {
                                     const dailyRate = emp.salary_info?.daily_rate || 0;
                                     const monthlyRate = dailyRate * 30;
                                     const bonus = calculateBonus(emp);

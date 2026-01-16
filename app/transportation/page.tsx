@@ -28,16 +28,21 @@ export default function TransportationAllowancePage() {
             const response = await fetch('/api/employees');
             if (response.ok) {
                 const data = await response.json();
-                // Filter only active employees
-                let activeEmployees = data.filter((emp: any) =>
-                    emp.employment_status !== 'Resigned' && emp.employment_status !== 'Terminated'
-                );
+                if (Array.isArray(data)) {
+                    // Filter only active employees
+                    let activeEmployees = data.filter((emp: any) =>
+                        emp.employment_status !== 'Resigned' && emp.employment_status !== 'Terminated'
+                    );
 
-                if (selectedBranch !== 'All') {
-                    activeEmployees = activeEmployees.filter((emp: any) => emp.branch === selectedBranch);
+                    if (selectedBranch !== 'All') {
+                        activeEmployees = activeEmployees.filter((emp: any) => emp.branch === selectedBranch);
+                    }
+
+                    setEmployees(activeEmployees);
+                } else {
+                    console.error('Fetched data is not an array:', data);
+                    setEmployees([]);
                 }
-
-                setEmployees(activeEmployees);
             }
         } catch (error) {
             console.error('Error fetching employees:', error);
@@ -177,7 +182,7 @@ export default function TransportationAllowancePage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {employees.map((emp, idx) => (
+                                {(employees || []).map((emp, idx) => (
                                     <tr key={emp.id}>
                                         <td style={{ textAlign: 'center' }}>{idx + 1}</td>
                                         <td>
