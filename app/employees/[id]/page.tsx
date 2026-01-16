@@ -335,16 +335,25 @@ export default function EmployeeDetailPage() {
 
         try {
             const res = await fetch('/api/employees/documents', { method: 'POST', body: formData });
+
+            let data;
+            try {
+                data = await res.json();
+            } catch (e) {
+                // If response is not JSON
+                data = { error: res.statusText || 'Unknown error occurred' };
+            }
+
             if (res.ok) {
                 showAlert('Uploaded successfully!');
                 setRefreshFiles(prev => prev + 1);
                 setPendingFile(null); // Reset
             } else {
-                showAlert('Upload failed');
+                showAlert(`Upload failed: ${data.error || 'Unknown error'}`);
             }
         } catch (error) {
             console.error(error);
-            showAlert('An error occurred');
+            showAlert('An error occurred during upload. Please check your connection.');
         }
     };
 
