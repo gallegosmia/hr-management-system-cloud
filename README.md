@@ -1,4 +1,4 @@
-# HR Management System - Digital 201 File
+# HR Management System - Digital 201 Filer
 
 A comprehensive, secure, web-based HR Management System designed specifically for Philippine companies with a focus on Digital 201 File Management.
 
