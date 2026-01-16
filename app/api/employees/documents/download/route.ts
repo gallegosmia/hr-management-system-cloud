@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+import { query } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
     try {
@@ -11,38 +8,42 @@ export async function GET(request: NextRequest) {
         const filename = searchParams.get('filename');
 
         if (!employeeId || !filename) {
-            return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
+            return new NextResponse('Missing required parameters', { status: 400 });
         }
 
-        const filePath = path.join(UPLOAD_DIR, employeeId, filename);
+        // Get Internal ID
+        const empRes = await query('SELECT id FROM employees WHERE employee_id = $1', [employeeId]);
+        if (empRes.rows.length === 0) {
+            return new NextResponse('Employee not found', { status: 404 });
+        }
+        const internalId = empRes.rows[0].id;
 
-        if (!fs.existsSync(filePath)) {
-            return NextResponse.json({ error: 'File not found' }, { status: 404 });
+        const res = await query(
+            'SELECT file_data, document_name FROM documents WHERE employee_id = $1 AND document_name = $2',
+            [internalId, filename]
+        );
+
+        if (res.rows.length === 0) {
+            return new NextResponse('File not found', { status: 404 });
         }
 
-        const fileBuffer = fs.readFileSync(filePath);
+        const fileData = res.rows[0].file_data; // This comes as a Buffer from pg
 
-        // Determine content type
-        const ext = path.extname(filename).toLowerCase();
+        // Determine content type (simple fallback)
         let contentType = 'application/octet-stream';
-        if (ext === '.pdf') contentType = 'application/pdf';
-        else if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg';
-        else if (ext === '.png') contentType = 'image/png';
-        else if (ext === '.doc' || ext === '.docx') contentType = 'application/msword';
+        if (filename.endsWith('.pdf')) contentType = 'application/pdf';
+        if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) contentType = 'image/jpeg';
+        if (filename.endsWith('.png')) contentType = 'image/png';
 
-        const isView = searchParams.get('view') === 'true';
-        const displayFilename = filename.split('_').slice(2).join('_');
-
-        return new NextResponse(fileBuffer, {
+        return new NextResponse(fileData, {
             headers: {
                 'Content-Type': contentType,
-                'Content-Disposition': isView
-                    ? `inline; filename="${displayFilename}"`
-                    : `attachment; filename="${displayFilename}"`
+                'Content-Disposition': `attachment; filename="${filename}"`
             }
         });
+
     } catch (error) {
         console.error('Download error:', error);
-        return NextResponse.json({ error: 'Download failed' }, { status: 500 });
+        return new NextResponse('Download failed', { status: 500 });
     }
 }
