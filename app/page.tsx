@@ -45,7 +45,7 @@ export default function LoginPage() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #0c4a6e 0%, #0369a1 50%, #0ea5e9 100%)',
+            background: 'linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%)',
             padding: '1rem'
         }}>
             <div style={{
@@ -58,7 +58,7 @@ export default function LoginPage() {
             }}>
                 {/* Header */}
                 <div style={{
-                    background: 'linear-gradient(135deg, #0369a1, #0ea5e9)',
+                    background: 'linear-gradient(135deg, #059669, #10b981)',
                     padding: '2rem',
                     textAlign: 'center',
                     color: 'white'
@@ -142,8 +142,8 @@ export default function LoginPage() {
                                     fontFamily: 'Inter, sans-serif'
                                 }}
                                 onFocus={(e) => {
-                                    e.target.style.borderColor = '#0ea5e9';
-                                    e.target.style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.1)';
+                                    e.target.style.borderColor = '#10b981';
+                                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
                                 }}
                                 onBlur={(e) => {
                                     e.target.style.borderColor = '#e5e7eb';
@@ -178,8 +178,8 @@ export default function LoginPage() {
                                     fontFamily: 'Inter, sans-serif'
                                 }}
                                 onFocus={(e) => {
-                                    e.target.style.borderColor = '#0ea5e9';
-                                    e.target.style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.1)';
+                                    e.target.style.borderColor = '#10b981';
+                                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
                                 }}
                                 onBlur={(e) => {
                                     e.target.style.borderColor = '#e5e7eb';
@@ -197,7 +197,7 @@ export default function LoginPage() {
                                 fontSize: '0.875rem',
                                 fontWeight: '600',
                                 color: 'white',
-                                background: loading ? '#9ca3af' : 'linear-gradient(135deg, #0284c7, #0ea5e9)',
+                                background: loading ? '#9ca3af' : 'linear-gradient(135deg, #059669, #10b981)',
                                 border: 'none',
                                 borderRadius: '0.5rem',
                                 cursor: loading ? 'not-allowed' : 'pointer',
@@ -225,7 +225,7 @@ export default function LoginPage() {
                                     type="button"
                                     onClick={() => router.push('/register')}
                                     style={{
-                                        color: '#0ea5e9',
+                                        color: '#059669',
                                         fontWeight: '600',
                                         background: 'none',
                                         border: 'none',
