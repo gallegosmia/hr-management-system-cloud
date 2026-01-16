@@ -279,6 +279,7 @@ export default function CreatePayrollPage() {
                                             { key: 'other_deductions', label: 'Other' },
                                         ];
                                         const activeDeductions = deductionConfigs.filter(d =>
+                                            ['cash_advance', 'other_deductions'].includes(d.key) ||
                                             preview.some(s => (s.deduction_details?.[d.key] || 0) > 0)
                                         );
                                         return (
@@ -351,6 +352,7 @@ export default function CreatePayrollPage() {
                                                 { key: 'other_deductions', label: 'Other' },
                                             ];
                                             const activeDeductions = deductionConfigs.filter(d =>
+                                                ['cash_advance', 'other_deductions'].includes(d.key) ||
                                                 preview.some(s => (s.deduction_details?.[d.key] || 0) > 0)
                                             );
                                             return (
@@ -397,6 +399,7 @@ export default function CreatePayrollPage() {
                                             { key: 'other_deductions', label: 'Other' },
                                         ];
                                         const activeDeductions = deductionConfigs.filter(d =>
+                                            ['cash_advance', 'other_deductions'].includes(d.key) ||
                                             preview.some(s => (s.deduction_details?.[d.key] || 0) > 0)
                                         );
                                         return (

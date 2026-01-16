@@ -9,23 +9,31 @@ export default function BonusesPage() {
     const [loading, setLoading] = useState(true);
     const [bonusType, setBonusType] = useState<'Midyear' | '13th Month'>('Midyear');
     const [selectedYear, setSelectedYear] = useState('');
+    const [selectedBranch, setSelectedBranch] = useState('All');
     const [employeeMonths, setEmployeeMonths] = useState<Record<number, number>>({});
     const [showPreview, setShowPreview] = useState(false);
 
     useEffect(() => {
         const now = new Date();
         setSelectedYear(String(now.getFullYear()));
-        fetchEmployees();
     }, []);
+
+    useEffect(() => {
+        fetchEmployees();
+    }, [selectedBranch]);
 
     const fetchEmployees = async () => {
         try {
             const response = await fetch('/api/employees');
             if (response.ok) {
                 const data = await response.json();
-                const activeEmployees = data.filter((emp: any) =>
+                let activeEmployees = data.filter((emp: any) =>
                     emp.employment_status !== 'Resigned' && emp.employment_status !== 'Terminated'
                 );
+
+                if (selectedBranch !== 'All') {
+                    activeEmployees = activeEmployees.filter((emp: any) => emp.branch === selectedBranch);
+                }
 
                 // Initialize individual months to 12
                 const monthMap: Record<number, number> = {};
@@ -142,6 +150,18 @@ export default function BonusesPage() {
                                     {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
                                         <option key={year} value={year}>{year}</option>
                                     ))}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Branch</label>
+                                <select
+                                    value={selectedBranch}
+                                    onChange={(e) => setSelectedBranch(e.target.value)}
+                                    className="form-select"
+                                >
+                                    <option value="All">All Branches</option>
+                                    <option value="Ormoc Branch">Ormoc Branch</option>
+                                    <option value="Naval Branch">Naval Branch</option>
                                 </select>
                             </div>
                         </div>
@@ -314,7 +334,7 @@ export default function BonusesPage() {
                                     <p style={{ fontSize: '0.875rem', marginBottom: '2.5rem' }}>Reviewed By:</p>
                                     <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>VICTORIO RELOBA JR.</div>
                                     <div style={{ borderTop: '1px solid #333', width: '200px', marginTop: '0.25rem' }}></div>
-                                    <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>General Manager</p>
+                                    <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>Operations Manager</p>
                                 </div>
                                 <div>
                                     <p style={{ fontSize: '0.875rem', marginBottom: '2.5rem' }}>Approved By:</p>
@@ -401,7 +421,7 @@ export default function BonusesPage() {
                             <p style={{ fontSize: '0.875rem', marginBottom: '2.5rem' }}>Reviewed By:</p>
                             <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>VICTORIO RELOBA JR.</div>
                             <div style={{ borderTop: '1px solid #333', width: '200px', marginTop: '0.25rem' }}></div>
-                            <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>General Manager</p>
+                            <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>Operations Manager</p>
                         </div>
                         <div>
                             <p style={{ fontSize: '0.875rem', marginBottom: '2.5rem' }}>Approved By:</p>

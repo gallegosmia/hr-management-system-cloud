@@ -5,6 +5,22 @@ import { useRouter, useParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
 
+// Helper to format date safely for input[type="date"]
+const formatDateForInput = (dateValue: string | null | undefined) => {
+    if (!dateValue) return '';
+    try {
+        // If it's already an ISO string like "2024-01-01T..." or "2024-01-01"
+        if (typeof dateValue === 'string') {
+            return dateValue.split('T')[0];
+        }
+        // Fallback for Date objects
+        return new Date(dateValue).toISOString().split('T')[0];
+    } catch (e) {
+        console.error('Error formatting date:', dateValue, e);
+        return '';
+    }
+};
+
 export default function EditEmployeePage() {
     const router = useRouter();
     const params = useParams();
@@ -71,6 +87,7 @@ export default function EditEmployeePage() {
         year_graduated: string;
         honors_awards: string;
     }[]>([]);
+    const [profilePicture, setProfilePicture] = useState<string | null>(null);
 
     useEffect(() => {
         if (params.id) {
@@ -84,6 +101,8 @@ export default function EditEmployeePage() {
             const data = await response.json();
 
             if (response.ok) {
+                console.log('Fetched employee data:', data); // Debug log
+                setProfilePicture(data.profile_picture || null);
                 setFormData({
                     employee_id: data.employee_id || '',
                     last_name: data.last_name || '',
@@ -93,8 +112,8 @@ export default function EditEmployeePage() {
                     position: data.position || '',
                     branch: data.branch || '',
                     employment_status: data.employment_status || 'Probationary',
-                    date_hired: data.date_hired || '',
-                    date_of_birth: data.date_of_birth || '',
+                    date_hired: formatDateForInput(data.date_hired),
+                    date_of_birth: formatDateForInput(data.date_of_birth),
                     contact_number: data.contact_number || '',
                     email_address: data.email_address || '',
                     address: data.address || '',
@@ -405,154 +424,189 @@ export default function EditEmployeePage() {
                                 📝 Employee Profile
                             </h3>
 
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label className="form-label form-label-required">Employee ID</label>
-                                    <input
-                                        type="text"
-                                        name="employee_id"
-                                        value={formData.employee_id}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-input"
-                                    />
+                            <div style={{ display: 'flex', gap: 'var(--spacing-lg)', marginBottom: 'var(--spacing-lg)' }}>
+                                <div style={{ flexShrink: 0 }}>
+                                    {profilePicture ? (
+                                        <img
+                                            src={profilePicture}
+                                            alt="Profile"
+                                            style={{
+                                                width: '100px',
+                                                height: '100px',
+                                                objectFit: 'cover',
+                                                borderRadius: '50%',
+                                                border: '3px solid white',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                            }}
+                                        />
+                                    ) : (
+                                        <div style={{
+                                            width: '100px',
+                                            height: '100px',
+                                            background: 'var(--gray-100)',
+                                            borderRadius: '50%',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            border: '1px dashed var(--gray-300)',
+                                            color: 'var(--text-tertiary)',
+                                            fontSize: '0.75rem'
+                                        }}>
+                                            No Photo
+                                        </div>
+                                    )}
                                 </div>
+                                <div style={{ flex: 1 }}>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label className="form-label form-label-required">Employee ID</label>
+                                            <input
+                                                type="text"
+                                                name="employee_id"
+                                                value={formData.employee_id}
+                                                onChange={handleChange}
+                                                required
+                                                className="form-input"
+                                            />
+                                        </div>
 
-                                <div className="form-group">
-                                    <label className="form-label form-label-required">Last Name</label>
-                                    <input
-                                        type="text"
-                                        name="last_name"
-                                        value={formData.last_name}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-input"
-                                    />
-                                </div>
+                                        <div className="form-group">
+                                            <label className="form-label form-label-required">Last Name</label>
+                                            <input
+                                                type="text"
+                                                name="last_name"
+                                                value={formData.last_name}
+                                                onChange={handleChange}
+                                                required
+                                                className="form-input"
+                                            />
+                                        </div>
 
-                                <div className="form-group">
-                                    <label className="form-label form-label-required">First Name</label>
-                                    <input
-                                        type="text"
-                                        name="first_name"
-                                        value={formData.first_name}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-input"
-                                    />
-                                </div>
+                                        <div className="form-group">
+                                            <label className="form-label form-label-required">First Name</label>
+                                            <input
+                                                type="text"
+                                                name="first_name"
+                                                value={formData.first_name}
+                                                onChange={handleChange}
+                                                required
+                                                className="form-input"
+                                            />
+                                        </div>
 
-                                <div className="form-group">
-                                    <label className="form-label">Middle Name</label>
-                                    <input
-                                        type="text"
-                                        name="middle_name"
-                                        value={formData.middle_name}
-                                        onChange={handleChange}
-                                        className="form-input"
-                                    />
-                                </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Middle Name</label>
+                                            <input
+                                                type="text"
+                                                name="middle_name"
+                                                value={formData.middle_name}
+                                                onChange={handleChange}
+                                                className="form-input"
+                                            />
+                                        </div>
 
-                                <div className="form-group">
-                                    <label className="form-label form-label-required">Civil Status</label>
-                                    <select
-                                        name="civil_status"
-                                        value={formData.civil_status}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-select"
-                                    >
-                                        <option value="Single">Single</option>
-                                        <option value="Married">Married</option>
-                                        <option value="Widowed">Widowed</option>
-                                        <option value="Separated">Separated</option>
-                                    </select>
-                                </div>
+                                        <div className="form-group">
+                                            <label className="form-label form-label-required">Civil Status</label>
+                                            <select
+                                                name="civil_status"
+                                                value={formData.civil_status}
+                                                onChange={handleChange}
+                                                required
+                                                className="form-select"
+                                            >
+                                                <option value="Single">Single</option>
+                                                <option value="Married">Married</option>
+                                                <option value="Widowed">Widowed</option>
+                                                <option value="Separated">Separated</option>
+                                            </select>
+                                        </div>
 
-                                <div className="form-group">
-                                    <label className="form-label form-label-required">Department</label>
-                                    <input
-                                        type="text"
-                                        name="department"
-                                        value={formData.department}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-input"
-                                        list="departments"
-                                    />
-                                    <datalist id="departments">
-                                        <option value="Human Resources" />
-                                        <option value="Information Technology" />
-                                        <option value="Finance" />
-                                        <option value="Operations" />
-                                        <option value="Sales & Marketing" />
-                                        <option value="Administration" />
-                                    </datalist>
-                                </div>
+                                        <div className="form-group">
+                                            <label className="form-label form-label-required">Department</label>
+                                            <input
+                                                type="text"
+                                                name="department"
+                                                value={formData.department}
+                                                onChange={handleChange}
+                                                required
+                                                className="form-input"
+                                                list="departments"
+                                            />
+                                            <datalist id="departments">
+                                                <option value="Human Resources" />
+                                                <option value="Information Technology" />
+                                                <option value="Finance" />
+                                                <option value="Operations" />
+                                                <option value="Sales & Marketing" />
+                                                <option value="Administration" />
+                                            </datalist>
+                                        </div>
 
-                                <div className="form-group">
-                                    <label className="form-label form-label-required">Position</label>
-                                    <input
-                                        type="text"
-                                        name="position"
-                                        value={formData.position}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-input"
-                                    />
-                                </div>
+                                        <div className="form-group">
+                                            <label className="form-label form-label-required">Position</label>
+                                            <input
+                                                type="text"
+                                                name="position"
+                                                value={formData.position}
+                                                onChange={handleChange}
+                                                required
+                                                className="form-input"
+                                            />
+                                        </div>
 
-                                <div className="form-group">
-                                    <label className="form-label">Branch</label>
-                                    <select
-                                        name="branch"
-                                        value={(formData as any).branch}
-                                        onChange={handleChange}
-                                        className="form-select"
-                                    >
-                                        <option value="">Not Assigned</option>
-                                        <option value="Ormoc Branch">Ormoc Branch</option>
-                                        <option value="Naval Branch">Naval Branch</option>
-                                    </select>
-                                </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Branch</label>
+                                            <select
+                                                name="branch"
+                                                value={(formData as any).branch}
+                                                onChange={handleChange}
+                                                className="form-select"
+                                            >
+                                                <option value="">Not Assigned</option>
+                                                <option value="Ormoc Branch">Ormoc Branch</option>
+                                                <option value="Naval Branch">Naval Branch</option>
+                                            </select>
+                                        </div>
 
-                                <div className="form-group">
-                                    <label className="form-label form-label-required">Employment Status</label>
-                                    <select
-                                        name="employment_status"
-                                        value={formData.employment_status}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-select"
-                                    >
-                                        <option value="Probationary">Probationary</option>
-                                        <option value="Regular">Regular</option>
-                                        <option value="Contractual">Contractual</option>
-                                        <option value="Resigned">Resigned</option>
-                                        <option value="Terminated">Terminated</option>
-                                    </select>
-                                </div>
+                                        <div className="form-group">
+                                            <label className="form-label form-label-required">Employment Status</label>
+                                            <select
+                                                name="employment_status"
+                                                value={formData.employment_status}
+                                                onChange={handleChange}
+                                                required
+                                                className="form-select"
+                                            >
+                                                <option value="Probationary">Probationary</option>
+                                                <option value="Regular">Regular</option>
+                                                <option value="Contractual">Contractual</option>
+                                                <option value="Resigned">Resigned</option>
+                                                <option value="Terminated">Terminated</option>
+                                            </select>
+                                        </div>
 
-                                <div className="form-group">
-                                    <label className="form-label form-label-required">Date Hired</label>
-                                    <input
-                                        type="date"
-                                        name="date_hired"
-                                        value={formData.date_hired}
-                                        onChange={handleChange}
-                                        required
-                                        className="form-input"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Date of Birth</label>
-                                    <input
-                                        type="date"
-                                        name="date_of_birth"
-                                        value={formData.date_of_birth}
-                                        onChange={handleChange}
-                                        className="form-input"
-                                    />
+                                        <div className="form-group">
+                                            <label className="form-label form-label-required">Date Hired</label>
+                                            <input
+                                                type="date"
+                                                name="date_hired"
+                                                value={formData.date_hired}
+                                                onChange={handleChange}
+                                                required
+                                                className="form-input"
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Date of Birth</label>
+                                            <input
+                                                type="date"
+                                                name="date_of_birth"
+                                                value={formData.date_of_birth}
+                                                onChange={handleChange}
+                                                className="form-input"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
