@@ -489,6 +489,29 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
         const late = empAttendance.filter((a: any) => a.status === 'Late').length;
         const absent = empAttendance.filter((a: any) => a.status === 'Absent').length;
 
+        // Calculate onLeave from attendance OR approved leave requests
+        const attendanceOnLeave = empAttendance.filter((a: any) => a.status === 'On Leave').length;
+
+        // Also check leave requests falling in this period
+        const empLeaves = leaves.filter((l: any) => l.employee_id === emp.id);
+        const leaveDaysInPeriod = empLeaves.reduce((acc: number, l: any) => {
+            const lStart = new Date(l.start_date);
+            const lEnd = new Date(l.end_date);
+            // Simple overlap check
+            if (lStart <= end && lEnd >= start) {
+                // Approximate for simplicity: if overlap, count days. 
+                // For exact days, we'd iterate dates. But 'days_count' is usually good enough for summary
+                return acc + Number(l.days_count);
+            }
+            return acc;
+        }, 0);
+
+        // Avoid double counting if attendance already marks them as "On Leave"
+        // If we strictly rely on attendance for the daily report, just use attendanceOnLeave for "days marked"
+        // But the user wants "Used Leave" table. Let's use the explicit attendance status as the primary source for the "Attendance Summary" table context
+        // to stay consistent with present/late/absent columns which come from daily logs.
+        const onLeave = attendanceOnLeave;
+
         return {
             id: emp.id,
             name: `${emp.first_name} ${emp.last_name}`,
@@ -496,6 +519,7 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
             present,
             late,
             absent,
+            onLeave, // Add this field
             tardinessRate: empAttendance.length > 0 ? Math.round((late / empAttendance.length) * 100) : 0
         };
     });
