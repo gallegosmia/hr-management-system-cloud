@@ -27,8 +27,8 @@ export async function GET(request: NextRequest) {
             .sort((a: any, b: any) => a.date.localeCompare(b.date));
 
         // Calculate Paid Leave (5-day limit)
-        const empLeaves = (leaves || []).filter((l: any) => l.employee_id === id && l.status === 'Approved');
-        const totalPaidLeavesUsed = empLeaves.reduce((sum: number, l: any) => sum + (l.days_count || 0), 0);
+        // Calculate Paid Leave (5-day limit) based on explicit Attendance Status
+        const totalPaidLeavesUsed = logs.filter((r: any) => r.status === 'On Leave').length;
         const remainingPaidLeaves = Math.max(0, 5 - totalPaidLeavesUsed);
 
         const summary = {
