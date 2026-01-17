@@ -110,15 +110,32 @@ export async function GET(request: NextRequest) {
 
         // Check for Excessive Lates (5+ in current month)
         const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+
+        const startOfMonth = `${year}-${month}-01`;
+        const endOfMonth = `${year}-${month}-${lastDay}`;
 
         // We use getAll('attendance') then filter because existing query function might be limited in complex joins/grouping
-        // In a real DB we would use COUNT(*) ... GROUP BY ... WHERE date BETWEEN ... AND status='Late'
         const allAttendance = await getAll('attendance');
         const currentMonthAttendance = allAttendance.filter((a: any) => {
-            let recordDate = typeof a.date === 'string' ? a.date.split('T')[0] : a.date instanceof Date ? a.date.toISOString().split('T')[0] : '';
-            return recordDate && recordDate >= startOfMonth && recordDate <= endOfMonth && a.status === 'Late';
+            let recordDate = '';
+            if (typeof a.date === 'string') {
+                recordDate = a.date.split('T')[0];
+            } else if (a.date instanceof Date) {
+                // Ensure we get the date part without timezone shift if possible, 
+                // but usually toISOString is safest for standard Date objects in DB
+                recordDate = a.date.toISOString().split('T')[0];
+            }
+
+            // Normalize status to handle potential case/whitespace issues
+            const status = (a.status || '').toString().trim().toLowerCase();
+
+            return recordDate &&
+                recordDate >= startOfMonth &&
+                recordDate <= endOfMonth &&
+                status === 'late';
         });
 
         const latesMap = new Map<number, number>();
