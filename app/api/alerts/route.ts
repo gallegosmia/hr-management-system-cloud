@@ -116,11 +116,10 @@ export async function GET(request: NextRequest) {
         // We use getAll('attendance') then filter because existing query function might be limited in complex joins/grouping
         // In a real DB we would use COUNT(*) ... GROUP BY ... WHERE date BETWEEN ... AND status='Late'
         const allAttendance = await getAll('attendance');
-        const currentMonthAttendance = allAttendance.filter((a: any) =>
-            a.date >= startOfMonth &&
-            a.date <= endOfMonth &&
-            a.status === 'Late'
-        );
+        const currentMonthAttendance = allAttendance.filter((a: any) => {
+            let recordDate = typeof a.date === 'string' ? a.date.split('T')[0] : a.date instanceof Date ? a.date.toISOString().split('T')[0] : '';
+            return recordDate && recordDate >= startOfMonth && recordDate <= endOfMonth && a.status === 'Late';
+        });
 
         const latesMap = new Map<number, number>();
         currentMonthAttendance.forEach((att: any) => {
