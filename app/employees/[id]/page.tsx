@@ -403,8 +403,8 @@ export default function EmployeeDetailPage() {
 
     const fetchAttendanceSummary = async () => {
         try {
-            const start = '2024-01-01'; // Ensure we catch all records from start of 2024
-            const end = new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0];
+            const start = '2020-01-01'; // Broad range to catch all history
+            const end = '2030-12-31';   // Future buffer
             const res = await fetch(`/api/attendance/report/individual?employeeId=${params.id}&start=${start}&end=${end}`);
             if (res.ok) {
                 const data = await res.json();
