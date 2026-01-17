@@ -230,7 +230,7 @@ export default function AttendancePage() {
     const getStatusBadgeClass = (status: string) => {
         switch (status) {
             case 'Present': return 'badge-success';
-            case 'Late': return 'badge-warning';
+            case 'Late': return 'badge-danger';
             case 'Absent': return 'badge-danger';
             case 'Half-Day': return 'badge-info';
             case 'On Leave': return 'badge-gray';
