@@ -405,7 +405,7 @@ export default function EmployeeDetailPage() {
         try {
             const start = '2024-01-01'; // Ensure we catch all records from start of 2024
             const end = new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0];
-            const res = await fetch(`/api/attendance/report/individual?id=${params.id}&start=${start}&end=${end}`);
+            const res = await fetch(`/api/attendance/report/individual?employeeId=${params.id}&start=${start}&end=${end}`);
             if (res.ok) {
                 const data = await res.json();
                 setAttendanceSummary({
