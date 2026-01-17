@@ -1216,9 +1216,9 @@ export default function EmployeeDetailPage() {
                                 <LeaveCreditsWidget used={attendanceSummary.totalPaidLeaves} total={5} />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--spacing-md)', textAlign: 'center' }}>
-                                <div style={{ padding: 'var(--spacing-sm)', background: 'var(--warning-50)', borderRadius: 'var(--radius-md)' }}>
-                                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--warning-700)' }}>{attendanceSummary.late}</div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--warning-600)' }}>Total Lates</div>
+                                <div style={{ padding: 'var(--spacing-sm)', background: 'var(--danger-50)', borderRadius: 'var(--radius-md)' }}>
+                                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--danger-700)' }}>{attendanceSummary.late}</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--danger-600)' }}>Total Lates</div>
                                 </div>
                                 <div style={{ padding: 'var(--spacing-sm)', background: 'var(--danger-50)', borderRadius: 'var(--radius-md)' }}>
                                     <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--danger-700)' }}>{attendanceSummary.absent}</div>
