@@ -296,7 +296,7 @@ export default function ReportsPage() {
 
                         {/* Branch - NEW */}
                         <div className="relative">
-                            <label className={labelClasses}>Branch</label>
+                            <label className={labelClasses}>Select Branch</label>
                             <select
                                 value={config.branch}
                                 onChange={(e) => setConfig({ ...config, branch: e.target.value })}
