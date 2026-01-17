@@ -73,6 +73,8 @@ export async function GET(request: NextRequest) {
             absent: logs.filter((r: any) => r.status === 'Absent').length,
             onLeave: logs.filter((r: any) => r.status === 'On Leave').length,
             paidLeavesUsed: totalPaidLeavesUsed,
+            totalPaidLeavesUsed: totalPaidLeavesUsed,
+            present_on_leave: logs.filter((r: any) => r.status === 'On Leave').length,
             remainingPaidLeaves: remainingPaidLeaves
         };
 
