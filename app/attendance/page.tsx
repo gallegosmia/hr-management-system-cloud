@@ -129,7 +129,7 @@ export default function AttendancePage() {
                 // Auto-detect late status
                 if (field === 'time_in' && value) {
                     const timeIn = new Date(`2000-01-01 ${value}`);
-                    const cutoff = new Date(`2000-01-01 08:00`); // 8:00 AM cutoff
+                    const cutoff = new Date(`2000-01-01 08:01`); // 8:00 AM cutoff
 
                     if (timeIn > cutoff) {
                         updated.status = 'Late';
@@ -169,7 +169,7 @@ export default function AttendancePage() {
 
             // If clocking in, auto-calculate status
             if (type === 'in') {
-                const cutoff = new Date(`2000-01-01 08:00`);
+                const cutoff = new Date(`2000-01-01 08:01`);
                 const timeIn = new Date(`2000-01-01 ${currentTime}`);
                 if (timeIn > cutoff) {
                     record.status = 'Late';
