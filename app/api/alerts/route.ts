@@ -33,9 +33,7 @@ export async function GET(request: NextRequest) {
                 { field: 'personal_info_complete', label: 'Personal Information' },
                 { field: 'preemployment_req_complete', label: 'Pre-Employment Requirements' },
                 { field: 'government_docs_complete', label: 'Government Documents' },
-                { field: 'employment_records_complete', label: 'Employment Records' },
-                { field: 'attendance_records_complete', label: 'Attendance Records' },
-                { field: 'payroll_records_complete', label: 'Payroll Records' }
+                { field: 'employment_records_complete', label: 'Employment Records' }
             ];
 
             checklistFields.forEach(item => {
@@ -56,7 +54,7 @@ export async function GET(request: NextRequest) {
                     employee_name: `${emp.first_name} ${emp.last_name}`,
                     type: 'incomplete_201',
                     severity: alertSeverity,
-                    message: `${missingItems.length} document(s) missing from 201 file`,
+                    message: `${missingItems.length} document(s) missing: ${missingItems.join(', ')}`,
                     missing_items: missingItems,
                     days_since_hire: daysSinceHire,
                     created_at: new Date().toISOString()
