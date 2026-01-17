@@ -23,7 +23,7 @@ export default function AlertsWidget() {
 
     const fetchAlerts = async () => {
         try {
-            const response = await fetch('/api/alerts?severity=high');
+            const response = await fetch(`/api/alerts?severity=high&t=${new Date().getTime()}`);
             const data = await response.json();
             setAlerts(data.alerts || []);
         } catch (error) {
