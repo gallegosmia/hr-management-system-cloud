@@ -319,6 +319,16 @@ export default function AttendancePage() {
             styles: { fontSize: 9 },
             columnStyles: {
                 5: { fontStyle: 'bold' }
+            },
+            didParseCell: function (data) {
+                if (data.section === 'body' && data.column.index === 5) {
+                    const status = data.cell.raw as string;
+                    if (status === 'Late' || status === 'Absent') {
+                        data.cell.styles.textColor = [220, 38, 38]; // Red
+                    } else if (status === 'Present') {
+                        data.cell.styles.textColor = [22, 163, 74]; // Green
+                    }
+                }
             }
         });
 
