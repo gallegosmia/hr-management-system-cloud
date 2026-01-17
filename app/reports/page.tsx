@@ -98,6 +98,15 @@ export default function ReportsPage() {
             body: tableData,
             startY: 50,
             headStyles: { fillColor: [79, 70, 229] },
+            didParseCell: function (data) {
+                if (data.section === 'body') {
+                    // Late (Index 3) and Absent (Index 4)
+                    if ((data.column.index === 3 || data.column.index === 4) && Number(data.cell.raw) > 0) {
+                        data.cell.styles.textColor = [220, 38, 38]; // Red
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                }
+            }
         });
         doc.save(`Attendance_Report.pdf`);
     };
