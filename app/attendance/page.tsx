@@ -397,7 +397,7 @@ export default function AttendancePage() {
                                 <div className="stat-card-value">{stats.late}</div>
                                 <div className="stat-card-label">Late</div>
                             </div>
-                            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #fef3c7, #fde68a)', color: '#d97706' }}>
+                            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #fee2e2, #fecaca)', color: '#dc2626' }}>
                                 ⚠️
                             </div>
                         </div>
