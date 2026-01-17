@@ -516,6 +516,7 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
             id: emp.id,
             name: `${emp.first_name} ${emp.last_name}`,
             department: emp.department,
+            branch: emp.branch, // Added branch
             present,
             late,
             absent,
@@ -537,6 +538,7 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
             id: emp.id,
             name: `${emp.first_name} ${emp.last_name}`,
             department: emp.department,
+            branch: emp.branch, // Added branch
             entitlement: 5,
             used,
             remaining: 5 - used,
@@ -551,6 +553,7 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
         totalSSS: activeEmployees.reduce((acc, emp) => acc + (Number(emp.salary_info?.deductions?.sss_contribution) || 0), 0),
         totalPhilHealth: activeEmployees.reduce((acc, emp) => acc + (Number(emp.salary_info?.deductions?.philhealth_contribution) || 0), 0),
         totalPagIBIG: activeEmployees.reduce((acc, emp) => acc + (Number(emp.salary_info?.deductions?.pagibig_contribution) || 0), 0),
+        totalPagIBIGMP2: activeEmployees.reduce((acc, emp) => acc + (Number(emp.salary_info?.deductions?.pagibig_mp2) || 0), 0),
         employeeCount: activeEmployees.length
     };
 
@@ -567,6 +570,7 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
             id: emp.id,
             name: `${emp.first_name} ${emp.last_name}`,
             department: emp.department,
+            branch: emp.branch, // Added branch
             status: emp.file_completion_status,
             missingFields: missing
         };
@@ -589,6 +593,7 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
             id: emp.id,
             name: `${emp.first_name} ${emp.last_name}`,
             department: emp.department,
+            branch: emp.branch, // Added branch
             dateHired: emp.date_hired,
             tenure: `${years}y ${months}m`,
             yearsInCompany: years,

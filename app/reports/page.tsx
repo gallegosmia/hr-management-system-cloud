@@ -28,6 +28,7 @@ export default function ReportsPage() {
         startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
         endDate: new Date().toISOString().split('T')[0],
         department: 'All Departments',
+        branch: 'All Branches',
         sortBy: 'Name',
         column: 'All Columns',
         filter: 'None'
@@ -69,6 +70,12 @@ export default function ReportsPage() {
         doc.setFontSize(10);
         doc.text(`Period: ${config.startDate} to ${config.endDate}`, 14, 32);
         doc.text(`Generated on: ${new Date().toLocaleString()}`, 160, 32);
+
+        // Add Branch info to header if selected
+        if (config.branch !== 'All Branches') {
+            doc.text(`Branch: ${config.branch}`, 14, 37);
+        }
+
         doc.setTextColor(0, 0, 0);
     };
 
@@ -86,12 +93,19 @@ export default function ReportsPage() {
         }
     };
 
+    const filterData = (rows: any[]) => {
+        return rows.filter(row => {
+            const deptMatch = config.department === 'All Departments' || row.department === config.department;
+            const branchMatch = config.branch === 'All Branches' || row.branch === config.branch;
+            return deptMatch && branchMatch;
+        });
+    };
+
     const genAttendancePDF = () => {
         if (!data) return;
         const doc = new jsPDF();
         addReportHeader(doc, 'Attendance Summary');
-        const tableData = data.attendanceSummary
-            .filter(row => config.department === 'All Departments' || row.department === config.department)
+        const tableData = filterData(data.attendanceSummary)
             .map(row => [row.name, row.department, row.present, row.late, row.absent, row.onLeave || 0, `${row.tardinessRate}%`]);
         autoTable(doc, {
             head: [['Employee', 'Department', 'Present', 'Late', 'Absent', 'On Leave', 'Tardiness Rate']],
@@ -115,8 +129,7 @@ export default function ReportsPage() {
         if (!data) return;
         const doc = new jsPDF();
         addReportHeader(doc, 'Leave Credit & Usage Report');
-        const tableData = data.leaveUsage
-            .filter(row => config.department === 'All Departments' || row.department === config.department)
+        const tableData = filterData(data.leaveUsage)
             .map(row => [row.name, row.department, row.entitlement, row.used, row.remaining]);
         autoTable(doc, {
             head: [['Employee', 'Department', 'Yearly Credits', 'Days Used', 'Balance']],
@@ -154,8 +167,7 @@ export default function ReportsPage() {
         if (!data) return;
         const doc = new jsPDF();
         addReportHeader(doc, '201 File Compliance Audit');
-        const tableData = data.complianceAudit
-            .filter(row => config.department === 'All Departments' || row.department === config.department)
+        const tableData = filterData(data.complianceAudit)
             .map(row => [row.name, row.department, row.status, row.missingFields.join(', ') || 'NONE']);
         autoTable(doc, {
             head: [['Employee', 'Department', 'Status', 'Missing Info']],
@@ -170,8 +182,7 @@ export default function ReportsPage() {
         if (!data) return;
         const doc = new jsPDF();
         addReportHeader(doc, 'Employee Tenure & Anniversaries');
-        const tableData = data.tenureData
-            .filter(row => config.department === 'All Departments' || row.department === config.department)
+        const tableData = filterData(data.tenureData)
             .map(row => [row.name, row.department, row.dateHired, row.tenure, row.daysToAnniversary <= 30 ? `IN ${row.daysToAnniversary} DAYS!` : `${row.daysToAnniversary} d`]);
         autoTable(doc, {
             head: [['Employee', 'Department', 'Date Hired', 'Tenure', 'Next Anniversary']],
@@ -219,6 +230,9 @@ export default function ReportsPage() {
     const inputClasses = "w-full border border-gray-300 rounded-lg py-3 px-4 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer";
     const labelClasses = "absolute -top-2.5 left-3 bg-white px-1 text-[11px] font-semibold text-gray-500 uppercase tracking-wider";
 
+    // Extract unique branches
+    const branches = Array.from(new Set(data?.attendanceSummary.map((r: any) => r.branch).filter(Boolean) as string[]));
+
     return (
         <DashboardLayout>
             <div className="min-h-[80vh] flex items-center justify-center p-4 bg-gray-50/50">
@@ -265,7 +279,7 @@ export default function ReportsPage() {
                             />
                         </div>
 
-                        {/* Departments (Matches 'Stores' in image) */}
+                        {/* Departments */}
                         <div className="relative">
                             <label className={labelClasses}>Departments</label>
                             <select
@@ -276,6 +290,21 @@ export default function ReportsPage() {
                                 <option>All Departments</option>
                                 {data?.headcount.byDepartment.map(dept => (
                                     <option key={dept.name} value={dept.name}>{dept.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Branch - NEW */}
+                        <div className="relative">
+                            <label className={labelClasses}>Branch</label>
+                            <select
+                                value={config.branch}
+                                onChange={(e) => setConfig({ ...config, branch: e.target.value })}
+                                className={inputClasses}
+                            >
+                                <option>All Branches</option>
+                                {branches.map(branch => (
+                                    <option key={branch} value={branch}>{branch}</option>
                                 ))}
                             </select>
                         </div>
