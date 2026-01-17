@@ -21,10 +21,23 @@ export async function GET(request: NextRequest) {
         const startDate = new Date(start);
         const endDate = new Date(end);
 
-        // Filter logs for this employee in the range
+        // Filter logs using robust string comparison
         const logs = attendance
-            .filter((r: any) => r.employee_id === id && new Date(r.date) >= startDate && new Date(r.date) <= endDate)
-            .sort((a: any, b: any) => a.date.localeCompare(b.date));
+            .filter((r: any) => {
+                let dStr = r.date;
+                // Normalize to YYYY-MM-DD string
+                if (r.date instanceof Date) {
+                    dStr = r.date.toISOString().split('T')[0];
+                } else if (typeof r.date === 'string') {
+                    dStr = r.date.split('T')[0];
+                }
+                return r.employee_id === id && dStr >= start && dStr <= end;
+            })
+            .sort((a: any, b: any) => {
+                const da = a.date instanceof Date ? a.date.toISOString() : a.date;
+                const db = b.date instanceof Date ? b.date.toISOString() : b.date;
+                return da.localeCompare(db);
+            });
 
         // Calculate Paid Leave (5-day limit)
         // Calculate Paid Leave (5-day limit) based on BOTH Approved Requests AND Attendance 'On Leave'
