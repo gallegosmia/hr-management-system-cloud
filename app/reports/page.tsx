@@ -230,8 +230,8 @@ export default function ReportsPage() {
     const inputClasses = "w-full border border-gray-300 rounded-lg py-3 px-4 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer";
     const labelClasses = "absolute -top-2.5 left-3 bg-white px-1 text-[11px] font-semibold text-gray-500 uppercase tracking-wider";
 
-    // Extract unique branches
-    const branches = Array.from(new Set(data?.attendanceSummary.map((r: any) => r.branch).filter(Boolean) as string[]));
+    // Extract unique branches safely
+    const branches = Array.from(new Set((data?.attendanceSummary || []).map((r: any) => r.branch).filter(Boolean) as string[]));
 
     return (
         <DashboardLayout>
@@ -288,7 +288,7 @@ export default function ReportsPage() {
                                 className={inputClasses}
                             >
                                 <option>All Departments</option>
-                                {data?.headcount.byDepartment.map(dept => (
+                                {(data?.headcount?.byDepartment || []).map(dept => (
                                     <option key={dept.name} value={dept.name}>{dept.name}</option>
                                 ))}
                             </select>
