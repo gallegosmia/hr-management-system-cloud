@@ -92,9 +92,9 @@ export default function ReportsPage() {
         addReportHeader(doc, 'Attendance Summary');
         const tableData = data.attendanceSummary
             .filter(row => config.department === 'All Departments' || row.department === config.department)
-            .map(row => [row.name, row.department, row.present, row.late, row.absent, `${row.tardinessRate}%`]);
+            .map(row => [row.name, row.department, row.present, row.late, row.absent, row.onLeave || 0, `${row.tardinessRate}%`]);
         autoTable(doc, {
-            head: [['Employee', 'Department', 'Present', 'Late', 'Absent', 'Tardiness Rate']],
+            head: [['Employee', 'Department', 'Present', 'Late', 'Absent', 'On Leave', 'Tardiness Rate']],
             body: tableData,
             startY: 50,
             headStyles: { fillColor: [79, 70, 229] },
