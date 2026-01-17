@@ -51,10 +51,10 @@ export async function POST(request: NextRequest) {
             await recordAttendance({
                 employee_id: record.employee_id,
                 date: date,
-                time_in: record.time_in || undefined,
-                time_out: record.time_out || undefined,
+                time_in: record.time_in || null,
+                time_out: record.time_out || null,
                 status: record.status,
-                remarks: record.remarks || undefined
+                remarks: record.remarks || null
             });
         }
 
