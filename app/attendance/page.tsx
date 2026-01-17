@@ -239,6 +239,18 @@ export default function AttendancePage() {
         }
     };
 
+    const getStatusStyle = (status: string) => {
+        switch (status) {
+            case 'Present': return { bg: '#dcfce7', color: '#16a34a' }; // Green
+            case 'Late': return { bg: '#fee2e2', color: '#dc2626' };    // Red
+            case 'Absent': return { bg: '#fee2e2', color: '#dc2626' };  // Red
+            case 'Half-Day': return { bg: '#dbeafe', color: '#2563eb' }; // Blue
+            case 'On Leave': return { bg: '#e0e7ff', color: '#4f46e5' }; // Indigo
+            case 'No Work': return { bg: '#f3f4f6', color: '#4b5563' };  // Gray
+            default: return { bg: '#f3f4f6', color: '#4b5563' };
+        }
+    };
+
     const filteredAttendance = attendance.filter(att => {
         if (user?.role === 'Employee') {
             return att.employee_id === user.employee_id || att.employee_id === parseInt(user.employee_id);
@@ -544,8 +556,14 @@ export default function AttendancePage() {
                                                     <select
                                                         value={att.status}
                                                         onChange={(e) => handleAttendanceChange(att.employee_id, 'status', e.target.value)}
-                                                        className={`badge ${getStatusBadgeClass(att.status)}`}
-                                                        style={{ border: 'none', cursor: 'pointer', padding: 'var(--spacing-xs) var(--spacing-md)' }}
+                                                        className="badge"
+                                                        style={{
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            padding: 'var(--spacing-xs) var(--spacing-md)',
+                                                            backgroundColor: getStatusStyle(att.status).bg,
+                                                            color: getStatusStyle(att.status).color
+                                                        }}
                                                     >
                                                         <option value="Present">Present</option>
                                                         <option value="Late">Late</option>
@@ -555,7 +573,13 @@ export default function AttendancePage() {
                                                         <option value="No Work">No Work</option>
                                                     </select>
                                                 ) : (
-                                                    <span className={`badge ${getStatusBadgeClass(att.status)}`}>
+                                                    <span
+                                                        className="badge"
+                                                        style={{
+                                                            backgroundColor: getStatusStyle(att.status).bg,
+                                                            color: getStatusStyle(att.status).color
+                                                        }}
+                                                    >
                                                         {att.status}
                                                     </span>
                                                 )}
