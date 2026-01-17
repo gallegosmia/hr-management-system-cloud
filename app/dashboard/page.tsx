@@ -433,24 +433,46 @@ export default function DashboardPage() {
                                             'Resigned': 'var(--gray-400)',
                                             'Terminated': 'var(--danger-500)'
                                         };
+                                        const color = colors[status.employment_status] || 'var(--gray-400)';
+                                        const percentage = stats.totalEmployees > 0
+                                            ? ((status.count / stats.totalEmployees) * 100).toFixed(1)
+                                            : '0';
+
                                         return (
                                             <div key={status.employment_status} style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
                                                 padding: 'var(--spacing-md)',
                                                 background: 'var(--bg-secondary)',
                                                 borderRadius: 'var(--radius-md)',
-                                                borderLeft: `4px solid ${colors[status.employment_status] || 'var(--gray-400)'}`
+                                                borderLeft: `4px solid ${color}`
                                             }}>
-                                                <span style={{ fontWeight: '600', fontSize: '0.875rem' }}>{status.employment_status}</span>
-                                                <span style={{
-                                                    fontWeight: '700',
-                                                    fontSize: '1.25rem',
-                                                    color: colors[status.employment_status] || 'var(--gray-600)'
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-sm)' }}>
+                                                    <span style={{ fontWeight: '600', fontSize: '0.875rem' }}>{status.employment_status}</span>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <span style={{
+                                                            fontWeight: '700',
+                                                            fontSize: '1.25rem',
+                                                            color: color,
+                                                            lineHeight: 1
+                                                        }}>
+                                                            {status.count}
+                                                        </span>
+                                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{percentage}%</div>
+                                                    </div>
+                                                </div>
+                                                <div style={{
+                                                    height: '6px',
+                                                    background: 'rgba(0,0,0,0.05)',
+                                                    borderRadius: 'var(--radius-full)',
+                                                    overflow: 'hidden'
                                                 }}>
-                                                    {status.count}
-                                                </span>
+                                                    <div style={{
+                                                        height: '100%',
+                                                        width: `${percentage}%`,
+                                                        background: color,
+                                                        borderRadius: 'var(--radius-full)',
+                                                        transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                    }} />
+                                                </div>
                                             </div>
                                         );
                                     })}
