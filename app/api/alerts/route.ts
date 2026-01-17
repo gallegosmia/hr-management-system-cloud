@@ -8,7 +8,7 @@ interface Alert {
     id: string;
     employee_id: number;
     employee_name: string;
-    type: 'incomplete_201' | 'missing_documents' | 'probation_ending' | 'contract_expiring';
+    type: 'incomplete_201' | 'missing_documents' | 'probation_ending' | 'contract_expiring' | 'excessive_lates';
     severity: 'high' | 'medium' | 'low';
     message: string;
     missing_items?: string[];
@@ -90,6 +90,54 @@ export async function GET(request: NextRequest) {
                         type: 'probation_ending',
                         severity: 'medium',
                         message: `Probationary period ending in ${daysUntilEnd} days`,
+                        created_at: new Date().toISOString()
+                    });
+                }
+            }
+            // Alert: Probation ending soon (within 30 days) for 'Probationary' status
+            if (emp.employment_status === 'Probationary' && daysSinceHire > 150 && daysSinceHire < 180) {
+                alerts.push({
+                    id: `probation-${emp.id}`,
+                    employee_id: emp.id,
+                    employee_name: `${emp.first_name} ${emp.last_name}`,
+                    type: 'probation_ending',
+                    severity: 'medium',
+                    message: 'Probationary period ending soon',
+                    created_at: new Date().toISOString()
+                });
+            }
+        });
+
+        // Check for Excessive Lates (5+ in current month)
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+        // We use getAll('attendance') then filter because existing query function might be limited in complex joins/grouping
+        // In a real DB we would use COUNT(*) ... GROUP BY ... WHERE date BETWEEN ... AND status='Late'
+        const allAttendance = await getAll('attendance');
+        const currentMonthAttendance = allAttendance.filter((a: any) =>
+            a.date >= startOfMonth &&
+            a.date <= endOfMonth &&
+            a.status === 'Late'
+        );
+
+        const latesMap = new Map<number, number>();
+        currentMonthAttendance.forEach((att: any) => {
+            latesMap.set(att.employee_id, (latesMap.get(att.employee_id) || 0) + 1);
+        });
+
+        latesMap.forEach((count, employeeId) => {
+            if (count >= 5) {
+                const emp = employees.find((e: any) => e.id === employeeId);
+                if (emp) {
+                    alerts.unshift({
+                        id: `lates-${emp.id}-${now.getMonth()}`,
+                        employee_id: emp.id,
+                        employee_name: `${emp.first_name} ${emp.last_name}`,
+                        type: 'excessive_lates',
+                        severity: 'high',
+                        message: `Employee has ${count} lates this month. Candidate for warning.`,
                         created_at: new Date().toISOString()
                     });
                 }
