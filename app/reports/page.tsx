@@ -14,6 +14,7 @@ interface ReportData {
     governmentRemittance: any;
     headcount: {
         byDepartment: { name: string, count: number }[];
+        byBranch: { name: string, count: number }[];
         total: number;
         growthThisYear: number;
     };
@@ -33,6 +34,8 @@ export default function ReportsPage() {
         column: 'All Columns',
         filter: 'None'
     });
+    const [branches, setBranches] = useState<string[]>([]);
+    const [departments, setDepartments] = useState<string[]>([]);
 
     const reportOptions = [
         { id: 'attendance', title: 'Attendance Summary', action: 'genAttendancePDF' },
@@ -46,18 +49,43 @@ export default function ReportsPage() {
 
     useEffect(() => {
         fetchReports();
-    }, [config.startDate, config.endDate]);
+    }, [config.startDate, config.endDate, config.branch]);
+
+    useEffect(() => {
+        fetchBranches();
+        fetchDepartments();
+    }, []);
 
     const fetchReports = async () => {
         try {
             setLoading(true);
-            const res = await fetch(`/api/reports?start=${config.startDate}&end=${config.endDate}`);
+            const res = await fetch(`/api/reports?start=${config.startDate}&end=${config.endDate}&branch=${config.branch}`);
             const result = await res.json();
             setData(result);
         } catch (error) {
             console.error('Failed to fetch reports:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchBranches = async () => {
+        try {
+            const res = await fetch('/api/employees/branches');
+            const result = await res.json();
+            setBranches(result);
+        } catch (error) {
+            console.error('Failed to fetch branches:', error);
+        }
+    };
+
+    const fetchDepartments = async () => {
+        try {
+            const res = await fetch('/api/employees/departments');
+            const result = await res.json();
+            setDepartments(result);
+        } catch (error) {
+            console.error('Failed to fetch departments:', error);
         }
     };
 
@@ -230,9 +258,6 @@ export default function ReportsPage() {
     const inputClasses = "w-full border border-gray-300 rounded-lg py-3 px-4 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer";
     const labelClasses = "absolute -top-2.5 left-3 bg-white px-1 text-[11px] font-semibold text-gray-500 uppercase tracking-wider";
 
-    // Extract unique branches safely
-    const branches = Array.from(new Set((data?.attendanceSummary || []).map((r: any) => r.branch).filter(Boolean) as string[]));
-
     return (
         <DashboardLayout>
             <div className="min-h-[80vh] flex items-center justify-center p-4 bg-gray-50/50">
@@ -288,8 +313,8 @@ export default function ReportsPage() {
                                 className={inputClasses}
                             >
                                 <option>All Departments</option>
-                                {(data?.headcount?.byDepartment || []).map(dept => (
-                                    <option key={dept.name} value={dept.name}>{dept.name}</option>
+                                {departments.map(dept => (
+                                    <option key={dept} value={dept}>{dept}</option>
                                 ))}
                             </select>
                         </div>
