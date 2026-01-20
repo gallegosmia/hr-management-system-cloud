@@ -422,15 +422,18 @@ export interface DetailedReportsData {
         id: number;
         name: string;
         department: string;
+        branch?: string;
         present: number;
         late: number;
         absent: number;
+        onLeave: number;
         tardinessRate: number;
     }[];
     leaveUsage: {
         id: number;
         name: string;
         department: string;
+        branch?: string;
         entitlement: number;
         used: number;
         remaining: number;
@@ -448,6 +451,7 @@ export interface DetailedReportsData {
         id: number;
         name: string;
         department: string;
+        branch?: string;
         status: string;
         missingFields: string[];
     }[];
@@ -455,6 +459,7 @@ export interface DetailedReportsData {
         id: number;
         name: string;
         department: string;
+        branch?: string;
         dateHired: string;
         tenure: string;
         yearsInCompany: number;
