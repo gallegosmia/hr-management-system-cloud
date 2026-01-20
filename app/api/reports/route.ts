@@ -9,11 +9,12 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const start = searchParams.get('start') || undefined;
         const end = searchParams.get('end') || undefined;
+        const branch = searchParams.get('branch') || undefined;
 
         const dateRange = start && end ? { start, end } : undefined;
 
         const stats = await getDashboardStats();
-        const detailedReports = await getDetailedReportsData(dateRange);
+        const detailedReports = await getDetailedReportsData(dateRange, branch);
         const employees = await getAll('employees');
         const leaves = await getAll('leave_requests');
 

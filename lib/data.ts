@@ -412,6 +412,11 @@ export async function getDepartments(): Promise<string[]> {
     return res.rows.map(r => r.department).filter(Boolean);
 }
 
+export async function getBranches(): Promise<string[]> {
+    const res = await query("SELECT DISTINCT branch FROM employees ORDER BY branch");
+    return res.rows.map(r => r.branch).filter(Boolean);
+}
+
 export interface DetailedReportsData {
     attendanceSummary: {
         id: number;
@@ -463,14 +468,19 @@ export interface DetailedReportsData {
     };
     headcount: {
         byDepartment: { name: string, count: number }[];
+        byBranch: { name: string, count: number }[];
         total: number;
         growthThisYear: number;
     };
 }
 
-export async function getDetailedReportsData(dateRange?: { start: string, end: string }): Promise<DetailedReportsData> {
+export async function getDetailedReportsData(dateRange?: { start: string, end: string }, branch?: string): Promise<DetailedReportsData> {
     const employees = await getAll('employees');
-    const activeEmployees = employees.filter((emp: any) => emp.employment_status !== 'Resigned');
+    let activeEmployees = employees.filter((emp: any) => emp.employment_status !== 'Resigned');
+
+    if (branch && branch !== 'All Branches') {
+        activeEmployees = activeEmployees.filter((emp: any) => emp.branch === branch);
+    }
 
     const now = new Date();
     const start = dateRange?.start ? new Date(dateRange.start) : new Date(now.getFullYear(), now.getMonth(), 1);
@@ -615,6 +625,12 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
         return acc;
     }, {});
 
+    const headcountByBranch = activeEmployees.reduce((acc: any, emp: any) => {
+        const branchName = emp.branch || 'Not Assigned';
+        acc[branchName] = (acc[branchName] || 0) + 1;
+        return acc;
+    }, {});
+
     const thisYear = now.getFullYear();
     const joinedThisYear = activeEmployees.filter((emp: any) => {
         const hired = new Date(emp.date_hired);
@@ -630,6 +646,7 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
         governmentRemittance,
         headcount: {
             byDepartment: Object.entries(headcountByDept).map(([name, count]) => ({ name, count: count as number })),
+            byBranch: Object.entries(headcountByBranch).map(([name, count]) => ({ name, count: count as number })),
             total: activeEmployees.length,
             growthThisYear: joinedThisYear
         }

@@ -34,18 +34,21 @@ export default function EmployeesPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [departmentFilter, setDepartmentFilter] = useState('');
+    const [branchFilter, setBranchFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
 
     const [departments, setDepartments] = useState<string[]>([]);
+    const [branches, setBranches] = useState<string[]>([]);
 
     useEffect(() => {
         fetchEmployees();
         fetchDepartments();
+        fetchBranches();
     }, []);
 
     useEffect(() => {
         filterEmployees();
-    }, [employees, searchQuery, departmentFilter, statusFilter]);
+    }, [employees, searchQuery, departmentFilter, branchFilter, statusFilter]);
 
     const fetchEmployees = async () => {
         try {
@@ -70,6 +73,16 @@ export default function EmployeesPage() {
         }
     };
 
+    const fetchBranches = async () => {
+        try {
+            const response = await fetch('/api/employees/branches');
+            const data = await response.json();
+            setBranches(data);
+        } catch (error) {
+            console.error('Failed to fetch branches:', error);
+        }
+    };
+
     const filterEmployees = () => {
         let filtered = employees;
 
@@ -86,6 +99,10 @@ export default function EmployeesPage() {
 
         if (departmentFilter) {
             filtered = filtered.filter(emp => emp.department === departmentFilter);
+        }
+
+        if (branchFilter) {
+            filtered = filtered.filter(emp => emp.branch === branchFilter);
         }
 
         if (statusFilter) {
@@ -232,6 +249,18 @@ export default function EmployeesPage() {
                                 <option value="">All Departments</option>
                                 {departments.map(dept => (
                                     <option key={dept} value={dept}>{dept}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <select
+                                value={branchFilter}
+                                onChange={(e) => setBranchFilter(e.target.value)}
+                                className="form-select"
+                            >
+                                <option value="">All Branches</option>
+                                {branches.map(branch => (
+                                    <option key={branch} value={branch}>{branch}</option>
                                 ))}
                             </select>
                         </div>
