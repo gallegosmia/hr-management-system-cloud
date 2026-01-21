@@ -916,6 +916,56 @@ export async function createPayslip(data: Omit<Payslip, 'id' | 'generated_at'>):
     });
 }
 
+export async function batchCreatePayslips(items: Omit<Payslip, 'id' | 'generated_at'>[]): Promise<void> {
+    if (items.length === 0) return;
+
+    if (isPostgres) {
+        const values: any[] = [];
+        let placeholderIndex = 1;
+        const valueStrings: string[] = [];
+
+        for (const item of items) {
+            valueStrings.push(`($${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++})`);
+            values.push(
+                item.payroll_run_id,
+                item.employee_id,
+                item.gross_pay,
+                item.net_pay,
+                item.total_deductions,
+                item.total_allowances,
+                item.days_present,
+                item.double_pay_days,
+                item.double_pay_amount,
+                JSON.stringify(item.deduction_details),
+                JSON.stringify(item.allowance_details)
+            );
+        }
+
+        const sql = `
+            INSERT INTO payslips (
+                payroll_run_id, employee_id, gross_pay, net_pay, 
+                total_deductions, total_allowances, days_present, 
+                double_pay_days, double_pay_amount, deduction_details, allowance_details
+            ) VALUES ${valueStrings.join(', ')}
+        `;
+        await query(sql, values);
+    } else {
+        for (const item of items) {
+            await createPayslip(item);
+        }
+    }
+}
+
+export async function batchUpdateEmployees(updates: { id: number, data: Partial<EmployeeFormData> }[]): Promise<void> {
+    if (updates.length === 0) return;
+
+    // For simplicity, we loop updates but this is still cleaner in the route
+    // and can be further optimized if needed.
+    for (const update of updates) {
+        await updateEmployee(update.id, update.data);
+    }
+}
+
 export async function logAudit(data: {
     user_id: number;
     action: string;
