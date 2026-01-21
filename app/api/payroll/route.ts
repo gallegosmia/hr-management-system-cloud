@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPayrollRun, createPayslip, getAllPayrollRuns, getEmployeeById, updateEmployee } from '@/lib/data';
+import { createPayrollRun, createPayslip, getAllPayrollRuns, getEmployeeById, updateEmployee, batchCreatePayslips, batchUpdateEmployees, getAllEmployees } from '@/lib/data';
 
 export async function GET() {
     try {
@@ -34,9 +34,15 @@ export async function POST(request: NextRequest) {
         });
 
         const isFinalized = (status || 'Finalized') === 'Finalized';
+        const payslipsToCreate = [];
+        const employeeUpdates = [];
+
+        // Fetch all employees in one go if finalized
+        const allEmployees = isFinalized ? await getAllEmployees() : [];
+        const employeeMap = new Map(allEmployees.map(e => [e.id, e]));
 
         for (const item of items) {
-            await createPayslip({
+            payslipsToCreate.push({
                 payroll_run_id: runId,
                 employee_id: item.employee_id,
                 gross_pay: item.gross_pay,
@@ -51,7 +57,7 @@ export async function POST(request: NextRequest) {
             });
 
             if (isFinalized) {
-                const emp = await getEmployeeById(item.employee_id);
+                const emp = employeeMap.get(item.employee_id);
                 if (emp && emp.salary_info && emp.salary_info.deductions) {
                     const d = emp.salary_info.deductions;
                     const updates: any = { salary_info: JSON.parse(JSON.stringify(emp.salary_info)) };
@@ -73,10 +79,16 @@ export async function POST(request: NextRequest) {
                     }
 
                     if (hasUpdates) {
-                        await updateEmployee(emp.id, updates);
+                        employeeUpdates.push({ id: emp.id, data: updates });
                     }
                 }
             }
+        }
+
+        // Perform bulk operations
+        await batchCreatePayslips(payslipsToCreate);
+        if (employeeUpdates.length > 0) {
+            await batchUpdateEmployees(employeeUpdates);
         }
 
         return NextResponse.json({ success: true, id: runId });
