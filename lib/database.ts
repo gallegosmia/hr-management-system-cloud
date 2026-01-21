@@ -22,6 +22,8 @@ if (DATABASE_URL) {
   });
 }
 
+export const isPostgres = !!pool;
+
 // Ensure local directory exists (for development)
 if (!DATABASE_URL && !fs.existsSync(path.join(process.cwd(), 'data'))) {
   fs.mkdirSync(path.join(process.cwd(), 'data'));

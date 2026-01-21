@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAll, query } from '@/lib/database';
-import { recordAttendance, getAttendanceByDate } from '@/lib/data';
+import { recordAttendance, getAttendanceByDate, batchRecordAttendance } from '@/lib/data';
 
 export async function GET(request: NextRequest) {
     try {
@@ -46,17 +46,15 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Save each attendance record
-        for (const record of records) {
-            await recordAttendance({
-                employee_id: record.employee_id,
-                date: date,
-                time_in: record.time_in || null,
-                time_out: record.time_out || null,
-                status: record.status,
-                remarks: record.remarks || null
-            });
-        }
+        // Efficiently save all records in one batch
+        await batchRecordAttendance(records.map(record => ({
+            employee_id: record.employee_id,
+            date: date,
+            time_in: record.time_in || null,
+            time_out: record.time_out || null,
+            status: record.status,
+            remarks: record.remarks || null
+        })));
 
         return NextResponse.json({ success: true, count: records.length });
     } catch (error) {
