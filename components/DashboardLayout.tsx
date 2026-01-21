@@ -88,7 +88,6 @@ export default function DashboardLayout({ children }: LayoutProps) {
         { name: 'Employee Bonuses', href: '/bonuses', icon: '🎁', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
         { name: 'Transportation Allowance', href: '/transportation', icon: '🚗', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
         { name: 'Reports', href: '/reports', icon: '📈', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
-        { name: 'QR Kiosk', href: '/attendance/kiosk', icon: '🎥', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
         { name: 'Settings', href: '/settings', icon: '⚙️', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
     ];
 
