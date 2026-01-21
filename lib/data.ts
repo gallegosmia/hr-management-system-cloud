@@ -1,4 +1,4 @@
-import { getAll, getById, insert, update, query, remove, resetTableSequence } from './database';
+import { getAll, getById, insert, update, query, remove, resetTableSequence, isPostgres } from './database';
 
 export interface SalaryInfo {
     basic_salary: number;
@@ -757,6 +757,53 @@ export async function recordAttendance(data: {
         await update('attendance', res.rows[0].id, data);
     } else {
         await insert('attendance', data);
+    }
+}
+
+export async function batchRecordAttendance(records: {
+    employee_id: number;
+    date: string;
+    time_in?: string;
+    time_out?: string;
+    status: string;
+    remarks?: string;
+}[]): Promise<void> {
+    if (records.length === 0) return;
+
+    if (isPostgres) {
+        // Multi-row UPSERT for Postgres
+        const values: any[] = [];
+        let placeholderIndex = 1;
+        const valueStrings: string[] = [];
+
+        for (const record of records) {
+            valueStrings.push(`($${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++})`);
+            values.push(
+                record.employee_id,
+                record.date,
+                record.time_in || null,
+                record.time_out || null,
+                record.status,
+                record.remarks || null
+            );
+        }
+
+        const sql = `
+            INSERT INTO attendance (employee_id, date, time_in, time_out, status, remarks)
+            VALUES ${valueStrings.join(', ')}
+            ON CONFLICT (employee_id, date) 
+            DO UPDATE SET 
+                time_in = EXCLUDED.time_in,
+                time_out = EXCLUDED.time_out,
+                status = EXCLUDED.status,
+                remarks = EXCLUDED.remarks
+        `;
+        await query(sql, values);
+    } else {
+        // Fallback for local DB (still sequential but handled here)
+        for (const record of records) {
+            await recordAttendance(record);
+        }
     }
 }
 
