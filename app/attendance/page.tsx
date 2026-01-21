@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
+import Link from 'next/link';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface AttendanceRecord {
     id?: number;
@@ -359,9 +361,14 @@ export default function AttendancePage() {
                                 📄 Download PDF
                             </button>
                             {canManageAttendance && (
-                                <button onClick={saveAttendance} disabled={saving} className="btn btn-primary">
-                                    {saving ? 'Saving...' : '💾 Save Attendance'}
-                                </button>
+                                <>
+                                    <Link href="/attendance/kiosk" className="btn btn-secondary" style={{ backgroundColor: '#8b5cf6', borderColor: '#8b5cf6', color: 'white' }}>
+                                        🎥 Launch QR Kiosk
+                                    </Link>
+                                    <button onClick={saveAttendance} disabled={saving} className="btn btn-primary">
+                                        {saving ? 'Saving...' : '💾 Save Attendance'}
+                                    </button>
+                                </>
                             )}
                         </div>
                     </div>
@@ -372,27 +379,38 @@ export default function AttendancePage() {
             {isEmployee && selectedDate === format(new Date(), 'yyyy-MM-dd') && (
                 <div className="card mb-3" style={{ borderLeft: '4px solid var(--primary-600)' }}>
                     <div className="card-body" style={{ display: 'flex', gap: 'var(--spacing-lg)', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <div>
+                        <div style={{ flex: 1 }}>
                             <h3 style={{ margin: 0 }}>🕒 Clock In / Out</h3>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Record your attendance for today ({format(new Date(), 'MMMM dd, yyyy')})</p>
                         </div>
-                        <div style={{ marginLeft: 'auto', display: 'flex', gap: 'var(--spacing-md)' }}>
-                            <button
-                                onClick={() => handleClockAction('in')}
-                                className="btn btn-primary"
-                                disabled={saving}
-                                style={{ background: '#10b981', borderColor: '#10b981' }}
-                            >
-                                Clock In
-                            </button>
-                            <button
-                                onClick={() => handleClockAction('out')}
-                                className="btn btn-secondary"
-                                disabled={saving}
-                                style={{ background: '#64748b' }}
-                            >
-                                Clock Out
-                            </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                            <div style={{ textAlign: 'center' }}>
+                                <div id="employee-qr" style={{ padding: '10px', backgroundColor: 'white', borderRadius: '8px', display: 'inline-block' }}>
+                                    <QRCodeSVG
+                                        value={employees.find(e => e.id === (typeof user.employee_id === 'string' ? parseInt(user.employee_id) : user.employee_id))?.employee_id || '0'}
+                                        size={80}
+                                    />
+                                </div>
+                                <p style={{ fontSize: '0.75rem', fontWeight: 'bold', margin: '5px 0 0 0' }}>My QR ID</p>
+                            </div>
+                            <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+                                <button
+                                    onClick={() => handleClockAction('in')}
+                                    className="btn btn-primary"
+                                    disabled={saving}
+                                    style={{ background: '#10b981', borderColor: '#10b981' }}
+                                >
+                                    Clock In
+                                </button>
+                                <button
+                                    onClick={() => handleClockAction('out')}
+                                    className="btn btn-secondary"
+                                    disabled={saving}
+                                    style={{ background: '#64748b' }}
+                                >
+                                    Clock Out
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
