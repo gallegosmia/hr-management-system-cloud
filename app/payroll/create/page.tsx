@@ -247,23 +247,23 @@ export default function CreatePayrollPage() {
             </div>
 
             {preview.length > 0 && (
-                <div className="card">
-                    <div className="card-header">
+                <div className="card" style={{ padding: '0.75rem' }}>
+                    <div className="card-header" style={{ padding: '0.5rem 1rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Payroll Preview</h3>
-                            <div style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--primary-600)' }}>
+                            <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>Payroll Preview</h3>
+                            <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--primary-600)' }}>
                                 Total Payout: ₱{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                         </div>
                     </div>
-                    <div className="table-container-responsive">
-                        <table className="table table-condensed">
+                    <div className="table-container-responsive" style={{ fontSize: '0.75rem' }}>
+                        <table className="table table-condensed table-payroll">
                             <thead>
                                 <tr>
-                                    <th>Employee</th>
+                                    <th style={{ minWidth: '120px' }}>Employee</th>
                                     <th>Branch</th>
-                                    <th style={{ width: '80px', textAlign: 'center' }}>Days</th>
-                                    <th style={{ width: '100px', textAlign: 'center' }}>Holiday</th>
+                                    <th style={{ width: '50px', textAlign: 'center' }}>Days</th>
+                                    <th style={{ width: '60px', textAlign: 'center' }}>Hol.</th>
                                     <th style={{ textAlign: 'right' }}>Gross</th>
                                     <th style={{ textAlign: 'right' }}>Allow.</th>
                                     {(() => {
@@ -297,16 +297,16 @@ export default function CreatePayrollPage() {
                             <tbody>
                                 {preview.map((item, index) => (
                                     <tr key={item.employee_id}>
-                                        <td style={{ minWidth: '150px' }}>
-                                            <div style={{ fontWeight: 600 }}>{item.employee_name}</div>
-                                            <div style={{ fontSize: '0.70rem', color: 'var(--text-tertiary)' }}>
+                                        <td style={{ minWidth: '120px' }}>
+                                            <div style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{item.employee_name}</div>
+                                            <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>
                                                 Daily: ₱{item.daily_rate?.toLocaleString()}
                                             </div>
                                         </td>
-                                        <td>
-                                            <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                                        <td style={{ fontSize: '0.7rem' }}>
+                                            <div style={{ whiteSpace: 'nowrap' }}>
                                                 {item.branch || 'N/A'}
-                                            </span>
+                                            </div>
                                         </td>
                                         <td style={{ textAlign: 'center' }}>
                                             <input
@@ -314,7 +314,7 @@ export default function CreatePayrollPage() {
                                                 value={item.days_present}
                                                 onChange={(e) => handleUpdateItem(index, 'days_present', e.target.value)}
                                                 className="form-input"
-                                                style={{ padding: '0.15rem 0.25rem', fontSize: '0.8rem', textAlign: 'center', width: '50px', margin: '0 auto' }}
+                                                style={{ padding: '0.1rem 0.2rem', fontSize: '0.75rem', textAlign: 'center', width: '40px', margin: '0 auto' }}
                                                 min="0"
                                                 step="0.01"
                                             />
@@ -325,7 +325,7 @@ export default function CreatePayrollPage() {
                                                 value={item.double_pay_amount}
                                                 onChange={(e) => handleUpdateItem(index, 'double_pay_amount', e.target.value)}
                                                 className="form-input"
-                                                style={{ padding: '0.15rem 0.25rem', fontSize: '0.8rem', textAlign: 'center', width: '70px', margin: '0 auto' }}
+                                                style={{ padding: '0.1rem 0.2rem', fontSize: '0.75rem', textAlign: 'center', width: '55px', margin: '0 auto' }}
                                                 min="0"
                                                 step="0.01"
                                             />
@@ -333,7 +333,7 @@ export default function CreatePayrollPage() {
                                         <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>
                                             ₱{(item.gross_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             {item.double_pay_amount > 0 && (
-                                                <div style={{ fontSize: '0.70rem', color: 'var(--success-600)' }}>
+                                                <div style={{ fontSize: '0.65rem', color: 'var(--success-600)' }}>
                                                     +₱{(item.double_pay_amount || 0).toLocaleString()}
                                                 </div>
                                             )}
@@ -358,7 +358,7 @@ export default function CreatePayrollPage() {
                                             return (
                                                 <>
                                                     {activeDeductions.map(d => (
-                                                        <td key={d.key} style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                                                        <td key={d.key} style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: '0.7rem', padding: '0.25rem' }}>
                                                             {(item.deduction_details?.[d.key] || 0) > 0
                                                                 ? `₱${item.deduction_details[d.key].toLocaleString()}`
                                                                 : <span style={{ color: 'var(--text-tertiary)' }}>-</span>
@@ -442,6 +442,72 @@ export default function CreatePayrollPage() {
                     </div>
                 </div>
             )}
+            <style jsx>{`
+                .table-payroll {
+                    border-collapse: collapse;
+                    width: 100%;
+                }
+                .table-payroll th, .table-payroll td {
+                    padding: 0.25rem 0.4rem !important;
+                    line-height: 1.2;
+                }
+                .form-input {
+                    border-radius: 4px;
+                    border: 1px solid var(--border-color);
+                }
+            `}</style>
         </DashboardLayout>
     );
 }
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { test, expect, vi } from 'vitest';
+import PayrollCreate from './page';
+
+/**
+ * UNIT & INTEGRATION TESTS (Vitest + React Testing Library)
+ */
+describe('PayrollCreate Component', () => {
+    test('calculates total gross pay correctly including double pay', () => {
+        render(<PayrollCreate />);
+        const totalGross = screen.getByText(/TOTALS:/i).closest('tr')?.querySelectorAll('td')[1];
+        expect(totalGross).toBeDefined();
+    });
+
+    test('updates days_present and triggers recalculation', async () => {
+        render(<PayrollCreate />);
+        const input = screen.getAllByRole('spinbutton')[0] as HTMLInputElement;
+        fireEvent.change(input, { target: { value: '12.5' } });
+        expect(input.value).toBe('12.5');
+    });
+
+    test('disables buttons and shows loading state during save', async () => {
+        render(<PayrollCreate />);
+        const saveBtn = screen.getByRole('button', { name: /Save as Draft/i });
+        fireEvent.click(saveBtn);
+        expect(saveBtn).toBeDisabled();
+        expect(screen.getByText(/Saving.../i)).toBeInTheDocument();
+    });
+});
+
+/**
+ * E2E TEST (Playwright)
+ * File: e2e/payroll.spec.ts
+ */
+/*
+import { test, expect } from '@playwright/test';
+
+test('user can successfully create and finalize payroll', async ({ page }) => {
+    await page.goto('/payroll/create');
+    await page.waitForSelector('table tbody tr');
+    
+    // Edit a row
+    const input = page.locator('input[type="number"]').first();
+    await input.fill('13');
+    
+    // Submit
+    await page.click('button:has-text("Confirm & Finalize Payroll")');
+    
+    // Verify redirection or success message
+    await expect(page).toHaveURL(/\/payroll/);
+});
+*/

@@ -362,9 +362,6 @@ export default function AttendancePage() {
                             </button>
                             {canManageAttendance && (
                                 <>
-                                    <Link href="/attendance/kiosk" className="btn btn-secondary" style={{ backgroundColor: '#8b5cf6', borderColor: '#8b5cf6', color: 'white' }}>
-                                        🎥 Launch QR Kiosk
-                                    </Link>
                                     <button onClick={saveAttendance} disabled={saving} className="btn btn-primary">
                                         {saving ? 'Saving...' : '💾 Save Attendance'}
                                     </button>
@@ -384,14 +381,7 @@ export default function AttendancePage() {
                             <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Record your attendance for today ({format(new Date(), 'MMMM dd, yyyy')})</p>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                            <div style={{ textAlign: 'center' }}>
-                                <div id="employee-qr" style={{ padding: '10px', backgroundColor: 'white', borderRadius: '8px', display: 'inline-block' }}>
-                                    <QRCodeSVG
-                                        value={employees.find(e => e.id === (typeof user.employee_id === 'string' ? parseInt(user.employee_id) : user.employee_id))?.employee_id || '0'}
-                                        size={80}
-                                    />
-                                </div>
-                                <p style={{ fontSize: '0.75rem', fontWeight: 'bold', margin: '5px 0 0 0' }}>My QR ID</p>
+                            <div style={{ display: 'none' }}>
                             </div>
                             <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
                                 <button
