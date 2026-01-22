@@ -4,6 +4,9 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { format } from 'date-fns';
 
 export default function PayrollDetailsPage() {
     const params = useParams();
@@ -82,6 +85,80 @@ export default function PayrollDetailsPage() {
         } catch (error) {
             console.error('Approval error:', error);
         }
+    };
+
+    const exportPDF = () => {
+        if (!run) return;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.width;
+
+        // Header
+        doc.setFillColor(33, 150, 243);
+        doc.rect(0, 0, pageWidth, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.text('PAYROLL REGISTER', 14, 25);
+
+        doc.setFontSize(10);
+        doc.text(`Period: ${format(new Date(run.period_start), 'MMM dd, yyyy')} - ${format(new Date(run.period_end), 'MMM dd, yyyy')}`, 14, 33);
+        doc.text(`Generated: ${format(new Date(), 'MMM dd, yyyy HH:mm')}`, pageWidth - 60, 33);
+
+        const deductionConfigs = [
+            { key: 'sss', label: 'SSS' },
+            { key: 'sss_loan', label: 'SSS L.' },
+            { key: 'philhealth', label: 'P.Health' },
+            { key: 'pagibig', label: 'PagIBIG' },
+            { key: 'pagibig_loan', label: 'P.I. L.' },
+            { key: 'company_loan', label: 'Co.Loan' },
+            { key: 'company_cash_fund', label: 'Cash Fund' },
+            { key: 'cash_advance', label: 'Cash Adv' },
+            { key: 'other_deductions', label: 'Other' },
+        ];
+
+        const activeDeductions = deductionConfigs.filter(d =>
+            run.payslips.some((s: any) => (s.deduction_details?.[d.key] || 0) > 0)
+        );
+
+        const tableHead = [
+            'Employee',
+            'Days',
+            'Gross Pay',
+            'Allowances',
+            ...activeDeductions.map(d => d.label),
+            'Total Ded.',
+            'Net Pay'
+        ];
+
+        const tableBody = run.payslips.map((slip: any) => [
+            slip.employee_name,
+            slip.days_present,
+            slip.gross_pay.toLocaleString(),
+            (slip.total_allowances || 0).toLocaleString(),
+            ...activeDeductions.map(d => (slip.deduction_details?.[d.key] || 0).toLocaleString()),
+            slip.total_deductions.toLocaleString(),
+            slip.net_pay.toLocaleString()
+        ]);
+
+        autoTable(doc, {
+            head: [tableHead],
+            body: tableBody,
+            startY: 45,
+            theme: 'striped',
+            headStyles: { fillColor: [33, 150, 243] },
+            styles: { fontSize: 8 },
+            foot: [[
+                'TOTALS',
+                '',
+                run.payslips.reduce((sum: number, s: any) => sum + s.gross_pay, 0).toLocaleString(),
+                run.payslips.reduce((sum: number, s: any) => sum + s.total_allowances, 0).toLocaleString(),
+                ...activeDeductions.map(d => run.payslips.reduce((sum: number, s: any) => sum + (s.deduction_details?.[d.key] || 0), 0).toLocaleString()),
+                run.payslips.reduce((sum: number, s: any) => sum + s.total_deductions, 0).toLocaleString(),
+                run.total_amount.toLocaleString()
+            ]],
+            footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }
+        });
+
+        doc.save(`Payroll_${format(new Date(run.period_end), 'yyyy-MM-dd')}.pdf`);
     };
 
     const getStatusBadge = (status: string) => {
@@ -166,6 +243,13 @@ export default function PayrollDetailsPage() {
                                     ✏️ Edit Run
                                 </Link>
                             )}
+                            <button
+                                onClick={() => exportPDF()}
+                                className="btn btn-primary btn-sm"
+                                style={{ backgroundColor: '#2563eb' }}
+                            >
+                                📥 Export PDF Report
+                            </button>
                             <Link href="/payroll" className="btn btn-secondary btn-sm">
                                 ← Back to List
                             </Link>
@@ -773,18 +857,26 @@ export default function PayrollDetailsPage() {
                     </div>
                 </div>
             </div>
-            <style jsx global>{`
+            <style dangerouslySetInnerHTML={{
+                __html: `
                 @media screen {
                     .payslip-print-container, .payroll-register-print-container, .single-payslip-print-container {
                         display: none;
                     }
                     /* Compact Table for Details */
                     .table-condensed th, .table-condensed td {
-                        padding: 0.35rem 0.5rem !important;
-                        font-size: 0.8rem;
+                        padding: 0.5rem 0.75rem !important;
+                        font-size: 0.85rem;
+                        border: 1px solid #edf2f7;
+                    }
+                    .table-condensed th {
+                        background: #f7fafc;
+                        font-weight: 700;
+                        color: #4a5568;
                     }
                     .table-condensed {
                         width: 100%;
+                        border-collapse: collapse;
                     }
                 }
                 @media print {
@@ -879,7 +971,7 @@ export default function PayrollDetailsPage() {
                         display: none !important;
                     }
                 }
-            `}</style>
+            `}} />
 
             {/* Hidden Single Payslip Print Container */}
             {activeSlip && (
