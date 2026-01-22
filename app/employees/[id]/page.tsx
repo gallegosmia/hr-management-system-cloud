@@ -401,10 +401,8 @@ export default function EmployeeDetailPage() {
         }
     };
 
-    const fetchAttendanceSummary = async () => {
+    const fetchAttendanceSummary = async (start: string, end: string) => {
         try {
-            const start = '2020-01-01'; // Broad range to catch all history
-            const end = '2030-12-31';   // Future buffer
             const res = await fetch(`/api/attendance/report/individual?employeeId=${params.id}&start=${start}&end=${end}`);
             if (res.ok) {
                 const data = await res.json();
@@ -441,9 +439,14 @@ export default function EmployeeDetailPage() {
     useEffect(() => {
         if (params.id) {
             fetchEmployee();
-            fetchAttendanceSummary();
         }
     }, [params.id]);
+
+    useEffect(() => {
+        if (params.id && reportStartDate && reportEndDate) {
+            fetchAttendanceSummary(reportStartDate, reportEndDate);
+        }
+    }, [params.id, reportStartDate, reportEndDate]);
 
     const generateProfilePDF = async () => {
         if (!employee) return;
