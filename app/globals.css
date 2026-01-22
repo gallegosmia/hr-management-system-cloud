@@ -266,6 +266,17 @@ a:hover {
   flex: 1;
   margin-left: 280px;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  max-width: calc(100vw - 280px);
+}
+
+.content-area {
+  flex: 1;
+  padding: var(--spacing-lg);
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 .topbar {
