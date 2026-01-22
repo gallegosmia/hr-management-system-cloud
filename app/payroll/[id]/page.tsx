@@ -380,22 +380,20 @@ export default function PayrollDetailsPage() {
                 <div className="card-header">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h3 style={{ fontSize: '1.125rem', fontWeight: 600, margin: 0 }}>Payslips</h3>
-                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button
                                 onClick={() => scrollTable('left')}
-                                className="btn btn-secondary btn-sm"
-                                style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
+                                className="scroll-btn"
                                 title="Scroll Left"
                             >
-                                ← Scroll
+                                ⬅️ Scroll Left
                             </button>
                             <button
                                 onClick={() => scrollTable('right')}
-                                className="btn btn-secondary btn-sm"
-                                style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
+                                className="scroll-btn"
                                 title="Scroll Right"
                             >
-                                Scroll →
+                                Scroll Right ➡️
                             </button>
                         </div>
                     </div>
@@ -868,6 +866,7 @@ export default function PayrollDetailsPage() {
                         padding: 0.5rem 0.75rem !important;
                         font-size: 0.85rem;
                         border: 1px solid #edf2f7;
+                        white-space: nowrap;
                     }
                     .table-condensed th {
                         background: #f7fafc;
@@ -877,6 +876,33 @@ export default function PayrollDetailsPage() {
                     .table-condensed {
                         width: 100%;
                         border-collapse: collapse;
+                        min-width: 1200px; /* Force a minimum width to ensure scrolling */
+                    }
+                    .table-container-responsive {
+                        overflow-x: auto;
+                        width: 100%;
+                        display: block;
+                        -webkit-overflow-scrolling: touch;
+                        border: 1px solid #edf2f7;
+                        border-radius: 8px;
+                        margin-bottom: 1rem;
+                    }
+                    .scroll-btn {
+                        background: #3b82f6;
+                        color: white !important;
+                        border: none;
+                        padding: 0.5rem 1rem;
+                        border-radius: 6px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        transition: all 0.2s;
+                    }
+                    .scroll-btn:hover {
+                        background: #2563eb;
+                        transform: translateY(-1px);
                     }
                 }
                 @media print {
