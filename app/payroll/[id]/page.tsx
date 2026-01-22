@@ -872,20 +872,29 @@ export default function PayrollDetailsPage() {
                         background: #f7fafc;
                         font-weight: 700;
                         color: #4a5568;
+                        position: sticky;
+                        top: 0;
+                        z-index: 10;
                     }
                     .table-condensed {
                         width: 100%;
                         border-collapse: collapse;
-                        min-width: 1200px; /* Force a minimum width to ensure scrolling */
+                        min-width: 1400px;
                     }
                     .table-container-responsive {
                         overflow-x: auto;
                         width: 100%;
+                        max-width: 100%;
                         display: block;
                         -webkit-overflow-scrolling: touch;
                         border: 1px solid #edf2f7;
                         border-radius: 8px;
                         margin-bottom: 1rem;
+                        position: relative;
+                    }
+                    .card {
+                        max-width: calc(100vw - 320px);
+                        overflow: hidden;
                     }
                     .scroll-btn {
                         background: #3b82f6;
@@ -899,6 +908,7 @@ export default function PayrollDetailsPage() {
                         align-items: center;
                         gap: 0.5rem;
                         transition: all 0.2s;
+                        white-space: nowrap;
                     }
                     .scroll-btn:hover {
                         background: #2563eb;
