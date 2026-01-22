@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
@@ -12,6 +12,17 @@ export default function PayrollDetailsPage() {
     const [loading, setLoading] = useState(true);
     const [activeSlip, setActiveSlip] = useState<any>(null);
     const [user, setUser] = useState<any>(null);
+    const tableContainerRef = useRef<HTMLDivElement>(null);
+
+    const scrollTable = (direction: 'left' | 'right') => {
+        if (tableContainerRef.current) {
+            const scrollAmount = 300;
+            tableContainerRef.current.scrollBy({
+                left: direction === 'left' ? -scrollAmount : scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+    };
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -283,9 +294,33 @@ export default function PayrollDetailsPage() {
 
             <div className="card no-print">
                 <div className="card-header">
-                    <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Payslips</h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, margin: 0 }}>Payslips</h3>
+                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            <button
+                                onClick={() => scrollTable('left')}
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
+                                title="Scroll Left"
+                            >
+                                ← Scroll
+                            </button>
+                            <button
+                                onClick={() => scrollTable('right')}
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
+                                title="Scroll Right"
+                            >
+                                Scroll →
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div className="table-container-responsive">
+                <div
+                    ref={tableContainerRef}
+                    className="table-container-responsive"
+                    style={{ scrollBehavior: 'smooth' }}
+                >
                     {(() => {
                         const deductionConfigs = [
                             { key: 'sss', label: 'SSS' },
@@ -742,6 +777,14 @@ export default function PayrollDetailsPage() {
                 @media screen {
                     .payslip-print-container, .payroll-register-print-container, .single-payslip-print-container {
                         display: none;
+                    }
+                    /* Compact Table for Details */
+                    .table-condensed th, .table-condensed td {
+                        padding: 0.35rem 0.5rem !important;
+                        font-size: 0.8rem;
+                    }
+                    .table-condensed {
+                        width: 100%;
                     }
                 }
                 @media print {

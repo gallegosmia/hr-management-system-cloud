@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { QRCodeSVG } from 'qrcode.react';
 
 interface AttendanceRecord {
     id?: number;

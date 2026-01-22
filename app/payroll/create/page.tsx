@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
@@ -16,6 +16,18 @@ export default function CreatePayrollPage() {
     const [selectedBranch, setSelectedBranch] = useState<string>('All');
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const tableContainerRef = useRef<HTMLDivElement>(null);
+
+    const scrollTable = (direction: 'left' | 'right') => {
+        if (tableContainerRef.current) {
+            const scrollAmount = 300;
+            tableContainerRef.current.scrollBy({
+                left: direction === 'left' ? -scrollAmount : scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+    };
+
 
 
 
@@ -251,12 +263,37 @@ export default function CreatePayrollPage() {
                     <div className="card-header" style={{ padding: '0.5rem 1rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>Payroll Preview</h3>
-                            <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--primary-600)' }}>
-                                Total Payout: ₱{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                    <button
+                                        onClick={() => scrollTable('left')}
+                                        className="btn btn-secondary btn-sm"
+                                        style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
+                                        title="Scroll Left"
+                                    >
+                                        ← Scroll
+                                    </button>
+                                    <button
+                                        onClick={() => scrollTable('right')}
+                                        className="btn btn-secondary btn-sm"
+                                        style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
+                                        title="Scroll Right"
+                                    >
+                                        Scroll →
+                                    </button>
+                                </div>
+
+                                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--primary-600)' }}>
+                                    Total Payout: ₱{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div className="table-container-responsive" style={{ fontSize: '0.75rem' }}>
+                    <div
+                        ref={tableContainerRef}
+                        className="table-container-responsive"
+                        style={{ fontSize: '0.75rem', scrollBehavior: 'smooth' }}
+                    >
                         <table className="table table-condensed table-payroll">
                             <thead>
                                 <tr>
