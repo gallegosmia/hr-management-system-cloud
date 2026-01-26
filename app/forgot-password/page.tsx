@@ -84,7 +84,7 @@ export default function ForgotPasswordPage() {
                         Forgot Password
                     </h1>
                     <p style={{ fontSize: '0.875rem', opacity: 0.9 }}>
-                        Enter your username or email address
+                        Enter the username or email you used during registration
                     </p>
                 </div>
 
@@ -123,7 +123,7 @@ export default function ForgotPasswordPage() {
                                 value={identifier}
                                 onChange={(e) => setIdentifier(e.target.value)}
                                 required
-                                placeholder="Enter registered username or email"
+                                placeholder="Username or email used at registration"
                                 style={{
                                     width: '100%',
                                     padding: '0.75rem 1rem',
