@@ -9,6 +9,10 @@ export async function sendEmail(to: string, subject: string, text: string) {
     const from = process.env.SMTP_FROM || user;
 
     if (!host || !user || !pass) {
+        if (process.env.NODE_ENV === 'production') {
+            console.error('❌ SMTP credentials missing in production environment.');
+            return false;
+        }
         console.warn('⚠️ SMTP credentials not found. Falling back to console logging.');
         console.log('--------------------------------------------------');
         console.log(`EMULATION: Sending Email to ${to}`);
