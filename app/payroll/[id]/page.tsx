@@ -552,10 +552,10 @@ export default function PayrollDetailsPage() {
                                                     <td key={d.key} className="amount-col">
                                                         {(slip.deduction_details?.[d.key] || 0) > 0 ? (
                                                             <div>
-                                                                <div>₱{Number(slip.deduction_details[d.key]).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                                                <div>₱{Number(slip.deduction_details?.[d.key] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                                                                 {slip.deduction_details?.[`${d.key}_balance`] !== undefined && d.key !== 'sss_loan' && d.key !== 'pagibig_loan' && (
                                                                     <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                                                                        Bal: ₱{Number(slip.deduction_details[`${d.key}_balance`]).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                        Bal: ₱{Number(slip.deduction_details?.[`${d.key}_balance`] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -900,11 +900,11 @@ export default function PayrollDetailsPage() {
 
                                                     {visibleDeductions.map(vd => (
                                                         <td key={vd.key} style={{ border: '1px solid #333', padding: '4px', textAlign: 'right' }}>
-                                                            {Number(d[vd.key] || 0) > 0 ? (
+                                                            {Number(d?.[vd.key] || 0) > 0 ? (
                                                                 <div>
-                                                                    <div>₱{Number(d[vd.key]).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                                                                    {d[`${vd.key}_balance`] !== undefined && vd.key !== 'sss_loan' && vd.key !== 'pagibig_loan' && (
-                                                                        <div style={{ fontSize: '0.45rem', color: '#666', fontStyle: 'italic' }}>Bal: ₱{Number(d[`${vd.key}_balance`]).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                                                    <div>₱{Number(d?.[vd.key] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                                                    {d?.[`${vd.key}_balance`] !== undefined && vd.key !== 'sss_loan' && vd.key !== 'pagibig_loan' && (
+                                                                        <div style={{ fontSize: '0.45rem', color: '#666', fontStyle: 'italic' }}>Bal: ₱{Number(d?.[`${vd.key}_balance`] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                                                                     )}
                                                                 </div>
                                                             ) : '0.00'}
@@ -1029,7 +1029,7 @@ export default function PayrollDetailsPage() {
                                                 <span style={{ textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}</span>
                                                 {hasBal && key !== 'sss_loan' && key !== 'pagibig_loan' && (
                                                     <span style={{ fontSize: '0.65rem', display: 'block', fontStyle: 'italic' }}>
-                                                        Bal: ₱{Number(slip.deduction_details[balanceKey] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        Bal: ₱{Number(slip.deduction_details?.[balanceKey] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </span>
                                                 )}
                                             </span>

@@ -331,7 +331,7 @@ export default function EmployeesPage() {
                                                 {employee.employment_status}
                                             </span>
                                         </td>
-                                        <td>{new Date(employee.date_hired).toLocaleDateString('en-PH')}</td>
+                                        <td>{employee.date_hired ? new Date(employee.date_hired).toLocaleDateString('en-PH') : '-'}</td>
 
                                         <td>
                                             <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>

@@ -415,10 +415,10 @@ export default function CreatePayrollPage() {
                                                         <td key={d.key} style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: '0.7rem', padding: '0.25rem' }}>
                                                             {((item.deduction_details?.[d.key] || 0) > 0) ? (
                                                                 <div>
-                                                                    <div style={{ fontWeight: 600 }}>₱{item.deduction_details[d.key].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                                                                    {item.deduction_details[`${d.key}_balance`] !== undefined && (
+                                                                    <div style={{ fontWeight: 600 }}>₱{item.deduction_details?.[d.key]?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                                                    {item.deduction_details?.[`${d.key}_balance`] !== undefined && (
                                                                         <div style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>
-                                                                            Bal: ₱{item.deduction_details[`${d.key}_balance`].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                            Bal: ₱{item.deduction_details?.[`${d.key}_balance`]?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                                         </div>
                                                                     )}
                                                                 </div>

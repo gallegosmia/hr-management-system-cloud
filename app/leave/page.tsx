@@ -683,9 +683,9 @@ export default function LeavePage() {
                                         </td>
                                         <td>{req.leave_type}</td>
                                         <td>
-                                            <div>{format(parseISO(req.start_date), 'MMM d, yyyy')}</div>
+                                            <div>{req.start_date ? format(parseISO(req.start_date), 'MMM d, yyyy') : '-'}</div>
                                             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                                to {format(parseISO(req.end_date), 'MMM d, yyyy')}
+                                                {req.end_date ? `to ${format(parseISO(req.end_date), 'MMM d, yyyy')}` : ''}
                                             </div>
                                         </td>
                                         <td>{req.days_count}</td>

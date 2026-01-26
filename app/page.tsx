@@ -188,6 +188,23 @@ export default function LoginPage() {
                             />
                         </div>
 
+                        <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'flex-end', marginTop: '-1rem' }}>
+                            <button
+                                type="button"
+                                onClick={() => router.push('/forgot-password')}
+                                style={{
+                                    fontSize: '0.875rem',
+                                    color: '#059669',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                }}
+                            >
+                                Forgot Password?
+                            </button>
+                        </div>
+
                         <button
                             type="submit"
                             disabled={loading}

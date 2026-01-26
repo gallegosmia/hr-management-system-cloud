@@ -341,7 +341,7 @@ export default function CompensationDetailPage() {
                                 </div>
                                 <div>
                                     <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Date Hired</label>
-                                    <div style={{ fontWeight: 600 }}>{new Date(employee.date_hired).toLocaleDateString()}</div>
+                                    <div style={{ fontWeight: 600 }}>{employee.date_hired ? new Date(employee.date_hired).toLocaleDateString() : '-'}</div>
                                 </div>
                             </div>
                         </div>

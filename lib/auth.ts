@@ -12,6 +12,7 @@ export function verifyPassword(password: string, hash: string): boolean {
 export interface User {
     id: number;
     username: string;
+    email?: string;
     role: 'Admin' | 'HR' | 'Manager' | 'Employee' | 'President' | 'Vice President';
     employee_id?: number;
     is_active: number;
@@ -56,6 +57,7 @@ export async function getSession(sessionId: string): Promise<{ user: User; expir
         user: {
             id: user.id,
             username: user.username,
+            email: user.email,
             role: user.role,
             employee_id: user.employee_id,
             is_active: user.is_active

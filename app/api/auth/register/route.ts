@@ -4,11 +4,11 @@ import { hashPassword, createSession } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
     try {
-        const { username, password, role } = await request.json();
+        const { username, email, password, role } = await request.json();
 
-        if (!username || !password || !role) {
+        if (!username || !email || !password || !role) {
             return NextResponse.json(
-                { error: 'Username, password, and role are required' },
+                { error: 'Username, email, password, and role are required' },
                 { status: 400 }
             );
         }
@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
         // Set is_active to 0 (Pending Approval)
 
         const insertResult = await query(
-            "INSERT INTO users (username, password, role, is_active, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, role",
-            [username, hashedPassword, role, 0, new Date().toISOString()]
+            "INSERT INTO users (username, email, password, role, is_active, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, role",
+            [username, email, hashedPassword, role, 0, new Date().toISOString()]
         );
 
         const newUser = insertResult.rows[0];
