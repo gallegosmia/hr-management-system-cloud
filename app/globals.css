@@ -802,6 +802,205 @@ a:hover {
 .badge {
   display: inline-flex;
   align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.badge-success {
+  background: var(--success-100);
+  color: var(--success-700);
+}
+
+.badge-warning {
+  background: var(--warning-100);
+  color: var(--warning-700);
+}
+
+.badge-danger {
+  background: var(--danger-100);
+  color: var(--danger-700);
+}
+
+.badge-primary {
+  background: var(--primary-100);
+  color: var(--primary-700);
+}
+
+.badge-secondary {
+  background: var(--gray-100);
+  color: var(--text-secondary);
+}
+
+/* ===================================
+   LOGIN PAGE STYLES
+   =================================== */
+
+.login-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: white;
+}
+
+.login-brand-section {
+  flex: 1;
+  position: relative;
+  background-color: var(--primary-900);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 3rem;
+  overflow: hidden;
+}
+
+.login-brand-bg-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/login-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+}
+
+.login-brand-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.9) 0%, rgba(37, 99, 235, 0.8) 100%);
+  z-index: 2;
+}
+
+.login-brand-content {
+  position: relative;
+  z-index: 3;
+  max-width: 600px;
+}
+
+.login-brand-title {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  line-height: 1.2;
+}
+
+.login-brand-tagline {
+  font-size: 1.25rem;
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.login-form-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background: white;
+  position: relative;
+  z-index: 10;
+}
+
+.login-form-wrapper {
+  width: 100%;
+  max-width: 420px;
+  padding: 2rem;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.login-logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.login-welcome-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.login-welcome-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.login-input-group {
+  margin-bottom: 1.25rem;
+  position: relative;
+}
+
+.login-button {
+  width: 100%;
+  padding: 0.875rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  margin-top: 1rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 2.3rem;
+  /* Adjusted for label height */
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 0;
+}
+
+.password-toggle:hover {
+  color: var(--primary-600);
+}
+
+@media (max-width: 1024px) {
+  .login-brand-title {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-container {
+    flex-direction: column;
+  }
+
+  .login-brand-section {
+    display: none;
+  }
+
+  .login-form-section {
+    width: 100%;
+    padding: 1rem;
+  }
+}
+
+
+.badge {
+  display: inline-flex;
+  align-items: center;
   gap: var(--spacing-xs);
   padding: var(--spacing-xs) var(--spacing-md);
   font-size: 0.75rem;
