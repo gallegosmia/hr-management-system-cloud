@@ -25,10 +25,11 @@ export async function POST(request: NextRequest) {
         const { period_start, period_end, items, status } = await request.json();
 
         // Create Run
+        const totalAmount = items.reduce((sum: number, i: any) => sum + (typeof i.net_pay === 'string' ? parseFloat(i.net_pay) : (i.net_pay || 0)), 0);
         const runId = await createPayrollRun({
             period_start,
             period_end,
-            total_amount: items.reduce((sum: number, i: any) => sum + i.net_pay, 0),
+            total_amount: totalAmount,
             status: status || 'Finalized',
             created_by: 1
         });
@@ -45,15 +46,15 @@ export async function POST(request: NextRequest) {
             payslipsToCreate.push({
                 payroll_run_id: runId,
                 employee_id: item.employee_id,
-                gross_pay: item.gross_pay,
-                net_pay: item.net_pay,
-                total_deductions: item.deductions,
-                total_allowances: item.allowances,
-                days_present: item.days_present || 0,
-                double_pay_days: item.double_pay_days || 0,
-                double_pay_amount: item.double_pay_amount || 0,
-                deduction_details: item.deduction_details,
-                allowance_details: { standard: item.allowances }
+                gross_pay: typeof item.gross_pay === 'string' ? parseFloat(item.gross_pay) : (item.gross_pay || 0),
+                net_pay: typeof item.net_pay === 'string' ? parseFloat(item.net_pay) : (item.net_pay || 0),
+                total_deductions: typeof item.deductions === 'string' ? parseFloat(item.deductions) : (item.deductions || 0),
+                total_allowances: typeof item.allowances === 'string' ? parseFloat(item.allowances) : (item.allowances || 0),
+                days_present: typeof item.days_present === 'string' ? parseFloat(item.days_present) : (item.days_present || 0),
+                double_pay_days: typeof item.double_pay_days === 'string' ? parseFloat(item.double_pay_days) : (item.double_pay_days || 0),
+                double_pay_amount: typeof item.double_pay_amount === 'string' ? parseFloat(item.double_pay_amount) : (item.double_pay_amount || 0),
+                deduction_details: item.deduction_details || {},
+                allowance_details: { standard: typeof item.allowances === 'string' ? parseFloat(item.allowances) : (item.allowances || 0) }
             });
 
             if (isFinalized) {
@@ -63,18 +64,10 @@ export async function POST(request: NextRequest) {
                     const updates: any = { salary_info: JSON.parse(JSON.stringify(emp.salary_info)) };
                     let hasUpdates = false;
 
-                    if (item.deduction_details.company_loan && d.company_loan) {
-                        updates.salary_info.deductions.company_loan.balance = Math.max(0, d.company_loan.balance - item.deduction_details.company_loan);
-                        hasUpdates = true;
-                    }
-
-                    if (item.deduction_details.sss_loan && d.sss_loan) {
-                        updates.salary_info.deductions.sss_loan.balance = Math.max(0, d.sss_loan.balance - item.deduction_details.sss_loan);
-                        hasUpdates = true;
-                    }
-
-                    if (item.deduction_details.pagibig_loan && d.pagibig_loan) {
-                        updates.salary_info.deductions.pagibig_loan.balance = Math.max(0, d.pagibig_loan.balance - item.deduction_details.pagibig_loan);
+                    if (item.deduction_details && item.deduction_details.company_loan && d.company_loan) {
+                        const deduction = typeof item.deduction_details.company_loan === 'string' ? parseFloat(item.deduction_details.company_loan) : (item.deduction_details.company_loan || 0);
+                        const balance = typeof d.company_loan.balance === 'string' ? parseFloat(d.company_loan.balance) : (d.company_loan.balance || 0);
+                        updates.salary_info.deductions.company_loan.balance = Math.max(0, balance - deduction);
                         hasUpdates = true;
                     }
 

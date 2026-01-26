@@ -19,7 +19,7 @@
       "employee_id": "",
       "id": 5,
       "created_at": "2026-01-09T06:13:35.334Z",
-      "last_login": "2026-01-13T02:38:47.588Z",
+      "last_login": "2026-01-24T03:40:01.141Z",
       "last_updated": "2026-01-13T02:38:47.589Z"
     },
     {
@@ -327,7 +327,7 @@
           "pagibig_contribution": 200,
           "company_cash_fund": 300,
           "company_loan": {
-            "balance": 23500,
+            "balance": 22500,
             "amortization": 1000
           },
           "sss_loan": {
@@ -462,7 +462,7 @@
           "pagibig_contribution": 200,
           "company_cash_fund": 300,
           "company_loan": {
-            "balance": 17386,
+            "balance": 15386,
             "amortization": 2000
           },
           "sss_loan": {
@@ -659,7 +659,7 @@
           "pagibig_contribution": 200,
           "company_cash_fund": 300,
           "company_loan": {
-            "balance": 4000,
+            "balance": 3000,
             "amortization": 1000
           },
           "sss_loan": {
@@ -2869,7 +2869,16 @@
       "updated_at": "2026-01-12T10:22:04.355Z"
     }
   ],
-  "payroll_runs": [],
+  "payroll_runs": [
+    {
+      "period_start": "2026-01-16",
+      "period_end": "2026-01-31",
+      "total_amount": 26764.55,
+      "status": "Finalized",
+      "created_by": 1,
+      "id": 1
+    }
+  ],
   "payslips": [
     {
       "payroll_run_id": 1,
@@ -2881,8 +2890,13 @@
       "days_present": 15,
       "double_pay_days": 0,
       "double_pay_amount": 0,
-      "deduction_details": "{\"philhealth\":285,\"sss\":725}",
-      "allowance_details": "{\"standard\":750}",
+      "deduction_details": {
+        "philhealth": 285,
+        "sss": 725
+      },
+      "allowance_details": {
+        "standard": 750
+      },
       "id": 1
     },
     {
@@ -2895,8 +2909,13 @@
       "days_present": 15,
       "double_pay_days": 0,
       "double_pay_amount": 0,
-      "deduction_details": "{\"philhealth\":281.25,\"sss\":700}",
-      "allowance_details": "{\"standard\":900}",
+      "deduction_details": {
+        "philhealth": 281.25,
+        "sss": 700
+      },
+      "allowance_details": {
+        "standard": 900
+      },
       "id": 2
     },
     {
@@ -2909,8 +2928,13 @@
       "days_present": 15,
       "double_pay_days": 0,
       "double_pay_amount": 0,
-      "deduction_details": "{\"philhealth\":281.25,\"sss\":700}",
-      "allowance_details": "{\"standard\":500}",
+      "deduction_details": {
+        "philhealth": 281.25,
+        "sss": 700
+      },
+      "allowance_details": {
+        "standard": 500
+      },
       "id": 3
     },
     {
@@ -2923,8 +2947,13 @@
       "days_present": 15,
       "double_pay_days": 0,
       "double_pay_amount": 0,
-      "deduction_details": "{\"philhealth\":281.25,\"sss\":700}",
-      "allowance_details": "{\"standard\":500}",
+      "deduction_details": {
+        "philhealth": 281.25,
+        "sss": 700
+      },
+      "allowance_details": {
+        "standard": 500
+      },
       "id": 4
     },
     {
@@ -2937,8 +2966,13 @@
       "days_present": 15,
       "double_pay_days": 0,
       "double_pay_amount": 0,
-      "deduction_details": "{\"philhealth\":285,\"sss\":725}",
-      "allowance_details": "{\"standard\":750}",
+      "deduction_details": {
+        "philhealth": 285,
+        "sss": 725
+      },
+      "allowance_details": {
+        "standard": 750
+      },
       "id": 5
     },
     {
@@ -2951,8 +2985,13 @@
       "days_present": 15,
       "double_pay_days": 0,
       "double_pay_amount": 0,
-      "deduction_details": "{\"philhealth\":281.25,\"sss\":700}",
-      "allowance_details": "{\"standard\":900}",
+      "deduction_details": {
+        "philhealth": 281.25,
+        "sss": 700
+      },
+      "allowance_details": {
+        "standard": 900
+      },
       "id": 6
     },
     {
@@ -2965,8 +3004,13 @@
       "days_present": 15,
       "double_pay_days": 0,
       "double_pay_amount": 0,
-      "deduction_details": "{\"philhealth\":281.25,\"sss\":700}",
-      "allowance_details": "{\"standard\":500}",
+      "deduction_details": {
+        "philhealth": 281.25,
+        "sss": 700
+      },
+      "allowance_details": {
+        "standard": 500
+      },
       "id": 7
     },
     {
@@ -2979,9 +3023,114 @@
       "days_present": 15,
       "double_pay_days": 0,
       "double_pay_amount": 0,
-      "deduction_details": "{\"philhealth\":281.25,\"sss\":700}",
-      "allowance_details": "{\"standard\":500}",
+      "deduction_details": {
+        "philhealth": 281.25,
+        "sss": 700
+      },
+      "allowance_details": {
+        "standard": 500
+      },
       "id": 8
+    },
+    {
+      "payroll_run_id": 1,
+      "employee_id": 1,
+      "gross_pay": 6855,
+      "net_pay": 5587.9400000000005,
+      "total_deductions": 2017.06,
+      "total_allowances": 750,
+      "days_present": 15,
+      "double_pay_days": 0,
+      "double_pay_amount": 0,
+      "deduction_details": {
+        "sss": 725,
+        "sss_loan": 1292.06
+      },
+      "allowance_details": {
+        "standard": 750
+      },
+      "id": 9
+    },
+    {
+      "payroll_run_id": 1,
+      "employee_id": 2,
+      "gross_pay": 6780,
+      "net_pay": 6980,
+      "total_deductions": 700,
+      "total_allowances": 900,
+      "days_present": 15,
+      "double_pay_days": 0,
+      "double_pay_amount": 0,
+      "deduction_details": {
+        "sss": 700
+      },
+      "allowance_details": {
+        "standard": 900
+      },
+      "id": 10
+    },
+    {
+      "payroll_run_id": 1,
+      "employee_id": 6,
+      "gross_pay": 6780,
+      "net_pay": 3405.23,
+      "total_deductions": 3874.77,
+      "total_allowances": 500,
+      "days_present": 15,
+      "double_pay_days": 0,
+      "double_pay_amount": 0,
+      "deduction_details": {
+        "sss": 675,
+        "sss_loan": 1199.77,
+        "company_loan": 2000,
+        "company_loan_balance": 15386
+      },
+      "allowance_details": {
+        "standard": 500
+      },
+      "id": 11
+    },
+    {
+      "payroll_run_id": 1,
+      "employee_id": 4,
+      "gross_pay": 6780,
+      "net_pay": 5049.33,
+      "total_deductions": 2230.67,
+      "total_allowances": 500,
+      "days_present": 15,
+      "double_pay_days": 0,
+      "double_pay_amount": 0,
+      "deduction_details": {
+        "sss": 700,
+        "sss_loan": 530.67,
+        "company_loan": 1000,
+        "company_loan_balance": 22500
+      },
+      "allowance_details": {
+        "standard": 500
+      },
+      "id": 12
+    },
+    {
+      "payroll_run_id": 1,
+      "employee_id": 9,
+      "gross_pay": 6780,
+      "net_pay": 5742.05,
+      "total_deductions": 2287.95,
+      "total_allowances": 1250,
+      "days_present": 15,
+      "double_pay_days": 0,
+      "double_pay_amount": 0,
+      "deduction_details": {
+        "sss": 700,
+        "sss_loan": 587.95,
+        "company_loan": 1000,
+        "company_loan_balance": 3000
+      },
+      "allowance_details": {
+        "standard": 1250
+      },
+      "id": 13
     }
   ],
   "sessions": [
@@ -3024,6 +3173,16 @@
       "id": "c771619c6d345568c814baa8989dabab",
       "user_id": 5,
       "expires_at": "2026-01-14T02:38:47.590Z"
+    },
+    {
+      "id": "53a0c1259f9c48b4e74d50be6bc3472d",
+      "user_id": 5,
+      "expires_at": "2026-01-25T03:16:09.974Z"
+    },
+    {
+      "id": "5588e9f10a644e9fc38eb4b79e8cb636",
+      "user_id": 5,
+      "expires_at": "2026-01-25T03:40:01.144Z"
     }
   ],
   "education": [

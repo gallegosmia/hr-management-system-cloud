@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEducationByEmployeeId, addEducation, deleteEducation, replaceEmployeeEducation, logAudit } from '@/lib/data';
+import { query } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
     try {
@@ -53,10 +54,20 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const data = await request.json();
-        const { employee_id, education } = data;
+        let { employee_id, education } = data;
 
         if (!employee_id || !Array.isArray(education)) {
             return NextResponse.json({ error: 'Employee ID and education list required' }, { status: 400 });
+        }
+
+        // If employee_id is string (e.g. "2017-0001"), resolve to internal ID
+        if (typeof employee_id === 'string' && !/^\d+$/.test(employee_id)) {
+            const res = await query("SELECT id FROM employees WHERE UPPER(employee_id) = UPPER($1)", [employee_id]);
+            if (res.rows[0]) {
+                employee_id = res.rows[0].id;
+            } else {
+                return NextResponse.json({ error: 'Employee not found for education update' }, { status: 404 });
+            }
         }
 
         await replaceEmployeeEducation(employee_id, education);

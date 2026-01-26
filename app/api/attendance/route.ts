@@ -57,10 +57,10 @@ export async function POST(request: NextRequest) {
         })));
 
         return NextResponse.json({ success: true, count: records.length });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Save attendance error:', error);
         return NextResponse.json(
-            { error: 'Failed to save attendance' },
+            { error: `Failed to save attendance: ${error.message || String(error)}` },
             { status: 500 }
         );
     }

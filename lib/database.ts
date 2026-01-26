@@ -22,7 +22,7 @@ if (DATABASE_URL) {
   });
 }
 
-export const isPostgres = !!pool;
+export let isPostgres = !!pool;
 
 // Ensure local directory exists (for development)
 if (!DATABASE_URL && !fs.existsSync(path.join(process.cwd(), 'data'))) {
@@ -66,8 +66,16 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
         rowCount: res.rowCount || 0
       };
     } catch (error: any) {
-      console.error(`[PostgreSQL] Query Error: ${sql}`, error);
-      throw error;
+      const errorMsg = error.message || '';
+      if (errorMsg.includes('quota') || errorMsg.includes('transfer') || errorMsg.includes('limit')) {
+        console.error('⚠ DATABASE QUOTA EXCEEDED. Falling back to local JSON database for this session.', errorMsg);
+        // Temporarily nullify pool for this process lifetime to trigger fallback below
+        pool = null;
+        isPostgres = false;
+      } else {
+        console.error(`[PostgreSQL] Query Error: ${sql}`, error);
+        throw error;
+      }
     }
   }
 
@@ -221,12 +229,8 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
  * High-level Data Access Functions
  */
 export async function getAll(table: string): Promise<any[]> {
-  if (pool) {
-    const res = await pool.query(`SELECT * FROM ${table}`);
-    return res.rows;
-  }
-  const db = loadDB();
-  return db[table] || [];
+  const res = await query(`SELECT * FROM ${table}`);
+  return res.rows;
 }
 
 export async function getById(table: string, id: number | string): Promise<any | undefined> {
@@ -239,59 +243,36 @@ export async function getById(table: string, id: number | string): Promise<any |
 }
 
 export async function insert(table: string, data: any): Promise<number> {
+  const keys = Object.keys(data);
+  const values = Object.values(data);
+  const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
+
+  // Use RETURNING id for PostgreSQL to get the new ID immediately
+  const sql = pool
+    ? `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders}) RETURNING id`
+    : `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
+
+  const res = await query(sql, values);
+
   if (pool) {
-    const keys = Object.keys(data);
-    const values = Object.values(data);
-    const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
-    const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders}) RETURNING id`;
-    const res = await pool.query(sql, values);
-    return res.rows[0].id;
+    return res.rows[0]?.id;
   }
 
-  const db = loadDB();
-  if (!db[table]) db[table] = [];
-  const maxId = db[table].reduce((max: number, item: any) => Math.max(max, item.id || 0), 0);
-  const newItem = { ...data, id: maxId + 1 };
-  db[table].push(newItem);
-  saveDB(db);
-  return newItem.id;
+  // Fallback / Local logic (query function already handled insertion for local)
+  return res.rows[0]?.id;
 }
 
 export async function update(table: string, id: number | string, data: any): Promise<void> {
-  if (pool) {
-    const keys = Object.keys(data);
-    const values = Object.values(data);
-    const setClause = keys.map((key, i) => `${key} = $${i + 2}`).join(', ');
-    const sql = `UPDATE ${table} SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = $1`;
-    // Note: Some tables might not have updated_at, but we'll try or catch
-    try {
-      await pool.query(sql, [id, ...values]);
-    } catch (e) {
-      // Fallback for tables without updated_at
-      const sqlPlain = `UPDATE ${table} SET ${setClause} WHERE id = $1`;
-      await pool.query(sqlPlain, [id, ...values]);
-    }
-    return;
-  }
+  const keys = Object.keys(data);
+  const values = Object.values(data);
+  const setClause = keys.map((key, i) => `${key} = $${i + 2}`).join(', ');
+  const sql = `UPDATE ${table} SET ${setClause} WHERE id = $1`;
 
-  const db = loadDB();
-  if (!db[table]) return;
-  const index = db[table].findIndex((item: any) => item.id == id);
-  if (index !== -1) {
-    db[table][index] = { ...db[table][index], ...data };
-    saveDB(db);
-  }
+  await query(sql, [id, ...values]);
 }
 
 export async function remove(table: string, id: number | string): Promise<void> {
-  if (pool) {
-    await pool.query(`DELETE FROM ${table} WHERE id = $1`, [id]);
-    return;
-  }
-  const db = loadDB();
-  if (!db[table]) return;
-  db[table] = db[table].filter((item: any) => item.id != id);
-  saveDB(db);
+  await query(`DELETE FROM ${table} WHERE id = $1`, [id]);
 }
 
 export async function initializeDatabase() {

@@ -88,6 +88,7 @@ export default function EditEmployeePage() {
         honors_awards: string;
     }[]>([]);
     const [profilePicture, setProfilePicture] = useState<string | null>(null);
+    const [internalId, setInternalId] = useState<number | null>(null);
 
     useEffect(() => {
         if (params.id) {
@@ -102,6 +103,7 @@ export default function EditEmployeePage() {
 
             if (response.ok) {
                 console.log('Fetched employee data:', data); // Debug log
+                setInternalId(data.id);
                 setProfilePicture(data.profile_picture || null);
                 setFormData({
                     employee_id: data.employee_id || '',
@@ -341,7 +343,7 @@ export default function EditEmployeePage() {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    id: parseInt(params.id as string),
+                    id: internalId || parseInt(params.id as string),
                     ...formData
                 })
             });
@@ -354,7 +356,7 @@ export default function EditEmployeePage() {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        employee_id: parseInt(params.id as string),
+                        employee_id: internalId || parseInt(params.id as string),
                         education: education
                     })
                 });

@@ -133,13 +133,23 @@ export default function LeavePage() {
                 }
             }
 
+            // Custom calculation: Exclude Sundays only
+            let daysCount = 0;
+            let current = new Date(start);
+            while (current <= end) {
+                if (current.getDay() !== 0) { // 0 is Sunday
+                    daysCount++;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+
             const body = {
                 employee_id: parseInt(formData.employee_id),
                 leave_type: formData.leave_type,
                 start_date: formData.start_date,
                 end_date: formData.end_date,
                 reason: combinedReason,
-                days_count: days > 0 ? days : 0
+                days_count: daysCount
             };
 
             if (editingId) {
@@ -343,7 +353,7 @@ export default function LeavePage() {
         doc.text('Date of Leave:', 20, yPos);
         doc.setFont('helvetica', 'normal');
         doc.line(55, yPos + 1, 190, yPos + 1);
-        doc.text(format(parseISO(req.start_date), 'MMMM d, yyyy'), 57, yPos);
+        doc.text(`${format(parseISO(req.start_date), 'MMMM d, yyyy')} - ${format(parseISO(req.end_date), 'MMMM d, yyyy')}`, 57, yPos);
 
         yPos += 8;
         doc.setFont('helvetica', 'bold');

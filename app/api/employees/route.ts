@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllEmployees, createEmployee, getEmployeeById, updateEmployee, update201Checklist, deleteEmployee, logAudit } from '@/lib/data';
+import { getAllEmployees, createEmployee, getEmployeeById, updateEmployee, update201Checklist, deleteEmployee, logAudit, getEmployeeByEmployeeId } from '@/lib/data';
+import { query } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
     try {
@@ -7,7 +8,20 @@ export async function GET(request: NextRequest) {
         const id = searchParams.get('id');
 
         if (id) {
-            const employee = await getEmployeeById(parseInt(id));
+            const cleanId = id.trim();
+            let employee = null;
+
+            // Try by Internal ID (Numeric) first
+            if (/^\d+$/.test(cleanId)) {
+                employee = await getEmployeeById(parseInt(cleanId));
+            }
+
+            // If not found, try by Employee ID (String, e.g., 2017-0001, case-insensitive)
+            if (!employee) {
+                const res = await query("SELECT * FROM employees WHERE UPPER(employee_id) = UPPER($1)", [cleanId]);
+                employee = res.rows[0];
+            }
+
             if (!employee) {
                 return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
             }
@@ -27,7 +41,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const data = await request.json();
+        const rawData = await request.json();
+
+        // Clean data: convert empty strings to null
+        const data: any = {};
+        Object.entries(rawData).forEach(([key, value]) => {
+            data[key] = value === '' ? null : value;
+        });
+
         const userId = 1;
 
         const employeeId = await createEmployee(data, userId);
@@ -52,16 +73,38 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
     try {
-        const { id, ...data } = await request.json();
+        let { id, ...data } = await request.json();
 
         if (!id) {
             return NextResponse.json({ error: 'Employee ID is required' }, { status: 400 });
         }
 
+        // If ID is string (e.g. "2017-0001"), find the internal numeric ID
+        if (typeof id === 'string' && !/^\d+$/.test(id)) {
+            const res = await query("SELECT id FROM employees WHERE UPPER(employee_id) = UPPER($1)", [id]);
+            if (res.rows[0]) {
+                id = res.rows[0].id;
+            } else {
+                return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
+            }
+        } else if (typeof id === 'string') {
+            id = parseInt(id, 10);
+        }
+
+        // Clean data: convert empty strings to null
+        const cleanData: any = {};
+        Object.entries(data).forEach(([key, value]) => {
+            cleanData[key] = value === '' ? null : value;
+        });
+
         const userId = 1;
         const oldEmployee = await getEmployeeById(id);
 
-        await updateEmployee(id, data);
+        if (!oldEmployee) {
+            return NextResponse.json({ error: 'Employee not found in database' }, { status: 404 });
+        }
+
+        await updateEmployee(id, cleanData);
 
         await logAudit({
             user_id: userId,
@@ -69,14 +112,14 @@ export async function PUT(request: NextRequest) {
             table_name: 'employees',
             record_id: id,
             old_value: JSON.stringify(oldEmployee),
-            new_value: JSON.stringify(data)
+            new_value: JSON.stringify(cleanData)
         });
 
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Update employee error:', error);
         return NextResponse.json(
-            { error: 'Failed to update employee' },
+            { error: `Failed to update employee: ${error.message || String(error)}` },
             { status: 500 }
         );
     }

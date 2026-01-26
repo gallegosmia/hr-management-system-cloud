@@ -277,6 +277,7 @@ export default function EmployeeDetailPage() {
     const [modalMessage, setModalMessage] = useState('');
     const [modalType, setModalType] = useState<'alert' | 'confirm'>('alert');
     const [onConfirm, setOnConfirm] = useState<() => void>(() => { });
+    const [apiError, setApiError] = useState<string | null>(null);
 
     const showAlert = (message: string, title = 'Melann Lending') => {
         setModalTitle(title);
@@ -390,20 +391,29 @@ export default function EmployeeDetailPage() {
         }
     };
     const fetchEmployee = async () => {
+        setApiError(null);
         try {
             const response = await fetch(`/api/employees?id=${params.id}`);
             const data = await response.json();
-            setEmployee(data);
-        } catch (error) {
+            if (response.ok) {
+                setEmployee(data);
+            } else {
+                console.error('API Error:', data.error);
+                setApiError(data.error || 'Employee record set could not be reached');
+                setEmployee(null);
+            }
+        } catch (error: any) {
             console.error('Failed to fetch employee:', error);
+            setApiError(error.message || 'Network connection failed');
+            setEmployee(null);
         } finally {
             setLoading(false);
         }
     };
 
-    const fetchAttendanceSummary = async (start: string, end: string) => {
+    const fetchAttendanceSummary = async (empId: number, start: string, end: string) => {
         try {
-            const res = await fetch(`/api/attendance/report/individual?employeeId=${params.id}&start=${start}&end=${end}`);
+            const res = await fetch(`/api/attendance/report/individual?employeeId=${empId}&start=${start}&end=${end}`);
             if (res.ok) {
                 const data = await res.json();
                 setAttendanceSummary({
@@ -419,8 +429,9 @@ export default function EmployeeDetailPage() {
     };
 
     const fetchEducation = async () => {
+        if (!employee?.id) return;
         try {
-            const response = await fetch(`/api/employees/education?employee_id=${params.id}`);
+            const response = await fetch(`/api/employees/education?employee_id=${employee.id}`);
             if (response.ok) {
                 const data = await response.json();
                 setEducation(data);
@@ -443,10 +454,10 @@ export default function EmployeeDetailPage() {
     }, [params.id]);
 
     useEffect(() => {
-        if (params.id && reportStartDate && reportEndDate) {
-            fetchAttendanceSummary(reportStartDate, reportEndDate);
+        if (employee?.id && reportStartDate && reportEndDate) {
+            fetchAttendanceSummary(employee.id, reportStartDate, reportEndDate);
         }
-    }, [params.id, reportStartDate, reportEndDate]);
+    }, [employee?.id, reportStartDate, reportEndDate]);
 
     const generateProfilePDF = async () => {
         if (!employee) return;
@@ -889,39 +900,59 @@ export default function EmployeeDetailPage() {
     if (loading) {
         return (
             <DashboardLayout>
-                <div style={{ textAlign: 'center', padding: '3rem' }}>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '60vh',
+                    color: 'var(--text-secondary)'
+                }}>
                     <div style={{
                         width: '48px',
                         height: '48px',
-                        border: '4px solid var(--primary-200)',
+                        border: '4px solid var(--primary-100)',
                         borderTopColor: 'var(--primary-600)',
                         borderRadius: '50%',
                         animation: 'spin 1s linear infinite',
-                        margin: '0 auto 1rem'
+                        marginBottom: '1.5rem'
                     }} />
-                    <p style={{ color: 'var(--text-secondary)' }}>Loading employee...</p>
+                    <h3 style={{ margin: 0, fontWeight: '500' }}>Retrieving Employee Profile...</h3>
+                    <p style={{ fontSize: '0.875rem' }}>Securing database connection</p>
                 </div>
             </DashboardLayout>
         );
     }
 
-    if (!employee) {
+    // We removed the hard Error Screen as requested. 
+    // If employee is null, the loading state above handles it, 
+    // or we can show a simpler status if loading finished but no data.
+    if (!employee && !loading) {
         return (
             <DashboardLayout>
-                <div className="card">
-                    <div className="card-body" style={{ textAlign: 'center', padding: '3rem' }}>
-                        <h2>Employee Not Found</h2>
-                        <p style={{ color: 'var(--text-secondary)', marginTop: 'var(--spacing-md)' }}>
-                            The employee you're looking for doesn't exist.
+                <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+                    <h3 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Employee Record Not Ready</h3>
+                    <p>We couldn't find a record for ID: <strong>{params?.id}</strong></p>
+                    {apiError && (
+                        <p style={{ color: 'var(--danger-500)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                            Error Detail: {apiError}
                         </p>
-                        <Link href="/employees" className="btn btn-primary" style={{ marginTop: 'var(--spacing-lg)' }}>
-                            Back to Employee List
+                    )}
+                    <div style={{ display: 'flex', gap: 'var(--spacing-md)', justifyContent: 'center', marginTop: '1.5rem' }}>
+                        <button onClick={() => window.location.reload()} className="btn btn-primary">
+                            Retry Connection
+                        </button>
+                        <Link href="/employees" className="btn btn-secondary">
+                            Back to Masterlist
                         </Link>
                     </div>
                 </div>
             </DashboardLayout>
         );
     }
+
+    if (!employee) return null; // Safety for linting
 
     const fullName = `${employee.first_name} ${employee.middle_name ? employee.middle_name + ' ' : ''}${employee.last_name}`;
 

@@ -16,10 +16,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Only image files are allowed' }, { status: 400 });
         }
 
-        // Validate file size (e.g., max 1MB for base64 storage)
-        // Note: Base64 increases size by ~33%. 1MB limit keeps DB reasonably light.
-        if (file.size > 1024 * 1024) {
-            return NextResponse.json({ error: 'Image too large. Please resize to under 1MB.' }, { status: 400 });
+        // Validate file size (e.g., max 2.5MB for base64 storage)
+        // Note: Base64 increases size by ~33%. 2.5MB keeps DB reasonably light (~3.3MB per photo).
+        if (file.size > 2.5 * 1024 * 1024) {
+            return NextResponse.json({ error: 'Image too large. Please resize to under 2.5MB.' }, { status: 400 });
         }
 
         // Convert file to buffer then base64
