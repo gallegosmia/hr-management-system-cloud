@@ -61,18 +61,33 @@ export async function POST(request: NextRequest) {
             [otp, expiresAt, user.id]
         );
 
-        // 4. Log the attempt for security audit
         const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
-        await query(
-            "INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES ($1, $2, $3, $4)",
-            [user.id, 'OTP_SENT', JSON.stringify({ email_masked: maskEmail(user.email) }), ipAddress]
-        );
 
-        // 5. Send Email
-        await sendEmail(
+        // 5. Check audit logs to limit rate (optional but good practice)
+        // For now, proceeding with overwrite as per requirement "Invalidate any previous OTP"
+
+        // 6. Send Email and Log Result
+        const emailSent = await sendEmail(
             user.email,
             'Your OTP for Password Reset',
             `Hi ${user.username},\n\nYour one-time password for resetting your password is: ${otp}\n\nThis code will expire in 5 minutes.\n\nIf you did not request this, please ignore this email.`
+        );
+
+        if (!emailSent) {
+            // Log failure
+            await query(
+                "INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES ($1, $2, $3, $4)",
+                [user.id, 'OTP_SEND_FAILED', JSON.stringify({ error: 'Email service failed' }), ipAddress]
+            );
+            return NextResponse.json({
+                error: 'Failed to send OTP email. Please check your email configuration or try again later.'
+            }, { status: 500 });
+        }
+
+        // Log success
+        await query(
+            "INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES ($1, $2, $3, $4)",
+            [user.id, 'OTP_SENT', JSON.stringify({ email_masked: maskEmail(user.email) }), ipAddress]
         );
 
         return NextResponse.json({

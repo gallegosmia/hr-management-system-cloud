@@ -9,7 +9,12 @@ export default function VerifyOTPPage() {
     const [maskedEmail, setMaskedEmail] = useState('');
     const [otp, setOtp] = useState('');
     const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Resend Logic
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const [resendLoading, setResendLoading] = useState(false);
 
     useEffect(() => {
         const storedUsername = sessionStorage.getItem('resetUsername');
@@ -22,9 +27,20 @@ export default function VerifyOTPPage() {
         }
     }, [router]);
 
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (resendCooldown > 0) {
+            timer = setInterval(() => {
+                setResendCooldown((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [resendCooldown]);
+
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
+        setSuccessMsg('');
         setLoading(true);
 
         try {
@@ -47,6 +63,36 @@ export default function VerifyOTPPage() {
             setError('An error occurred. Please try again.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleResend = async () => {
+        if (resendCooldown > 0 || resendLoading) return;
+
+        setResendLoading(true);
+        setError('');
+        setSuccessMsg('');
+
+        try {
+            // Re-use forgot-password endpoint to generate new OTP
+            const response = await fetch('/api/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identifier: username }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSuccessMsg('A new OTP has been sent to your email.');
+                setResendCooldown(60); // 60 seconds cooldown
+            } else {
+                setError(data.error || 'Failed to resend OTP');
+            }
+        } catch (err) {
+            setError('Failed to connect to server.');
+        } finally {
+            setResendLoading(false);
         }
     };
 
@@ -97,6 +143,16 @@ export default function VerifyOTPPage() {
                     <p style={{ fontSize: '0.875rem', opacity: 0.9 }}>
                         Enter the 6-digit code sent to<br /><strong style={{ color: '#ecfdf5' }}>{maskedEmail}</strong>
                     </p>
+                    {/* Spam Folder Prompt */}
+                    <div style={{
+                        marginTop: '0.75rem',
+                        fontSize: '0.75rem',
+                        background: 'rgba(255,255,255,0.2)',
+                        padding: '0.5rem',
+                        borderRadius: '0.5rem'
+                    }}>
+                        ℹ️ If you don't see it, please check your <strong>Spam</strong> or <strong>Junk</strong> folder.
+                    </div>
                 </div>
 
                 <div style={{ padding: '2rem' }}>
@@ -118,6 +174,23 @@ export default function VerifyOTPPage() {
                             </div>
                         )}
 
+                        {successMsg && (
+                            <div style={{
+                                background: '#dcfce7',
+                                color: '#166534',
+                                padding: '0.75rem 1rem',
+                                borderRadius: '0.5rem',
+                                marginBottom: '1.5rem',
+                                fontSize: '0.875rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                            }}>
+                                <span>✅</span>
+                                {successMsg}
+                            </div>
+                        )}
+
                         <div style={{ marginBottom: '1.5rem' }}>
                             <label style={{
                                 display: 'block',
@@ -131,7 +204,7 @@ export default function VerifyOTPPage() {
                             <input
                                 type="text"
                                 value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
+                                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} // Only allow numbers
                                 required
                                 maxLength={6}
                                 placeholder="000000"
@@ -168,7 +241,32 @@ export default function VerifyOTPPage() {
                             {loading ? 'Verifying...' : 'Verify & Continue'}
                         </button>
 
+                        {/* Resend Button with Cooldown */}
                         <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+                                Didn't receive the code?
+                            </p>
+                            <button
+                                type="button"
+                                onClick={handleResend}
+                                disabled={resendCooldown > 0 || resendLoading}
+                                style={{
+                                    fontSize: '0.875rem',
+                                    fontWeight: '600',
+                                    color: (resendCooldown > 0 || resendLoading) ? '#9ca3af' : '#059669',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: (resendCooldown > 0 || resendLoading) ? 'not-allowed' : 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                }}
+                            >
+                                {resendLoading ? 'Sending...' : (resendCooldown > 0 ? `Resend available in ${resendCooldown}s` : 'Resend OTP')}
+                            </button>
+                        </div>
+
+                        <div style={{ marginTop: '1.5rem', textAlign: 'center', borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}>
                             <button
                                 type="button"
                                 onClick={() => router.push('/forgot-password')}
