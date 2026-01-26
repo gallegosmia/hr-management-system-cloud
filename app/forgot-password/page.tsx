@@ -5,29 +5,28 @@ import { useRouter } from 'next/navigation';
 
 export default function ForgotPasswordPage() {
     const router = useRouter();
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState('');
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
-        setMessage('');
         setLoading(true);
 
         try {
             const response = await fetch('/api/auth/forgot-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
+                body: JSON.stringify({ username }),
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                // Store email in session storage to use in verify page
-                sessionStorage.setItem('resetEmail', email);
+                // Store username and masked email for the next screens
+                sessionStorage.setItem('resetUsername', username);
+                sessionStorage.setItem('maskedEmail', data.maskedEmail);
                 router.push('/verify-otp');
             } else {
                 setError(data.error || 'Failed to process request');
@@ -85,7 +84,7 @@ export default function ForgotPasswordPage() {
                         Forgot Password
                     </h1>
                     <p style={{ fontSize: '0.875rem', opacity: 0.9 }}>
-                        Enter your email to receive a reset code
+                        Enter your username to receive a reset code
                     </p>
                 </div>
 
@@ -117,14 +116,14 @@ export default function ForgotPasswordPage() {
                                 color: '#1f2937',
                                 marginBottom: '0.5rem'
                             }}>
-                                Email Address
+                                Username
                             </label>
                             <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
                                 required
-                                placeholder="Enter your registered email"
+                                placeholder="Enter your username"
                                 style={{
                                     width: '100%',
                                     padding: '0.75rem 1rem',
@@ -155,7 +154,7 @@ export default function ForgotPasswordPage() {
                                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                             }}
                         >
-                            {loading ? 'Sending OTP...' : 'Send OTP'}
+                            {loading ? 'Processing...' : 'Verify Account'}
                         </button>
 
                         <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>

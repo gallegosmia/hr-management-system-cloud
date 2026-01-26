@@ -5,17 +5,20 @@ import { useRouter } from 'next/navigation';
 
 export default function VerifyOTPPage() {
     const router = useRouter();
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
+    const [maskedEmail, setMaskedEmail] = useState('');
     const [otp, setOtp] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const storedEmail = sessionStorage.getItem('resetEmail');
-        if (!storedEmail) {
+        const storedUsername = sessionStorage.getItem('resetUsername');
+        const storedMaskedEmail = sessionStorage.getItem('maskedEmail');
+        if (!storedUsername) {
             router.push('/forgot-password');
         } else {
-            setEmail(storedEmail);
+            setUsername(storedUsername);
+            setMaskedEmail(storedMaskedEmail || 'registered email');
         }
     }, [router]);
 
@@ -28,12 +31,13 @@ export default function VerifyOTPPage() {
             const response = await fetch('/api/auth/verify-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, otp }),
+                body: JSON.stringify({ username, otp }),
             });
 
             const data = await response.json();
 
             if (response.ok) {
+                // Keep username for the reset step
                 sessionStorage.setItem('resetOTP', otp);
                 router.push('/reset-password');
             } else {
@@ -91,7 +95,7 @@ export default function VerifyOTPPage() {
                         Verify OTP
                     </h1>
                     <p style={{ fontSize: '0.875rem', opacity: 0.9 }}>
-                        Enter the 6-digit code sent to<br /><strong>{email}</strong>
+                        Enter the 6-digit code sent to<br /><strong style={{ color: '#ecfdf5' }}>{maskedEmail}</strong>
                     </p>
                 </div>
 
@@ -122,7 +126,7 @@ export default function VerifyOTPPage() {
                                 color: '#1f2937',
                                 marginBottom: '0.5rem'
                             }}>
-                                One-Time Password
+                                Security Code
                             </label>
                             <input
                                 type="text"
@@ -161,7 +165,7 @@ export default function VerifyOTPPage() {
                                 transition: 'all 150ms'
                             }}
                         >
-                            {loading ? 'Verifying...' : 'Verify Code'}
+                            {loading ? 'Verifying...' : 'Verify & Continue'}
                         </button>
 
                         <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
@@ -176,7 +180,7 @@ export default function VerifyOTPPage() {
                                     cursor: 'pointer'
                                 }}
                             >
-                                Did not receive code? Try again
+                                Incorrect account? Go back
                             </button>
                         </div>
                     </form>
