@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
                 [user.id, 'OTP_SEND_FAILED', JSON.stringify({ error: 'Email service failed' }), ipAddress]
             );
             return NextResponse.json({
-                error: 'Failed to send OTP email. Please check your email configuration or try again later.'
+                error: 'System Error: Email service is not configured. Please contact the administrator.'
             }, { status: 500 });
         }
 
