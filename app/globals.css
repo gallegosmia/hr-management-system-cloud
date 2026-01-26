@@ -849,14 +849,8 @@ a:hover {
 .login-brand-section {
   flex: 1;
   position: relative;
-  background-color: var(--primary-900);
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 3rem;
+  background-color: white;
+  padding: 0;
   overflow: hidden;
 }
 
@@ -866,21 +860,14 @@ a:hover {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('/login-bg.jpg');
+  background-image: url('/login-left-panel.png');
   background-size: cover;
   background-position: center;
   z-index: 1;
 }
 
-.login-brand-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(30, 58, 138, 0.9) 0%, rgba(37, 99, 235, 0.8) 100%);
-  z-index: 2;
-}
+/* Overlay removed as requested */
+
 
 .login-brand-content {
   position: relative;

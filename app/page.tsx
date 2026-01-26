@@ -45,27 +45,6 @@ export default function LoginPage() {
             {/* Left Panel: Branding */}
             <div className="login-brand-section">
                 <div className="login-brand-bg-image"></div>
-                <div className="login-brand-overlay"></div>
-                <div className="login-brand-content">
-                    <div style={{ marginBottom: '2rem' }}>
-                        {/* HR Icon / Illustration */}
-                        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(255,255,255,0.9)' }}>
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        </svg>
-                    </div>
-
-                    <h1 className="login-brand-title">
-                        Melann Lending Investor Corp.<br />
-                        <span style={{ fontSize: '0.8em', opacity: 0.9 }}>HR Management System</span>
-                    </h1>
-
-                    <div className="login-brand-tagline">
-                        LEND. EMPOWER. GROWTH.
-                    </div>
-                </div>
             </div>
 
             {/* Right Panel: Login Form */}
