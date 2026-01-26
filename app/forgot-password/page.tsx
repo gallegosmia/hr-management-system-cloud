@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 export default function ForgotPasswordPage() {
     const router = useRouter();
-    const [username, setUsername] = useState('');
+    const [identifier, setIdentifier] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -18,14 +18,14 @@ export default function ForgotPasswordPage() {
             const response = await fetch('/api/auth/forgot-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username }),
+                body: JSON.stringify({ identifier }),
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                // Store username and masked email for the next screens
-                sessionStorage.setItem('resetUsername', username);
+                // Store username (returned from server) and masked email
+                sessionStorage.setItem('resetUsername', data.username);
                 sessionStorage.setItem('maskedEmail', data.maskedEmail);
                 router.push('/verify-otp');
             } else {
@@ -84,7 +84,7 @@ export default function ForgotPasswordPage() {
                         Forgot Password
                     </h1>
                     <p style={{ fontSize: '0.875rem', opacity: 0.9 }}>
-                        Enter your username to receive a reset code
+                        Enter your username or email address
                     </p>
                 </div>
 
@@ -116,14 +116,14 @@ export default function ForgotPasswordPage() {
                                 color: '#1f2937',
                                 marginBottom: '0.5rem'
                             }}>
-                                Username
+                                Username or Email
                             </label>
                             <input
                                 type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                value={identifier}
+                                onChange={(e) => setIdentifier(e.target.value)}
                                 required
-                                placeholder="Enter your username"
+                                placeholder="Enter registered username or email"
                                 style={{
                                     width: '100%',
                                     padding: '0.75rem 1rem',
@@ -154,7 +154,7 @@ export default function ForgotPasswordPage() {
                                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                             }}
                         >
-                            {loading ? 'Processing...' : 'Verify Account'}
+                            {loading ? 'Processing...' : 'Verify Identity'}
                         </button>
 
                         <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>

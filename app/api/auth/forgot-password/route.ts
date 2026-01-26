@@ -6,7 +6,7 @@ import { sendEmail } from '@/lib/email';
 function maskEmail(email: string): string {
     if (!email) return '';
     const [localPart, domain] = email.split('@');
-    if (!domain) return email; // Should not happen with valid email
+    if (!domain) return email;
     if (localPart.length <= 2) {
         return `${localPart[0]}****@${domain}`;
     }
@@ -15,19 +15,31 @@ function maskEmail(email: string): string {
 
 export async function POST(request: NextRequest) {
     try {
-        const { username } = await request.json();
+        const { identifier } = await request.json(); // Use 'identifier' which can be username or email
 
-        if (!username) {
-            return NextResponse.json({ error: 'Username is required' }, { status: 400 });
+        if (!identifier) {
+            return NextResponse.json({ error: 'Username or Email is required' }, { status: 400 });
         }
 
-        // 1. Check if user exists and has a registered email
-        const userRes = await query("SELECT id, username, email FROM users WHERE username = $1", [username]);
+        // 1. Try to find user in users table by username OR email
+        const userRes = await query(
+            "SELECT id, username, email FROM users WHERE username = $1 OR email = $1",
+            [identifier]
+        );
 
         if (userRes.rows.length === 0) {
-            // Security: We can either say "Username not found" or "OTP sent if account exists"
-            // The prompt asks to "Reject OTP requests if no verified email exists for the account"
-            // and "Display appropriate error messages for: Invalid or unregistered email" (from previous requirement)
+            // Check if they exist in employees table instead
+            const empRes = await query(
+                "SELECT employee_id, email_address FROM employees WHERE email_address = $1",
+                [identifier]
+            );
+
+            if (empRes.rows.length > 0) {
+                return NextResponse.json({
+                    error: 'You have an employee record but haven\'t created a login account yet. Please register first.'
+                }, { status: 403 });
+            }
+
             return NextResponse.json({ error: 'Account not found' }, { status: 404 });
         }
 
@@ -66,7 +78,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             success: true,
             message: 'OTP sent successfully',
-            maskedEmail: maskEmail(user.email)
+            maskedEmail: maskEmail(user.email),
+            username: user.username // Send back the actual username
         });
 
     } catch (error: any) {
