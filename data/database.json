@@ -9,7 +9,10 @@
       "created_at": "2026-01-08T02:04:53.152Z",
       "last_login": "2026-01-12T10:53:57.670Z",
       "is_active": 1,
-      "last_updated": "2026-01-12T10:53:57.671Z"
+      "last_updated": "2026-01-12T10:53:57.671Z",
+      "email": "admin@example.com",
+      "reset_otp": null,
+      "reset_otp_expires_at": null
     },
     {
       "username": "mia",
@@ -20,7 +23,10 @@
       "id": 5,
       "created_at": "2026-01-09T06:13:35.334Z",
       "last_login": "2026-01-24T03:40:01.141Z",
-      "last_updated": "2026-01-13T02:38:47.589Z"
+      "last_updated": "2026-01-13T02:38:47.589Z",
+      "email": null,
+      "reset_otp": null,
+      "reset_otp_expires_at": null
     },
     {
       "username": "shan",
@@ -31,7 +37,10 @@
       "id": 6,
       "created_at": "2026-01-09T06:17:30.257Z",
       "last_login": "2026-01-09T06:30:51.688Z",
-      "last_updated": "2026-01-10T08:37:22.171Z"
+      "last_updated": "2026-01-10T08:37:22.171Z",
+      "email": null,
+      "reset_otp": null,
+      "reset_otp_expires_at": null
     },
     {
       "username": "lhynn",
@@ -42,7 +51,10 @@
       "id": 7,
       "created_at": "2026-01-09T06:31:25.169Z",
       "last_login": "2026-01-09T06:35:09.215Z",
-      "last_updated": "2026-01-09T06:35:09.215Z"
+      "last_updated": "2026-01-09T06:35:09.215Z",
+      "email": null,
+      "reset_otp": null,
+      "reset_otp_expires_at": null
     },
     {
       "username": "jhun",
@@ -53,7 +65,10 @@
       "id": 8,
       "created_at": "2026-01-09T06:36:55.944Z",
       "last_login": "2026-01-09T06:37:48.728Z",
-      "last_updated": "2026-01-09T06:37:48.729Z"
+      "last_updated": "2026-01-09T06:37:48.729Z",
+      "email": null,
+      "reset_otp": null,
+      "reset_otp_expires_at": null
     },
     {
       "username": "ann",
@@ -62,19 +77,28 @@
       "is_active": 1,
       "employee_id": null,
       "id": 9,
-      "created_at": "2026-01-09T06:39:27.224Z"
+      "created_at": "2026-01-09T06:39:27.224Z",
+      "email": null,
+      "reset_otp": null,
+      "reset_otp_expires_at": null
     },
     {
       "username": "Mel",
       "password": "$2a$10$0WO8Hv/SZUiUXN.tf6Kcsu/5QHnlVeE3Il/i.kEhBI.M6Q25LqjKq",
       "role": "HR",
-      "id": 10
+      "id": 10,
+      "email": null,
+      "reset_otp": null,
+      "reset_otp_expires_at": null
     },
     {
       "username": "admin2",
       "password": "$2a$10$vXTuG8Rd8fALPp3aNHo.UeRzHJOF6LRV0nz1BQGKOkz3.Ue/.OySu",
       "role": "Executive",
-      "id": 11
+      "id": 11,
+      "email": null,
+      "reset_otp": null,
+      "reset_otp_expires_at": null
     }
   ],
   "employees": [

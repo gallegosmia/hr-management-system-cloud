@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 export default function RegisterPage() {
     const router = useRouter();
     const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('Employee');
     const [error, setError] = useState('');
@@ -21,7 +22,7 @@ export default function RegisterPage() {
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, role }),
+                body: JSON.stringify({ username, email, password, role }),
             });
 
             const data = await response.json();
@@ -143,6 +144,18 @@ export default function RegisterPage() {
                                     required
                                     className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-0 transition-colors"
                                     placeholder="Choose a username"
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-0 transition-colors"
+                                    placeholder="yourname@example.com"
                                 />
                             </div>
 

@@ -331,7 +331,7 @@ export default function EditPayrollPage() {
                                                     {activeDeductions.map(d => (
                                                         <td key={d.key} style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: '0.85rem' }}>
                                                             {(item.deduction_details?.[d.key] || 0) > 0
-                                                                ? `₱${item.deduction_details[d.key].toLocaleString()}`
+                                                                ? `₱${item.deduction_details?.[d.key]?.toLocaleString()}`
                                                                 : <span style={{ color: 'var(--text-tertiary)' }}>-</span>
                                                             }
                                                         </td>
