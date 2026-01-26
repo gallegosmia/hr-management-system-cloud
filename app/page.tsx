@@ -7,6 +7,7 @@ export default function LoginPage() {
     const router = useRouter();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -40,165 +41,122 @@ export default function LoginPage() {
     };
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%)',
-            padding: '1rem'
-        }}>
-            <div style={{
-                background: 'white',
-                borderRadius: '1rem',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                width: '100%',
-                maxWidth: '450px',
-                overflow: 'hidden'
-            }}>
-                {/* Header */}
-                <div style={{
-                    background: 'linear-gradient(135deg, #059669, #10b981)',
-                    padding: '2rem',
-                    textAlign: 'center',
-                    color: 'white'
-                }}>
-                    <div style={{
-                        width: '80px',
-                        height: '80px',
-                        margin: '0 auto 1rem',
-                        background: 'white',
-                        borderRadius: '1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
-                    }}>
-                        <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="10" y="50" width="20" height="40" rx="4" fill="#8B2635" />
-                            <rect x="40" y="30" width="20" height="60" rx="4" fill="#D2691E" />
-                            <rect x="70" y="10" width="20" height="80" rx="4" fill="#E74C3C" />
+        <div className="login-container">
+            {/* Left Panel: Branding */}
+            <div className="login-brand-section">
+                <div className="login-brand-bg-image"></div>
+                <div className="login-brand-overlay"></div>
+                <div className="login-brand-content">
+                    <div style={{ marginBottom: '2rem' }}>
+                        {/* HR Icon / Illustration */}
+                        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                         </svg>
                     </div>
-                    <h1 style={{
-                        fontSize: '1.75rem',
-                        fontWeight: '700',
-                        marginBottom: '0.5rem',
-                        fontFamily: 'Poppins, sans-serif'
-                    }}>
-                        Melann Lending Investor Corporation
-                    </h1>
-                    <p style={{
-                        fontSize: '0.875rem',
-                        opacity: 0.9
-                    }}>
-                        Digital 201 File & Employee Management
-                    </p>
-                </div>
 
-                {/* Form */}
-                <div style={{ padding: '2rem' }}>
-                    <form onSubmit={handleSubmit}>
-                        {error && (
+                    <h1 className="login-brand-title">
+                        Melann Lending Investor Corp.<br />
+                        <span style={{ fontSize: '0.8em', opacity: 0.9 }}>HR Management System</span>
+                    </h1>
+
+                    <div className="login-brand-tagline">
+                        LEND. EMPOWER. GROWTH.
+                    </div>
+                </div>
+            </div>
+
+            {/* Right Panel: Login Form */}
+            <div className="login-form-section">
+                <div className="login-form-wrapper">
+                    <div className="login-header">
+                        <div className="login-logo-container">
                             <div style={{
-                                background: '#fee2e2',
-                                color: '#b91c1c',
-                                padding: '0.75rem 1rem',
-                                borderRadius: '0.5rem',
-                                marginBottom: '1.5rem',
-                                fontSize: '0.875rem',
+                                width: '64px',
+                                height: '64px',
+                                background: 'white',
+                                borderRadius: '12px',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.5rem'
+                                justifyContent: 'center',
+                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                             }}>
-                                <span>⚠️</span>
-                                {error}
+                                <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="10" y="50" width="20" height="40" rx="4" fill="#8B2635" />
+                                    <rect x="40" y="30" width="20" height="60" rx="4" fill="#D2691E" />
+                                    <rect x="70" y="10" width="20" height="80" rx="4" fill="#E74C3C" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h2 className="login-welcome-title">Welcome Back</h2>
+                        <p className="login-welcome-subtitle">Please sign in to continue</p>
+                    </div>
+
+                    <form onSubmit={handleSubmit}>
+                        {error && (
+                            <div className="form-error" style={{ marginBottom: '1.5rem', padding: '0.75rem', background: '#fee2e2', borderRadius: '0.5rem', color: '#b91c1c' }}>
+                                <span>⚠️</span> {error}
                             </div>
                         )}
 
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <label style={{
-                                display: 'block',
-                                fontSize: '0.875rem',
-                                fontWeight: '600',
-                                color: '#1f2937',
-                                marginBottom: '0.5rem'
-                            }}>
-                                Username
-                            </label>
+                        <div className="login-input-group">
+                            <label className="form-label" htmlFor="username">Username or Email</label>
                             <input
+                                id="username"
                                 type="text"
+                                className="form-input"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 required
                                 placeholder="Enter your username"
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem 1rem',
-                                    fontSize: '0.875rem',
-                                    border: '2px solid #e5e7eb',
-                                    borderRadius: '0.5rem',
-                                    transition: 'all 150ms',
-                                    fontFamily: 'Inter, sans-serif'
-                                }}
-                                onFocus={(e) => {
-                                    e.target.style.borderColor = '#10b981';
-                                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-                                }}
-                                onBlur={(e) => {
-                                    e.target.style.borderColor = '#e5e7eb';
-                                    e.target.style.boxShadow = 'none';
-                                }}
+                                style={{ paddingRight: '1rem' }}
                             />
                         </div>
 
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <label style={{
-                                display: 'block',
-                                fontSize: '0.875rem',
-                                fontWeight: '600',
-                                color: '#1f2937',
-                                marginBottom: '0.5rem'
-                            }}>
-                                Password
-                            </label>
+                        <div className="login-input-group">
+                            <label className="form-label" htmlFor="password">Password</label>
                             <input
-                                type="password"
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                className="form-input"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 placeholder="Enter your password"
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem 1rem',
-                                    fontSize: '0.875rem',
-                                    border: '2px solid #e5e7eb',
-                                    borderRadius: '0.5rem',
-                                    transition: 'all 150ms',
-                                    fontFamily: 'Inter, sans-serif'
-                                }}
-                                onFocus={(e) => {
-                                    e.target.style.borderColor = '#10b981';
-                                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-                                }}
-                                onBlur={(e) => {
-                                    e.target.style.borderColor = '#e5e7eb';
-                                    e.target.style.boxShadow = 'none';
-                                }}
+                                style={{ paddingRight: '3rem' }}
                             />
+                            <button
+                                type="button"
+                                className="password-toggle"
+                                onClick={() => setShowPassword(!showPassword)}
+                                aria-label="Toggle password visibility"
+                            >
+                                {showPassword ? (
+                                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                    </svg>
+                                ) : (
+                                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                )}
+                            </button>
                         </div>
 
-                        <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'flex-end', marginTop: '-1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem', marginTop: '-0.5rem' }}>
                             <button
                                 type="button"
                                 onClick={() => router.push('/forgot-password')}
                                 style={{
                                     fontSize: '0.875rem',
-                                    color: '#059669',
+                                    color: 'var(--primary-600)',
                                     background: 'none',
                                     border: 'none',
                                     cursor: 'pointer',
-                                    fontWeight: '600'
+                                    fontWeight: '500'
                                 }}
                             >
                                 Forgot Password?
@@ -207,67 +165,18 @@ export default function LoginPage() {
 
                         <button
                             type="submit"
+                            className="btn btn-primary login-button"
                             disabled={loading}
-                            style={{
-                                width: '100%',
-                                padding: '0.75rem 1.5rem',
-                                fontSize: '0.875rem',
-                                fontWeight: '600',
-                                color: 'white',
-                                background: loading ? '#9ca3af' : 'linear-gradient(135deg, #059669, #10b981)',
-                                border: 'none',
-                                borderRadius: '0.5rem',
-                                cursor: loading ? 'not-allowed' : 'pointer',
-                                transition: 'all 150ms',
-                                fontFamily: 'Inter, sans-serif',
-                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                            }}
-                            onMouseEnter={(e) => {
-                                if (!loading) {
-                                    e.currentTarget.style.transform = 'translateY(-1px)';
-                                    e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
-                            }}
                         >
                             {loading ? 'Signing in...' : 'Sign In'}
                         </button>
-                        <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-                            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                                Don't have an account?{' '}
-                                <button
-                                    type="button"
-                                    onClick={() => router.push('/register')}
-                                    style={{
-                                        color: '#059669',
-                                        fontWeight: '600',
-                                        background: 'none',
-                                        border: 'none',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    Create an account
-                                </button>
-                            </p>
-                        </div>
                     </form>
 
-                </div>
-
-                {/* Footer */}
-                <div style={{
-                    padding: '1rem 2rem',
-                    background: '#f9fafb',
-                    borderTop: '1px solid #e5e7eb',
-                    textAlign: 'center',
-                    fontSize: '0.75rem',
-                    color: '#6b7280'
-                }}>
-                    <p>🇵🇭 Designed for Philippine Companies</p>
-                    <p style={{ marginTop: '0.25rem' }}>DOLE Compliant • Secure • Audit-Ready</p>
+                    <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                            &copy; {new Date().getFullYear()} Melann Lending Investor Corp.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
