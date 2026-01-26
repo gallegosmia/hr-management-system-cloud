@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 export default function ResetPasswordPage() {
     const router = useRouter();
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [otp, setOtp] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -14,12 +14,12 @@ export default function ResetPasswordPage() {
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
-        const storedEmail = sessionStorage.getItem('resetEmail');
+        const storedUsername = sessionStorage.getItem('resetUsername');
         const storedOTP = sessionStorage.getItem('resetOTP');
-        if (!storedEmail || !storedOTP) {
+        if (!storedUsername || !storedOTP) {
             router.push('/forgot-password');
         } else {
-            setEmail(storedEmail);
+            setUsername(storedUsername);
             setOtp(storedOTP);
         }
     }, [router]);
@@ -44,15 +44,16 @@ export default function ResetPasswordPage() {
             const response = await fetch('/api/auth/reset-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, otp, newPassword }),
+                body: JSON.stringify({ username, otp, newPassword }),
             });
 
             const data = await response.json();
 
             if (response.ok) {
                 setSuccess(true);
-                sessionStorage.removeItem('resetEmail');
+                sessionStorage.removeItem('resetUsername');
                 sessionStorage.removeItem('resetOTP');
+                sessionStorage.removeItem('maskedEmail');
             } else {
                 setError(data.error || 'Reset failed');
             }
@@ -108,7 +109,7 @@ export default function ResetPasswordPage() {
                         Reset Password
                     </h1>
                     <p style={{ fontSize: '0.875rem', opacity: 0.9 }}>
-                        Create a new secure password
+                        Create a new secure password for <strong>{username}</strong>
                     </p>
                 </div>
 
@@ -116,8 +117,8 @@ export default function ResetPasswordPage() {
                     {success ? (
                         <div style={{ textAlign: 'center' }}>
                             <div style={{ color: '#059669', fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '1rem' }}>Password Reset Successful!</h2>
-                            <p style={{ color: '#4b5563', marginBottom: '2rem' }}>You can now sign in with your new password.</p>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '1rem' }}>Success!</h2>
+                            <p style={{ color: '#4b5563', marginBottom: '2rem' }}>Your password has been updated. You can now log in.</p>
                             <button
                                 onClick={() => router.push('/')}
                                 style={{
@@ -132,7 +133,7 @@ export default function ResetPasswordPage() {
                                     cursor: 'pointer'
                                 }}
                             >
-                                Sign In Now
+                                Back to Sign In
                             </button>
                         </div>
                     ) : (
@@ -224,7 +225,7 @@ export default function ResetPasswordPage() {
                                     transition: 'all 150ms'
                                 }}
                             >
-                                {loading ? 'Updating Password...' : 'Reset Password'}
+                                {loading ? 'Updating...' : 'Set New Password'}
                             </button>
                         </form>
                     )}

@@ -3,20 +3,20 @@ import { query } from '@/lib/database';
 
 export async function POST(request: NextRequest) {
     try {
-        const { email, otp } = await request.json();
+        const { username, otp } = await request.json();
 
-        if (!email || !otp) {
-            return NextResponse.json({ error: 'Email and OTP are required' }, { status: 400 });
+        if (!username || !otp) {
+            return NextResponse.json({ error: 'Username and OTP are required' }, { status: 400 });
         }
 
-        // 1. Find user with this email
+        // 1. Find user with this username
         const userRes = await query(
-            "SELECT id, reset_otp, reset_otp_expires_at FROM users WHERE email = $1",
-            [email]
+            "SELECT id, reset_otp, reset_otp_expires_at FROM users WHERE username = $1",
+            [username]
         );
 
         if (userRes.rows.length === 0) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            return NextResponse.json({ error: 'Account not found' }, { status: 404 });
         }
 
         const user = userRes.rows[0];

@@ -4,20 +4,20 @@ import { hashPassword } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
     try {
-        const { email, otp, newPassword } = await request.json();
+        const { username, otp, newPassword } = await request.json();
 
-        if (!email || !otp || !newPassword) {
+        if (!username || !otp || !newPassword) {
             return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
         }
 
         // 1. Verify OTP again (for security)
         const userRes = await query(
-            "SELECT id, reset_otp, reset_otp_expires_at FROM users WHERE email = $1",
-            [email]
+            "SELECT id, reset_otp, reset_otp_expires_at FROM users WHERE username = $1",
+            [username]
         );
 
         if (userRes.rows.length === 0) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            return NextResponse.json({ error: 'Account not found' }, { status: 404 });
         }
 
         const user = userRes.rows[0];
@@ -38,6 +38,13 @@ export async function POST(request: NextRequest) {
         await query(
             "UPDATE users SET password = $1, reset_otp = NULL, reset_otp_expires_at = NULL WHERE id = $2",
             [hashedPassword, user.id]
+        );
+
+        // 4. Log the password reset action
+        const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
+        await query(
+            "INSERT INTO audit_logs (user_id, action, details, ip_address) VALUES ($1, $2, $3, $4)",
+            [user.id, 'PASSWORD_RESET', JSON.stringify({ status: 'success' }), ipAddress]
         );
 
         return NextResponse.json({
