@@ -7,10 +7,13 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) UNIQUE NOT NULL,
     password TEXT NOT NULL,
     role VARCHAR(50) NOT NULL,
+    email VARCHAR(100),
     employee_id INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP WITH TIME ZONE,
-    is_active INTEGER DEFAULT 1
+    is_active INTEGER DEFAULT 1,
+    reset_otp VARCHAR(20),
+    reset_otp_expires_at TIMESTAMP WITH TIME ZONE
 );
 
 -- 2. Employees table (The main 201 file)
