@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
@@ -27,6 +27,23 @@ export default function CreatePayrollPage() {
             });
         }
     };
+
+    // Auto-select deductions based on date range
+    useEffect(() => {
+        if (!dates.end) return;
+
+        const end = new Date(dates.end);
+        const day = end.getDate();
+        const lastDay = new Date(end.getFullYear(), end.getMonth() + 1, 0).getDate();
+
+        if (day === 15) {
+            // 15th Cutoff Defaults
+            setSelectedDeductions(['philhealth', 'pagibig', 'pagibig_loan', 'company_loan', 'company_cash_fund', 'cash_advance', 'other_deductions']);
+        } else if (day >= 28 && (day >= 30 || day === lastDay)) {
+            // 30th/End-of-Month Cutoff Defaults (Covers 30th, 31st, and last day of Feb)
+            setSelectedDeductions(['sss', 'sss_loan', 'company_loan', 'cash_advance', 'other_deductions']);
+        }
+    }, [dates.end]);
 
 
 
@@ -316,7 +333,7 @@ export default function CreatePayrollPage() {
                                             { key: 'other_deductions', label: 'Other' },
                                         ];
                                         const activeDeductions = deductionConfigs.filter(d =>
-                                            ['cash_advance', 'other_deductions'].includes(d.key) ||
+                                            ['company_loan', 'sss_loan', 'pagibig_loan', 'cash_advance', 'other_deductions'].includes(d.key) ||
                                             preview.some(s => (s.deduction_details?.[d.key] || 0) > 0)
                                         );
                                         return (
@@ -368,10 +385,10 @@ export default function CreatePayrollPage() {
                                             />
                                         </td>
                                         <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>
-                                            ₱{(item.gross_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            ₱{(item.gross_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             {item.double_pay_amount > 0 && (
                                                 <div style={{ fontSize: '0.65rem', color: 'var(--success-600)' }}>
-                                                    +₱{(item.double_pay_amount || 0).toLocaleString()}
+                                                    +₱{(item.double_pay_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </div>
                                             )}
                                         </td>
@@ -389,17 +406,25 @@ export default function CreatePayrollPage() {
                                                 { key: 'other_deductions', label: 'Other' },
                                             ];
                                             const activeDeductions = deductionConfigs.filter(d =>
-                                                ['cash_advance', 'other_deductions'].includes(d.key) ||
+                                                ['company_loan', 'sss_loan', 'pagibig_loan', 'cash_advance', 'other_deductions'].includes(d.key) ||
                                                 preview.some(s => (s.deduction_details?.[d.key] || 0) > 0)
                                             );
                                             return (
                                                 <>
                                                     {activeDeductions.map(d => (
                                                         <td key={d.key} style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: '0.7rem', padding: '0.25rem' }}>
-                                                            {(item.deduction_details?.[d.key] || 0) > 0
-                                                                ? `₱${item.deduction_details[d.key].toLocaleString()}`
-                                                                : <span style={{ color: 'var(--text-tertiary)' }}>-</span>
-                                                            }
+                                                            {((item.deduction_details?.[d.key] || 0) > 0) ? (
+                                                                <div>
+                                                                    <div style={{ fontWeight: 600 }}>₱{item.deduction_details[d.key].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                                                    {item.deduction_details[`${d.key}_balance`] !== undefined && (
+                                                                        <div style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>
+                                                                            Bal: ₱{item.deduction_details[`${d.key}_balance`].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ) : (
+                                                                <span style={{ color: 'var(--text-tertiary)' }}>-</span>
+                                                            )}
                                                         </td>
                                                     ))}
                                                 </>
@@ -436,14 +461,14 @@ export default function CreatePayrollPage() {
                                             { key: 'other_deductions', label: 'Other' },
                                         ];
                                         const activeDeductions = deductionConfigs.filter(d =>
-                                            ['cash_advance', 'other_deductions'].includes(d.key) ||
+                                            ['company_loan', 'sss_loan', 'pagibig_loan', 'cash_advance', 'other_deductions'].includes(d.key) ||
                                             preview.some(s => (s.deduction_details?.[d.key] || 0) > 0)
                                         );
                                         return (
                                             <>
                                                 {activeDeductions.map(d => (
                                                     <td key={d.key} style={{ textAlign: 'right', padding: '0.5rem', fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                                                        {preview.reduce((sum, item) => sum + (item.deduction_details?.[d.key] || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        ₱{preview.reduce((sum, item) => sum + (item.deduction_details?.[d.key] || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </td>
                                                 ))}
                                             </>

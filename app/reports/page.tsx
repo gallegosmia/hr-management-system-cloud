@@ -4,10 +4,20 @@ import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { format } from 'date-fns';
 
 interface ReportData {
     attendanceSummary: any[];
-    leaveUsage: any[];
+    leaveUsage: {
+        id: number;
+        name: string;
+        department: string;
+        entitlement: number;
+        used: number;
+        remaining: number;
+        filedValidation?: number;
+        details?: Record<string, number>;
+    }[];
     payrollSummary: any;
     complianceAudit: any[];
     tenureData: any[];
@@ -19,6 +29,16 @@ interface ReportData {
         growthThisYear: number;
     };
     attendance_metrics?: any;
+    latesAbsencesLog: any[];
+    latesAbsencesSummary: {
+        id: number;
+        name: string;
+        department: string;
+        branch?: string;
+        lateCount: number;
+        absentCount: number;
+        isThresholdExceeded: boolean;
+    }[];
 }
 
 export default function ReportsPage() {
@@ -39,6 +59,7 @@ export default function ReportsPage() {
 
     const reportOptions = [
         { id: 'attendance', title: 'Attendance Summary', action: 'genAttendancePDF' },
+        { id: 'latesAbsences', title: 'Lates and Absences', action: 'genLatesAbsencesPDF' },
         { id: 'leave', title: 'Leave Credits & Usage', action: 'genLeavePDF' },
         { id: 'payroll', title: 'Payroll Expenditure', action: 'genPayrollPDF' },
         { id: 'compliance', title: '201 File Compliance', action: 'genCompliancePDF' },
@@ -112,6 +133,7 @@ export default function ReportsPage() {
         if (!data) return;
         switch (config.reportType) {
             case 'attendance': genAttendancePDF(); break;
+            case 'latesAbsences': genLatesAbsencesPDF(); break;
             case 'leave': genLeavePDF(); break;
             case 'payroll': genPayrollPDF(); break;
             case 'compliance': genCompliancePDF(); break;
@@ -122,6 +144,7 @@ export default function ReportsPage() {
     };
 
     const filterData = (rows: any[]) => {
+        if (!rows) return [];
         return rows.filter(row => {
             const deptMatch = config.department === 'All Departments' || row.department === config.department;
             const branchMatch = config.branch === 'All Branches' || row.branch === config.branch;
@@ -153,6 +176,46 @@ export default function ReportsPage() {
         doc.save(`Attendance_Report.pdf`);
     };
 
+    const genLatesAbsencesPDF = () => {
+        if (!data) return;
+        const doc = new jsPDF();
+        addReportHeader(doc, 'Monthly Lates & Absences Summary');
+
+        // Use summary data instead of detailed logs
+        const tableData = filterData(data.latesAbsencesSummary || [])
+            .map(row => [
+                row.name,
+                row.department,
+                row.lateCount,
+                row.absentCount,
+                row.isThresholdExceeded ? '⚠️ EXCEEDED' : 'Normal'
+            ]);
+
+        autoTable(doc, {
+            head: [['Employee Name', 'Department', 'Total Lates', 'Total Absences', 'Threshold Status']],
+            body: tableData,
+            startY: 50,
+            headStyles: { fillColor: [185, 28, 28] }, // Deep Red
+            didParseCell: function (data) {
+                if (data.section === 'body') {
+                    // Always bold and red for Late Count (Index 2)
+                    if (data.column.index === 2) {
+                        data.cell.styles.textColor = [185, 28, 28]; // Deep Red
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+
+                    // Also check if threshold is exceeded for this row
+                    const isExceeded = data.row.cells[4].raw?.toString().includes('EXCEEDED');
+                    if (isExceeded) {
+                        data.cell.styles.textColor = [185, 28, 28]; // Deep Red
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                }
+            }
+        });
+        doc.save(`Lates_Absences_Summary_${config.startDate}.pdf`);
+    };
+
     const genLeavePDF = () => {
         if (!data) return;
         const doc = new jsPDF();
@@ -164,6 +227,16 @@ export default function ReportsPage() {
             body: tableData,
             startY: 50,
             headStyles: { fillColor: [16, 185, 129] },
+            didParseCell: function (data) {
+                if (data.section === 'body') {
+                    // Check 'Days Used' column (Index 3)
+                    const daysUsed = Number(data.row.cells[3].raw);
+                    if (daysUsed > 0 && (data.column.index === 3 || data.column.index === 4)) {
+                        data.cell.styles.textColor = [220, 38, 38]; // Red
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                }
+            }
         });
         doc.save(`Leave_Credits_Report.pdf`);
     };
@@ -211,7 +284,13 @@ export default function ReportsPage() {
         const doc = new jsPDF();
         addReportHeader(doc, 'Employee Tenure & Anniversaries');
         const tableData = filterData(data.tenureData)
-            .map(row => [row.name, row.department, row.dateHired, row.tenure, row.daysToAnniversary <= 30 ? `IN ${row.daysToAnniversary} DAYS!` : `${row.daysToAnniversary} d`]);
+            .map(row => [
+                row.name,
+                row.department,
+                row.dateHired ? format(new Date(row.dateHired), 'MMMM dd, yyyy') : '-',
+                row.tenure,
+                row.daysToAnniversary <= 30 ? `IN ${row.daysToAnniversary} DAYS!` : `${row.daysToAnniversary} d`
+            ]);
         autoTable(doc, {
             head: [['Employee', 'Department', 'Date Hired', 'Tenure', 'Next Anniversary']],
             body: tableData,
@@ -391,6 +470,72 @@ export default function ReportsPage() {
                             GENERATE REPORT
                         </button>
                     </div>
+                </div>
+
+                {/* Report Preview Section */}
+                <div className="mt-12 w-full max-w-6xl mx-auto pb-20">
+                    {!loading && data && (
+                        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                <h2 className="text-xl font-bold text-slate-800">
+                                    {reportOptions.find(o => o.id === config.reportType)?.title} Preview
+                                </h2>
+                                <span className="text-sm font-medium text-slate-500 bg-white px-4 py-1.5 rounded-full border border-gray-100 shadow-sm">
+                                    {config.startDate} to {config.endDate}
+                                </span>
+                            </div>
+
+                            <div className="overflow-x-auto">
+                                {config.reportType === 'latesAbsences' && (
+                                    <table className="w-full border-collapse">
+                                        <thead>
+                                            <tr className="bg-red-700 text-left border-b border-gray-100">
+                                                <th className="p-5 text-xs font-bold text-white uppercase tracking-wider">Employee Name</th>
+                                                <th className="p-5 text-xs font-bold text-white uppercase tracking-wider">Department</th>
+                                                <th className="p-5 text-xs font-bold text-white uppercase tracking-wider text-center">Total Lates</th>
+                                                <th className="p-5 text-xs font-bold text-white uppercase tracking-wider text-center">Total Absences</th>
+                                                <th className="p-5 text-xs font-bold text-white uppercase tracking-wider text-right">Threshold Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filterData(data.latesAbsencesSummary || []).length === 0 ? (
+                                                <tr><td colSpan={5} className="p-10 text-center text-slate-400">No data available for the selected period.</td></tr>
+                                            ) : (
+                                                filterData(data.latesAbsencesSummary || []).map((row) => (
+                                                    <tr key={row.id} className={`border-b border-gray-50 hover:bg-slate-50/50 transition-colors ${row.isThresholdExceeded ? 'bg-red-50 text-red-700' : 'text-slate-600'}`}>
+                                                        <td className="p-5 whitespace-nowrap font-medium">{row.name}</td>
+                                                        <td className="p-5 whitespace-nowrap">{row.department}</td>
+                                                        <td className="p-5 text-center text-red-600 font-bold">{row.lateCount}</td>
+                                                        <td className="p-5 text-center">{row.absentCount}</td>
+                                                        <td className="p-5 text-right whitespace-nowrap">
+                                                            {row.isThresholdExceeded ? (
+                                                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                                                                    ⚠️ EXCEEDED (5L/10A)
+                                                                </span>
+                                                            ) : (
+                                                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                                                    Normal
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                )}
+
+                                {/* Preview implementation for other reports will go here */}
+                                {config.reportType !== 'latesAbsences' && (
+                                    <div className="p-20 text-center">
+                                        <div className="text-4xl mb-4">📥</div>
+                                        <h3 className="text-lg font-bold text-slate-800 mb-2">Ready to Export</h3>
+                                        <p className="text-slate-500">Visual preview for this report type is coming soon. Please click the generate button above to download the full PDF.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </DashboardLayout>

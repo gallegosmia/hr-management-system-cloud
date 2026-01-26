@@ -218,7 +218,8 @@ export default function AttendancePage() {
                 alert('Attendance saved successfully!');
                 fetchAttendance();
             } else {
-                alert('Failed to save attendance');
+                const errorData = await response.json();
+                alert(`Failed to save attendance: ${errorData.error || 'Unknown error'}`);
             }
         } catch (error) {
             console.error('Failed to save attendance:', error);

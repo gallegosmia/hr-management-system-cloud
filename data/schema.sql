@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS employees (
     remarks TEXT,
     training_details TEXT,
     disciplinary_details TEXT,
-    profile_picture VARCHAR(255),
+    profile_picture TEXT,
     created_by INTEGER REFERENCES users(id)
 );
 
@@ -63,7 +63,8 @@ CREATE TABLE IF NOT EXISTS documents (
     file_path TEXT,
     file_size INTEGER,
     uploaded_by INTEGER REFERENCES users(id),
-    uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    file_data BYTEA
 );
 
 -- 4. Attendance table

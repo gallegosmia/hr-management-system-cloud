@@ -1149,6 +1149,11 @@ a:hover {
    =================================== */
 
 @media print {
+  @page {
+    size: legal portrait;
+    margin: 0.3in 0.4in;
+  }
+
   .no-print {
     display: none !important;
   }
@@ -1166,10 +1171,13 @@ a:hover {
 
   body {
     background: white !important;
+    margin: 0;
+    padding: 0;
   }
 
   .content-area {
     padding: 0 !important;
+    margin: 0 !important;
   }
 
   .card {
@@ -1179,50 +1187,76 @@ a:hover {
 
   .payslip-print-container {
     display: block !important;
+    width: 100% !important;
   }
 
   .payslip-page {
+    height: 4.4in;
+    page-break-inside: avoid;
+    padding: 0.3in 0.5in;
+    border-bottom: 1px dashed #999;
+    margin-bottom: 0 !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .payslip-page:nth-child(3n) {
     page-break-after: always;
-    padding: 2rem;
-    border: 1px solid #eee;
-    margin-bottom: 2rem;
+    border-bottom: none;
   }
 
   .payslip-header {
     text-align: center;
-    margin-bottom: 2rem;
-    border-bottom: 2px solid #333;
-    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1.5px solid #333;
+    padding-bottom: 0.5rem;
+  }
+
+  .payslip-header h2 {
+    font-size: 1.35rem !important;
+    margin-bottom: 0.125rem !important;
   }
 
   .payslip-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2rem;
+    gap: 1.5rem;
+    margin-bottom: 0.5rem;
   }
 
   .payslip-section-title {
     font-weight: 700;
+    font-size: 0.85rem;
     border-bottom: 1px solid #ddd;
-    margin-bottom: 0.5rem;
-    padding-bottom: 0.25rem;
+    margin-bottom: 0.35rem;
+    padding-bottom: 0.15rem;
+    color: #444;
   }
 
   .payslip-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 0.25rem;
-    font-size: 0.875rem;
+    margin-bottom: 0.125rem;
+    font-size: 0.75rem;
+    line-height: 1.2;
   }
 
   .payslip-total {
-    margin-top: 1rem;
-    padding-top: 0.5rem;
-    border-top: 2px solid #333;
+    margin-top: 0.4rem;
+    padding-top: 0.25rem;
+    border-top: 1.5px solid #333;
     font-weight: 700;
-    font-size: 1.125rem;
+    font-size: 0.9rem;
     display: flex;
     justify-content: space-between;
+  }
+
+  .signature-section {
+    margin-top: 0.75rem !important;
   }
 }
 

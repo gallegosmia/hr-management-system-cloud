@@ -13,6 +13,7 @@ export default function EditPayrollPage() {
         end: ''
     });
     const [preview, setPreview] = useState<any[]>([]);
+    const [selectedBranch, setSelectedBranch] = useState('All');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -39,26 +40,32 @@ export default function EditPayrollPage() {
             if (response.ok) {
                 const data = await response.json();
                 setDates({
-                    start: data.period_start,
-                    end: data.period_end
+                    start: data.period_start ? new Date(data.period_start).toISOString().split('T')[0] : '',
+                    end: data.period_end ? new Date(data.period_end).toISOString().split('T')[0] : ''
                 });
 
                 // We need to fetch daily rates for each employee to support recalculation
-                // For now, we'll assume the daily rate can be derived or we fetch it
-                const enrichedPayslips = await Promise.all(data.payslips.map(async (slip: any) => {
-                    // Fetch employee to get daily rate
-                    const empRes = await fetch(`/api/employees`);
-                    const employees = await empRes.json();
-                    const emp = employees.find((e: any) => e.id === slip.employee_id);
+                const enrichedPayslips = data.payslips.map((slip: any) => {
+                    const grossPay = Number(slip.gross_pay || 0);
+                    const deductions = Number(slip.total_deductions || 0);
+                    const allowances = Number(slip.total_allowances || 0);
+                    const netPay = Number(slip.net_pay || 0);
+                    const daysPresent = Number(slip.days_present || 0);
+                    const holidayAmt = Number(slip.double_pay_amount || 0);
 
                     return {
                         ...slip,
-                        employee_name: slip.employee_name,
-                        daily_rate: emp?.salary_info?.daily_rate || (slip.gross_pay / (slip.days_present || 1)),
-                        deductions: slip.total_deductions,
-                        allowances: slip.total_allowances
+                        gross_pay: grossPay,
+                        total_deductions: deductions,
+                        total_allowances: allowances,
+                        net_pay: netPay,
+                        days_present: daysPresent,
+                        double_pay_amount: holidayAmt,
+                        daily_rate: slip.daily_rate || (grossPay / (daysPresent || 1)),
+                        deductions: deductions, // mapping for internal use in render
+                        allowances: allowances   // mapping for internal use in render
                     };
-                }));
+                });
 
                 setPreview(enrichedPayslips);
             } else {
@@ -72,8 +79,11 @@ export default function EditPayrollPage() {
         }
     };
 
-    const handleUpdateItem = (index: number, field: string, value: any) => {
+    const handleUpdateItem = (employeeId: number, field: string, value: any) => {
         setPreview(prev => {
+            const index = prev.findIndex(item => item.employee_id === employeeId);
+            if (index === -1) return prev;
+
             const newPreview = [...prev];
             const item = { ...newPreview[index] };
             const numValue = parseFloat(value) || 0;
@@ -166,6 +176,21 @@ export default function EditPayrollPage() {
                                 className="form-input"
                             />
                         </div>
+                        {preview.length > 0 && (
+                            <div className="form-group">
+                                <label className="form-label">Filter by Branch</label>
+                                <select
+                                    className="form-input"
+                                    value={selectedBranch}
+                                    onChange={(e) => setSelectedBranch(e.target.value)}
+                                >
+                                    <option value="All">All Branches</option>
+                                    {Array.from(new Set(preview.map(p => p.branch).filter(Boolean))).sort().map(branch => (
+                                        <option key={branch} value={branch}>{branch}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -225,7 +250,7 @@ export default function EditPayrollPage() {
                                         { key: 'other_deductions', label: 'Other' },
                                     ];
                                     const activeDeductions = deductionConfigs.filter(d =>
-                                        preview.some(s => (s.deduction_details?.[d.key] || 0) > 0)
+                                        preview.some(s => Number(s.deduction_details?.[d.key] || 0) > 0)
                                     );
                                     return (
                                         <>
@@ -240,86 +265,88 @@ export default function EditPayrollPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {preview.map((item, index) => (
-                                <tr key={item.employee_id}>
-                                    <td>
-                                        <strong>{item.employee_name}</strong>
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                            {item.position}
-                                        </div>
-                                        <div style={{ fontSize: '0.70rem', color: 'var(--text-tertiary)' }}>
-                                            Daily: ₱{item.daily_rate?.toLocaleString()}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <input
-                                            type="number"
-                                            value={item.days_present}
-                                            onChange={(e) => handleUpdateItem(index, 'days_present', e.target.value)}
-                                            className="form-input"
-                                            style={{ padding: '0.15rem 0.25rem', fontSize: '0.8rem', textAlign: 'center', width: '50px' }}
-                                            min="0"
-                                            step="0.01"
-                                        />
-                                    </td>
-                                    <td>
-                                        <input
-                                            type="number"
-                                            value={item.double_pay_amount}
-                                            onChange={(e) => handleUpdateItem(index, 'double_pay_amount', e.target.value)}
-                                            className="form-input"
-                                            style={{ padding: '0.15rem 0.25rem', fontSize: '0.8rem', textAlign: 'center', width: '80px' }}
-                                            min="0"
-                                            step="0.01"
-                                        />
-                                    </td>
-                                    <td>
-                                        ₱{item.gross_pay.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                        {item.double_pay_amount > 0 && (
-                                            <div style={{ fontSize: '0.70rem', color: 'var(--success-600)' }}>
-                                                +₱{item.double_pay_amount.toLocaleString()} (Holiday)
+                            {preview
+                                .filter(item => selectedBranch === 'All' || item.branch === selectedBranch)
+                                .map((item) => (
+                                    <tr key={item.employee_id}>
+                                        <td>
+                                            <strong>{item.employee_name}</strong>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                                {item.position}
                                             </div>
-                                        )}
-                                    </td>
-                                    <td>
-                                        ₱{item.allowances.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                    </td>
-                                    {(() => {
-                                        const deductionConfigs = [
-                                            { key: 'sss', label: 'SSS' },
-                                            { key: 'sss_loan', label: 'SSS L.' },
-                                            { key: 'philhealth', label: 'P.Health' },
-                                            { key: 'pagibig', label: 'PagIBIG' },
-                                            { key: 'pagibig_loan', label: 'P.I. L.' },
-                                            { key: 'company_loan', label: 'Co.Loan' },
-                                            { key: 'company_cash_fund', label: 'Cash Fund' },
-                                            { key: 'cash_advance', label: 'Cash Adv' },
-                                            { key: 'other_deductions', label: 'Other' },
-                                        ];
-                                        const activeDeductions = deductionConfigs.filter(d =>
-                                            preview.some(s => (s.deduction_details?.[d.key] || 0) > 0)
-                                        );
-                                        return (
-                                            <>
-                                                {activeDeductions.map(d => (
-                                                    <td key={d.key} style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: '0.85rem' }}>
-                                                        {(item.deduction_details?.[d.key] || 0) > 0
-                                                            ? `₱${item.deduction_details[d.key].toLocaleString()}`
-                                                            : <span style={{ color: 'var(--text-tertiary)' }}>-</span>
-                                                        }
-                                                    </td>
-                                                ))}
-                                            </>
-                                        );
-                                    })()}
-                                    <td style={{ color: 'var(--danger-600)', textAlign: 'right' }}>
-                                        -₱{item.deductions.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                    </td>
-                                    <td style={{ fontWeight: 700 }}>
-                                        ₱{item.net_pay.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                    </td>
-                                </tr>
-                            ))}
+                                            <div style={{ fontSize: '0.70rem', color: 'var(--text-tertiary)' }}>
+                                                Daily: ₱{item.daily_rate?.toLocaleString()}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="number"
+                                                value={item.days_present}
+                                                onChange={(e) => handleUpdateItem(item.employee_id, 'days_present', e.target.value)}
+                                                className="form-input"
+                                                style={{ padding: '0.15rem 0.25rem', fontSize: '0.8rem', textAlign: 'center', width: '50px' }}
+                                                min="0"
+                                                step="0.01"
+                                            />
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="number"
+                                                value={item.double_pay_amount}
+                                                onChange={(e) => handleUpdateItem(item.employee_id, 'double_pay_amount', e.target.value)}
+                                                className="form-input"
+                                                style={{ padding: '0.15rem 0.25rem', fontSize: '0.8rem', textAlign: 'center', width: '80px' }}
+                                                min="0"
+                                                step="0.01"
+                                            />
+                                        </td>
+                                        <td>
+                                            ₱{item.gross_pay.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            {item.double_pay_amount > 0 && (
+                                                <div style={{ fontSize: '0.70rem', color: 'var(--success-600)' }}>
+                                                    +₱{item.double_pay_amount.toLocaleString()} (Holiday)
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td>
+                                            ₱{item.allowances.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        </td>
+                                        {(() => {
+                                            const deductionConfigs = [
+                                                { key: 'sss', label: 'SSS' },
+                                                { key: 'sss_loan', label: 'SSS L.' },
+                                                { key: 'philhealth', label: 'P.Health' },
+                                                { key: 'pagibig', label: 'PagIBIG' },
+                                                { key: 'pagibig_loan', label: 'P.I. L.' },
+                                                { key: 'company_loan', label: 'Co.Loan' },
+                                                { key: 'company_cash_fund', label: 'Cash Fund' },
+                                                { key: 'cash_advance', label: 'Cash Adv' },
+                                                { key: 'other_deductions', label: 'Other' },
+                                            ];
+                                            const activeDeductions = deductionConfigs.filter(d =>
+                                                preview.some(s => Number(s.deduction_details?.[d.key] || 0) > 0)
+                                            );
+                                            return (
+                                                <>
+                                                    {activeDeductions.map(d => (
+                                                        <td key={d.key} style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                                                            {(item.deduction_details?.[d.key] || 0) > 0
+                                                                ? `₱${item.deduction_details[d.key].toLocaleString()}`
+                                                                : <span style={{ color: 'var(--text-tertiary)' }}>-</span>
+                                                            }
+                                                        </td>
+                                                    ))}
+                                                </>
+                                            );
+                                        })()}
+                                        <td style={{ color: 'var(--danger-600)', textAlign: 'right' }}>
+                                            -₱{item.deductions.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        </td>
+                                        <td style={{ fontWeight: 700 }}>
+                                            ₱{item.net_pay.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        </td>
+                                    </tr>
+                                ))}
                         </tbody>
                         <tfoot>
                             <tr style={{ background: 'var(--gray-50)', fontWeight: 700 }}>
@@ -349,7 +376,7 @@ export default function EditPayrollPage() {
                                         <>
                                             {activeDeductions.map(d => (
                                                 <td key={d.key} style={{ textAlign: 'right', padding: '0.5rem', fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                                                    {preview.reduce((sum, item) => sum + (item.deduction_details?.[d.key] || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                    {preview.reduce((sum, item) => sum + Number(item.deduction_details?.[d.key] || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                 </td>
                                             ))}
                                         </>

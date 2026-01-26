@@ -409,12 +409,14 @@ export async function getDashboardStats() {
 
 export async function getDepartments(): Promise<string[]> {
     const res = await query("SELECT DISTINCT department FROM employees ORDER BY department");
-    return res.rows.map(r => r.department).filter(Boolean);
+    const departments = res.rows.map(r => r.department).filter(Boolean);
+    return Array.from(new Set(departments)).sort();
 }
 
 export async function getBranches(): Promise<string[]> {
     const res = await query("SELECT DISTINCT branch FROM employees ORDER BY branch");
-    return res.rows.map(r => r.branch).filter(Boolean);
+    const branches = res.rows.map(r => r.branch).filter(Boolean);
+    return Array.from(new Set(branches)).sort();
 }
 
 export interface DetailedReportsData {
@@ -477,6 +479,25 @@ export interface DetailedReportsData {
         total: number;
         growthThisYear: number;
     };
+    latesAbsencesLog: {
+        date: string;
+        employee_id: number;
+        name: string;
+        department: string;
+        branch?: string;
+        time_in?: string;
+        time_out?: string;
+        status: string;
+        late_minutes: number;
+    }[];
+    latesAbsencesSummary: {
+        id: number;
+        name: string;
+        department: string;
+        lateCount: number;
+        absentCount: number;
+        isThresholdExceeded: boolean;
+    }[];
 }
 
 export async function getDetailedReportsData(dateRange?: { start: string, end: string }, branch?: string): Promise<DetailedReportsData> {
@@ -540,11 +561,24 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
         };
     });
 
-    // 2. Leave
+    // 2. Leave - Computation based primarily on Attendance 'On Leave' status
+    const currentYearStart = new Date(now.getFullYear(), 0, 1);
+    const yearlyLeaveRes = await query(
+        "SELECT employee_id, COUNT(*) as count FROM attendance WHERE status = 'On Leave' AND date >= $1 GROUP BY employee_id",
+        [currentYearStart]
+    );
+    const yearlyAttendanceLeaveMap = new Map(yearlyLeaveRes.rows.map((r: any) => [Number(r.employee_id), parseInt(r.count)]));
+
     const leaveUsage = activeEmployees.map((emp: any) => {
-        const empLeaves = leaves.filter((l: any) => l.employee_id === emp.id);
-        const used = empLeaves.reduce((acc: number, curr: any) => acc + Number(curr.days_count), 0);
-        const byType = empLeaves.reduce((acc: any, curr: any) => {
+        const empLeavesFiled = leaves.filter((l: any) => l.employee_id === emp.id);
+
+        // Attendance records are the primary truth for usage
+        const used = yearlyAttendanceLeaveMap.get(emp.id) || 0;
+
+        // Validation: We can compare filed vs logs if needed, but 'used' is attendance-based
+        const filedCount = empLeavesFiled.reduce((acc: number, curr: any) => acc + Number(curr.days_count), 0);
+
+        const byType = empLeavesFiled.reduce((acc: any, curr: any) => {
             acc[curr.leave_type] = (acc[curr.leave_type] || 0) + Number(curr.days_count);
             return acc;
         }, {});
@@ -553,11 +587,12 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
             id: emp.id,
             name: `${emp.first_name} ${emp.last_name}`,
             department: emp.department,
-            branch: emp.branch, // Added branch
-            entitlement: 5,
-            used,
+            branch: emp.branch,
+            entitlement: 5, // Yearly entitlement
+            used,           // Counts 'On Leave' in attendance for the current year
             remaining: 5 - used,
-            details: byType
+            details: byType,
+            filedValidation: filedCount // Retained for background validation
         };
     });
 
@@ -609,7 +644,7 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
             name: `${emp.first_name} ${emp.last_name}`,
             department: emp.department,
             branch: emp.branch, // Added branch
-            dateHired: emp.date_hired,
+            dateHired: emp.date_hired ? new Date(emp.date_hired).toISOString().split('T')[0] : '-',
             tenure: `${years}y ${months}m`,
             yearsInCompany: years,
             daysToAnniversary: daysUntilAnniversary
@@ -642,6 +677,66 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
         return hired.getFullYear() === thisYear;
     }).length;
 
+    const headcount = {
+        byDepartment: Object.entries(headcountByDept).map(([name, count]) => ({ name, count: count as number })),
+        byBranch: Object.entries(headcountByBranch).map(([name, count]) => ({ name, count: count as number })),
+        total: activeEmployees.length,
+        growthThisYear: joinedThisYear
+    };
+
+    // 8. Lates and Absences Log
+    const settingsRows = await query("SELECT value FROM settings WHERE key = 'attendance_cutoff'");
+    const scheduledIn = settingsRows.rows[0]?.value || '08:00';
+
+    const latesAbsencesLog = activeEmployees.flatMap((emp: any) => {
+        const empAttendance = attendance.filter((a: any) => a.employee_id === emp.id);
+
+        return empAttendance
+            .map((a: any) => {
+                let lateMinutes = 0;
+                const timeInStr = String(a.time_in || '');
+                const schedInStr = String(scheduledIn || '08:00');
+
+                if (timeInStr && timeInStr.includes(':')) {
+                    const [h1, m1] = timeInStr.split(':').map(Number);
+                    const [h2, m2] = schedInStr.split(':').map(Number);
+                    const actualMin = h1 * 60 + m1;
+                    const schedMin = h2 * 60 + m2;
+                    lateMinutes = Math.max(0, actualMin - schedMin);
+                }
+
+                return {
+                    date: typeof a.date === 'string' ? a.date : new Date(a.date).toISOString().split('T')[0],
+                    employee_id: emp.id,
+                    name: `${emp.first_name} ${emp.last_name}`,
+                    department: emp.department,
+                    branch: emp.branch,
+                    time_in: a.time_in || '-',
+                    time_out: a.time_out || '-',
+                    status: a.status,
+                    late_minutes: lateMinutes
+                };
+            })
+            .filter(log => log.status === 'Late' || log.status === 'Absent' || log.late_minutes > 0);
+    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // 9. Lates and Absences Summary (Threshold: 5 lates or 10 absences)
+    const latesAbsencesSummary = activeEmployees.map((emp: any) => {
+        const empAttendance = attendance.filter((a: any) => a.employee_id === emp.id);
+        const lateCount = empAttendance.filter(a => a.status === 'Late').length;
+        const absentCount = empAttendance.filter(a => a.status === 'Absent').length;
+
+        return {
+            id: emp.id,
+            name: `${emp.first_name} ${emp.last_name}`,
+            department: emp.department,
+            branch: emp.branch,
+            lateCount,
+            absentCount,
+            isThresholdExceeded: lateCount >= 5 || absentCount >= 10
+        };
+    });
+
     return {
         attendanceSummary,
         leaveUsage,
@@ -649,12 +744,9 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
         complianceAudit,
         tenureData,
         governmentRemittance,
-        headcount: {
-            byDepartment: Object.entries(headcountByDept).map(([name, count]) => ({ name, count: count as number })),
-            byBranch: Object.entries(headcountByBranch).map(([name, count]) => ({ name, count: count as number })),
-            total: activeEmployees.length,
-            growthThisYear: joinedThisYear
-        }
+        headcount,
+        latesAbsencesLog,
+        latesAbsencesSummary
     };
 }
 
@@ -905,14 +997,19 @@ export async function createPayrollRun(data: Omit<PayrollRun, 'id' | 'created_at
 
 export async function getPayslipsByRunId(runId: number): Promise<Payslip[]> {
     const res = await query("SELECT * FROM payslips WHERE payroll_run_id = $1", [runId]);
-    return res.rows;
+    return res.rows.map(row => ({
+        ...row,
+        deduction_details: typeof row.deduction_details === 'string' ? JSON.parse(row.deduction_details) : row.deduction_details,
+        allowance_details: typeof row.allowance_details === 'string' ? JSON.parse(row.allowance_details) : row.allowance_details
+    }));
 }
 
 export async function createPayslip(data: Omit<Payslip, 'id' | 'generated_at'>): Promise<number> {
     return await insert('payslips', {
         ...data,
-        deduction_details: JSON.stringify(data.deduction_details),
-        allowance_details: JSON.stringify(data.allowance_details)
+        // Don't manually stringify for Postgres JSONB or Local JSON
+        deduction_details: data.deduction_details,
+        allowance_details: data.allowance_details
     });
 }
 
@@ -936,8 +1033,8 @@ export async function batchCreatePayslips(items: Omit<Payslip, 'id' | 'generated
                 item.days_present,
                 item.double_pay_days,
                 item.double_pay_amount,
-                JSON.stringify(item.deduction_details),
-                JSON.stringify(item.allowance_details)
+                item.deduction_details,
+                item.allowance_details
             );
         }
 
