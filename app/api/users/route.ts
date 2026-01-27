@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
                 u.employee_id, 
                 u.last_login, 
                 u.created_at,
+                u.two_fa_enabled,
                 u.email as user_email,
                 e.first_name,
                 e.last_name,
