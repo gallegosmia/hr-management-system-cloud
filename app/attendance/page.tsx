@@ -262,6 +262,16 @@ export default function AttendancePage() {
     };
 
     // --- Actions ---
+    const handleAdd = () => {
+        setEditingRecord({
+            employee_id: 0,
+            date: format(new Date(), 'yyyy-MM-dd'),
+            status: 'Present',
+            remarks: ''
+        });
+        setIsEditModalOpen(true);
+    };
+
     const handleSaveEdit = async () => {
         if (!editingRecord) return;
 
@@ -432,264 +442,315 @@ export default function AttendancePage() {
                             />
                         </div>
 
-                        {/* Generate Report */}
-                        <button
-                            onClick={handleGenerateReport}
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                                backgroundColor: '#facc15', color: '#422006', fontWeight: 600,
-                                padding: '0.5rem 1.25rem', borderRadius: '9999px', border: 'none', cursor: 'pointer',
-                                boxShadow: '0 2px 4px rgba(250, 204, 21, 0.2)'
-                            }}
-                        >
-                            <DownloadIcon /> Generate Report
-                        </button>
-                    </div>
-                </div>
-
-                {/* Metrics Section */}
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-                    <MetricCard title="Total Employees" value={stats.total} icon="👥" color="#d97706" trend="+12.9%" />
-                    <MetricCard title="Present" value={stats.present} icon="✔" color="#059669" trend="+43.6%" />
-                    <MetricCard title="Absent" value={stats.absent} icon="✖" color="#dc2626" trend="+56.4%" />
-                    <MetricCard title="Remote" value={stats.remote} icon="🏠" color="#7c3aed" trend="+23.9%" />
-                    <MetricCard title="Late" value={stats.late} icon="⏰" color="#d97706" trend="+29.3%" />
-                    <MetricCard title="Half Leave" value={stats.halfLeave} icon="🌓" color="#c026d3" trend="+3.4%" />
-                    <MetricCard title="On Leave" value={stats.onLeave} icon="📅" color="#2563eb" trend="+12.9%" />
-                </div>
-
-                {/* Table Section */}
-                <div style={{ background: 'white', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
-                    <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead style={{ background: 'white', borderBottom: '1px solid #f3f4f6' }}>
-                                <tr>
-                                    {['Employee Name', 'Date', 'Check In', 'Check Out', 'Spent', 'Status', 'Remarks', 'Action'].map(h => (
-                                        <th key={h} style={{ textAlign: 'left', padding: '1rem', fontSize: '0.875rem', fontWeight: 600, color: '#111827' }}>
-                                            {h}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr><td colSpan={8} style={{ padding: '2rem', textAlign: 'center' }}>Loading...</td></tr>
-                                ) : paginatedRecords.length === 0 ? (
-                                    <tr><td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>No attendance records found for this period.</td></tr>
-                                ) : (
-                                    paginatedRecords.map((record, idx) => (
-                                        <tr key={idx} style={{ borderBottom: '1px solid #f9fafb', transition: 'background 0.2s' }} className="hover:bg-gray-50">
-                                            <td style={{ padding: '1rem' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600, color: '#4b5563' }}>
-                                                        {record.employee_name?.split(' ').map(n => n[0]).join('').substring(0, 2) || 'E'}
-                                                    </div>
-                                                    <div>
-                                                        <div style={{ fontWeight: 600, color: '#1f2937', fontSize: '0.9rem' }}>{record.employee_name}</div>
-                                                        <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{record.position || record.department || 'Employee'}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td style={{ padding: '1rem', color: '#4b5563', fontSize: '0.9rem' }}>{format(new Date(record.date), 'MMM dd, yyyy')}</td>
-                                            <td style={{ padding: '1rem', fontWeight: 500, color: '#1f2937' }}>{record.time_in || '--'}</td>
-                                            <td style={{ padding: '1rem', fontWeight: 500, color: '#1f2937' }}>{record.time_out || '--'}</td>
-                                            <td style={{ padding: '1rem', color: '#4b5563' }}>{calculateSpent(record.time_in, record.time_out)}</td>
-                                            <td style={{ padding: '1rem' }}><StatusBadge status={record.status} /></td>
-                                            <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                {record.remarks || '-'}
-                                            </td>
-                                            <td style={{ padding: '1rem' }}>
-                                                <div className="dropdown" style={{ position: 'relative', display: 'inline-block' }}>
-                                                    <button
-                                                        className="action-btn"
-                                                        style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#9ca3af', padding: '0.25rem' }}
-                                                        onClick={(e) => {
-                                                            const menu = e.currentTarget.nextElementSibling as HTMLElement;
-                                                            // Simple toggle logic, better handled by state but keeping it lightweight
-                                                            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-
-                                                            // Close others
-                                                            document.querySelectorAll('.action-menu').forEach(el => {
-                                                                if (el !== menu) (el as HTMLElement).style.display = 'none';
-                                                            });
-                                                        }}
-                                                    >
-                                                        <MoreVerticalIcon />
-                                                    </button>
-                                                    <div className="action-menu" style={{
-                                                        display: 'none',
-                                                        position: 'absolute', right: 0, top: '100%',
-                                                        backgroundColor: 'white', minWidth: '120px',
-                                                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                                        borderRadius: '8px', zIndex: 10, overflow: 'hidden',
-                                                        border: '1px solid #f3f4f6'
-                                                    }}>
-                                                        <button
-                                                            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: '#374151' }}
-                                                            onClick={(e) => {
-                                                                // Open details (reuse edit modal in read-only or similar)
-                                                                setEditingRecord({ ...record });
-                                                                setIsEditModalOpen(true);
-                                                                (e.target as HTMLElement).parentElement!.style.display = 'none';
-                                                            }}
-                                                        >
-                                                            👁 Details
-                                                        </button>
-                                                        <button
-                                                            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: '#2563eb' }}
-                                                            onClick={(e) => {
-                                                                setEditingRecord({ ...record });
-                                                                setIsEditModalOpen(true);
-                                                                (e.target as HTMLElement).parentElement!.style.display = 'none';
-                                                            }}
-                                                        >
-                                                            ✎ Edit
-                                                        </button>
-                                                        <button
-                                                            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: '#dc2626' }}
-                                                            onClick={(e) => {
-                                                                if (record.id) handleDelete(record.id);
-                                                                (e.target as HTMLElement).parentElement!.style.display = 'none';
-                                                            }}
-                                                        >
-                                                            🗑 Delete
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
                     </div>
 
-                    {/* Pagination */}
-                    <div style={{ padding: '1rem', borderTop: '1px solid #f3f4f6', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem' }}>
-                        <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                            Showing {(currentPage - 1) * rowsPerPage + 1} to {Math.min(currentPage * rowsPerPage, filteredAttendance.length)} of {filteredAttendance.length}
-                        </span>
-                        <div style={{ display: 'flex', gap: '0.25rem' }}>
-                            <button
-                                disabled={currentPage === 1}
-                                onClick={() => setCurrentPage(p => p - 1)}
-                                style={{ padding: '0.25rem 0.75rem', border: '1px solid #e5e7eb', borderRadius: '4px', background: 'white', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
-                            >
-                                Prev
-                            </button>
-                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(p => (
-                                <button
-                                    key={p}
-                                    onClick={() => setCurrentPage(p)}
-                                    style={{
-                                        padding: '0.25rem 0.75rem',
-                                        border: '1px solid',
-                                        borderColor: currentPage === p ? '#facc15' : '#e5e7eb',
-                                        borderRadius: '4px',
-                                        background: currentPage === p ? '#facc15' : 'white',
-                                        color: currentPage === p ? '#422006' : '#374151',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    {p}
-                                </button>
-                            ))}
-                            <button
-                                disabled={currentPage === totalPages}
-                                onClick={() => setCurrentPage(p => p + 1)}
-                                style={{ padding: '0.25rem 0.75rem', border: '1px solid #e5e7eb', borderRadius: '4px', background: 'white', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
-                            >
-                                Next
-                            </button>
-                        </div>
-                        <select
-                            value={rowsPerPage}
-                            onChange={e => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                            style={{ padding: '0.25rem', borderRadius: '4px', border: '1px solid #e5e7eb' }}
-                        >
-                            <option value={10}>10 / page</option>
-                            <option value={20}>20 / page</option>
-                            <option value={50}>50 / page</option>
-                        </select>
-                    </div>
+                    {/* Add Attendance */}
+                    <button
+                        onClick={handleAdd}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '0.5rem',
+                            backgroundColor: '#3b82f6', color: 'white', fontWeight: 600,
+                            padding: '0.5rem 1.25rem', borderRadius: '9999px', border: 'none', cursor: 'pointer',
+                            boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)'
+                        }}
+                    >
+                        <span>+</span> Add Attendance
+                    </button>
+
+                    {/* Generate Report */}
+                    <button
+                        onClick={handleGenerateReport}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '0.5rem',
+                            backgroundColor: '#facc15', color: '#422006', fontWeight: 600,
+                            padding: '0.5rem 1.25rem', borderRadius: '9999px', border: 'none', cursor: 'pointer',
+                            boxShadow: '0 2px 4px rgba(250, 204, 21, 0.2)'
+                        }}
+                    >
+                        <DownloadIcon /> Generate Report
+                    </button>
                 </div>
             </div>
 
-            {/* Edit Modal */}
-            {
-                isEditModalOpen && editingRecord && (
-                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-                        <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '500px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Edit Attendance</h3>
-                                <button onClick={() => setIsEditModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', lineHeight: 1 }}>&times;</button>
+            {/* Metrics Section */}
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+                <MetricCard title="Total Employees" value={stats.total} icon="👥" color="#d97706" trend="+12.9%" />
+                <MetricCard title="Present" value={stats.present} icon="✔" color="#059669" trend="+43.6%" />
+                <MetricCard title="Absent" value={stats.absent} icon="✖" color="#dc2626" trend="+56.4%" />
+                <MetricCard title="Remote" value={stats.remote} icon="🏠" color="#7c3aed" trend="+23.9%" />
+                <MetricCard title="Late" value={stats.late} icon="⏰" color="#d97706" trend="+29.3%" />
+                <MetricCard title="Half Leave" value={stats.halfLeave} icon="🌓" color="#c026d3" trend="+3.4%" />
+                <MetricCard title="On Leave" value={stats.onLeave} icon="📅" color="#2563eb" trend="+12.9%" />
+            </div>
+
+            {/* Table Section */}
+            <div style={{ background: 'white', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
+                <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead style={{ background: 'white', borderBottom: '1px solid #f3f4f6' }}>
+                            <tr>
+                                {['Employee Name', 'Date', 'Check In', 'Check Out', 'Spent', 'Status', 'Remarks', 'Action'].map(h => (
+                                    <th key={h} style={{ textAlign: 'left', padding: '1rem', fontSize: '0.875rem', fontWeight: 600, color: '#111827' }}>
+                                        {h}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr><td colSpan={8} style={{ padding: '2rem', textAlign: 'center' }}>Loading...</td></tr>
+                            ) : paginatedRecords.length === 0 ? (
+                                <tr><td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>No attendance records found for this period.</td></tr>
+                            ) : (
+                                paginatedRecords.map((record, idx) => (
+                                    <tr key={idx} style={{ borderBottom: '1px solid #f9fafb', transition: 'background 0.2s' }} className="hover:bg-gray-50">
+                                        <td style={{ padding: '1rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600, color: '#4b5563' }}>
+                                                    {record.employee_name?.split(' ').map(n => n[0]).join('').substring(0, 2) || 'E'}
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontWeight: 600, color: '#1f2937', fontSize: '0.9rem' }}>{record.employee_name}</div>
+                                                    <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{record.position || record.department || 'Employee'}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '1rem', color: '#4b5563', fontSize: '0.9rem' }}>{format(new Date(record.date), 'MMM dd, yyyy')}</td>
+                                        <td style={{ padding: '1rem', fontWeight: 500, color: '#1f2937' }}>{record.time_in || '--'}</td>
+                                        <td style={{ padding: '1rem', fontWeight: 500, color: '#1f2937' }}>{record.time_out || '--'}</td>
+                                        <td style={{ padding: '1rem', color: '#4b5563' }}>{calculateSpent(record.time_in, record.time_out)}</td>
+                                        <td style={{ padding: '1rem' }}><StatusBadge status={record.status} /></td>
+                                        <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {record.remarks || '-'}
+                                        </td>
+                                        <td style={{ padding: '1rem' }}>
+                                            <div className="dropdown" style={{ position: 'relative', display: 'inline-block' }}>
+                                                <button
+                                                    className="action-btn"
+                                                    style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#9ca3af', padding: '0.25rem' }}
+                                                    onClick={(e) => {
+                                                        const menu = e.currentTarget.nextElementSibling as HTMLElement;
+                                                        // Simple toggle logic, better handled by state but keeping it lightweight
+                                                        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+
+                                                        // Close others
+                                                        document.querySelectorAll('.action-menu').forEach(el => {
+                                                            if (el !== menu) (el as HTMLElement).style.display = 'none';
+                                                        });
+                                                    }}
+                                                >
+                                                    <MoreVerticalIcon />
+                                                </button>
+                                                <div className="action-menu" style={{
+                                                    display: 'none',
+                                                    position: 'absolute', right: 0, top: '100%',
+                                                    backgroundColor: 'white', minWidth: '120px',
+                                                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                                    borderRadius: '8px', zIndex: 10, overflow: 'hidden',
+                                                    border: '1px solid #f3f4f6'
+                                                }}>
+                                                    <button
+                                                        style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: '#374151' }}
+                                                        onClick={(e) => {
+                                                            // Open details (reuse edit modal in read-only or similar)
+                                                            setEditingRecord({ ...record });
+                                                            setIsEditModalOpen(true);
+                                                            (e.target as HTMLElement).parentElement!.style.display = 'none';
+                                                        }}
+                                                    >
+                                                        👁 Details
+                                                    </button>
+                                                    <button
+                                                        style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: '#2563eb' }}
+                                                        onClick={(e) => {
+                                                            setEditingRecord({ ...record });
+                                                            setIsEditModalOpen(true);
+                                                            (e.target as HTMLElement).parentElement!.style.display = 'none';
+                                                        }}
+                                                    >
+                                                        ✎ Edit
+                                                    </button>
+                                                    <button
+                                                        style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: '#dc2626' }}
+                                                        onClick={(e) => {
+                                                            if (record.id) handleDelete(record.id);
+                                                            (e.target as HTMLElement).parentElement!.style.display = 'none';
+                                                        }}
+                                                    >
+                                                        🗑 Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination */}
+                <div style={{ padding: '1rem', borderTop: '1px solid #f3f4f6', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem' }}>
+                    <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                        Showing {(currentPage - 1) * rowsPerPage + 1} to {Math.min(currentPage * rowsPerPage, filteredAttendance.length)} of {filteredAttendance.length}
+                    </span>
+                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(p => p - 1)}
+                            style={{ padding: '0.25rem 0.75rem', border: '1px solid #e5e7eb', borderRadius: '4px', background: 'white', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                        >
+                            Prev
+                        </button>
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(p => (
+                            <button
+                                key={p}
+                                onClick={() => setCurrentPage(p)}
+                                style={{
+                                    padding: '0.25rem 0.75rem',
+                                    border: '1px solid',
+                                    borderColor: currentPage === p ? '#facc15' : '#e5e7eb',
+                                    borderRadius: '4px',
+                                    background: currentPage === p ? '#facc15' : 'white',
+                                    color: currentPage === p ? '#422006' : '#374151',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                {p}
+                            </button>
+                        ))}
+                        <button
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(p => p + 1)}
+                            style={{ padding: '0.25rem 0.75rem', border: '1px solid #e5e7eb', borderRadius: '4px', background: 'white', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                        >
+                            Next
+                        </button>
+                    </div>
+                    <select
+                        value={rowsPerPage}
+                        onChange={e => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                        style={{ padding: '0.25rem', borderRadius: '4px', border: '1px solid #e5e7eb' }}
+                    >
+                        <option value={10}>10 / page</option>
+                        <option value={20}>20 / page</option>
+                        <option value={50}>50 / page</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+            {/* Edit/Add Modal */ }
+    {
+        isEditModalOpen && editingRecord && (
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+                <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '500px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
+                            {editingRecord.id ? 'Edit Attendance' : 'Add Attendance'}
+                        </h3>
+                        <button onClick={() => setIsEditModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', lineHeight: 1 }}>&times;</button>
+                    </div>
+
+                    <div style={{ display: 'grid', gap: '1rem' }}>
+
+                        {/* Employee Selection */}
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Employee</label>
+                            {editingRecord.id ? (
+                                <input type="text" value={editingRecord.employee_name || ''} disabled style={{ width: '100%', padding: '0.5rem', background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '6px', color: '#6b7280' }} />
+                            ) : (
+                                <select
+                                    value={editingRecord.employee_id || ''}
+                                    onChange={e => {
+                                        const empId = Number(e.target.value);
+                                        const emp = employees.find(em => em.id === empId);
+                                        setEditingRecord(prev => prev ? ({
+                                            ...prev,
+                                            employee_id: empId,
+                                            employee_name: emp ? `${emp.first_name} ${emp.last_name}` : ''
+                                        }) : null);
+                                    }}
+                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                                >
+                                    <option value="">Select Employee</option>
+                                    {employees.map(emp => (
+                                        <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
+
+                        {/* Date Selection */}
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Date</label>
+                            <input
+                                type="date"
+                                value={editingRecord.date || ''}
+                                onChange={e => handleEditChange('date', e.target.value)}
+                                style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Check In</label>
+                                <input
+                                    type="time"
+                                    value={editingRecord.time_in || ''}
+                                    onChange={e => handleEditChange('time_in', e.target.value)}
+                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                                />
                             </div>
-
-                            <div style={{ display: 'grid', gap: '1rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Employee</label>
-                                    <input type="text" value={editingRecord.employee_name} disabled style={{ width: '100%', padding: '0.5rem', background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '6px' }} />
-                                </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Check In</label>
-                                        <input
-                                            type="time"
-                                            value={editingRecord.time_in || ''}
-                                            onChange={e => handleEditChange('time_in', e.target.value)}
-                                            style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Check Out</label>
-                                        <input
-                                            type="time"
-                                            value={editingRecord.time_out || ''}
-                                            onChange={e => handleEditChange('time_out', e.target.value)}
-                                            style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Status</label>
-                                    <select
-                                        value={editingRecord.status}
-                                        onChange={e => handleEditChange('status', e.target.value)}
-                                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-                                    >
-                                        <option value="Present">Present</option>
-                                        <option value="Late">Late</option>
-                                        <option value="Absent">Absent</option>
-                                        <option value="Half-Day">Half-Day</option>
-                                        <option value="On Leave">On Leave</option>
-                                        <option value="No Work">No Work</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Remarks</label>
-                                    <textarea
-                                        value={editingRecord.remarks || ''}
-                                        onChange={e => handleEditChange('remarks', e.target.value)}
-                                        rows={3}
-                                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-                                    />
-                                </div>
-                            </div>
-
-                            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                                <button onClick={() => setIsEditModalOpen(false)} style={{ padding: '0.5rem 1rem', background: 'white', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
-                                <button onClick={handleSaveEdit} style={{ padding: '0.5rem 1rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Save Changes</button>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Check Out</label>
+                                <input
+                                    type="time"
+                                    value={editingRecord.time_out || ''}
+                                    onChange={e => handleEditChange('time_out', e.target.value)}
+                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                                />
                             </div>
                         </div>
-                    </div>
-                )
-            }
 
-            {/* Global Styles for Dropdown/Misc */}
-            <style jsx>{`
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Status</label>
+                            <select
+                                value={editingRecord.status || 'Present'}
+                                onChange={e => handleEditChange('status', e.target.value)}
+                                style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                            >
+                                <option value="Present">Present</option>
+                                <option value="Late">Late</option>
+                                <option value="Absent">Absent</option>
+                                <option value="Half-Day">Half-Day</option>
+                                <option value="On Leave">On Leave</option>
+                                <option value="No Work">No Work</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Remarks</label>
+                            <textarea
+                                value={editingRecord.remarks || ''}
+                                onChange={e => handleEditChange('remarks', e.target.value)}
+                                rows={3}
+                                style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                            />
+                        </div>
+                    </div>
+
+                    <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                        <button onClick={() => setIsEditModalOpen(false)} style={{ padding: '0.5rem 1rem', background: 'white', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
+                        <button onClick={handleSaveEdit} style={{ padding: '0.5rem 1rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    {/* Global Styles for Dropdown/Misc */ }
+    <style jsx>{`
                 .hover\\:bg-gray-50:hover { background-color: #f9fafb; }
             `}</style>
         </DashboardLayout >
