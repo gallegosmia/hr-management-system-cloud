@@ -373,8 +373,10 @@ export default function AttendancePage() {
     };
 
     // --- Pagination Logic ---
+    // --- Pagination Logic ---
     const totalPages = Math.ceil(filteredAttendance.length / rowsPerPage);
-    const paginatedRecords = filteredAttendance.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const paginatedRecords = filteredAttendance.slice(startIndex, startIndex + rowsPerPage);
 
     return (
         <DashboardLayout>
@@ -638,119 +640,118 @@ export default function AttendancePage() {
                     </select>
                 </div>
             </div>
-        </div>
 
-            {/* Edit/Add Modal */ }
-    {
-        isEditModalOpen && editingRecord && (
-            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-                <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '500px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
-                            {editingRecord.id ? 'Edit Attendance' : 'Add Attendance'}
-                        </h3>
-                        <button onClick={() => setIsEditModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', lineHeight: 1 }}>&times;</button>
-                    </div>
-
-                    <div style={{ display: 'grid', gap: '1rem' }}>
-
-                        {/* Employee Selection */}
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Employee</label>
-                            {editingRecord.id ? (
-                                <input type="text" value={editingRecord.employee_name || ''} disabled style={{ width: '100%', padding: '0.5rem', background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '6px', color: '#6b7280' }} />
-                            ) : (
-                                <select
-                                    value={editingRecord.employee_id || ''}
-                                    onChange={e => {
-                                        const empId = Number(e.target.value);
-                                        const emp = employees.find(em => em.id === empId);
-                                        setEditingRecord(prev => prev ? ({
-                                            ...prev,
-                                            employee_id: empId,
-                                            employee_name: emp ? `${emp.first_name} ${emp.last_name}` : ''
-                                        }) : null);
-                                    }}
-                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-                                >
-                                    <option value="">Select Employee</option>
-                                    {employees.map(emp => (
-                                        <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
-                                    ))}
-                                </select>
-                            )}
-                        </div>
-
-                        {/* Date Selection */}
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Date</label>
-                            <input
-                                type="date"
-                                value={editingRecord.date || ''}
-                                onChange={e => handleEditChange('date', e.target.value)}
-                                style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-                            />
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Check In</label>
-                                <input
-                                    type="time"
-                                    value={editingRecord.time_in || ''}
-                                    onChange={e => handleEditChange('time_in', e.target.value)}
-                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-                                />
+            {/* Edit/Add Modal */}
+            {
+                isEditModalOpen && editingRecord && (
+                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+                        <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '500px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
+                                    {editingRecord.id ? 'Edit Attendance' : 'Add Attendance'}
+                                </h3>
+                                <button onClick={() => setIsEditModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', lineHeight: 1 }}>&times;</button>
                             </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Check Out</label>
-                                <input
-                                    type="time"
-                                    value={editingRecord.time_out || ''}
-                                    onChange={e => handleEditChange('time_out', e.target.value)}
-                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-                                />
+
+                            <div style={{ display: 'grid', gap: '1rem' }}>
+
+                                {/* Employee Selection */}
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Employee</label>
+                                    {editingRecord.id ? (
+                                        <input type="text" value={editingRecord.employee_name || ''} disabled style={{ width: '100%', padding: '0.5rem', background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '6px', color: '#6b7280' }} />
+                                    ) : (
+                                        <select
+                                            value={editingRecord.employee_id || ''}
+                                            onChange={e => {
+                                                const empId = Number(e.target.value);
+                                                const emp = employees.find(em => em.id === empId);
+                                                setEditingRecord(prev => prev ? ({
+                                                    ...prev,
+                                                    employee_id: empId,
+                                                    employee_name: emp ? `${emp.first_name} ${emp.last_name}` : ''
+                                                }) : null);
+                                            }}
+                                            style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                                        >
+                                            <option value="">Select Employee</option>
+                                            {employees.map(emp => (
+                                                <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </div>
+
+                                {/* Date Selection */}
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Date</label>
+                                    <input
+                                        type="date"
+                                        value={editingRecord.date || ''}
+                                        onChange={e => handleEditChange('date', e.target.value)}
+                                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                                    />
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Check In</label>
+                                        <input
+                                            type="time"
+                                            value={editingRecord.time_in || ''}
+                                            onChange={e => handleEditChange('time_in', e.target.value)}
+                                            style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Check Out</label>
+                                        <input
+                                            type="time"
+                                            value={editingRecord.time_out || ''}
+                                            onChange={e => handleEditChange('time_out', e.target.value)}
+                                            style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Status</label>
+                                    <select
+                                        value={editingRecord.status || 'Present'}
+                                        onChange={e => handleEditChange('status', e.target.value)}
+                                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                                    >
+                                        <option value="Present">Present</option>
+                                        <option value="Late">Late</option>
+                                        <option value="Absent">Absent</option>
+                                        <option value="Half-Day">Half-Day</option>
+                                        <option value="On Leave">On Leave</option>
+                                        <option value="No Work">No Work</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Remarks</label>
+                                    <textarea
+                                        value={editingRecord.remarks || ''}
+                                        onChange={e => handleEditChange('remarks', e.target.value)}
+                                        rows={3}
+                                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                                <button onClick={() => setIsEditModalOpen(false)} style={{ padding: '0.5rem 1rem', background: 'white', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
+                                <button onClick={handleSaveEdit} style={{ padding: '0.5rem 1rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Save Changes</button>
                             </div>
                         </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Status</label>
-                            <select
-                                value={editingRecord.status || 'Present'}
-                                onChange={e => handleEditChange('status', e.target.value)}
-                                style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-                            >
-                                <option value="Present">Present</option>
-                                <option value="Late">Late</option>
-                                <option value="Absent">Absent</option>
-                                <option value="Half-Day">Half-Day</option>
-                                <option value="On Leave">On Leave</option>
-                                <option value="No Work">No Work</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Remarks</label>
-                            <textarea
-                                value={editingRecord.remarks || ''}
-                                onChange={e => handleEditChange('remarks', e.target.value)}
-                                rows={3}
-                                style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-                            />
-                        </div>
                     </div>
+                )
+            }
 
-                    <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                        <button onClick={() => setIsEditModalOpen(false)} style={{ padding: '0.5rem 1rem', background: 'white', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
-                        <button onClick={handleSaveEdit} style={{ padding: '0.5rem 1rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Save Changes</button>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
-    {/* Global Styles for Dropdown/Misc */ }
-    <style jsx>{`
+            {/* Global Styles for Dropdown/Misc */}
+            <style jsx>{`
                 .hover\\:bg-gray-50:hover { background-color: #f9fafb; }
             `}</style>
         </DashboardLayout >

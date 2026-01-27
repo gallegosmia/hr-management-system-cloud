@@ -5,6 +5,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
+import EmployeeCard from '@/components/EmployeeCard';
 
 interface Employee {
     id: number;
@@ -131,22 +132,7 @@ export default function EmployeesPage() {
             filtered = filtered.filter(emp => emp.employment_status === statusFilter);
         }
 
-
-
         setFilteredEmployees(filtered);
-    };
-
-
-
-    const getEmploymentStatusBadge = (status: string) => {
-        switch (status) {
-            case 'Regular': return 'badge-success';
-            case 'Probationary': return 'badge-warning';
-            case 'Contractual': return 'badge-info';
-            case 'Resigned': return 'badge-gray';
-            case 'Terminated': return 'badge-danger';
-            default: return 'badge-gray';
-        }
     };
 
     const exportToPDF = () => {
@@ -204,6 +190,10 @@ export default function EmployeesPage() {
         doc.save(`201_File_Masterlist_${new Date().toISOString().split('T')[0]}.pdf`);
     };
 
+    // --- Stats ---
+    const activeCount = employees.filter(e => e.employment_status !== 'Resigned' && e.employment_status !== 'Terminated').length;
+    const inactiveCount = employees.length - activeCount;
+
     if (loading) {
         return (
             <DashboardLayout>
@@ -211,13 +201,19 @@ export default function EmployeesPage() {
                     <div style={{
                         width: '48px',
                         height: '48px',
-                        border: '4px solid var(--primary-200)',
-                        borderTopColor: 'var(--primary-600)',
+                        border: '4px solid #3b82f6',
+                        borderTopColor: 'transparent',
                         borderRadius: '50%',
                         animation: 'spin 1s linear infinite',
                         margin: '0 auto 1rem'
                     }} />
-                    <p style={{ color: 'var(--text-secondary)' }}>Loading employees...</p>
+                    <p style={{ color: '#6b7280' }}>Loading employees...</p>
+                    <style jsx>{`
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                    `}</style>
                 </div>
             </DashboardLayout>
         );
@@ -225,161 +221,117 @@ export default function EmployeesPage() {
 
     return (
         <DashboardLayout>
-            {/* Header */}
-            <div className="card mb-3">
-                <div className="card-body">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--spacing-md)' }}>
-                        <div>
-                            <h2 style={{ marginBottom: '0.5rem' }}>Digital 201 File Masterlist</h2>
-                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                                {filteredEmployees.length} of {employees.length} employees
-                            </p>
+            <div style={{ padding: '0 0.5rem' }}>
+
+                {/* Header Section */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                        <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111827', margin: 0, marginBottom: '0.5rem' }}>Employee</h1>
+                        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem' }}>
+                            <span style={{ color: '#10b981', fontWeight: 600 }}>• Active {activeCount}</span>
+                            <span style={{ color: '#6b7280' }}>• Inactive {inactiveCount}</span>
                         </div>
-                        <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
-                            <button onClick={exportToPDF} className="btn btn-outline">
-                                <span>📄</span>
-                                Export to PDF
-                            </button>
-                            <Link href="/employees/add" className="btn btn-primary">
-                                <span>➕</span>
-                                Add Employee
-                            </Link>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+
+                        <button onClick={exportToPDF} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', fontWeight: 500, color: '#374151', cursor: 'pointer' }}>
+                            <span>📄</span> Export
+                        </button>
+                        <Link href="/employees/add" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#065f46', color: 'white', borderRadius: '8px', fontWeight: 600, textDecoration: 'none', border: 'none' }}>
+                            <span>+</span> Add Employee
+                        </Link>
+                    </div>
+                </div>
+
+                {/* Filters Section */}
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
+
+                    {/* Search */}
+                    <div style={{ position: 'relative', minWidth: '300px' }}>
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '0.75rem 1rem 0.75rem 2.5rem',
+                                borderRadius: '8px',
+                                border: '1px solid #e5e7eb',
+                                outline: 'none',
+                                background: 'white'
+                            }}
+                        />
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}>🔍</span>
+                    </div>
+
+                    {/* Filter Buttons (Simulated Dropdowns) */}
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <select
+                            value={departments.includes(departmentFilter) ? departmentFilter : ''}
+                            onChange={(e) => setDepartmentFilter(e.target.value)}
+                            style={{ padding: '0.75rem 1rem', borderRadius: '8px', border: 'none', background: '#f3f4f6', color: '#4b5563', fontWeight: 500, cursor: 'pointer', outline: 'none' }}
+                        >
+                            <option value="">Role / Dept</option>
+                            {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
+
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            style={{ padding: '0.75rem 1rem', borderRadius: '8px', border: 'none', background: '#f3f4f6', color: '#4b5563', fontWeight: 500, cursor: 'pointer', outline: 'none' }}
+                        >
+                            <option value="">Status</option>
+                            <option value="Regular">Regular</option>
+                            <option value="Probationary">Probationary</option>
+                            <option value="Contractual">Contractual</option>
+                            <option value="Resigned">Resigned</option>
+                            <option value="Terminated">Terminated</option>
+                        </select>
+
+                        <select
+                            value={branchFilter}
+                            onChange={(e) => setBranchFilter(e.target.value)}
+                            style={{ padding: '0.75rem 1rem', borderRadius: '8px', border: 'none', background: '#f3f4f6', color: '#4b5563', fontWeight: 500, cursor: 'pointer', outline: 'none' }}
+                        >
+                            <option value="">Branch</option>
+                            {branches.map(b => <option key={b} value={b}>{b}</option>)}
+                        </select>
+
+                        <button style={{ padding: '0.75rem 1rem', borderRadius: '8px', border: 'none', background: '#f3f4f6', color: '#4b5563', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span>⚡</span> Advance Filter
+                        </button>
+                    </div>
+
+                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        {/* View Toggles (Visual Only) */}
+                        <div style={{ display: 'flex', gap: '2px', background: '#e5e7eb', padding: '2px', borderRadius: '6px' }}>
+                            <button style={{ padding: '4px 8px', background: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>GridView</button>
+                            <button style={{ padding: '4px 8px', background: 'transparent', border: 'none', borderRadius: '4px', cursor: 'pointer', color: '#6b7280' }}>List</button>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Filters */}
-            <div className="card mb-3">
-                <div className="card-body">
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-md)' }}>
-                        <div>
-                            <input
-                                type="text"
-                                placeholder="🔍 Search employees..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="form-input"
-                            />
-                        </div>
-                        <div>
-                            <select
-                                value={departmentFilter}
-                                onChange={(e) => setDepartmentFilter(e.target.value)}
-                                className="form-select"
-                            >
-                                <option value="">All Departments</option>
-                                {departments.map(dept => (
-                                    <option key={dept} value={dept}>{dept}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <select
-                                value={branchFilter}
-                                onChange={(e) => setBranchFilter(e.target.value)}
-                                className="form-select"
-                            >
-                                <option value="">All Branches</option>
-                                {branches.map(branch => (
-                                    <option key={branch} value={branch}>{branch}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="form-select"
-                            >
-                                <option value="">All Employment Status</option>
-                                <option value="Regular">Regular</option>
-                                <option value="Probationary">Probationary</option>
-                                <option value="Contractual">Contractual</option>
-                                <option value="Resigned">Resigned</option>
-                                <option value="Terminated">Terminated</option>
-                            </select>
-                        </div>
-
+                {/* Employee Grid */}
+                {filteredEmployees.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>
+                        <p>No employees found matching your filters.</p>
                     </div>
-                </div>
+                ) : (
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                        gap: '1.5rem',
+                        paddingBottom: '2rem'
+                    }}>
+                        {filteredEmployees.map(emp => (
+                            <EmployeeCard key={emp.id} employee={emp} />
+                        ))}
+                    </div>
+                )}
+
             </div>
-
-            {/* Employee Table */}
-            <div className="card">
-                <div className="table-container">
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>Employee ID</th>
-                                <th>Name</th>
-                                <th>Department</th>
-                                <th>Position</th>
-                                <th>Employment Status</th>
-                                <th>Date Hired</th>
-
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredEmployees.length === 0 ? (
-                                <tr>
-                                    <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                                        {searchQuery.trim()
-                                            ? `No matching employee found for "${searchQuery}"`
-                                            : (departmentFilter || branchFilter || statusFilter)
-                                                ? 'No employees match your filters'
-                                                : 'No employees found. Add your first employee to get started.'}
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredEmployees.map(employee => (
-                                    <tr key={employee.id}>
-                                        <td>
-                                            <strong>{employee.employee_id}</strong>
-                                        </td>
-                                        <td>
-                                            <div>
-                                                <strong>{employee.last_name}, {employee.first_name}</strong>
-                                                {employee.middle_name && (
-                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                                        {employee.middle_name}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td>{employee.department}</td>
-                                        <td>{employee.position}</td>
-                                        <td>
-                                            <span className={`badge ${getEmploymentStatusBadge(employee.employment_status)}`}>
-                                                {employee.employment_status}
-                                            </span>
-                                        </td>
-                                        <td>{employee.date_hired ? new Date(employee.date_hired).toLocaleDateString('en-PH') : '-'}</td>
-
-                                        <td>
-                                            <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
-                                                <Link href={`/employees/${employee.id}`} className="btn btn-sm btn-primary">
-                                                    View/Upload
-                                                </Link>
-                                                <Link href={`/employees/${employee.id}/edit`} className="btn btn-sm btn-secondary">
-                                                    Edit
-                                                </Link>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <style jsx>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
         </DashboardLayout>
     );
 }

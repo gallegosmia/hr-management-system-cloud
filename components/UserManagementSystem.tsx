@@ -67,10 +67,25 @@ export default function UserManagementSystem() {
         setLoading(true);
         try {
             const res = await fetch('/api/users');
+            if (!res.ok) {
+                const errText = await res.text();
+                console.error("API Error:", res.status, errText);
+                alert(`API Error: ${res.status} - ${errText}`);
+                setUsers([]);
+                return;
+            }
             const data = await res.json();
-            setUsers(data);
+            if (Array.isArray(data)) {
+                setUsers(data);
+            } else {
+                console.error("Failed to fetch users (invalid response):", data);
+                alert("Invalid API response format");
+                setUsers([]);
+            }
         } catch (error) {
             console.error("Failed to fetch users", error);
+            alert(`Network/Fetch Error: ${error}`);
+            setUsers([]);
         } finally {
             setLoading(false);
         }
@@ -268,7 +283,7 @@ export default function UserManagementSystem() {
         logAction('EXPORT_USERS_PDF', { count: filteredUsers.length });
     };
 
-    const filteredUsers = users.filter(u => {
+    const filteredUsers = (Array.isArray(users) ? users : []).filter(u => {
         const matchesSearch = u.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             u.email?.toLowerCase().includes(searchQuery.toLowerCase());
