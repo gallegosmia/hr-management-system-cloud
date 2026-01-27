@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Modal from '@/components/Modal';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -10,6 +11,7 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -69,8 +71,8 @@ export default function LoginPage() {
                                 </svg>
                             </div>
                         </div>
-                        <h2 className="login-welcome-title">Welcome Back</h2>
-                        <p className="login-welcome-subtitle">Please sign in to continue</p>
+                        <h2 className="login-welcome-title">Melann HR Management System</h2>
+                        <p className="login-welcome-subtitle">Managed by Melann Lending Investor Corp.</p>
                     </div>
 
                     <form onSubmit={handleSubmit}>
@@ -128,7 +130,7 @@ export default function LoginPage() {
                         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem', marginTop: '-0.5rem' }}>
                             <button
                                 type="button"
-                                onClick={() => router.push('/forgot-password')}
+                                onClick={() => setIsForgotModalOpen(true)}
                                 style={{
                                     fontSize: '0.875rem',
                                     color: 'var(--primary-600)',
@@ -152,12 +154,35 @@ export default function LoginPage() {
                     </form>
 
                     <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-                        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                            Don't have an account?{' '}
+                            <button
+                                onClick={() => router.push('/register')}
+                                style={{
+                                    color: 'var(--primary-600)',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                    padding: 0
+                                }}
+                            >
+                                Create Account
+                            </button>
+                        </p>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)' }}>
                             &copy; {new Date().getFullYear()} Melann Lending Investor Corp.
                         </p>
                     </div>
                 </div>
             </div>
+
+            <Modal
+                isOpen={isForgotModalOpen}
+                onClose={() => setIsForgotModalOpen(false)}
+                title="Forgot Password"
+                message="Password reset is handled by the administrator. Please contact your administrator to change your password."
+            />
         </div>
     );
 }

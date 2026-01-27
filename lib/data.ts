@@ -351,7 +351,20 @@ export async function getDashboardStats() {
     const leavesRes = await query("SELECT COUNT(*) FROM leave_requests WHERE status LIKE 'Pending%'");
     const pendingLeaves = parseInt(leavesRes.rows[0].count);
 
+    // Get Today's Attendance Stats
     const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const attendanceRes = await query("SELECT status FROM attendance WHERE date = $1", [todayStr]);
+    const todayRecords = attendanceRes.rows;
+
+    const todayPresents = todayRecords.filter((r: any) =>
+        ['present', 'late', 'on time'].includes(r.status.toLowerCase())
+    ).length;
+
+    const todayAbsents = todayRecords.filter((r: any) =>
+        ['absent', 'walk-in'].includes(r.status.toLowerCase())
+    ).length;
+
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const currentMonth = today.getMonth();
     const nextMonth = (currentMonth + 1) % 12;
@@ -397,13 +410,22 @@ export async function getDashboardStats() {
 
     return {
         totalEmployees: activeEmployees.length,
+        totalDepartments: byDepartment.length,
+        todayPresents,
+        todayAbsents,
         completeFiles,
         partialFiles,
         incompleteFiles,
         pendingLeaves,
         upcomingBirthdays,
         byDepartment,
-        byStatus
+        byStatus,
+        // Mock Comparison data for UI (since YoY requires historical tables/snapshots)
+        comparisons: {
+            employees: { value: 12, positive: true },
+            departments: { value: 0, positive: true },
+            attendance: { value: 5, positive: true }
+        }
     };
 }
 

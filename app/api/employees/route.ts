@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllEmployees, createEmployee, getEmployeeById, updateEmployee, update201Checklist, deleteEmployee, logAudit, getEmployeeByEmployeeId } from '@/lib/data';
+import { getAllEmployees, createEmployee, getEmployeeById, updateEmployee, update201Checklist, deleteEmployee, logAudit, getEmployeeByEmployeeId, searchEmployees } from '@/lib/data';
 import { query } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
+        const search = searchParams.get('search');
 
         if (id) {
             const cleanId = id.trim();
@@ -26,6 +27,11 @@ export async function GET(request: NextRequest) {
                 return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
             }
             return NextResponse.json(employee);
+        }
+
+        if (search) {
+            const employees = await searchEmployees(search);
+            return NextResponse.json(employees);
         }
 
         const employees = await getAllEmployees();
