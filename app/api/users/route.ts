@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
             employee_id: u.employee_id,
             last_login: u.last_login,
             created_at: u.created_at,
-            email: u.user_email || u.employee_email || '',
+            email: u.user_email || u.employee_email || u.email || '',
             full_name: u.first_name ? `${u.first_name} ${u.last_name}` : u.username,
             two_fa_enabled: u.two_fa_enabled === 1 || u.two_fa_enabled === true
         }));
