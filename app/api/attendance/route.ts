@@ -23,6 +23,14 @@ export async function GET(request: NextRequest) {
             return NextResponse.json(res.rows);
         }
 
+        if (startDate && endDate) {
+            const res = await query(
+                "SELECT * FROM attendance WHERE date >= $1 AND date <= $2 ORDER BY date DESC, time_in ASC",
+                [startDate, endDate]
+            );
+            return NextResponse.json(res.rows);
+        }
+
         // Get all attendance
         const attendance = await getAll('attendance');
         return NextResponse.json(attendance);
@@ -30,6 +38,26 @@ export async function GET(request: NextRequest) {
         console.error('Get attendance error:', error);
         return NextResponse.json(
             { error: 'Failed to fetch attendance' },
+            { status: 500 }
+        );
+    }
+}
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
+
+        if (!id) {
+            return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+        }
+
+        await query("DELETE FROM attendance WHERE id = $1", [parseInt(id)]);
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('Delete attendance error:', error);
+        return NextResponse.json(
+            { error: 'Failed to delete record' },
             { status: 500 }
         );
     }
