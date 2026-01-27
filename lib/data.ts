@@ -290,17 +290,65 @@ export async function deleteEmployee(id: number): Promise<void> {
 }
 
 export async function searchEmployees(searchQuery: string): Promise<Employee[]> {
-    const q = `%${searchQuery.toLowerCase()}%`;
+    const trimmedQuery = searchQuery.trim().toLowerCase();
+    if (!trimmedQuery) return getAllEmployees();
+
+    const q = `%${trimmedQuery}%`;
+
+    if (isPostgres) {
+        const res = await query(
+            `SELECT *, 
+              (CASE 
+                WHEN LOWER(employee_id) = $2 THEN 1
+                WHEN LOWER(email_address) = $2 THEN 1
+                WHEN LOWER(first_name || ' ' || last_name) = $2 THEN 1
+                WHEN LOWER(last_name || ', ' || first_name) = $2 THEN 1
+                WHEN LOWER(last_name) = $2 THEN 2
+                WHEN LOWER(first_name) = $2 THEN 2
+                WHEN LOWER(last_name) LIKE $1 AND LOWER(first_name) LIKE $1 THEN 2
+                WHEN LOWER(last_name) LIKE $1 THEN 3
+                WHEN LOWER(first_name) LIKE $1 THEN 3
+                WHEN LOWER(employee_id) LIKE $1 THEN 3
+                WHEN LOWER(email_address) LIKE $1 THEN 3
+                ELSE 4
+              END) as relevance
+             FROM employees 
+             WHERE LOWER(employee_id) LIKE $1 
+             OR LOWER(last_name) LIKE $1 
+             OR LOWER(first_name) LIKE $1 
+             OR LOWER(email_address) LIKE $1
+             OR LOWER(first_name || ' ' || last_name) LIKE $1
+             OR LOWER(last_name || ', ' || first_name) LIKE $1
+             OR LOWER(department) LIKE $1 
+             OR LOWER(position) LIKE $1
+             ORDER BY relevance ASC, last_name ASC, first_name ASC`,
+            [q, trimmedQuery]
+        );
+        return res.rows;
+    }
+
     const res = await query(
         `SELECT * FROM employees 
          WHERE LOWER(employee_id) LIKE $1 
          OR LOWER(last_name) LIKE $1 
          OR LOWER(first_name) LIKE $1 
          OR LOWER(department) LIKE $1 
-         OR LOWER(position) LIKE $1`,
+         OR LOWER(position) LIKE $1 
+         OR LOWER(email_address) LIKE $1`,
         [q]
     );
-    return res.rows;
+
+    // Simple relevance sort for local JSON
+    return res.rows.sort((a, b) => {
+        const aFull = `${a.first_name} ${a.last_name}`.toLowerCase();
+        const bFull = `${b.first_name} ${b.last_name}`.toLowerCase();
+        const aMatch = a.employee_id.toLowerCase() === trimmedQuery || a.email_address?.toLowerCase() === trimmedQuery || aFull === trimmedQuery;
+        const bMatch = b.employee_id.toLowerCase() === trimmedQuery || b.email_address?.toLowerCase() === trimmedQuery || bFull === trimmedQuery;
+
+        if (aMatch && !bMatch) return -1;
+        if (!aMatch && bMatch) return 1;
+        return 0;
+    });
 }
 
 export async function filterEmployees(filters: {

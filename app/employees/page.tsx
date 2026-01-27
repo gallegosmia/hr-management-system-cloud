@@ -87,14 +87,36 @@ export default function EmployeesPage() {
         let filtered = employees;
 
         if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            filtered = filtered.filter(emp =>
-                emp.employee_id.toLowerCase().includes(query) ||
-                emp.last_name.toLowerCase().includes(query) ||
-                emp.first_name.toLowerCase().includes(query) ||
-                emp.department.toLowerCase().includes(query) ||
-                emp.position.toLowerCase().includes(query)
-            );
+            const query = searchQuery.trim().toLowerCase();
+            if (query) {
+                filtered = filtered.filter(emp => {
+                    const fullName = `${emp.first_name} ${emp.last_name}`.toLowerCase();
+                    const altFullName = `${emp.last_name}, ${emp.first_name}`.toLowerCase();
+                    const email = (emp.email_address || '').toLowerCase();
+                    const empId = emp.employee_id.toLowerCase();
+
+                    return empId.includes(query) ||
+                        emp.last_name.toLowerCase().includes(query) ||
+                        emp.first_name.toLowerCase().includes(query) ||
+                        fullName.includes(query) ||
+                        altFullName.includes(query) ||
+                        email.includes(query) ||
+                        emp.department.toLowerCase().includes(query) ||
+                        emp.position.toLowerCase().includes(query);
+                });
+
+                // Relevance sorting for local results
+                filtered.sort((a, b) => {
+                    const aFull = `${a.first_name} ${a.last_name}`.toLowerCase();
+                    const bFull = `${b.first_name} ${b.last_name}`.toLowerCase();
+                    const aExact = a.employee_id.toLowerCase() === query || (a.email_address || '').toLowerCase() === query || aFull === query;
+                    const bExact = b.employee_id.toLowerCase() === query || (b.email_address || '').toLowerCase() === query || bFull === query;
+
+                    if (aExact && !bExact) return -1;
+                    if (!aExact && bExact) return 1;
+                    return 0;
+                });
+            }
         }
 
         if (departmentFilter) {
@@ -303,9 +325,11 @@ export default function EmployeesPage() {
                             {filteredEmployees.length === 0 ? (
                                 <tr>
                                     <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                                        {searchQuery || departmentFilter || statusFilter
-                                            ? 'No employees match your filters'
-                                            : 'No employees found. Add your first employee to get started.'}
+                                        {searchQuery.trim()
+                                            ? `No matching employee found for "${searchQuery}"`
+                                            : (departmentFilter || branchFilter || statusFilter)
+                                                ? 'No employees match your filters'
+                                                : 'No employees found. Add your first employee to get started.'}
                                     </td>
                                 </tr>
                             ) : (
