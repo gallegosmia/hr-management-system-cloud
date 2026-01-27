@@ -9,6 +9,7 @@ export default function RegisterPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('Employee');
+    const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -29,7 +30,6 @@ export default function RegisterPage() {
 
             if (response.ok) {
                 setSuccess(true);
-                // Do not auto-login
             } else {
                 setError(data.error || 'Registration failed');
             }
@@ -41,77 +41,52 @@ export default function RegisterPage() {
     };
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%)',
-            padding: '1rem'
-        }}>
-            <div style={{
-                background: 'white',
-                borderRadius: '1rem',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                width: '100%',
-                maxWidth: '450px',
-                overflow: 'hidden'
-            }}>
-                {/* Header */}
-                <div style={{
-                    background: 'linear-gradient(135deg, #059669, #10b981)',
-                    padding: '2rem',
-                    textAlign: 'center',
-                    color: 'white'
-                }}>
-                    <div style={{
-                        width: '80px',
-                        height: '80px',
-                        margin: '0 auto 1rem',
-                        background: 'white',
-                        borderRadius: '1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
-                    }}>
-                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                            <circle cx="8.5" cy="7" r="4" />
-                            <line x1="20" y1="8" x2="20" y2="14" />
-                            <line x1="23" y1="11" x2="17" y2="11" />
-                        </svg>
-                    </div>
-                    <h1 style={{
-                        fontSize: '1.75rem',
-                        fontWeight: '700',
-                        marginBottom: '0.5rem',
-                        fontFamily: 'Poppins, sans-serif'
-                    }}>
-                        Create Account
-                    </h1>
-                    <p style={{ fontSize: '0.875rem', opacity: 0.9 }}>
-                        Join Melann Lending Investor Corp.
-                    </p>
-                </div>
+        <div className="login-container">
+            {/* Left Panel: Branding (Hidden on mobile via globals.css) */}
+            <div className="login-brand-section">
+                <div className="login-brand-bg-image"></div>
+            </div>
 
-                {/* Form */}
-                <div style={{ padding: '2rem' }}>
+            {/* Right Panel: Registration Form */}
+            <div className="login-form-section">
+                <div className="login-form-wrapper">
+                    <div className="login-header">
+                        <div className="login-logo-container">
+                            <div style={{
+                                width: '64px',
+                                height: '64px',
+                                background: 'white',
+                                borderRadius: '12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                            }}>
+                                <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="10" y="50" width="20" height="40" rx="4" fill="#8B2635" />
+                                    <rect x="40" y="30" width="20" height="60" rx="4" fill="#D2691E" />
+                                    <rect x="70" y="10" width="20" height="80" rx="4" fill="#E74C3C" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h2 className="login-welcome-title">Melann HR Management System</h2>
+                        <p className="login-welcome-subtitle">Join our team - Managed by Melann Lending</p>
+                    </div>
+
                     {success ? (
-                        <div className="text-center">
-                            <div className="mb-4 text-green-500">
-                                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div style={{ textAlign: 'center', padding: '1rem' }}>
+                            <div style={{ marginBottom: '1.5rem', color: 'var(--success-500)' }}>
+                                <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ margin: '0 auto' }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <h2 className="text-xl font-bold mb-2 text-gray-800">Registration Successful!</h2>
-                            <p className="text-gray-600 mb-6">
+                            <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Registration Successful!</h3>
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
                                 Your account has been created and is pending approval from the administrator.
-                                Please check back later.
                             </p>
                             <button
                                 onClick={() => router.push('/')}
-                                className="w-full py-3 px-6 text-white font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors"
+                                className="btn btn-primary login-button"
                             >
                                 Return to Login
                             </button>
@@ -119,64 +94,54 @@ export default function RegisterPage() {
                     ) : (
                         <form onSubmit={handleSubmit}>
                             {error && (
-                                <div style={{
-                                    background: '#fee2e2',
-                                    color: '#b91c1c',
-                                    padding: '0.75rem 1rem',
-                                    borderRadius: '0.5rem',
-                                    marginBottom: '1.5rem',
-                                    fontSize: '0.875rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem'
-                                }}>
-                                    <span>⚠️</span>
-                                    {error}
+                                <div className="form-error" style={{ marginBottom: '1.5rem', padding: '0.75rem', background: '#fee2e2', borderRadius: '0.5rem', color: '#b91c1c' }}>
+                                    <span>⚠️</span> {error}
                                 </div>
                             )}
 
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Username</label>
+                            <div className="login-input-group">
+                                <label className="form-label">Username</label>
                                 <input
                                     type="text"
+                                    className="form-input"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     required
-                                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-0 transition-colors"
                                     placeholder="Choose a username"
                                 />
                             </div>
 
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                            <div className="login-input-group">
+                                <label className="form-label">Email Address</label>
                                 <input
                                     type="email"
+                                    className="form-input"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
-                                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-0 transition-colors"
                                     placeholder="yourname@example.com"
                                 />
                             </div>
 
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                            <div className="login-input-group">
+                                <label className="form-label">Password</label>
                                 <input
                                     type="password"
+                                    className="form-input"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-0 transition-colors"
-                                    placeholder="Choose a strong password"
+                                    placeholder="Create a strong password"
                                 />
                             </div>
 
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Role</label>
+                            <div className="login-input-group">
+                                <label className="form-label">Desired Role</label>
                                 <select
+                                    className="form-select"
                                     value={role}
                                     onChange={(e) => setRole(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-emerald-500 focus:ring-0 transition-colors bg-white"
+                                    required
                                 >
                                     <option value="Employee">Employee</option>
                                     <option value="HR">HR Officer</option>
@@ -185,30 +150,121 @@ export default function RegisterPage() {
                                 </select>
                             </div>
 
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', marginTop: '0.5rem' }}>
+                                <label className="ios-switch">
+                                    <input
+                                        type="checkbox"
+                                        checked={showPasswordRequirements}
+                                        onChange={(e) => setShowPasswordRequirements(e.target.checked)}
+                                    />
+                                    <span className="ios-slider"></span>
+                                </label>
+                                <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                                    Show password requirements
+                                </span>
+                            </div>
+
+                            {showPasswordRequirements && (
+                                <div style={{
+                                    padding: '1rem',
+                                    background: 'var(--gray-50)',
+                                    borderRadius: '0.75rem',
+                                    marginBottom: '1.5rem',
+                                    fontSize: '0.8125rem',
+                                    color: 'var(--text-secondary)',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    <p style={{ fontWeight: 600, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Password must contain:</p>
+                                    <ul style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                        <li>At least 8 characters long</li>
+                                        <li>At least one uppercase letter</li>
+                                        <li>At least one number or special character</li>
+                                    </ul>
+                                </div>
+                            )}
+
                             <button
                                 type="submit"
+                                className="btn btn-primary login-button"
                                 disabled={loading}
-                                className="w-full py-3 px-6 text-white font-semibold rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transform transition-all active:scale-95 shadow-md"
                             >
-                                {loading ? 'Creating Account...' : 'Register'}
+                                {loading ? 'Creating Account...' : 'Create Account'}
                             </button>
                         </form>
                     )}
 
-                    <div className="mt-6 text-center">
-                        <p className="text-sm text-gray-600">
+                    <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
                             Already have an account?{' '}
                             <button
                                 onClick={() => router.push('/')}
-                                className="text-emerald-600 font-semibold hover:text-emerald-700 hover:underline"
+                                style={{
+                                    color: 'var(--primary-600)',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                    padding: 0
+                                }}
                             >
                                 Sign in
                             </button>
                         </p>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)' }}>
+                            &copy; {new Date().getFullYear()} Melann Lending Investor Corp.
+                        </p>
                     </div>
-
                 </div>
             </div>
+
+            <style jsx>{`
+                /* iOS Style Toggle - Copied from Preview Component for local use */
+                .ios-switch {
+                    position: relative;
+                    display: inline-block;
+                    width: 40px;
+                    height: 22px;
+                }
+
+                .ios-switch input {
+                    opacity: 0;
+                    width: 0;
+                    height: 0;
+                }
+
+                .ios-slider {
+                    position: absolute;
+                    cursor: pointer;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: #e2e8f0;
+                    transition: .4s cubic-bezier(0.4, 0, 0.2, 1);
+                    border-radius: 34px;
+                }
+
+                .ios-slider:before {
+                    position: absolute;
+                    content: "";
+                    height: 16px;
+                    width: 16px;
+                    left: 3px;
+                    bottom: 3px;
+                    background-color: white;
+                    transition: .4s cubic-bezier(0.4, 0, 0.2, 1);
+                    border-radius: 50%;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+
+                input:checked + .ios-slider {
+                    background-color: var(--primary-500);
+                }
+
+                input:checked + .ios-slider:before {
+                    transform: translateX(18px);
+                }
+            `}</style>
         </div>
     );
 }

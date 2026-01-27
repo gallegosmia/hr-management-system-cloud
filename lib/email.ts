@@ -34,7 +34,7 @@ export async function sendEmail(to: string, subject: string, text: string) {
         });
 
         await transporter.sendMail({
-            from: `"HR Management System" <${from}>`,
+            from: `"Melann HR Management System" <${from}>`,
             to,
             subject,
             text,

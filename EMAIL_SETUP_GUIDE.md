@@ -1,6 +1,6 @@
 # Email Configuration Guide
 
-Your HR System needs an email account to send "Forgot Password" OTPs and notifications. Since this information is sensitive (passwords), it was not included in the default setup.
+Your HR System can use an email account to send notifications and reports. Since this information is sensitive (passwords), it was not included in the default setup.
 
 ## 1. Get an Email Account for Sending
 

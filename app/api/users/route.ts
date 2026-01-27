@@ -4,17 +4,37 @@ import { hashPassword } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
     try {
-        const users = await getAll('users');
-        // Remove sensitive data
-        const safeUsers = users.map((u: any) => ({
+        const sql = `
+            SELECT 
+                u.id, 
+                u.username, 
+                u.role, 
+                u.is_active, 
+                u.employee_id, 
+                u.last_login, 
+                u.created_at,
+                u.email as user_email,
+                e.first_name,
+                e.last_name,
+                e.email_address as employee_email
+            FROM users u
+            LEFT JOIN employees e ON u.employee_id = e.id
+        `;
+        const res = await query(sql);
+
+        const safeUsers = res.rows.map((u: any) => ({
             id: u.id,
             username: u.username,
             role: u.role,
             is_active: u.is_active,
             employee_id: u.employee_id,
             last_login: u.last_login,
-            created_at: u.created_at
+            created_at: u.created_at,
+            email: u.user_email || u.employee_email || '',
+            full_name: u.first_name ? `${u.first_name} ${u.last_name}` : u.username,
+            two_fa_enabled: u.two_fa_enabled === 1 || u.two_fa_enabled === true
         }));
+
         return NextResponse.json(safeUsers);
     } catch (error) {
         console.error('Get users error:', error);
