@@ -16,6 +16,8 @@ import AttendanceTab from '@/components/employee/AttendanceTab';
 import LeaveHistoryTab from '@/components/employee/LeaveHistoryTab';
 import PayrollHistoryTab from '@/components/employee/PayrollHistoryTab';
 import PayrollDetailsTab from '@/components/employee/PayrollDetailsTab';
+import TrainingsTab from '@/components/employee/TrainingsTab';
+import ViolationsTab from '@/components/employee/ViolationsTab';
 
 interface Employee {
     id: number;
@@ -61,7 +63,7 @@ export default function EmployeeDetailPage() {
 
     // Tab State
     const [activeTab, setActiveTab] = useState('Personal info');
-    const [tabs, setTabs] = useState(['Personal info', 'Payroll details', 'Documents', 'Payroll history', 'Leave history', 'Attendance']);
+    const [tabs, setTabs] = useState(['Personal info', 'Payroll details', 'Documents', 'Payroll history', 'Leave history', 'Attendance', 'Trainings', 'Violations']);
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -70,13 +72,15 @@ export default function EmployeeDetailPage() {
                 const parsedUser = JSON.parse(userData);
                 setUser(parsedUser);
                 if (parsedUser.role === 'Employee') {
-                    setTabs(['Personal info', 'Documents', 'Payroll history', 'Leave history', 'Attendance']);
+                    // Employees can see Trainings but not Violations
+                    setTabs(['Personal info', 'Documents', 'Payroll history', 'Leave history', 'Attendance', 'Trainings']);
                 }
             } catch (e) {
                 console.error("Failed to parse user data", e);
             }
         }
     }, []);
+
 
     // Modal State
     const [isEditModalOpen, setEditModalOpen] = useState(false);
@@ -750,7 +754,16 @@ export default function EmployeeDetailPage() {
                                 onUpdate={handleUpdatePayrollDetails}
                             />
                         )}
+
+                        {activeTab === 'Trainings' && (
+                            <TrainingsTab employeeId={employee.id} />
+                        )}
+
+                        {activeTab === 'Violations' && (
+                            <ViolationsTab employeeId={employee.id} />
+                        )}
                     </div>
+
 
                 </div>
             </div>
