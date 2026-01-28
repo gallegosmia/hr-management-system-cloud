@@ -15,8 +15,36 @@ interface LoggedEmployee {
     logged_at: string;
 }
 
+interface AttendanceData {
+    date: string;
+    morning_in: string | null;
+    morning_out: string | null;
+    afternoon_in: string | null;
+    afternoon_out: string | null;
+    morning_hours: number;
+    afternoon_hours: number;
+    total_hours: number;
+}
+
+const CHECKPOINT_ICONS: Record<string, string> = {
+    'morning_in': '🌅',
+    'morning_out': '☀️',
+    'afternoon_in': '🌤️',
+    'afternoon_out': '🌙'
+};
+
+const CHECKPOINT_COLORS: Record<string, string> = {
+    'morning_in': '#059669',
+    'morning_out': '#0891b2',
+    'afternoon_in': '#7c3aed',
+    'afternoon_out': '#c026d3'
+};
+
 export default function AttendanceKioskPage() {
     const [scanResult, setScanResult] = useState<LoggedEmployee | null>(null);
+    const [attendanceData, setAttendanceData] = useState<AttendanceData | null>(null);
+    const [checkpoint, setCheckpoint] = useState<string>('');
+    const [checkpointLabel, setCheckpointLabel] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [isKioskMode, setIsKioskMode] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -59,18 +87,14 @@ export default function AttendanceKioskPage() {
         }
 
         try {
-            // Clear any existing scanner
             if (scannerRef.current) {
                 try {
                     await scannerRef.current.clear();
-                } catch (e) {
-                    // Ignore
-                }
+                } catch (e) { }
             }
 
             setStatus('Initializing scanner...');
 
-            // Dynamic import for client-side only
             const { Html5QrcodeScanner } = await import('html5-qrcode');
 
             const scanner = new Html5QrcodeScanner(
@@ -89,13 +113,11 @@ export default function AttendanceKioskPage() {
                     await processQRCode(decodedText);
                     scanner.clear();
                 },
-                (errorMessage: string) => {
-                    // Ignore scan failures (no QR in frame)
-                }
+                (errorMessage: string) => { }
             );
 
             scannerRef.current = scanner;
-            setStatus('Ready - Point camera at QR code');
+            setStatus('Ready - Scan your QR ID');
 
         } catch (err) {
             console.error("Scanner init failed:", err);
@@ -125,6 +147,9 @@ export default function AttendanceKioskPage() {
 
             if (response.ok) {
                 setScanResult(data.employee);
+                setAttendanceData(data.attendance);
+                setCheckpoint(data.checkpoint);
+                setCheckpointLabel(data.checkpoint_label);
                 setStatus('Success!');
             } else {
                 setError(data.error || 'Failed to log attendance');
@@ -132,7 +157,7 @@ export default function AttendanceKioskPage() {
                 setTimeout(() => {
                     setError(null);
                     initScanner();
-                }, 3000);
+                }, 4000);
             }
         } catch (err) {
             setError('Network error. Please try again.');
@@ -162,12 +187,11 @@ export default function AttendanceKioskPage() {
 
             await processQRCode(result);
         } catch (err) {
-            setError('No QR code found in the image. Please try another image.');
+            setError('No QR code found in the image.');
             setStatus('Scan Failed');
             setTimeout(() => setError(null), 3000);
         }
 
-        // Reset file input
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -183,6 +207,9 @@ export default function AttendanceKioskPage() {
 
     const handleContinue = () => {
         setScanResult(null);
+        setAttendanceData(null);
+        setCheckpoint('');
+        setCheckpointLabel('');
         setError(null);
         setStatus('Loading...');
     };
@@ -194,12 +221,15 @@ export default function AttendanceKioskPage() {
             <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; border: 2px dashed #064e3b; width: 280px; margin: auto; background: #fff;">
                 <h2 style="margin: 0; color: #064e3b; font-size: 18px;">MELANN LENDING</h2>
                 <p style="margin: 2px 0 15px; font-size: 10px; color: #666;">INVESTOR CORPORATION</p>
-                <h3 style="margin: 10px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;">ATTENDANCE SLIP</h3>
+                <h3 style="margin: 10px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px; color: ${CHECKPOINT_COLORS[checkpoint] || '#064e3b'};">
+                    ${CHECKPOINT_ICONS[checkpoint] || '✓'} ${checkpointLabel}
+                </h3>
                 <div style="text-align: left; margin: 15px 0; font-size: 12px; line-height: 1.8;">
                     <p><strong>NAME:</strong> ${scanResult.first_name} ${scanResult.last_name}</p>
                     <p><strong>EMP ID:</strong> ${scanResult.employee_id}</p>
                     <p><strong>DEPT:</strong> ${scanResult.department}</p>
-                    <p><strong>LOGGED AT:</strong> ${scanResult.logged_at}</p>
+                    <p><strong>TIME:</strong> ${format(new Date(), 'hh:mm:ss a')}</p>
+                    <p><strong>DATE:</strong> ${format(new Date(), 'MMMM dd, yyyy')}</p>
                 </div>
                 <div style="margin-top: 15px; font-size: 9px; color: #999;">
                     "Lend • Empower • Grow"
@@ -215,6 +245,19 @@ export default function AttendanceKioskPage() {
                 printWindow.print();
                 printWindow.close();
             }, 500);
+        }
+    };
+
+    const formatTime = (time: string | null) => {
+        if (!time) return '--:--';
+        try {
+            const [hours, minutes] = time.split(':');
+            const h = parseInt(hours);
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const h12 = h % 12 || 12;
+            return `${h12}:${minutes} ${ampm}`;
+        } catch {
+            return time;
         }
     };
 
@@ -289,7 +332,6 @@ export default function AttendanceKioskPage() {
                     {/* Scanner or Result */}
                     {!scanResult ? (
                         <div>
-                            {/* QR Scanner */}
                             <div id="qr-reader" style={{
                                 width: '100%',
                                 borderRadius: '16px',
@@ -297,10 +339,8 @@ export default function AttendanceKioskPage() {
                                 marginBottom: '1rem'
                             }}></div>
 
-                            {/* Hidden div for file scanning */}
                             <div id="qr-file-reader" style={{ display: 'none' }}></div>
 
-                            {/* Upload Button */}
                             <div style={{ marginTop: '1rem' }}>
                                 <label style={{
                                     display: 'inline-flex',
@@ -312,8 +352,7 @@ export default function AttendanceKioskPage() {
                                     borderRadius: '12px',
                                     cursor: 'pointer',
                                     fontWeight: 600,
-                                    fontSize: '0.875rem',
-                                    transition: 'all 0.2s'
+                                    fontSize: '0.875rem'
                                 }}>
                                     📷 Upload QR Image
                                     <input
@@ -325,17 +364,33 @@ export default function AttendanceKioskPage() {
                                         onChange={handleFileUpload}
                                     />
                                 </label>
-                                <p style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.5rem' }}>
-                                    Or upload a screenshot of your QR ID
-                                </p>
+                            </div>
+
+                            {/* Checkpoint Legend */}
+                            <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#f9fafb', borderRadius: '12px' }}>
+                                <p style={{ fontSize: '0.7rem', color: '#6b7280', marginBottom: '0.5rem', fontWeight: 600 }}>TODAY'S CHECKPOINTS</p>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                    {['morning_in', 'morning_out', 'afternoon_in', 'afternoon_out'].map((cp) => (
+                                        <div key={cp} style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.25rem',
+                                            fontSize: '0.7rem',
+                                            color: '#9ca3af'
+                                        }}>
+                                            <span>{CHECKPOINT_ICONS[cp]}</span>
+                                            <span>{cp.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     ) : (
                         <div>
-                            {/* Success Badge */}
+                            {/* Checkpoint Badge */}
                             <div style={{
-                                background: '#dcfce7',
-                                color: '#16a34a',
+                                background: CHECKPOINT_COLORS[checkpoint] || '#16a34a',
+                                color: 'white',
                                 padding: '0.75rem 1.5rem',
                                 borderRadius: '99px',
                                 display: 'inline-flex',
@@ -343,9 +398,9 @@ export default function AttendanceKioskPage() {
                                 gap: '0.5rem',
                                 fontWeight: 700,
                                 marginBottom: '1.5rem',
-                                fontSize: '0.875rem'
+                                fontSize: '0.9rem'
                             }}>
-                                ✅ Attendance Logged
+                                {CHECKPOINT_ICONS[checkpoint] || '✅'} {checkpointLabel}
                             </div>
 
                             {/* ID Card */}
@@ -355,7 +410,7 @@ export default function AttendanceKioskPage() {
                                 padding: '1.5rem',
                                 color: 'white',
                                 textAlign: 'left',
-                                marginBottom: '1.5rem'
+                                marginBottom: '1rem'
                             }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                                     <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: 600 }}>
@@ -366,8 +421,8 @@ export default function AttendanceKioskPage() {
 
                                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                                     <div style={{
-                                        width: '80px',
-                                        height: '80px',
+                                        width: '70px',
+                                        height: '70px',
                                         borderRadius: '12px',
                                         overflow: 'hidden',
                                         background: 'white',
@@ -379,29 +434,55 @@ export default function AttendanceKioskPage() {
                                         {scanResult.profile_picture ? (
                                             <img src={scanResult.profile_picture} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                                         ) : (
-                                            <div style={{ fontSize: '1.5rem', color: '#064e3b', fontWeight: 700 }}>
+                                            <div style={{ fontSize: '1.25rem', color: '#064e3b', fontWeight: 700 }}>
                                                 {scanResult.first_name[0]}{scanResult.last_name[0]}
                                             </div>
                                         )}
                                     </div>
                                     <div>
-                                        <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>{scanResult.first_name} {scanResult.last_name}</h3>
-                                        <div style={{ fontSize: '0.8rem', color: '#fbbf24', fontWeight: 600 }}>{scanResult.position}</div>
-                                        <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{scanResult.department}</div>
-                                    </div>
-                                </div>
-
-                                <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
-                                    <div>
-                                        <div style={{ fontSize: '0.6rem', opacity: 0.6, textTransform: 'uppercase' }}>ID</div>
-                                        <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{scanResult.employee_id}</div>
-                                    </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <div style={{ fontSize: '0.6rem', opacity: 0.6, textTransform: 'uppercase' }}>Time</div>
-                                        <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{format(new Date(), 'hh:mm a')}</div>
+                                        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>{scanResult.first_name} {scanResult.last_name}</h3>
+                                        <div style={{ fontSize: '0.75rem', color: '#fbbf24', fontWeight: 600 }}>{scanResult.position}</div>
+                                        <div style={{ fontSize: '0.65rem', opacity: 0.8 }}>{scanResult.department}</div>
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Today's Checkpoints */}
+                            {attendanceData && (
+                                <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '1rem', marginBottom: '1rem' }}>
+                                    <p style={{ fontSize: '0.65rem', color: '#6b7280', marginBottom: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>Today's Attendance</p>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                        {[
+                                            { key: 'morning_in', label: 'AM In', value: attendanceData.morning_in },
+                                            { key: 'morning_out', label: 'AM Out', value: attendanceData.morning_out },
+                                            { key: 'afternoon_in', label: 'PM In', value: attendanceData.afternoon_in },
+                                            { key: 'afternoon_out', label: 'PM Out', value: attendanceData.afternoon_out }
+                                        ].map(({ key, label, value }) => (
+                                            <div key={key} style={{
+                                                padding: '0.5rem',
+                                                background: value ? '#dcfce7' : 'white',
+                                                border: `1px solid ${value ? '#86efac' : '#e5e7eb'}`,
+                                                borderRadius: '8px',
+                                                textAlign: 'center'
+                                            }}>
+                                                <div style={{ fontSize: '0.6rem', color: '#6b7280', fontWeight: 600 }}>{label}</div>
+                                                <div style={{
+                                                    fontSize: '0.8rem',
+                                                    fontWeight: 700,
+                                                    color: value ? '#16a34a' : '#d1d5db'
+                                                }}>
+                                                    {formatTime(value)}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {attendanceData.total_hours > 0 && (
+                                        <div style={{ marginTop: '0.75rem', textAlign: 'center', fontSize: '0.75rem', color: '#064e3b', fontWeight: 700 }}>
+                                            Total Hours: {attendanceData.total_hours.toFixed(2)} hrs
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Action Buttons */}
                             <div style={{ display: 'flex', gap: '1rem' }}>
@@ -428,7 +509,7 @@ export default function AttendanceKioskPage() {
                                     cursor: 'pointer',
                                     fontSize: '0.875rem'
                                 }}>
-                                    🖨️ PRINT
+                                    🖨️
                                 </button>
                             </div>
                         </div>
