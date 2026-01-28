@@ -84,16 +84,43 @@ CREATE TABLE IF NOT EXISTS documents (
     file_data BYTEA
 );
 
--- 4. Attendance table
+-- 4. Attendance table (4-checkpoint system)
 CREATE TABLE IF NOT EXISTS attendance (
     id SERIAL PRIMARY KEY,
     employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
     date DATE NOT NULL,
+    -- 4 Checkpoints
+    morning_in TIME,
+    morning_out TIME,
+    afternoon_in TIME,
+    afternoon_out TIME,
+    -- Device tracking for each checkpoint
+    morning_in_device VARCHAR(50),
+    morning_out_device VARCHAR(50),
+    afternoon_in_device VARCHAR(50),
+    afternoon_out_device VARCHAR(50),
+    -- Method tracking (QR Scan / Manual)
+    morning_in_method VARCHAR(50) DEFAULT 'QR Scan',
+    morning_out_method VARCHAR(50) DEFAULT 'QR Scan',
+    afternoon_in_method VARCHAR(50) DEFAULT 'QR Scan',
+    afternoon_out_method VARCHAR(50) DEFAULT 'QR Scan',
+    -- Computed hours (updated on each checkpoint)
+    morning_hours DECIMAL(5,2) DEFAULT 0,
+    afternoon_hours DECIMAL(5,2) DEFAULT 0,
+    total_hours DECIMAL(5,2) DEFAULT 0,
+    -- Legacy columns for backward compatibility
     time_in TIME,
     time_out TIME,
     status VARCHAR(50),
     remarks TEXT,
+    device_type VARCHAR(50),
+    -- Payroll lock
+    is_locked BOOLEAN DEFAULT FALSE,
+    locked_by INTEGER REFERENCES users(id),
+    locked_at TIMESTAMP WITH TIME ZONE,
+    -- Timestamps
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(employee_id, date)
 );
 
