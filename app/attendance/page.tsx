@@ -213,16 +213,24 @@ export default function AttendancePage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [leaveBalance, setLeaveBalance] = useState<number | null>(null);
+    const [latesCount, setLatesCount] = useState<number | null>(null);
 
     // --- Effects ---
     useEffect(() => {
         if (editingRecord?.employee_id) {
             fetch(`/api/employees?id=${editingRecord.employee_id}`)
                 .then(res => res.json())
-                .then(data => setLeaveBalance(data.leave_balance !== undefined ? data.leave_balance : null))
-                .catch(() => setLeaveBalance(null));
+                .then(data => {
+                    setLeaveBalance(data.leave_balance !== undefined ? data.leave_balance : null);
+                    setLatesCount(data.lates_this_month !== undefined ? data.lates_this_month : 0);
+                })
+                .catch(() => {
+                    setLeaveBalance(null);
+                    setLatesCount(null);
+                });
         } else {
             setLeaveBalance(null);
+            setLatesCount(null);
         }
     }, [editingRecord?.employee_id]);
     useEffect(() => {
@@ -770,6 +778,12 @@ export default function AttendancePage() {
                                 {leaveBalance !== null && (
                                     <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: leaveBalance > 0 ? '#16a34a' : '#dc2626', fontWeight: 600 }}>
                                         Remaining Leave Balance: {leaveBalance} days
+                                    </div>
+                                )}
+                                {latesCount !== null && (
+                                    <div style={{ marginTop: '0.25rem', fontSize: '0.8rem', color: latesCount >= 5 ? '#dc2626' : '#d97706', fontWeight: 600 }}>
+                                        Lates This Month: {latesCount}
+                                        {latesCount >= 5 && <span style={{ marginLeft: '0.5rem', background: '#fee2e2', color: '#dc2626', padding: '0.1rem 0.3rem', borderRadius: '4px', fontSize: '0.7rem' }}>⚠️ Warning: Excessive</span>}
                                     </div>
                                 )}
                             </div>

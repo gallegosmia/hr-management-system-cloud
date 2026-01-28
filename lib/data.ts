@@ -1119,11 +1119,28 @@ export async function getEmployeePayslips(employeeId: number): Promise<any[]> {
 }
 
 export async function getEmployeeLeaveCount(employeeId: number, year: number): Promise<number> {
-    const res = await query(
-        "SELECT COUNT(*) FROM attendance WHERE employee_id = $1 AND EXTRACT(YEAR FROM date) = $2 AND status ILIKE 'Leave%'",
-        [employeeId, year]
-    );
-    return parseInt(res.rows[0].count);
+    const res = await query("SELECT * FROM attendance WHERE employee_id = $1", [employeeId]);
+    return res.rows.filter((row: any) => {
+        // Date check
+        const d = new Date(row.date);
+        if (d.getFullYear() !== year) return false;
+
+        // Status check (case-insensitive)
+        const s = (row.status || '').toLowerCase();
+        return s === 'on leave';
+    }).length;
+}
+
+export async function getEmployeeLateCount(employeeId: number, month: number, year: number): Promise<number> {
+    const res = await query("SELECT * FROM attendance WHERE employee_id = $1", [employeeId]);
+    return res.rows.filter((row: any) => {
+        const d = new Date(row.date);
+        // JS getMonth is 0-indexed
+        if (d.getFullYear() !== year || d.getMonth() !== month) return false;
+
+        const s = (row.status || '').toLowerCase();
+        return s === 'late';
+    }).length;
 }
 
 export async function createPayslip(data: Omit<Payslip, 'id' | 'generated_at'>): Promise<number> {

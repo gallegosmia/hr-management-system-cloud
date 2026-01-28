@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllEmployees, createEmployee, getEmployeeById, updateEmployee, update201Checklist, deleteEmployee, logAudit, getEmployeeByEmployeeId, searchEmployees, getEmployeeLeaveCount } from '@/lib/data';
+import { getAllEmployees, createEmployee, getEmployeeById, updateEmployee, update201Checklist, deleteEmployee, logAudit, getEmployeeByEmployeeId, searchEmployees, getEmployeeLeaveCount, getEmployeeLateCount } from '@/lib/data';
 import { query } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
@@ -32,12 +32,18 @@ export async function GET(request: NextRequest) {
             employee.education = eduRes.rows;
 
             // Fetch Leave Balance
+            // Fetch Leave Balance & Lates
             try {
-                const used = await getEmployeeLeaveCount(employee.id, new Date().getFullYear());
+                const now = new Date();
+                const used = await getEmployeeLeaveCount(employee.id, now.getFullYear());
                 employee.leave_balance = Math.max(0, 5 - used);
+
+                const lates = await getEmployeeLateCount(employee.id, now.getMonth(), now.getFullYear());
+                employee.lates_this_month = lates;
             } catch (e) {
-                console.error('Error fetching leave balance:', e);
+                console.error('Error fetching leave/lates:', e);
                 employee.leave_balance = 5;
+                employee.lates_this_month = 0;
             }
 
             return NextResponse.json(employee);
