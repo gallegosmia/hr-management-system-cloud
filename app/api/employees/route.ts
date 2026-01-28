@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllEmployees, createEmployee, getEmployeeById, updateEmployee, update201Checklist, deleteEmployee, logAudit, getEmployeeByEmployeeId, searchEmployees } from '@/lib/data';
+import { getAllEmployees, createEmployee, getEmployeeById, updateEmployee, update201Checklist, deleteEmployee, logAudit, getEmployeeByEmployeeId, searchEmployees, getEmployeeLeaveCount } from '@/lib/data';
 import { query } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
@@ -30,6 +30,15 @@ export async function GET(request: NextRequest) {
             // Fetch Education Records for the Personal Info Tab
             const eduRes = await query("SELECT * FROM education WHERE employee_id = $1 ORDER BY year_graduated DESC", [employee.id]);
             employee.education = eduRes.rows;
+
+            // Fetch Leave Balance
+            try {
+                const used = await getEmployeeLeaveCount(employee.id, new Date().getFullYear());
+                employee.leave_balance = Math.max(0, 5 - used);
+            } catch (e) {
+                console.error('Error fetching leave balance:', e);
+                employee.leave_balance = 5;
+            }
 
             return NextResponse.json(employee);
         }

@@ -212,8 +212,19 @@ export default function AttendancePage() {
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [leaveBalance, setLeaveBalance] = useState<number | null>(null);
 
     // --- Effects ---
+    useEffect(() => {
+        if (editingRecord?.employee_id) {
+            fetch(`/api/employees?id=${editingRecord.employee_id}`)
+                .then(res => res.json())
+                .then(data => setLeaveBalance(data.leave_balance !== undefined ? data.leave_balance : null))
+                .catch(() => setLeaveBalance(null));
+        } else {
+            setLeaveBalance(null);
+        }
+    }, [editingRecord?.employee_id]);
     useEffect(() => {
         const userData = localStorage.getItem('user');
         if (userData) setUser(JSON.parse(userData));
@@ -755,6 +766,11 @@ export default function AttendancePage() {
                                             <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
                                         ))}
                                     </select>
+                                )}
+                                {leaveBalance !== null && (
+                                    <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: leaveBalance > 0 ? '#16a34a' : '#dc2626', fontWeight: 600 }}>
+                                        Remaining Leave Balance: {leaveBalance} days
+                                    </div>
                                 )}
                             </div>
 
