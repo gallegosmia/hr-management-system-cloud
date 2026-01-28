@@ -928,6 +928,11 @@ export async function recordAttendance(data: {
     date: string;
     time_in?: string;
     time_out?: string;
+    morning_in?: string;
+    morning_out?: string;
+    afternoon_in?: string;
+    afternoon_out?: string;
+    total_hours?: number;
     status: string;
     remarks?: string;
 }): Promise<void> {
@@ -960,6 +965,11 @@ export async function batchRecordAttendance(records: {
     date: string;
     time_in?: string;
     time_out?: string;
+    morning_in?: string;
+    morning_out?: string;
+    afternoon_in?: string;
+    afternoon_out?: string;
+    total_hours?: number;
     status: string;
     remarks?: string;
 }[]): Promise<void> {

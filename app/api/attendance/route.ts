@@ -80,6 +80,11 @@ export async function POST(request: NextRequest) {
             date: date,
             time_in: record.time_in || null,
             time_out: record.time_out || null,
+            morning_in: record.morning_in || null,
+            morning_out: record.morning_out || null,
+            afternoon_in: record.afternoon_in || null,
+            afternoon_out: record.afternoon_out || null,
+            total_hours: record.total_hours || 0,
             status: record.status,
             remarks: record.remarks || null
         })));
