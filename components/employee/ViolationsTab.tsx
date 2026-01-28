@@ -488,7 +488,8 @@ export default function ViolationsTab({ employeeId }: Props) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    zIndex: 1000
+                    zIndex: 1000,
+                    padding: '2rem'
                 }}>
                     <div style={{
                         background: 'white',
@@ -496,12 +497,14 @@ export default function ViolationsTab({ employeeId }: Props) {
                         padding: '2rem',
                         width: '100%',
                         maxWidth: '500px',
-                        maxHeight: '90vh',
-                        overflowY: 'auto'
+                        maxHeight: 'calc(100vh - 4rem)',
+                        overflowY: 'auto',
+                        margin: 'auto'
                     }}>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#b91c1c', marginBottom: '1.5rem' }}>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#b91c1c', marginBottom: '1.5rem', marginTop: 0 }}>
                             {editingItem ? 'Edit' : 'Add'} {activeSection === 'violations' ? 'Violation' : 'Warning'}
                         </h3>
+
 
                         {activeSection === 'violations' ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
