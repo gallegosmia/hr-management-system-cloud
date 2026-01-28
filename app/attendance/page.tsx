@@ -256,7 +256,7 @@ export default function AttendancePage() {
     const fetchAttendance = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/attendance?start_date=${startDate}&end_date=${endDate}`);
+            const res = await fetch(`/api/attendance?start_date=${startDate}&end_date=${endDate}&t=${new Date().getTime()}`);
             const data = await res.json();
             setAttendance(data);
         } catch (err) {
@@ -409,7 +409,30 @@ export default function AttendancePage() {
 
     const handleEditChange = (field: keyof AttendanceRecord, value: string) => {
         if (!editingRecord) return;
-        setEditingRecord({ ...editingRecord, [field]: value });
+
+        let updates: any = { [field]: value };
+
+        // Auto-detect Status based on Time
+        // Rule: 8:01+ = Late, 12:00+ = Half-Day
+        if (field === 'morning_in') {
+            if (value) {
+                if (value >= '12:00') {
+                    updates.status = 'Half-Day';
+                } else if (value >= '08:01') {
+                    updates.status = 'Late';
+                } else {
+                    updates.status = 'Present';
+                }
+            } else {
+                // If Morning In is cleared
+                // If Afternoon In is also empty (checking current state), set Absent
+                if (!editingRecord.afternoon_in) {
+                    updates.status = 'Absent';
+                }
+            }
+        }
+
+        setEditingRecord(prev => prev ? ({ ...prev, ...updates }) : null);
     };
 
     // --- Metrics ---
