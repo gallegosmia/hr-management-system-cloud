@@ -11,9 +11,23 @@ CREATE TABLE IF NOT EXISTS users (
     employee_id INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP WITH TIME ZONE,
-    is_active INTEGER DEFAULT 1,
+    is_active INTEGER DEFAULT 0, -- 0 for pending, 1 for active
+    status VARCHAR(50) DEFAULT 'PENDING_APPROVAL',
     reset_otp VARCHAR(20),
     reset_otp_expires_at TIMESTAMP WITH TIME ZONE
+);
+
+-- 1.1 Admin Approval Queue table
+CREATE TABLE IF NOT EXISTS admin_approval_queue (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    full_name TEXT,
+    email TEXT,
+    role VARCHAR(50),
+    status VARCHAR(50) DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    processed_at TIMESTAMP WITH TIME ZONE,
+    processed_by INTEGER REFERENCES users(id)
 );
 
 -- 2. Employees table (The main 201 file)

@@ -750,11 +750,12 @@ export default function EditEmployeePage() {
                                     <div className="form-group">
                                         <label className="form-label">Email Address</label>
                                         <input
-                                            type="email"
+                                            type="text"
                                             name="email_address"
                                             value={formData.email_address}
                                             onChange={handleChange}
                                             className="form-input"
+                                            placeholder="N/A"
                                         />
                                     </div>
                                 </div>
@@ -829,43 +830,6 @@ export default function EditEmployeePage() {
                                 </div>
                             </div>
 
-                            {/* 201 File Checklist Section */}
-                            <div style={{
-                                background: 'var(--bg-secondary)',
-                                padding: 'var(--spacing-lg)',
-                                borderRadius: 'var(--radius-md)',
-                                marginBottom: 'var(--spacing-xl)'
-                            }}>
-                                <h3 style={{ marginBottom: 'var(--spacing-lg)', fontSize: '1.125rem' }}>
-                                    📋 Digital 201 File Checklist
-                                </h3>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'var(--spacing-md)' }}>
-                                    {[
-                                        { name: 'personal_info_complete', label: 'Personal Information Complete' },
-                                        { name: 'preemployment_req_complete', label: 'Pre-Employment Requirements Complete' },
-                                        { name: 'government_docs_complete', label: 'Government Documents Complete' },
-                                        { name: 'employment_records_complete', label: 'Employment Records Complete' },
-                                        { name: 'attendance_records_complete', label: 'Attendance Records Complete' },
-                                        { name: 'payroll_records_complete', label: 'Payroll Records Complete' },
-                                        { name: 'disciplinary_records', label: 'Violations & Warnings' },
-                                        { name: 'training_records', label: 'Training & Certificate Records' },
-                                        { name: 'separation_records', label: 'Separation Records' },
-                                    ].map((item) => (
-                                        <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-                                            <input
-                                                type="checkbox"
-                                                id={item.name}
-                                                checked={(formData as any)[item.name] === 1}
-                                                onChange={(e) => setFormData({ ...formData, [item.name]: e.target.checked ? 1 : 0 })}
-                                                style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }}
-                                            />
-                                            <label htmlFor={item.name} style={{ fontSize: '0.875rem', cursor: 'pointer' }}>
-                                                {item.label}
-                                            </label>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
 
                             {/* 201 Information Section */}
                             <div style={{

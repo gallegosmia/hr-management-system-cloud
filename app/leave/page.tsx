@@ -450,6 +450,13 @@ export default function LeavePage() {
         return 'badge-gray';
     };
 
+    const getStatusStyles = (status: string) => {
+        if (status === 'Approved') return { background: '#ecfdf5', color: '#065f46' };
+        if (status === 'Rejected') return { background: '#fef2f2', color: '#991b1b' };
+        if (status === 'Cancelled') return { background: '#f3f4f6', color: '#374151' };
+        return { background: '#fff7ed', color: '#9a3412' }; // Pending
+    };
+
     const filteredRequests = filterStatus === 'All'
         ? requests
         : requests.filter(r => {
@@ -459,51 +466,90 @@ export default function LeavePage() {
 
     return (
         <DashboardLayout>
-            <div className="card mb-3">
-                <div className="card-body">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                            <h2 style={{ marginBottom: '0.5rem' }}>Leave Management</h2>
-                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                                Track and approve employee leave requests
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => {
-                                if (showForm) {
-                                    setEditingId(null);
-                                    setFormData({
-                                        employee_id: '',
-                                        leave_type: 'Vacation Leave',
-                                        start_date: '',
-                                        end_date: '',
-                                        reason: '',
-                                        vacation_reason: '',
-                                        other_reason: ''
-                                    });
-                                }
-                                setShowForm(!showForm);
-                            }}
-                            className="btn btn-primary"
-                        >
-                            {showForm ? 'Cancel' : '➕ File Leave Request'}
-                        </button>
+            {/* Header Section */}
+            <div style={{
+                background: 'linear-gradient(135deg, #064e3b 0%, #111827 100%)',
+                padding: '2rem',
+                borderRadius: '16px',
+                marginBottom: '1.5rem',
+                position: 'relative',
+                overflow: 'hidden',
+                color: 'white'
+            }}>
+                {/* Visual stripes overlay */}
+                <div style={{
+                    position: 'absolute',
+                    top: '-50%',
+                    right: '-10%',
+                    width: '300px',
+                    height: '200%',
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    transform: 'rotate(45deg)',
+                    pointerEvents: 'none'
+                }} />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+                    <div>
+                        <h1 style={{ color: 'white', margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>Leave Management</h1>
+                        <p style={{ color: 'rgba(255,255,255,0.7)', margin: '0.5rem 0 0', fontSize: '0.925rem' }}>
+                            Track and approve employee leave requests
+                        </p>
                     </div>
+                    <button
+                        onClick={() => {
+                            if (showForm) {
+                                setEditingId(null);
+                                setFormData({
+                                    employee_id: '',
+                                    leave_type: 'Vacation Leave',
+                                    start_date: '',
+                                    end_date: '',
+                                    reason: '',
+                                    vacation_reason: '',
+                                    other_reason: ''
+                                });
+                            }
+                            setShowForm(!showForm);
+                        }}
+                        style={{
+                            background: '#10b981',
+                            color: 'white',
+                            border: 'none',
+                            padding: '0.75rem 1.5rem',
+                            borderRadius: '10px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.background = '#059669'}
+                        onMouseOut={(e) => e.currentTarget.style.background = '#10b981'}
+                    >
+                        {showForm ? 'Cancel Request' : (
+                            <><span style={{ fontSize: '1.25rem' }}>+</span> File Leave Request</>
+                        )}
+                    </button>
                 </div>
             </div>
 
             {showForm && (
-                <div className="card mb-3" style={{ animation: 'slideDown 0.3s ease' }}>
-                    <div className="card-header">
-                        <div className="card-title">{editingId ? 'Edit Leave Request' : 'File New Leave Request'}</div>
+                <div className="card mb-3" style={{ animation: 'slideDown 0.3s ease', borderRadius: '16px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+                    <div className="card-header" style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '1.25rem 1.5rem' }}>
+                        <div className="card-title" style={{ fontSize: '1.125rem', fontWeight: 700, margin: 0 }}>
+                            {editingId ? '✏️ Edit Leave Request' : '📄 File New Leave Request'}
+                        </div>
                     </div>
-                    <div className="card-body">
+                    <div className="card-body" style={{ padding: '1.5rem' }}>
                         <form onSubmit={handleSubmit}>
                             <div className="form-row">
                                 <div className="form-group">
-                                    <label className="form-label">Employee</label>
+                                    <label className="form-label" style={{ fontWeight: 600 }}>Employee Name</label>
                                     <select
                                         className="form-select"
+                                        style={{ height: '42px', borderRadius: '8px' }}
                                         value={formData.employee_id}
                                         onChange={e => {
                                             setFormData({ ...formData, employee_id: e.target.value });
@@ -528,16 +574,17 @@ export default function LeavePage() {
                                         )}
                                     </select>
                                     {formData.employee_id && (
-                                        <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: leaveDaysUsed >= 5 ? 'var(--danger-600)' : 'var(--text-secondary)' }}>
-                                            Paid Leaves Used: <strong>{leaveDaysUsed} / 5 days</strong>
+                                        <div style={{ fontSize: '0.75rem', marginTop: '0.35rem', color: leaveDaysUsed >= 5 ? '#ef4444' : '#64748b', fontWeight: 500 }}>
+                                            Paid Leaves Used: <strong style={{ color: leaveDaysUsed >= 5 ? '#ef4444' : '#10b981' }}>{leaveDaysUsed} / 5 days</strong>
                                             {leaveDaysUsed >= 5 && ' (Limit Reached)'}
                                         </div>
                                     )}
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Leave Type</label>
+                                    <label className="form-label" style={{ fontWeight: 600 }}>Type of Leave</label>
                                     <select
                                         className="form-select"
+                                        style={{ height: '42px', borderRadius: '8px' }}
                                         value={formData.leave_type}
                                         onChange={e => setFormData({ ...formData, leave_type: e.target.value })}
                                     >
@@ -549,20 +596,22 @@ export default function LeavePage() {
                             </div>
                             <div className="form-row">
                                 <div className="form-group">
-                                    <label className="form-label">Start Date</label>
+                                    <label className="form-label" style={{ fontWeight: 600 }}>Start Date</label>
                                     <input
                                         type="date"
                                         className="form-input"
+                                        style={{ height: '42px', borderRadius: '8px' }}
                                         value={formData.start_date}
                                         onChange={e => setFormData({ ...formData, start_date: e.target.value })}
                                         required
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">End Date</label>
+                                    <label className="form-label" style={{ fontWeight: 600 }}>End Date</label>
                                     <input
                                         type="date"
                                         className="form-input"
+                                        style={{ height: '42px', borderRadius: '8px' }}
                                         value={formData.end_date}
                                         onChange={e => setFormData({ ...formData, end_date: e.target.value })}
                                         required
@@ -572,9 +621,10 @@ export default function LeavePage() {
                             {formData.leave_type === 'Vacation Leave' && (
                                 <>
                                     <div className="form-group">
-                                        <label className="form-label">Vacation Reason</label>
+                                        <label className="form-label" style={{ fontWeight: 600 }}>Vacation Reason</label>
                                         <select
                                             className="form-select"
+                                            style={{ height: '42px', borderRadius: '8px' }}
                                             value={formData.vacation_reason}
                                             onChange={e => setFormData({ ...formData, vacation_reason: e.target.value })}
                                             required
@@ -591,10 +641,11 @@ export default function LeavePage() {
                                     </div>
                                     {formData.vacation_reason === 'Other' && (
                                         <div className="form-group">
-                                            <label className="form-label">Please Specify Other Reason</label>
+                                            <label className="form-label" style={{ fontWeight: 600 }}>Please Specify Other Reason</label>
                                             <input
                                                 type="text"
                                                 className="form-input"
+                                                style={{ height: '42px', borderRadius: '8px' }}
                                                 value={formData.other_reason}
                                                 onChange={e => setFormData({ ...formData, other_reason: e.target.value })}
                                                 placeholder="Specify your reason..."
@@ -605,29 +656,38 @@ export default function LeavePage() {
                                 </>
                             )}
                             <div className="form-group">
-                                <label className="form-label">Additional Notes (Optional)</label>
+                                <label className="form-label" style={{ fontWeight: 600 }}>Additional Notes (Optional)</label>
                                 <textarea
                                     className="form-textarea"
+                                    style={{ borderRadius: '8px', minHeight: '100px', border: '2px solid #e2e8f0' }}
                                     value={formData.reason}
                                     onChange={e => setFormData({ ...formData, reason: e.target.value })}
                                     placeholder="Any additional information..."
-                                    style={{ minHeight: '80px' }}
                                 />
                             </div>
-                            <div style={{ textAlign: 'right' }}>
+                            <div style={{ textAlign: 'right', marginTop: '1rem' }}>
                                 {user?.role === 'Employee' && !user?.employee_id ? (
-                                    <div className="alert alert-danger" style={{ textAlign: 'left', marginBottom: '1rem' }}>
+                                    <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#991b1b', padding: '1rem', borderRadius: '10px', textAlign: 'left' }}>
                                         <strong>Notice:</strong> Your account is not yet linked to an employee record.
                                         Please contact HR to link your account so you can file leave requests.
                                     </div>
                                 ) : (
                                     <button
                                         type="submit"
-                                        className="btn btn-success"
+                                        style={{
+                                            background: '#10b981',
+                                            color: 'white',
+                                            border: 'none',
+                                            padding: '0.75rem 2rem',
+                                            borderRadius: '8px',
+                                            fontWeight: 700,
+                                            cursor: (leaveDaysUsed >= 5 && !editingId) ? 'not-allowed' : 'pointer',
+                                            opacity: (leaveDaysUsed >= 5 && !editingId) ? 0.6 : 1
+                                        }}
                                         disabled={(leaveDaysUsed >= 5 && !editingId) || (user?.role === 'Employee' && !user?.employee_id)}
                                         title={leaveDaysUsed >= 5 && !editingId ? "Employee has reached the 5-day leave limit" : ""}
                                     >
-                                        {editingId ? 'Update Request' : (leaveDaysUsed >= 5 ? 'Limit Reached' : 'Submit Request')}
+                                        {editingId ? 'Update Request' : (leaveDaysUsed >= 5 ? 'Limit Reached' : 'Submit Leave Request')}
                                     </button>
                                 )}
                             </div>
@@ -636,124 +696,169 @@ export default function LeavePage() {
                 </div>
             )}
 
-            <div className="card mb-3">
-                <div className="card-body">
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <span style={{ fontWeight: 600 }}>Filter Status:</span>
+            {/* Filter Section */}
+            <div className="card mb-3" style={{ borderRadius: '12px', border: '1px solid #f1f5f9' }}>
+                <div className="card-body" style={{ padding: '0.75rem 1rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                         {['All', 'Pending', 'Approved', 'Rejected', 'Cancelled'].map(status => (
                             <button
                                 key={status}
                                 onClick={() => setFilterStatus(status)}
-                                className={`btn btn-sm ${filterStatus === status ? 'btn-primary' : 'btn-secondary'}`}
+                                style={{
+                                    padding: '0.4rem 1.25rem',
+                                    borderRadius: '999px',
+                                    fontSize: '0.825rem',
+                                    fontWeight: 600,
+                                    border: '1px solid ' + (filterStatus === status ? '#10b981' : '#e2e8f0'),
+                                    background: filterStatus === status ? '#10b981' : '#f8fafc',
+                                    color: filterStatus === status ? 'white' : '#64748b',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    boxShadow: filterStatus === status ? '0 2px 4px rgba(16, 185, 129, 0.2)' : 'none'
+                                }}
                             >
                                 {status}
+                                {status === 'Rejected' && filterStatus === status && (
+                                    <span style={{ marginLeft: '6px', width: '8px', height: '8px', background: 'white', borderRadius: '50%', display: 'inline-block' }}></span>
+                                )}
                             </button>
                         ))}
                     </div>
                 </div>
             </div>
 
-            <div className="card">
+            {/* Main Table Content */}
+            <div className="card" style={{ borderRadius: '16px', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
                 <div className="table-container">
-                    <table className="table">
-                        <thead>
+                    <table className="table" style={{ margin: 0 }}>
+                        <thead style={{ background: '#f8fafc' }}>
                             <tr>
-                                <th>Employee</th>
-                                <th>Type</th>
-                                <th>Dates</th>
-                                <th>Days</th>
-                                <th>Reason</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th style={{ padding: '1.25rem 1.5rem', color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>Employee</th>
+                                <th style={{ padding: '1.25rem 1.5rem', color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>Type</th>
+                                <th style={{ padding: '1.25rem 1.5rem', color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>Dates</th>
+                                <th style={{ padding: '1.25rem 1.5rem', color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>Days</th>
+                                <th style={{ padding: '1.25rem 1.5rem', color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>Reason</th>
+                                <th style={{ padding: '1.25rem 1.5rem', color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>Status</th>
+                                <th style={{ padding: '1.25rem 1.5rem', color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan={7} className="text-center p-4">Loading...</td></tr>
+                                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '4rem', color: '#64748b' }}>Loading records...</td></tr>
                             ) : filteredRequests.length === 0 ? (
-                                <tr><td colSpan={7} className="text-center p-4">No leave requests found</td></tr>
+                                <tr>
+                                    <td colSpan={7} style={{ padding: '4rem 0' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#94a3b8' }}>
+                                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🗓️</div>
+                                            <div style={{ fontWeight: 600, color: '#475569', fontSize: '1.125rem' }}>No leave requests.</div>
+                                            <p style={{ margin: '0.25rem 0' }}>Create your first leave application here.</p>
+                                            <button
+                                                onClick={() => setShowForm(true)}
+                                                style={{ marginTop: '1rem', background: '#10b981', color: 'white', border: 'none', padding: '0.625rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
+                                            >
+                                                File Leave Request
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
                             ) : (
-                                filteredRequests.map(req => (
-                                    <tr key={req.id}>
-                                        <td>
-                                            <div style={{ fontWeight: 600 }}>{req.employee_name}</div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                                {req.department}
-                                            </div>
-                                        </td>
-                                        <td>{req.leave_type}</td>
-                                        <td>
-                                            <div>{req.start_date ? format(parseISO(req.start_date), 'MMM d, yyyy') : '-'}</div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                                {req.end_date ? `to ${format(parseISO(req.end_date), 'MMM d, yyyy')}` : ''}
-                                            </div>
-                                        </td>
-                                        <td>{req.days_count}</td>
-                                        <td style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                            {req.reason}
-                                        </td>
-                                        <td>
-                                            <span className={`badge ${getStatusBadge(req.status)}`}>
-                                                {req.status}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                {req.status.startsWith('Pending') && (['Admin', 'HR', 'Manager', 'President', 'Vice President'].includes(user?.role)) && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => handleStatusUpdate(req.id, 'Approved')}
-                                                            className="btn btn-sm btn-success btn-icon"
-                                                            title="Approve"
-                                                        >
-                                                            ✓
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleStatusUpdate(req.id, 'Rejected')}
-                                                            className="btn btn-sm btn-danger btn-icon"
-                                                            title="Reject"
-                                                        >
-                                                            ✕
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleEdit(req)}
-                                                            className="btn btn-sm btn-primary btn-icon"
-                                                            title="Edit"
-                                                        >
-                                                            ✏️
-                                                        </button>
-                                                    </>
-                                                )}
-                                                <button
-                                                    onClick={() => handleDownloadPDF(req)}
-                                                    className="btn btn-sm btn-info btn-icon"
-                                                    title="Download PDF"
-                                                >
-                                                    📄
-                                                </button>
-                                                {req.status.startsWith('Pending') && (
+                                filteredRequests.map(req => {
+                                    const s = getStatusStyles(req.status);
+                                    return (
+                                        <tr key={req.id} style={{ transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.background = 'white'}>
+                                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                                                <div style={{ fontWeight: 700, color: '#111827' }}>{req.employee_name}</div>
+                                                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>
+                                                    {req.department}
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.875rem' }}>{req.leave_type}</td>
+                                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                                                <div style={{ fontWeight: 500, color: '#475569', fontSize: '0.875rem' }}>
+                                                    {req.start_date ? format(parseISO(req.start_date), 'MMM d, yyyy') : '-'}
+                                                </div>
+                                                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>
+                                                    {req.end_date ? `to ${format(parseISO(req.end_date), 'MMM d, yyyy')}` : ''}
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '1.25rem 1.5rem', fontWeight: 600, color: '#475569' }}>{req.days_count}</td>
+                                            <td style={{ padding: '1.25rem 1.5rem', maxWidth: '180px', fontSize: '0.825rem', color: '#64748b' }}>
+                                                <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={req.reason}>
+                                                    {req.reason}
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                                                <span style={{
+                                                    display: 'inline-flex',
+                                                    padding: '0.35rem 0.75rem',
+                                                    borderRadius: '6px',
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 700,
+                                                    background: s.background,
+                                                    color: s.color,
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.025em'
+                                                }}>
+                                                    {req.status}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                    {req.status.startsWith('Pending') && (['Admin', 'HR', 'Manager', 'President', 'Vice President'].includes(user?.role)) && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(req.id, 'Approved')}
+                                                                style={{ width: '30px', height: '30px', background: '#ecfdf5', color: '#059669', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                title="Approve"
+                                                            >
+                                                                ✓
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(req.id, 'Rejected')}
+                                                                style={{ width: '30px', height: '30px', background: '#fef2f2', color: '#dc2626', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                title="Reject"
+                                                            >
+                                                                ✕
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleEdit(req)}
+                                                                style={{ width: '30px', height: '30px', background: '#ebf5ff', color: '#2563eb', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                title="Edit"
+                                                            >
+                                                                ✏️
+                                                            </button>
+                                                        </>
+                                                    )}
                                                     <button
-                                                        onClick={() => handleStatusUpdate(req.id, 'Cancelled')}
-                                                        className="btn btn-sm btn-warning btn-icon"
-                                                        title="Cancel Leave Request"
+                                                        onClick={() => handleDownloadPDF(req)}
+                                                        style={{ width: '30px', height: '30px', background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                        title="Download PDF"
                                                     >
-                                                        🚫
+                                                        📄
                                                     </button>
-                                                )}
-                                                {(['Admin', 'HR', 'Manager', 'President', 'Vice President'].includes(user?.role)) && (
-                                                    <button
-                                                        onClick={() => handleDelete(req.id)}
-                                                        className="btn btn-sm btn-secondary btn-icon"
-                                                        title="Delete"
-                                                        style={{ color: 'var(--danger-600)' }}
-                                                    >
-                                                        🗑️
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
+                                                    {req.status.startsWith('Pending') && (
+                                                        <button
+                                                            onClick={() => handleStatusUpdate(req.id, 'Cancelled')}
+                                                            style={{ width: '30px', height: '30px', background: '#fff7ed', color: '#ea580c', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                            title="Cancel Leave Request"
+                                                        >
+                                                            🚫
+                                                        </button>
+                                                    )}
+                                                    {(['Admin', 'HR', 'Manager', 'President', 'Vice President'].includes(user?.role)) && (
+                                                        <button
+                                                            onClick={() => handleDelete(req.id)}
+                                                            style={{ width: '30px', height: '30px', background: '#fef2f2', color: '#dc2626', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                            title="Delete"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>

@@ -1,38 +1,54 @@
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 import fs from 'fs';
 import path from 'path';
 
 // Database configuration
-const isProduction = process.env.NODE_ENV === 'production' || !!process.env.DATABASE_URL;
-const DATABASE_URL = process.env.DATABASE_URL;
 const DB_FILE = path.join(process.cwd(), 'data', 'database.json');
-
-// Pool for PostgreSQL (Production)
 let pool: Pool | null = null;
 
-if (DATABASE_URL) {
-  pool = new Pool({
-    connectionString: DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false
-    },
-    max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
-  });
+function getPool(): Pool | null {
+  if (pool) return pool;
+
+  let url = process.env.DATABASE_URL;
+  if (!url && fs.existsSync(path.join(process.cwd(), '.env'))) {
+    const env = fs.readFileSync(path.join(process.cwd(), '.env'), 'utf-8');
+    const match = env.match(/^DATABASE_URL=(.+)$/m);
+    if (match) url = match[1].trim();
+  }
+
+  if (url) {
+    try {
+      pool = new Pool({
+        connectionString: url,
+        ssl: { rejectUnauthorized: false },
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 5000,
+      });
+      return pool;
+    } catch (e) {
+      console.error('Failed to create PG pool:', e);
+      return null;
+    }
+  }
+  return null;
 }
 
-export let isPostgres = !!pool;
+export const isPostgres = () => !!getPool();
 
-// Ensure local directory exists (for development)
-if (!DATABASE_URL && !fs.existsSync(path.join(process.cwd(), 'data'))) {
-  fs.mkdirSync(path.join(process.cwd(), 'data'));
+// Ensure local directory exists
+if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
+  fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
 }
 
 // Local JSON Fallback Logic
 function loadDB() {
   if (fs.existsSync(DB_FILE)) {
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+    try {
+      return JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+    } catch (e) {
+      console.error('Failed to parse database.json', e);
+    }
   }
   return {
     users: [],
@@ -45,7 +61,8 @@ function loadDB() {
     documents: [],
     audit_logs: [],
     sessions: [],
-    education: []
+    education: [],
+    admin_approval_queue: []
   };
 }
 
@@ -57,21 +74,24 @@ function saveDB(data: any) {
  * Main query function
  */
 export async function query(sql: string, params: any[] = []): Promise<{ rows: any[], rowCount: number }> {
-  // Use PostgreSQL if pool is available
-  if (pool) {
+  const activePool = getPool();
+  if (activePool) {
     try {
-      const res = await pool.query(sql, params);
+      const res = await activePool.query(sql, params);
       return {
         rows: res.rows,
         rowCount: res.rowCount || 0
       };
     } catch (error: any) {
-      const errorMsg = error.message || '';
-      if (errorMsg.includes('quota') || errorMsg.includes('transfer') || errorMsg.includes('limit')) {
-        console.error('⚠ DATABASE QUOTA EXCEEDED. Falling back to local JSON database for this session.', errorMsg);
-        // Temporarily nullify pool for this process lifetime to trigger fallback below
+      const errorMsg = (error.message || '').toLowerCase();
+      const isConnectionError = errorMsg.includes('connection') ||
+        errorMsg.includes('econnrefused') ||
+        errorMsg.includes('etimedout');
+
+      if (isConnectionError) {
+        console.error('⚠ DATABASE CONNECTION ERROR. Falling back to local JSON database.', errorMsg);
         pool = null;
-        isPostgres = false;
+        // Proceed to fallback logic below
       } else {
         console.error(`[PostgreSQL] Query Error: ${sql}`, error);
         throw error;
@@ -84,65 +104,46 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
   const normalizedSql = sql.trim().replace(/\s+/g, ' ');
 
   try {
-    // SELECT NOW()
     if (normalizedSql.match(/^SELECT NOW\(\)/i)) {
       return { rows: [{ now: new Date().toISOString() }], rowCount: 1 };
     }
 
-    // SELECT
     if (normalizedSql.match(/^SELECT/i)) {
-      const tableMatch = normalizedSql.match(/FROM\s+([a-z_]+)/i);
+      const tableMatch = normalizedSql.match(/FROM\s+([a-z0-9_]+)/i);
       if (!tableMatch) throw new Error('Table not found in query');
-      const table = tableMatch[1];
+      const table = tableMatch[1].toLowerCase();
 
       if (!db[table]) return { rows: [], rowCount: 0 };
 
       let results = [...db[table]];
 
-      // WHERE clause
       const whereMatch = normalizedSql.match(/WHERE\s+(.+?)(?:ORDER BY|$)/i);
       if (whereMatch) {
         const conditions = whereMatch[1];
-        results = results.filter(row => {
+        results = results.filter((row: any) => {
           const parts = conditions.split(/\s+AND\s+/i);
           return parts.every(part => {
             let match;
-            if (match = part.match(/([a-z_]+)\s*=\s*\$(\d+)/i)) {
+            if (match = part.match(/([a-z0-9_]+)\s*=\s*\$(\d+)/i)) {
               const [_, col, paramIdx] = match;
               return row[col] == params[parseInt(paramIdx) - 1];
             }
-            else if (match = part.match(/([a-z_]+)\s+LIKE\s+\$(\d+)/i)) {
+            if (match = part.match(/([a-z0-9_]+)\s*=\s*'(.*?)'/i)) {
+              const [_, col, literal] = match;
+              return row[col] == literal;
+            }
+            if (match = part.match(/([a-z0-9_]+)\s+LIKE\s+\$(\d+)/i)) {
               const [_, col, paramIdx] = match;
               const val = params[parseInt(paramIdx) - 1];
               if (!row[col]) return false;
               const pattern = val.replace(/%/g, '.*');
               return new RegExp(`^${pattern}$`, 'i').test(row[col]);
             }
-            else if (match = part.match(/([a-z_]+)\s*>=\s*\$(\d+)/i)) {
-              const [_, col, paramIdx] = match;
-              return row[col] >= params[parseInt(paramIdx) - 1];
-            }
-            else if (match = part.match(/([a-z_]+)\s*<=\s*\$(\d+)/i)) {
-              const [_, col, paramIdx] = match;
-              return row[col] <= params[parseInt(paramIdx) - 1];
-            }
             return true;
           });
         });
       }
 
-      // ORDER BY
-      const orderMatch = normalizedSql.match(/ORDER BY\s+([a-z_]+)(?:\s+(ASC|DESC))?/i);
-      if (orderMatch) {
-        const [_, col, dir] = orderMatch;
-        results.sort((a, b) => {
-          if (a[col] < b[col]) return dir?.toUpperCase() === 'DESC' ? 1 : -1;
-          if (a[col] > b[col]) return dir?.toUpperCase() === 'DESC' ? -1 : 1;
-          return 0;
-        });
-      }
-
-      // SELECT COUNT(*)
       if (normalizedSql.match(/SELECT\s+COUNT\(\*\)/i)) {
         return { rows: [{ count: results.length }], rowCount: 1 };
       }
@@ -150,7 +151,6 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
       return { rows: results, rowCount: results.length };
     }
 
-    // INSERT
     if (normalizedSql.match(/^INSERT/i)) {
       const tableMatch = normalizedSql.match(/INTO\s+([a-z_]+)/i);
       const table = tableMatch![1];
@@ -174,68 +174,99 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
       return { rows: [{ id: newItem.id }], rowCount: 1 };
     }
 
-    // UPDATE
     if (normalizedSql.match(/^UPDATE/i)) {
       const tableMatch = normalizedSql.match(/UPDATE\s+([a-z_]+)/i);
       const table = tableMatch![1];
-      const whereIdMatch = normalizedSql.match(/WHERE\s+id\s*=\s*\$(\d+)/i);
-      if (!whereIdMatch) throw new Error('UPDATE must have WHERE id');
-      const idToUpdate = params[parseInt(whereIdMatch[1]) - 1];
-      const itemIndex = db[table].findIndex((i: any) => i.id == idToUpdate);
+      const whereMatch = normalizedSql.match(/WHERE\s+(.+)$/i);
+      if (!whereMatch) throw new Error('UPDATE must have WHERE clause');
 
-      if (itemIndex !== -1) {
-        const setMatch = normalizedSql.match(/SET\s+(.+?)\s+WHERE/i);
-        if (setMatch) {
-          const setClauses = setMatch[1].split(',');
-          setClauses.forEach(clause => {
-            const [colRaw, valRaw] = clause.split('=');
-            const col = colRaw.trim();
-            const valPart = valRaw.trim();
-            if (valPart.startsWith('$')) {
-              db[table][itemIndex][col] = params[parseInt(valPart.substring(1)) - 1];
-            } else if (valPart.match(/CURRENT_TIMESTAMP/i)) {
-              db[table][itemIndex][col] = new Date().toISOString();
-            }
-          });
+      const conditions = whereMatch[1];
+      let updatedCount = 0;
+
+      if (!db[table]) return { rows: [], rowCount: 0 };
+
+      db[table] = db[table].map((row: any) => {
+        const parts = conditions.split(/\s+AND\s+/i);
+        const matches = parts.every(part => {
+          let m;
+          if (m = part.match(/([a-z0-9_]+)\s*=\s*\$(\d+)/i)) {
+            const [_, col, paramIdx] = m;
+            return row[col] == params[parseInt(paramIdx) - 1];
+          }
+          if (m = part.match(/([a-z0-9_]+)\s*=\s*'(.*?)'/i)) {
+            const [_, col, literal] = m;
+            return row[col] == literal;
+          }
+          return true;
+        });
+
+        if (matches) {
+          const setMatch = normalizedSql.match(/SET\s+(.+?)\s+WHERE/i);
+          if (setMatch) {
+            const setClauses = setMatch[1].split(',');
+            setClauses.forEach(clause => {
+              const [colRaw, valRaw] = clause.split('=');
+              if (colRaw && valRaw) {
+                const col = colRaw.trim();
+                const valPart = valRaw.trim();
+                if (valPart.startsWith('$')) {
+                  row[col] = params[parseInt(valPart.substring(1)) - 1];
+                } else if (valPart.match(/CURRENT_TIMESTAMP/i)) {
+                  row[col] = new Date().toISOString();
+                } else if (valPart.startsWith("'") && valPart.endsWith("'")) {
+                  row[col] = valPart.substring(1, valPart.length - 1);
+                }
+              }
+            });
+          }
+          updatedCount++;
         }
-        saveDB(db);
-        return { rows: [], rowCount: 1 };
-      }
-      return { rows: [], rowCount: 0 };
+        return row;
+      });
+
+      if (updatedCount > 0) saveDB(db);
+      return { rows: [], rowCount: updatedCount };
     }
 
-    // DELETE
     if (normalizedSql.match(/^DELETE/i)) {
       const tableMatch = normalizedSql.match(/FROM\s+([a-z_]+)/i);
       const table = tableMatch![1];
-      const whereIdMatch = normalizedSql.match(/WHERE\s+id\s*=\s*\$(\d+)/i);
-      if (whereIdMatch) {
+      const whereMatch = normalizedSql.match(/WHERE\s+(.+)$/i);
+      if (whereMatch) {
         const initialLen = db[table].length;
-        db[table] = db[table].filter((i: any) => i.id != params[parseInt(whereIdMatch[1]) - 1]);
+        const conditions = whereMatch[1];
+        db[table] = db[table].filter((row: any) => {
+          const parts = conditions.split(/\s+AND\s+/i);
+          return !parts.every(part => {
+            let m;
+            if (m = part.match(/([a-z0-9_]+)\s*=\s*\$(\d+)/i)) {
+              const [_, col, paramIdx] = m;
+              return row[col] == params[parseInt(paramIdx) - 1];
+            }
+            return true;
+          });
+        });
         saveDB(db);
         return { rows: [], rowCount: initialLen - db[table].length };
       }
     }
 
     return { rows: [], rowCount: 0 };
-  } catch (e) {
+  } catch (e: any) {
     console.error(`[LocalDB] Query Error: ${sql}`, e);
     throw e;
   }
 }
 
-
-/**
- * High-level Data Access Functions
- */
 export async function getAll(table: string): Promise<any[]> {
   const res = await query(`SELECT * FROM ${table}`);
   return res.rows;
 }
 
 export async function getById(table: string, id: number | string): Promise<any | undefined> {
-  if (pool) {
-    const res = await pool.query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
+  const activePool = getPool();
+  if (activePool) {
+    const res = await activePool.query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
     return res.rows[0];
   }
   const db = loadDB();
@@ -247,18 +278,12 @@ export async function insert(table: string, data: any): Promise<number> {
   const values = Object.values(data);
   const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
 
-  // Use RETURNING id for PostgreSQL to get the new ID immediately
-  const sql = pool
+  const activePool = getPool();
+  const sql = activePool
     ? `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders}) RETURNING id`
     : `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
 
   const res = await query(sql, values);
-
-  if (pool) {
-    return res.rows[0]?.id;
-  }
-
-  // Fallback / Local logic (query function already handled insertion for local)
   return res.rows[0]?.id;
 }
 
@@ -267,7 +292,6 @@ export async function update(table: string, id: number | string, data: any): Pro
   const values = Object.values(data);
   const setClause = keys.map((key, i) => `${key} = $${i + 2}`).join(', ');
   const sql = `UPDATE ${table} SET ${setClause} WHERE id = $1`;
-
   await query(sql, [id, ...values]);
 }
 
@@ -276,14 +300,29 @@ export async function remove(table: string, id: number | string): Promise<void> 
 }
 
 export async function initializeDatabase() {
-  if (pool) {
+  const activePool = getPool();
+  if (activePool) {
     console.log('✅ PostgreSQL Database connected');
     return;
   }
   console.log('✅ Local JSON Database initialized');
 }
 
-export default {
+export async function resetTableSequence(table: string) {
+  const activePool = getPool();
+  if (activePool) {
+    try {
+      if (!/^[a-zA-Z0-9_]+$/.test(table)) throw new Error("Invalid table name");
+      const sql = `SELECT setval(pg_get_serial_sequence($1, 'id'), COALESCE((SELECT MAX(id) FROM ${table}), 0) + 1, false)`;
+      await activePool.query(sql, [table]);
+      console.log(`Sequence for ${table} reset successfully.`);
+    } catch (e) {
+      console.error(`Failed to reset sequence for ${table}:`, e);
+    }
+  }
+}
+
+const db = {
   query,
   getAll,
   getById,
@@ -291,37 +330,8 @@ export default {
   update,
   remove,
   initializeDatabase,
+  isPostgres,
   resetTableSequence
 };
 
-// Helper to reset sequence if out of sync
-export async function resetTableSequence(table: string) {
-  if (pool) {
-    try {
-      // Robust reset: find max ID, set sequence to max+1
-      // Use pg_get_serial_sequence to be safe about sequence naming
-      const query = `
-        SELECT setval(
-          pg_get_serial_sequence($1, 'id'),
-          COALESCE((SELECT MAX(id) FROM ${table}), 0) + 1,
-          false
-        )
-      `;
-      // Check if table name is safe (simple validation)
-      if (!/^[a-zA-Z0-9_]+$/.test(table)) throw new Error("Invalid table name");
-
-      await pool.query(query, [table]);
-      console.log(`Sequence for ${table} reset successfully.`);
-    } catch (e) {
-      console.error(`Failed to reset sequence for ${table}:`, e);
-      // Fallback: try standard naming convention if pg_get_serial_sequence fails
-      try {
-        const fallbackQuery = `SELECT setval('${table}_id_seq', COALESCE((SELECT MAX(id) FROM ${table}), 0) + 1, false)`;
-        await pool.query(fallbackQuery);
-        console.log(`Fallback sequence reset for ${table} success.`);
-      } catch (e2) {
-        console.error(`Fallback reset failed for ${table}:`, e2);
-      }
-    }
-  }
-}
+export default db;

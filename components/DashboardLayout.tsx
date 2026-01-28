@@ -8,13 +8,16 @@ import NotificationDropdown from './NotificationDropdown';
 
 interface LayoutProps {
     children: ReactNode;
+    hideSidebar?: boolean;
+    hideNavbar?: boolean;
 }
 
-export default function DashboardLayout({ children }: LayoutProps) {
+export default function DashboardLayout({ children, hideSidebar = false, hideNavbar = false }: LayoutProps) {
     const router = useRouter();
     const pathname = usePathname();
     const [user, setUser] = useState<any>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [loadingStatus, setLoadingStatus] = useState('Preparing system...');
 
     // Search States
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -24,23 +27,29 @@ export default function DashboardLayout({ children }: LayoutProps) {
     const searchRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        setLoadingStatus('Checking session...');
         try {
             const sessionId = localStorage.getItem('sessionId');
             const userData = localStorage.getItem('user');
 
             if (!sessionId || !userData || userData === 'undefined' || userData === 'null') {
+                setLoadingStatus('No active session. Redirecting...');
                 router.push('/');
                 return;
             }
 
             const parsedUser = JSON.parse(userData);
             if (!parsedUser) {
+                setLoadingStatus('Invalid session. Redirecting...');
                 router.push('/');
                 return;
             }
 
+            setLoadingStatus('Welcome, ' + parsedUser.username);
             setUser(parsedUser);
         } catch (error) {
+            console.error('Session error:', error);
+            setLoadingStatus('Session error. Redirecting...');
             router.push('/');
         }
     }, [router]);
@@ -90,18 +99,48 @@ export default function DashboardLayout({ children }: LayoutProps) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    if (!user) return <div className="loading-screen">Loading...</div>;
+    if (!user) {
+        return (
+            <div style={{
+                height: '100vh',
+                width: '100vw',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: '#f8fafc',
+                fontFamily: 'system-ui, -apple-system, sans-serif'
+            }}>
+                <div style={{
+                    width: '40px',
+                    height: '40px',
+                    border: '4px solid #e2e8f0',
+                    borderTopColor: '#3b82f6',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    marginBottom: '1rem'
+                }}></div>
+                <div style={{ color: '#64748b', fontWeight: 600 }}>{loadingStatus}</div>
+                <style>{`
+                    @keyframes spin {
+                        to { transform: rotate(360deg); }
+                    }
+                `}</style>
+            </div>
+        );
+    }
 
     const navigation = [
         { name: 'Dashboard', href: '/dashboard', icon: '📊', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President', 'Employee'] },
+        { name: 'My Profile', href: '/profile', icon: '👤', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President', 'Employee'] },
         { name: '201 Files', href: '/employees', icon: '📋', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
-        { name: 'Compensation & Benefits', href: '/compensation', icon: '💰', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
         { name: 'Attendance', href: '/attendance', icon: '⏰', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President', 'Employee'] },
         { name: 'Leave Requests', href: '/leave', icon: '🏖️', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President', 'Employee'] },
         { name: 'Payroll', href: '/payroll', icon: '🧾', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
         { name: 'Employee Bonuses', href: '/bonuses', icon: '🎁', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
         { name: 'Transportation Allowance', href: '/transportation', icon: '🚗', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
         { name: 'Reports', href: '/reports', icon: '📈', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
+        { name: 'Kiosk Scanner', href: '/attendance/kiosk', icon: '📱', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President', 'Employee'] },
         { name: 'User Management', href: '/users', icon: '👥', roles: ['Admin'] },
     ];
 
@@ -112,157 +151,165 @@ export default function DashboardLayout({ children }: LayoutProps) {
     return (
         <div className="premium-dashboard-container">
             {/* Fully Restored Original Sidebar */}
-            <aside className="main-sidebar original-sidebar">
-                <div className="sidebar-branding">
-                    <div className="sidebar-logo-icon">
-                        <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="10" y="50" width="20" height="40" rx="4" fill="#8B2635" />
-                            <rect x="40" y="30" width="20" height="60" rx="4" fill="#D2691E" />
-                            <rect x="70" y="10" width="20" height="80" rx="4" fill="#E74C3C" />
-                        </svg>
+            {!hideSidebar && (
+                <aside className="main-sidebar original-sidebar">
+                    <div className="sidebar-branding">
+                        <div className="sidebar-logo-icon">
+                            <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="10" y="50" width="20" height="40" rx="4" fill="#8B2635" />
+                                <rect x="40" y="30" width="20" height="60" rx="4" fill="#D2691E" />
+                                <rect x="70" y="10" width="20" height="80" rx="4" fill="#E74C3C" />
+                            </svg>
+                        </div>
+                        <div className="sidebar-text-brand">
+                            <div className="brand-line">Melann</div>
+                            <div className="brand-line" style={{ fontSize: '1rem', opacity: 0.9 }}>HR Management</div>
+                            <div className="brand-line" style={{ fontSize: '1rem', opacity: 0.9 }}>System</div>
+                        </div>
                     </div>
-                    <div className="sidebar-text-brand">
-                        <div className="brand-line">Melann</div>
-                        <div className="brand-line" style={{ fontSize: '1rem', opacity: 0.9 }}>HR Management</div>
-                        <div className="brand-line" style={{ fontSize: '1rem', opacity: 0.9 }}>System</div>
+
+                    <div className="sidebar-divider"></div>
+
+                    <nav className="sidebar-nav">
+                        <ul className="nav-list">
+                            {filteredNavigation.map((item, idx) => (
+                                <li key={idx}>
+                                    <Link href={item.href} className={`nav-link ${pathname === item.href ? 'active' : ''}`}>
+                                        <span className="nav-icon">{item.icon}</span>
+                                        <span className="nav-label">{item.name}</span>
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </nav>
+
+                    <div className="sidebar-footer">
+                        <Link href="/settings" className="nav-link">
+                            <span className="nav-icon">⚙️</span>
+                            <span className="nav-label">Settings</span>
+                        </Link>
+                        <button onClick={handleLogout} className="nav-link logout">
+                            <span className="nav-icon">🚪</span>
+                            <span className="nav-label">Logout</span>
+                        </button>
                     </div>
-                </div>
-
-                <div className="sidebar-divider"></div>
-
-                <nav className="sidebar-nav">
-                    <ul className="nav-list">
-                        {filteredNavigation.map((item, idx) => (
-                            <li key={idx}>
-                                <Link href={item.href} className={`nav-link ${pathname === item.href ? 'active' : ''}`}>
-                                    <span className="nav-icon">{item.icon}</span>
-                                    <span className="nav-label">{item.name}</span>
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                </nav>
-
-                <div className="sidebar-footer">
-                    <Link href="/settings" className="nav-link">
-                        <span className="nav-icon">⚙️</span>
-                        <span className="nav-label">Settings</span>
-                    </Link>
-                    <button onClick={handleLogout} className="nav-link logout">
-                        <span className="nav-icon">🚪</span>
-                        <span className="nav-label">Logout</span>
-                    </button>
-                </div>
-            </aside>
+                </aside>
+            )}
 
 
             {/* Main Area */}
-            <main className="main-viewport">
+            <main className="main-viewport" style={{ padding: hideSidebar ? 0 : '20px' }}>
                 {/* Fixed Top Nav */}
-                <header className="premium-header glass-effect">
-                    <div className="header-top-row">
-                        <div className="header-left">
-                            <div className="header-search-container" ref={searchRef}>
-                                <div className={`search-wrapper ${isSearchOpen ? 'open' : ''}`}>
-                                    <button className="search-trigger" onClick={() => setIsSearchOpen(!isSearchOpen)}>
-                                        <span className="search-icon">🔍</span>
-                                    </button>
-                                    {isSearchOpen && (
-                                        <input
-                                            type="text"
-                                            className="search-input"
-                                            placeholder="Search employees..."
-                                            autoFocus
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                        />
+                {!hideNavbar && (
+                    <header className="premium-header glass-effect">
+                        <div className="header-top-row">
+                            <div className="header-left">
+                                <div className="header-search-container" ref={searchRef}>
+                                    <div className={`search-wrapper ${isSearchOpen ? 'open' : ''}`}>
+                                        <button className="search-trigger" onClick={() => setIsSearchOpen(!isSearchOpen)}>
+                                            <span className="search-icon">🔍</span>
+                                        </button>
+                                        {isSearchOpen && (
+                                            <input
+                                                type="text"
+                                                className="search-input"
+                                                placeholder="Search employees..."
+                                                autoFocus
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                            />
+                                        )}
+                                    </div>
+
+                                    {/* Search Results Area - Moved inside ref to prevent premature closing */}
+                                    {isSearchOpen && (searchQuery.length > 1 || isSearching) && (
+                                        <div className="search-results-area glass-effect">
+                                            <div className="search-results-inner">
+                                                {isSearching ? (
+                                                    <div className="search-status">Searching for "{searchQuery}"...</div>
+                                                ) : searchResults.length > 0 ? (
+                                                    <div className="results-list">
+                                                        {searchResults.map((emp) => (
+                                                            <Link
+                                                                key={emp.id}
+                                                                href={`/employees/${emp.id}`}
+                                                                className="search-result-item"
+                                                                onClick={() => {
+                                                                    setIsSearchOpen(false);
+                                                                    setSearchQuery('');
+                                                                }}
+                                                            >
+                                                                <div className="result-main">
+                                                                    <div className="result-avatar" style={{ overflow: 'hidden' }}>
+                                                                        {emp.profile_picture ? (
+                                                                            <img src={emp.profile_picture} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                        ) : (
+                                                                            <>{emp.first_name[0]}{emp.last_name[0]}</>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="result-info">
+                                                                        <div className="result-name-row">
+                                                                            <span className="result-name">{emp.first_name} {emp.last_name}</span>
+                                                                            <span className="result-id">#{emp.employee_id}</span>
+                                                                        </div>
+                                                                        <div className="result-meta">
+                                                                            <span className="meta-pos">{emp.position}</span>
+                                                                            <span className="meta-dot">•</span>
+                                                                            <span className="meta-dept">{emp.department}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="result-actions">
+                                                                    <span className={`status-badge ${emp.employment_status?.toLowerCase()}`}>
+                                                                        {emp.employment_status || 'Active'}
+                                                                    </span>
+                                                                    <div className="view-feature-btn">
+                                                                        View ↗
+                                                                    </div>
+                                                                </div>
+                                                            </Link>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="search-status">No employees found matching "{searchQuery.trim()}"</div>
+                                                )}
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
+                            </div>
 
-                                {/* Search Results Area - Moved inside ref to prevent premature closing */}
-                                {isSearchOpen && (searchQuery.length > 1 || isSearching) && (
-                                    <div className="search-results-area glass-effect">
-                                        <div className="search-results-inner">
-                                            {isSearching ? (
-                                                <div className="search-status">Searching for "{searchQuery}"...</div>
-                                            ) : searchResults.length > 0 ? (
-                                                <div className="results-list">
-                                                    {searchResults.map((emp) => (
-                                                        <Link
-                                                            key={emp.id}
-                                                            href={`/employees/${emp.id}`}
-                                                            className="search-result-item"
-                                                            onClick={() => {
-                                                                setIsSearchOpen(false);
-                                                                setSearchQuery('');
-                                                            }}
-                                                        >
-                                                            <div className="result-main">
-                                                                <div className="result-avatar">
-                                                                    {emp.first_name[0]}{emp.last_name[0]}
-                                                                </div>
-                                                                <div className="result-info">
-                                                                    <div className="result-name-row">
-                                                                        <span className="result-name">{emp.first_name} {emp.last_name}</span>
-                                                                        <span className="result-id">#{emp.employee_id}</span>
-                                                                    </div>
-                                                                    <div className="result-meta">
-                                                                        <span className="meta-pos">{emp.position}</span>
-                                                                        <span className="meta-dot">•</span>
-                                                                        <span className="meta-dept">{emp.department}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="result-actions">
-                                                                <span className={`status-badge ${emp.employment_status?.toLowerCase()}`}>
-                                                                    {emp.employment_status || 'Active'}
-                                                                </span>
-                                                                <div className="view-feature-btn">
-                                                                    View ↗
-                                                                </div>
-                                                            </div>
-                                                        </Link>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <div className="search-status">No employees found matching "{searchQuery.trim()}"</div>
-                                            )}
-                                        </div>
+                            <div className="header-right">
+                                <div className="team-avatars">
+                                    <div className="avatar-group">
+                                        <div className="avatar-mini" style={{ background: '#f87171' }}>M</div>
+                                        <div className="avatar-mini" style={{ background: '#60a5fa' }}>E</div>
+                                        <div className="avatar-mini" style={{ background: '#fbbf24' }}>L</div>
+                                        <div className="avatar-count">+8</div>
                                     </div>
-                                )}
+                                </div>
+
+                                <Link href="/employees/add" className="add-employee-btn">
+                                    <span className="plus">+</span> Add Employee
+                                </Link>
+
+                                <div className="user-profile-widget">
+                                    <div className="user-text">
+                                        <span className="u-name">{user.username}</span>
+                                    </div>
+                                    <div className="u-avatar">
+                                        {user.username.substring(0, 1).toUpperCase()}
+                                    </div>
+                                    <NotificationDropdown />
+                                </div>
                             </div>
                         </div>
-
-                        <div className="header-right">
-                            <div className="team-avatars">
-                                <div className="avatar-group">
-                                    <div className="avatar-mini" style={{ background: '#f87171' }}>M</div>
-                                    <div className="avatar-mini" style={{ background: '#60a5fa' }}>E</div>
-                                    <div className="avatar-mini" style={{ background: '#fbbf24' }}>L</div>
-                                    <div className="avatar-count">+8</div>
-                                </div>
-                            </div>
-
-                            <Link href="/employees/add" className="add-employee-btn">
-                                <span className="plus">+</span> Add Employee
-                            </Link>
-
-                            <div className="user-profile-widget">
-                                <div className="user-text">
-                                    <span className="u-name">{user.username}</span>
-                                </div>
-                                <div className="u-avatar">
-                                    {user.username.substring(0, 1).toUpperCase()}
-                                </div>
-                                <NotificationDropdown />
-                            </div>
-                        </div>
-                    </div>
-                </header>
+                    </header>
+                )}
 
                 {/* Content */}
-                <div className="scroll-content">
+                <div className="scroll-content dashboard-content">
                     {children}
                 </div>
             </main>

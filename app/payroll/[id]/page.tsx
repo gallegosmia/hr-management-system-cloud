@@ -1,16 +1,18 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState, useRef, Suspense } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 
-export default function PayrollDetailsPage() {
+function PayrollDetailsContent() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const payslipId = searchParams.get('payslipId');
     const [run, setRun] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [activeSlip, setActiveSlip] = useState<any>(null);
@@ -39,6 +41,15 @@ export default function PayrollDetailsPage() {
             fetchRunDetails();
         }
     }, [params.id]);
+
+    useEffect(() => {
+        if (run && payslipId) {
+            const slip = run.payslips.find((s: any) => s.id.toString() === payslipId);
+            if (slip) {
+                setActiveSlip(slip);
+            }
+        }
+    }, [run, payslipId]);
 
     const fetchRunDetails = async () => {
         try {
@@ -619,27 +630,28 @@ export default function PayrollDetailsPage() {
                     padding: '1rem'
                 }} onClick={() => setActiveSlip(null)} className="no-print">
                     <div style={{
-                        backgroundColor: 'white',
-                        padding: '2rem',
-                        borderRadius: '16px',
+                        backgroundColor: '#ffffff',
+                        padding: '2.5rem',
+                        borderRadius: '24px',
                         maxWidth: '800px',
-                        width: '100%',
+                        width: '95%',
                         position: 'relative',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
                         maxHeight: '90vh',
-                        overflowY: 'auto'
+                        overflowY: 'auto',
+                        border: '1px solid #d1fae5'
                     }} onClick={e => e.stopPropagation()}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '2px solid #f1f5f9', paddingBottom: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '1.5rem' }}>
                             <div>
-                                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: '#1e293b' }}>Payslip Detail</h2>
-                                <p style={{ margin: '2px 0', color: '#64748b' }}>{activeSlip.employee_name} • {activeSlip.position}</p>
+                                <h2 style={{ fontSize: '1.75rem', fontWeight: 900, margin: 0, color: '#1e293b', letterSpacing: '-0.02em' }}>Payslip Detail</h2>
+                                <p style={{ margin: '4px 0', color: '#64748b', fontSize: '1rem' }}>{activeSlip.employee_name} • <span style={{ color: '#059669', fontWeight: 600 }}>{activeSlip.position}</span></p>
                             </div>
-                            <button onClick={() => setActiveSlip(null)} style={{ background: '#f1f5f9', border: 'none', width: '36px', height: '36px', borderRadius: '50%', cursor: 'pointer', fontSize: '1.25rem' }}>×</button>
+                            <button onClick={() => setActiveSlip(null)} style={{ background: '#f1f5f9', border: 'none', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', fontSize: '1.5rem', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                             <div>
-                                <h3 style={{ fontSize: '0.875rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.05em' }}>Earnings</h3>
+                                <h3 style={{ fontSize: '0.8rem', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', marginBottom: '1.25rem', letterSpacing: '0.1em' }}>Earnings</h3>
                                 <div className="payslip-row">
                                     <span>Basic Pay ({activeSlip.days_present} days)</span>
                                     <span>₱{Number(activeSlip.gross_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -661,7 +673,7 @@ export default function PayrollDetailsPage() {
                             </div>
 
                             <div>
-                                <h3 style={{ fontSize: '0.875rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.05em' }}>Deductions</h3>
+                                <h3 style={{ fontSize: '0.8rem', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', marginBottom: '1.25rem', letterSpacing: '0.1em' }}>Deductions</h3>
                                 {Object.entries(activeSlip.deduction_details || {}).map(([key, val]: [string, any]) => {
                                     if (key.includes('_balance')) return null;
                                     const balanceKey = `${key}_balance`;
@@ -687,9 +699,9 @@ export default function PayrollDetailsPage() {
                             </div>
                         </div>
 
-                        <div style={{ marginTop: '2rem', background: '#f0f9ff', padding: '1.5rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontWeight: 800, fontSize: '1.125rem', color: '#0369a1' }}>NET PAY</span>
-                            <span style={{ fontWeight: 800, fontSize: '1.75rem', color: 'var(--primary-700)', fontFamily: 'JetBrains Mono, monospace' }}>
+                        <div className="payslip-net-box">
+                            <span>Net Pay Amount</span>
+                            <span>
                                 ₱{Number(activeSlip.net_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                         </div>
@@ -1070,100 +1082,231 @@ export default function PayrollDetailsPage() {
             <style dangerouslySetInnerHTML={{
                 __html: `
                 @media screen {
+                    /* Global Page Styling Override for this page - Light Theme */
+                    .dashboard-content { 
+                        background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%);
+                        color: #1e293b;
+                    }
+
                     .payslip-print-container, .payroll-register-print-container, .single-payslip-print-container {
                         display: none;
                     }
+
+                    /* Summary Section */
                     .summary-grid {
                         display: grid;
-                        grid-template-columns: repeat(3, 1fr);
+                        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
                         gap: 1.5rem;
                         margin-bottom: 2rem;
                     }
                     .summary-item {
-                        padding: 1.25rem;
-                        background: white;
-                        border-radius: 12px;
-                        border: 1px solid #e2e8f0;
-                        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                        padding: 1.5rem;
+                        background: #ffffff;
+                        border-radius: 20px;
+                        border: 1px solid #d1fae5; /* Soft Emerald border */
+                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+                        transition: transform 0.2s ease, box-shadow 0.2s ease;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                    }
+                    .summary-item:hover {
+                        transform: translateY(-3px);
+                        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
                     }
                     .summary-item label {
-                        display: block;
-                        font-size: 0.75rem;
-                        font-weight: 700;
-                        color: #64748b;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        font-size: 0.72rem;
+                        font-weight: 800;
+                        color: #059669; /* Emerald 600 for labels */
                         text-transform: uppercase;
+                        letter-spacing: 0.1em;
                         margin-bottom: 0.5rem;
                     }
                     .summary-item .value {
                         font-size: 1.25rem;
                         font-weight: 800;
                         color: #1e293b;
+                        font-family: 'Inter', sans-serif;
                     }
                     .summary-item .value.highlight {
-                        color: var(--primary-700);
-                        font-size: 1.5rem;
+                        color: #059669; /* Emerald 600 */
+                        font-size: 2rem;
+                        line-height: 1.1;
+                        font-weight: 900;
+                        letter-spacing: -0.02em;
                     }
+
+                    /* Main Card Styling */
+                    .card {
+                        background: #ffffff !important;
+                        border: 1px solid #d1fae5;
+                        border-radius: 28px;
+                        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+                        overflow: hidden;
+                        margin-bottom: 2rem;
+                    }
+                    .card-header {
+                        background: #f0fdf4; /* Light green tint */
+                        border-bottom: 1px solid #d1fae5;
+                        padding: 1.75rem 2.25rem;
+                    }
+                    .card-title {
+                        font-size: 1.6rem;
+                        font-weight: 800;
+                        color: #1e293b;
+                        letter-spacing: -0.03em;
+                        display: flex;
+                        align-items: center;
+                        gap: 1rem;
+                    }
+                    
+                    /* Buttons */
+                    .btn-primary {
+                        background: #059669;
+                        border: 1px solid #047857;
+                        border-radius: 14px;
+                        font-weight: 700;
+                        letter-spacing: 1px;
+                        text-transform: uppercase;
+                        font-size: 0.75rem;
+                        padding: 0.75rem 1.5rem;
+                        transition: all 0.2s;
+                        color: #ffffff;
+                    }
+                    .btn-primary:hover {
+                        background: #047857;
+                        transform: translateY(-1px);
+                    }
+
+                    /* Badges */
+                    .badge {
+                        padding: 0.5rem 1rem;
+                        border-radius: 99px;
+                        font-weight: 700;
+                        font-size: 0.8rem;
+                        letter-spacing: 0.02em;
+                    }
+                    .badge-success {
+                        background-color: #dcfce7;
+                        color: #166534;
+                        border: 1px solid #bbf7d0;
+                    }
+                    .badge-warning {
+                        background-color: #fef9c3;
+                        color: #854d0e;
+                        border: 1px solid #fef08a;
+                    }
+                    .badge-info {
+                        background-color: #e0f2fe;
+                        color: #075985;
+                        border: 1px solid #bae6fd;
+                    }
+
+                    /* Table Styling */
                     .table-container-responsive {
                         overflow-x: auto;
                         width: 100%;
-                        border-radius: 12px;
+                        border-radius: 20px;
                         border: 1px solid #e2e8f0;
-                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-                        background: white;
-                        margin-bottom: 1.5rem;
+                        background: #ffffff;
+                    }
+                    .table-condensed {
+                        width: 100%;
+                        border-collapse: separate;
+                        border-spacing: 0;
                     }
                     .table-condensed th {
-                        background: #f8fafc;
-                        padding: 1rem;
-                        font-size: 0.75rem;
+                        background: #f0fdf4; /* Emerald tint */
+                        padding: 1.25rem 1rem;
+                        font-size: 0.65rem;
                         font-weight: 800;
-                        color: #475569;
+                        color: #047857; /* Darker emerald */
                         text-transform: uppercase;
-                        border-bottom: 2px solid #e2e8f0;
+                        letter-spacing: 0.12em;
+                        border-bottom: 1px solid #d1fae5;
                         white-space: nowrap;
                     }
                     .table-condensed td {
-                        padding: 1rem;
+                        padding: 1.25rem 1rem;
                         vertical-align: middle;
-                        font-size: 0.875rem;
+                        font-size: 0.85rem;
                         border-bottom: 1px solid #f1f5f9;
                         white-space: nowrap;
+                        color: #334155;
+                        font-weight: 500;
                     }
-                    .amount-col {
-                        text-align: right !important;
-                        font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
-                        font-weight: 600;
-                        width: 120px;
+                    .table-condensed tbody tr:hover td {
+                        background-color: #f8fafc !important;
                     }
-                    .employee-col { min-width: 200px; }
+                    
+                    /* Highlights */
                     .highlight-net {
-                        background: #f0f9ff;
-                        color: var(--primary-700);
-                        font-weight: 800 !important;
+                        color: #059669;
+                        font-weight: 900 !important;
+                        background-color: #f0fdf4 !important;
                     }
-                    .scroll-btn {
-                        background: #f8fafc;
-                        border: 1px solid #e2e8f0;
-                        padding: 0.4rem 0.8rem;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        font-size: 0.75rem;
-                        font-weight: 600;
+
+                    /* Footer */
+                    .table-footer td {
+                        background: #f8fafc !important;
+                        border-top: 2px solid #d1fae5;
+                        color: #065f46;
+                        font-weight: 700;
+                        padding: 1.5rem 1rem;
                     }
+                    .table-footer .highlight {
+                        background: #f0fdf4 !important;
+                        color: #15803d;
+                        font-weight: 900;
+                        border-top: 2px solid #059669;
+                    }
+
                     /* Modal styles */
                     .payslip-row {
                         display: flex;
                         justify-content: space-between;
-                        padding: 0.5rem 0;
+                        padding: 0.85rem 0;
                         border-bottom: 1px solid #f1f5f9;
+                    }
+                    .payslip-row span:first-child {
+                        color: #64748b;
+                    }
+                    .payslip-row span:last-child {
+                        font-weight: 600;
+                        color: #1e293b;
                     }
                     .payslip-total {
                         display: flex;
                         justify-content: space-between;
-                        padding: 0.75rem 0;
+                        padding: 1.25rem 0;
                         margin-top: 0.5rem;
                         font-weight: 800;
-                        border-top: 2px solid #1e293b;
+                        border-top: 2px solid #e2e8f0;
+                        color: #1e293b;
+                    }
+                    .payslip-net-box {
+                        background: #f0fdf4;
+                        margin-top: 1.5rem;
+                        padding: 1.25rem;
+                        border-radius: 16px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border: 1px solid #bbf7d0;
+                    }
+                    .payslip-net-box span:first-child {
+                        font-weight: 800;
+                        color: #166534;
+                        text-transform: uppercase;
+                        font-size: 0.85rem;
+                    }
+                    .payslip-net-box span:last-child {
+                        font-weight: 900;
+                        color: #15803d;
+                        font-size: 1.75rem;
                     }
                 }
 
@@ -1226,5 +1369,19 @@ export default function PayrollDetailsPage() {
                 }
             `}} />
         </DashboardLayout>
+    );
+}
+
+export default function PayrollDetailsPage() {
+    return (
+        <Suspense fallback={
+            <DashboardLayout>
+                <div style={{ textAlign: 'center', padding: '3rem' }}>
+                    <p>Loading payroll details...</p>
+                </div>
+            </DashboardLayout>
+        }>
+            <PayrollDetailsContent />
+        </Suspense>
     );
 }

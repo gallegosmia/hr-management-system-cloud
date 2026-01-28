@@ -39,7 +39,11 @@ export default function AddEmployeePage() {
         payroll_records_complete: 0,
         disciplinary_records: 0,
         training_records: 0,
-        separation_records: 0
+        separation_records: 0,
+        gender: '',
+        religion: '',
+        emergency_contact_name: '',
+        emergency_contact_number: ''
     });
 
     // Education State
@@ -250,6 +254,33 @@ export default function AddEmployeePage() {
                                 </div>
 
                                 <div className="form-group">
+                                    <label className="form-label">Gender</label>
+                                    <select
+                                        name="gender"
+                                        value={(formData as any).gender}
+                                        onChange={handleChange}
+                                        className="form-select"
+                                    >
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Religion</label>
+                                    <input
+                                        type="text"
+                                        name="religion"
+                                        value={(formData as any).religion}
+                                        onChange={handleChange}
+                                        className="form-input"
+                                        placeholder="e.g. Roman Catholic"
+                                    />
+                                </div>
+
+                                <div className="form-group">
                                     <label className="form-label form-label-required">Department</label>
                                     <input
                                         type="text"
@@ -310,6 +341,8 @@ export default function AddEmployeePage() {
                                         <option value="Probationary">Probationary</option>
                                         <option value="Regular">Regular</option>
                                         <option value="Contractual">Contractual</option>
+                                        <option value="Resigned">Resigned</option>
+                                        <option value="Terminated">Terminated</option>
                                     </select>
                                 </div>
 
@@ -465,12 +498,12 @@ export default function AddEmployeePage() {
                                 <div className="form-group">
                                     <label className="form-label">Email Address</label>
                                     <input
-                                        type="email"
+                                        type="text"
                                         name="email_address"
                                         value={formData.email_address}
                                         onChange={handleChange}
                                         className="form-input"
-                                        placeholder="juan.delacruz@company.com"
+                                        placeholder="juan.delacruz@company.com or N/A"
                                     />
                                 </div>
                             </div>
@@ -484,6 +517,34 @@ export default function AddEmployeePage() {
                                     className="form-input"
                                     placeholder="123 Example Street, City, Province"
                                 />
+                            </div>
+
+                            <div style={{ marginTop: 'var(--spacing-lg)', borderTop: '1px solid var(--border-color)', paddingTop: 'var(--spacing-md)' }}>
+                                <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: 'var(--spacing-md)' }}>🚨 Emergency Contact</h4>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label className="form-label">Contact Name</label>
+                                        <input
+                                            type="text"
+                                            name="emergency_contact_name"
+                                            value={(formData as any).emergency_contact_name}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                            placeholder="Full Name"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Contact Number</label>
+                                        <input
+                                            type="tel"
+                                            name="emergency_contact_number"
+                                            value={(formData as any).emergency_contact_number}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                            placeholder="Phone Number"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -549,43 +610,6 @@ export default function AddEmployeePage() {
                             </div>
                         </div>
 
-                        {/* 201 File Checklist Section */}
-                        <div style={{
-                            background: 'var(--bg-secondary)',
-                            padding: 'var(--spacing-lg)',
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: 'var(--spacing-xl)'
-                        }}>
-                            <h3 style={{ marginBottom: 'var(--spacing-lg)', fontSize: '1.125rem' }}>
-                                📋 Digital 201 File Checklist
-                            </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'var(--spacing-md)' }}>
-                                {[
-                                    { name: 'personal_info_complete', label: 'Personal Information Complete' },
-                                    { name: 'preemployment_req_complete', label: 'Pre-Employment Requirements Complete' },
-                                    { name: 'government_docs_complete', label: 'Government Documents Complete' },
-                                    { name: 'employment_records_complete', label: 'Employment Records Complete' },
-                                    { name: 'attendance_records_complete', label: 'Attendance Records Complete' },
-                                    { name: 'payroll_records_complete', label: 'Payroll Records Complete' },
-                                    { name: 'disciplinary_records', label: 'Violations & Warnings' },
-                                    { name: 'training_records', label: 'Training & Certificate Records' },
-                                    { name: 'separation_records', label: 'Separation Records' },
-                                ].map((item) => (
-                                    <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-                                        <input
-                                            type="checkbox"
-                                            id={item.name}
-                                            checked={(formData as any)[item.name] === 1}
-                                            onChange={(e) => setFormData({ ...formData, [item.name]: e.target.checked ? 1 : 0 })}
-                                            style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }}
-                                        />
-                                        <label htmlFor={item.name} style={{ fontSize: '0.875rem', cursor: 'pointer' }}>
-                                            {item.label}
-                                        </label>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
 
                         {/* 201 Information Section */}
                         <div style={{
