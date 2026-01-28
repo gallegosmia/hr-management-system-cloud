@@ -198,7 +198,7 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                 <head>
                     <title>Employee ID - ${employee.first_name} ${employee.last_name}</title>
                     <style>
-                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap');
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap');
                         
                         body { 
                             font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -209,164 +209,182 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                             margin: 0;
                             background: #e5e5e5;
                         }
+
                         .id-card {
-                            /* SQUARE ASPECT RATIO 1:1 */
-                            width: 500px;
-                            height: 500px;
+                            /* STANDARD CREDIT CARD SIZE (CR80) */
+                            width: 85.6mm;
+                            height: 54mm;
                             background: white;
-                            border-radius: 20px;
+                            border-radius: 4mm;
                             position: relative;
                             overflow: hidden;
+                            display: flex;
+                            align-items: center;
+                            box-sizing: border-box;
+                            border: 1px solid #cbd5e1;
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                        }
+                        
+                        /* Background Pattern */
+                        .id-bg {
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            z-index: 0;
+                            opacity: 0.03;
+                            background-image: radial-gradient(#8B2635 1px, transparent 1px);
+                            background-size: 4mm 4mm;
+                        }
+
+                        /* Left Side Accent */
+                        .left-accent {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            bottom: 0;
+                            width: 6mm;
+                            background: linear-gradient(180deg, #E74C3C 0%, #8B2635 100%);
+                            z-index: 10;
+                        }
+
+                        /* Content Container */
+                        .content {
+                            display: flex;
+                            width: 100%;
+                            height: 100%;
+                            padding: 0 5mm 0 10mm; /* Extra left padding for accent */
+                            position: relative;
+                            z-index: 20;
+                            gap: 4mm;
+                            align-items: center;
+                        }
+
+                        /* Photo Section (Left) */
+                        .photo-section {
                             display: flex;
                             flex-direction: column;
                             align-items: center;
-                            text-align: center;
-                            box-sizing: border-box;
-                            border: 1px solid #e2e8f0;
-                        }
-                        
-                        /* Header Section */
-                        .card-header {
-                            width: 100%;
-                            height: 130px;
-                            background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
-                            display: flex;
-                            justify-content: center;
-                            align-items: flex-start;
-                            padding-top: 25px;
-                            position: relative;
-                        }
-                        .header-content {
-                            display: flex;
-                            align-items: center;
-                            gap: 15px;
-                            z-index: 5;
-                        }
-                        .logo-box {
-                            width: 45px;
-                            height: 45px;
-                            background: rgba(255,255,255,0.95);
-                            border-radius: 10px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            padding: 6px;
-                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                        }
-                        .company-info {
-                            text-align: left;
-                            color: white;
-                        }
-                        .company-name {
-                            font-weight: 800;
-                            font-size: 1.1rem;
-                            line-height: 1.1;
-                            letter-spacing: 0.02em;
-                        }
-                        .company-tag {
-                            font-size: 0.7rem;
-                            text-transform: uppercase;
-                            opacity: 0.9;
-                            margin-top: 4px;
-                            letter-spacing: 0.1em;
-                            font-weight: 600;
+                            gap: 2mm;
                         }
 
-                        /* Profile Photo - Overlapping Header and Body */
                         .profile-container {
-                            width: 130px;
-                            height: 130px;
+                            width: 32mm;
+                            height: 32mm;
                             border-radius: 50%;
                             background: white;
-                            border: 6px solid white;
-                            margin-top: -65px; /* Half overlapping */
-                            z-index: 10;
+                            border: 1mm solid #f1f5f9;
                             overflow: hidden;
-                            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
                             display: flex;
                             align-items: center;
                             justify-content: center;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                         }
+
                         .profile-img {
                             width: 100%;
                             height: 100%;
                             object-fit: cover;
                         }
+
                         .initials {
-                            font-size: 3rem;
+                            font-size: 14mm;
                             font-weight: 800;
-                            color: #059669;
+                            color: #8B2635;
                         }
 
-                        /* Employee Info */
-                        .emp-info {
-                            margin-top: 15px;
+                        .id-number-box {
+                            background: #f8fafc;
+                            padding: 1mm 3mm;
+                            border-radius: 1mm;
+                            border: 1px solid #e2e8f0;
+                            text-align: center;
+                        }
+
+                        .id-label {
+                            font-size: 6pt;
+                            color: #64748b;
+                            text-transform: uppercase;
+                            font-weight: 700;
+                            display: block;
+                            line-height: 1;
+                            margin-bottom: 0.5mm;
+                        }
+
+                        .id-value {
+                            font-family: 'JetBrains Mono', monospace;
+                            font-size: 8pt;
+                            font-weight: 800;
+                            color: #334155;
+                        }
+
+                        /* Info Section (Right) */
+                        .info-section {
                             flex: 1;
                             display: flex;
                             flex-direction: column;
-                            align-items: center;
-                            width: 90%;
-                        }
-                        .emp-name {
-                            font-size: 1.75rem;
-                            font-weight: 900;
-                            color: #111827;
-                            margin: 0;
-                            line-height: 1.1;
-                            letter-spacing: -0.03em;
-                            margin-bottom: 6px;
-                        }
-                        .emp-pos {
-                            font-size: 1rem;
-                            font-weight: 700;
-                            color: #059669;
-                            text-transform: uppercase;
-                            letter-spacing: 0.05em;
-                            margin-bottom: 2px;
-                        }
-                        .emp-dept {
-                            font-size: 0.85rem;
-                            font-weight: 600;
-                            color: #6b7280;
-                            background: #f3f4f6;
-                            padding: 4px 12px;
-                            border-radius: 100px;
-                            margin-top: 4px;
+                            justify-content: center;
+                            height: 100%;
+                            padding-top: 2mm;
                         }
 
-                        /* QR and Footer Area */
-                        .footer-section {
+                        /* Header/Logo */
+                        .header {
                             display: flex;
-                            flex-direction: column;
                             align-items: center;
-                            width: 100%;
-                            padding-bottom: 20px;
-                            margin-top: auto;
-                        }
-                        .qr-box {
-                            background: white;
-                            padding: 6px;
-                            border-radius: 12px;
-                            border: 1px solid #e5e7eb;
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-                            margin-bottom: 8px;
-                        }
-                        .id-number {
-                            font-family: 'JetBrains Mono', monospace;
-                            font-size: 1.1rem;
-                            font-weight: 800;
-                            color: #374151;
-                            letter-spacing: 0.1em;
+                            gap: 2mm;
+                            margin-bottom: 3mm;
+                            border-bottom: 0.5px solid #e2e8f0;
+                            padding-bottom: 2mm;
                         }
 
-                        /* Footer Line */
-                        .bottom-bar {
+                        .logo-box {
+                            width: 8mm;
+                            height: 8mm;
+                        }
+
+                        .company-name {
+                            font-size: 8pt;
+                            font-weight: 900;
+                            color: #8B2635;
+                            line-height: 1.1;
+                            text-transform: uppercase;
+                        }
+
+                        .emp-name {
+                            font-size: 14pt;
+                            font-weight: 900;
+                            color: #0f172a;
+                            line-height: 1.1;
+                            margin-bottom: 1mm;
+                        }
+
+                        .emp-role {
+                            font-size: 8pt;
+                            color: #E74C3C;
+                            font-weight: 700;
+                            text-transform: uppercase;
+                            margin-bottom: 0.5mm;
+                        }
+
+                        .emp-dept {
+                            font-size: 7pt;
+                            color: #64748b;
+                            font-weight: 600;
+                        }
+
+                        /* QR Code */
+                        .qr-section {
                             position: absolute;
-                            bottom: 0;
-                            left: 0;
-                            right: 0;
-                            height: 8px;
-                            background: linear-gradient(90deg, #064e3b, #10b981, #064e3b);
+                            bottom: 3mm;
+                            right: 3mm;
+                            width: 14mm;
+                            height: 14mm;
+                            background: white;
+                            padding: 1mm;
+                            border-radius: 1mm;
+                            border: 0.5px solid #e2e8f0;
                         }
 
                         @media print {
@@ -374,59 +392,61 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                                 background: white; 
                                 height: auto;
                                 display: block;
+                                margin: 0;
                             }
                             .id-card {
-                                border: 1px solid #ddd;
-                                margin: 0 auto;
+                                border: 1px solid #eee; /* faint border for cutting guide */
+                                margin: 0;
                                 page-break-inside: avoid;
                                 -webkit-print-color-adjust: exact;
                                 print-color-adjust: exact;
+                                box-shadow: none;
                             }
                         }
                     </style>
                 </head>
                 <body>
                     <div class="id-card">
-                        <!-- Header -->
-                        <div class="card-header">
-                            <div class="header-content">
-                                <div class="logo-box">
-                                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
-                                        <rect x="15" y="50" width="18" height="35" rx="3" fill="#064e3b" />
-                                        <rect x="41" y="30" width="18" height="55" rx="3" fill="#059669" />
-                                        <rect x="67" y="15" width="18" height="70" rx="3" fill="#10b981" />
-                                    </svg>
+                        <div class="id-bg"></div>
+                        <div class="left-accent"></div>
+                        
+                        <div class="content">
+                            <!-- Photo Side -->
+                            <div class="photo-section">
+                                <div class="profile-container">
+                                    ${profilePic ? `<img src="${profilePic}" class="profile-img" />` : `<div class="initials">${initials}</div>`}
                                 </div>
-                                <div class="company-info">
-                                    <div class="company-name">MELANN LENDING<br>INVESTOR CORP.</div>
-                                    <div class="company-tag">Lend • Empower • Grow</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Profile Photo -->
-                        <div class="profile-container">
-                            ${profilePic ? `<img src="${profilePic}" class="profile-img" />` : `<div class="initials">${initials}</div>`}
-                        </div>
-
-                        <!-- Main Info -->
-                        <div class="emp-info">
-                            <h2 class="emp-name">${employee.first_name} ${employee.last_name}</h2>
-                            <div class="emp-pos">${employee.position}</div>
-                            <div class="emp-dept">${employee.department}</div>
-                        </div>
-
-                        <!-- Footer / QR -->
-                        <div class="footer-section">
-                            <div class="qr-box">
-                                <div style="width: 85px; height: 85px;">
-                                    ${qrSvg}
+                                <div class="id-number-box">
+                                    <span class="id-label">Employee ID</span>
+                                    <span class="id-value">${employee.employee_id}</span>
                                 </div>
                             </div>
-                            <div class="id-number">${employee.employee_id}</div>
-                        </div>
 
-                        <div class="bottom-bar"></div>
+                            <!-- Info Side -->
+                            <div class="info-section">
+                                <div class="header">
+                                    <div class="logo-box">
+                                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="10" y="50" width="20" height="40" rx="4" fill="#8B2635" />
+                                            <rect x="40" y="30" width="20" height="60" rx="4" fill="#D2691E" />
+                                            <rect x="70" y="10" width="20" height="80" rx="4" fill="#E74C3C" />
+                                        </svg>
+                                    </div>
+                                    <div class="company-name">Melann Lending<br>Investor Corp.</div>
+                                </div>
+                                
+                                <div>
+                                    <div class="emp-name">${employee.first_name}<br>${employee.last_name}</div>
+                                    <div class="emp-role">${employee.position}</div>
+                                    <div class="emp-dept">${employee.department}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- QR Code -->
+                            <div class="qr-section">
+                                ${qrSvg}
+                            </div>
+                        </div>
                     </div>
                 </body>
             </html>

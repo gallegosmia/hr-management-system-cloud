@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { format } from 'date-fns';
 
 interface Violation {
@@ -490,7 +491,7 @@ export default function ViolationsTab({ employeeId }: Props) {
             )}
 
             {/* Add/Edit Modal */}
-            {showAddModal && (
+            {showAddModal && typeof document !== 'undefined' && createPortal(
                 <div
                     style={{
                         position: 'fixed',
@@ -813,7 +814,8 @@ export default function ViolationsTab({ employeeId }: Props) {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
         </div>
