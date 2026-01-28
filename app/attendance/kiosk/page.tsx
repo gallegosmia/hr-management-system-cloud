@@ -260,6 +260,48 @@ export default function AttendanceKioskPage() {
                                 border: '4px solid #064e3b',
                                 background: '#000'
                             }}></div>
+
+                            {/* Upload Image Option */}
+                            <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                                <label style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    padding: '0.75rem 1.5rem',
+                                    background: '#f3f4f6',
+                                    color: '#374151',
+                                    borderRadius: '12px',
+                                    cursor: 'pointer',
+                                    fontWeight: 600,
+                                    fontSize: '0.875rem',
+                                    border: '1px solid #e5e7eb',
+                                    transition: 'all 0.2s'
+                                }}>
+                                    <span>📷</span> Upload QR Image
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file && html5QrCodeRef.current) {
+                                                try {
+                                                    setStatus('Processing image...');
+                                                    const result = await html5QrCodeRef.current.scanFile(file, true);
+                                                    await onScanSuccess(result);
+                                                } catch (err) {
+                                                    setError('No QR code found in the image.');
+                                                    setStatus('Scan Failed');
+                                                    setTimeout(() => setError(null), 3000);
+                                                }
+                                            }
+                                        }}
+                                    />
+                                </label>
+                                <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.5rem' }}>
+                                    Or upload a screenshot of your QR ID
+                                </p>
+                            </div>
                             <div style={{
                                 position: 'absolute',
                                 top: '50%',
