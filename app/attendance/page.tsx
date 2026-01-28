@@ -301,7 +301,7 @@ export default function AttendancePage() {
     // --- Helpers ---
     const calculateTotalHours = (record: AttendanceRecord) => {
         if (record.total_hours) {
-            return `${record.total_hours.toFixed(1)}h`;
+            return `${Number(record.total_hours).toFixed(1)}h`;
         }
         // Fallback to legacy calculation
         if (!record.time_in || !record.time_out) return '--';
