@@ -424,7 +424,8 @@ export default function TrainingsTab({ employeeId }: Props) {
                         alignItems: 'center',
                         justifyContent: 'center',
                         zIndex: 9999,
-                        padding: '1rem'
+                        padding: '1rem',
+                        overflow: 'hidden'
                     }}
                     onClick={(e) => {
                         if (e.target === e.currentTarget) {
@@ -434,243 +435,300 @@ export default function TrainingsTab({ employeeId }: Props) {
                         }
                     }}
                 >
+                    {/* Modal Container */}
                     <div style={{
                         background: 'white',
                         borderRadius: '16px',
-                        padding: '1.5rem',
                         width: '100%',
                         maxWidth: '500px',
-                        maxHeight: '85vh',
-                        overflowY: 'auto',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                        maxHeight: 'min(90vh, 700px)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                        overflow: 'hidden'
                     }}>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#064e3b', marginBottom: '1.5rem', marginTop: 0 }}>
-                            {editingItem ? 'Edit' : 'Add'} {activeSection === 'trainings' ? 'Training' : 'Certificate'}
-                        </h3>
-
-
-                        {activeSection === 'trainings' ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                        Training Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.training_name || ''}
-                                        onChange={(e) => setFormData({ ...formData, training_name: e.target.value })}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        placeholder="e.g., Leadership Development Program"
-                                    />
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Type
-                                        </label>
-                                        <select
-                                            value={formData.training_type || ''}
-                                            onChange={(e) => setFormData({ ...formData, training_type: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        >
-                                            <option value="">Select type</option>
-                                            <option value="Internal">Internal</option>
-                                            <option value="External">External</option>
-                                            <option value="Online">Online</option>
-                                            <option value="Workshop">Workshop</option>
-                                            <option value="Seminar">Seminar</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Status
-                                        </label>
-                                        <select
-                                            value={formData.status || 'Completed'}
-                                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        >
-                                            <option value="Completed">Completed</option>
-                                            <option value="In Progress">In Progress</option>
-                                            <option value="Planned">Planned</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                        Provider/Organization
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.provider || ''}
-                                        onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        placeholder="e.g., HR Department, Training Institute"
-                                    />
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Date Started
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={formData.date_started || ''}
-                                            onChange={(e) => setFormData({ ...formData, date_started: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Date Completed
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={formData.date_completed || ''}
-                                            onChange={(e) => setFormData({ ...formData, date_completed: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        />
-                                    </div>
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Hours Completed
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={formData.hours_completed || ''}
-                                            onChange={(e) => setFormData({ ...formData, hours_completed: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                            placeholder="e.g., 40"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Certificate Number
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={formData.certificate_number || ''}
-                                            onChange={(e) => setFormData({ ...formData, certificate_number: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                        Remarks
-                                    </label>
-                                    <textarea
-                                        value={formData.remarks || ''}
-                                        onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', minHeight: '80px' }}
-                                        placeholder="Additional notes..."
-                                    />
-                                </div>
-                            </div>
-                        ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                        Certificate Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.certificate_name || ''}
-                                        onChange={(e) => setFormData({ ...formData, certificate_name: e.target.value })}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        placeholder="e.g., PMP, Six Sigma, TESDA NC II"
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                        Issuing Organization
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.issuing_organization || ''}
-                                        onChange={(e) => setFormData({ ...formData, issuing_organization: e.target.value })}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        placeholder="e.g., PMI, TESDA"
-                                    />
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Issue Date
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={formData.issue_date || ''}
-                                            onChange={(e) => setFormData({ ...formData, issue_date: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Expiry Date
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={formData.expiry_date || ''}
-                                            onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        />
-                                    </div>
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Certificate Number
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={formData.certificate_number || ''}
-                                            onChange={(e) => setFormData({ ...formData, certificate_number: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Status
-                                        </label>
-                                        <select
-                                            value={formData.status || 'Active'}
-                                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        >
-                                            <option value="Active">Active</option>
-                                            <option value="Expired">Expired</option>
-                                            <option value="Revoked">Revoked</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                        Remarks
-                                    </label>
-                                    <textarea
-                                        value={formData.remarks || ''}
-                                        onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', minHeight: '80px' }}
-                                        placeholder="Additional notes..."
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+                        {/* Fixed Header */}
+                        <div style={{
+                            padding: '1.25rem 1.5rem',
+                            borderBottom: '1px solid #e5e7eb',
+                            background: 'linear-gradient(135deg, #064e3b, #059669)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexShrink: 0
+                        }}>
+                            <h3 style={{
+                                fontSize: '1.125rem',
+                                fontWeight: 700,
+                                color: 'white',
+                                margin: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                            }}>
+                                {activeSection === 'trainings' ? '📚' : '🏆'} {editingItem ? 'Edit' : 'Add'} {activeSection === 'trainings' ? 'Training' : 'Certificate'}
+                            </h3>
                             <button
                                 onClick={() => { setShowAddModal(false); setEditingItem(null); setFormData({}); }}
                                 style={{
-                                    padding: '0.75rem 1.5rem',
-                                    background: '#f3f4f6',
-                                    color: '#374151',
+                                    background: 'rgba(255,255,255,0.2)',
                                     border: 'none',
-                                    borderRadius: '10px',
+                                    borderRadius: '8px',
+                                    width: '32px',
+                                    height: '32px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: 'white',
+                                    fontSize: '1.25rem',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        {/* Scrollable Body */}
+                        <div style={{
+                            flex: 1,
+                            overflowY: 'auto',
+                            padding: '1.25rem 1.5rem',
+                            minHeight: 0
+                        }}>
+                            {activeSection === 'trainings' ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                            Training Name *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={formData.training_name || ''}
+                                            onChange={(e) => setFormData({ ...formData, training_name: e.target.value })}
+                                            style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            placeholder="e.g., Leadership Development Program"
+                                        />
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Type
+                                            </label>
+                                            <select
+                                                value={formData.training_type || ''}
+                                                onChange={(e) => setFormData({ ...formData, training_type: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            >
+                                                <option value="">Select type</option>
+                                                <option value="Internal">Internal</option>
+                                                <option value="External">External</option>
+                                                <option value="Online">Online</option>
+                                                <option value="Workshop">Workshop</option>
+                                                <option value="Seminar">Seminar</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Status
+                                            </label>
+                                            <select
+                                                value={formData.status || 'Completed'}
+                                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            >
+                                                <option value="Completed">Completed</option>
+                                                <option value="In Progress">In Progress</option>
+                                                <option value="Planned">Planned</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                            Provider/Organization
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={formData.provider || ''}
+                                            onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
+                                            style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            placeholder="e.g., HR Department, Training Institute"
+                                        />
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Date Started
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={formData.date_started || ''}
+                                                onChange={(e) => setFormData({ ...formData, date_started: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Date Completed
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={formData.date_completed || ''}
+                                                onChange={(e) => setFormData({ ...formData, date_completed: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Hours Completed
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={formData.hours_completed || ''}
+                                                onChange={(e) => setFormData({ ...formData, hours_completed: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                                placeholder="e.g., 40"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Certificate Number
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={formData.certificate_number || ''}
+                                                onChange={(e) => setFormData({ ...formData, certificate_number: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                            Remarks
+                                        </label>
+                                        <textarea
+                                            value={formData.remarks || ''}
+                                            onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                                            style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', minHeight: '70px', fontSize: '0.9rem', boxSizing: 'border-box', resize: 'vertical' }}
+                                            placeholder="Additional notes..."
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                            Certificate Name *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={formData.certificate_name || ''}
+                                            onChange={(e) => setFormData({ ...formData, certificate_name: e.target.value })}
+                                            style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            placeholder="e.g., PMP, Six Sigma, TESDA NC II"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                            Issuing Organization
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={formData.issuing_organization || ''}
+                                            onChange={(e) => setFormData({ ...formData, issuing_organization: e.target.value })}
+                                            style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            placeholder="e.g., PMI, TESDA"
+                                        />
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Issue Date
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={formData.issue_date || ''}
+                                                onChange={(e) => setFormData({ ...formData, issue_date: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Expiry Date
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={formData.expiry_date || ''}
+                                                onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Certificate Number
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={formData.certificate_number || ''}
+                                                onChange={(e) => setFormData({ ...formData, certificate_number: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Status
+                                            </label>
+                                            <select
+                                                value={formData.status || 'Active'}
+                                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            >
+                                                <option value="Active">Active</option>
+                                                <option value="Expired">Expired</option>
+                                                <option value="Revoked">Revoked</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                            Remarks
+                                        </label>
+                                        <textarea
+                                            value={formData.remarks || ''}
+                                            onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                                            style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', minHeight: '70px', fontSize: '0.9rem', boxSizing: 'border-box', resize: 'vertical' }}
+                                            placeholder="Additional notes..."
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Fixed Footer */}
+                        <div style={{
+                            padding: '1rem 1.5rem',
+                            borderTop: '1px solid #e5e7eb',
+                            background: '#f9fafb',
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            gap: '0.75rem',
+                            flexShrink: 0
+                        }}>
+                            <button
+                                onClick={() => { setShowAddModal(false); setEditingItem(null); setFormData({}); }}
+                                style={{
+                                    padding: '0.625rem 1.25rem',
+                                    background: 'white',
+                                    color: '#374151',
+                                    border: '1px solid #d1d5db',
+                                    borderRadius: '8px',
                                     fontWeight: 600,
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem'
                                 }}
                             >
                                 Cancel
@@ -678,13 +736,14 @@ export default function TrainingsTab({ employeeId }: Props) {
                             <button
                                 onClick={handleSave}
                                 style={{
-                                    padding: '0.75rem 1.5rem',
+                                    padding: '0.625rem 1.25rem',
                                     background: 'linear-gradient(135deg, #064e3b, #059669)',
                                     color: 'white',
                                     border: 'none',
-                                    borderRadius: '10px',
+                                    borderRadius: '8px',
                                     fontWeight: 700,
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem'
                                 }}
                             >
                                 {editingItem ? 'Update' : 'Save'}
@@ -693,6 +752,7 @@ export default function TrainingsTab({ employeeId }: Props) {
                     </div>
                 </div>
             )}
+
         </div>
     );
 }
