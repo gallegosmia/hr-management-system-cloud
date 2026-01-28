@@ -408,7 +408,8 @@ export default function TrainingsTab({ employeeId }: Props) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    zIndex: 1000
+                    zIndex: 1000,
+                    padding: '2rem'
                 }}>
                     <div style={{
                         background: 'white',
@@ -416,12 +417,14 @@ export default function TrainingsTab({ employeeId }: Props) {
                         padding: '2rem',
                         width: '100%',
                         maxWidth: '500px',
-                        maxHeight: '90vh',
-                        overflowY: 'auto'
+                        maxHeight: 'calc(100vh - 4rem)',
+                        overflowY: 'auto',
+                        margin: 'auto'
                     }}>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#064e3b', marginBottom: '1.5rem' }}>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#064e3b', marginBottom: '1.5rem', marginTop: 0 }}>
                             {editingItem ? 'Edit' : 'Add'} {activeSection === 'trainings' ? 'Training' : 'Certificate'}
                         </h3>
+
 
                         {activeSection === 'trainings' ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
