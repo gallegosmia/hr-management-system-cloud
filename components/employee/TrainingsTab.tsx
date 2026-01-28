@@ -62,7 +62,12 @@ export default function TrainingsTab({ employeeId }: Props) {
     // Scroll modal body to top when it opens
     useEffect(() => {
         if (showAddModal && modalBodyRef.current) {
-            modalBodyRef.current.scrollTop = 0;
+            // Use setTimeout to ensure scroll happens after render and any auto-focus
+            setTimeout(() => {
+                if (modalBodyRef.current) {
+                    modalBodyRef.current.scrollTop = 0;
+                }
+            }, 50);
         }
     }, [showAddModal]);
 
@@ -429,11 +434,11 @@ export default function TrainingsTab({ employeeId }: Props) {
                         bottom: 0,
                         background: 'rgba(0,0,0,0.6)',
                         display: 'flex',
-                        alignItems: 'center',
+                        alignItems: 'flex-start',
                         justifyContent: 'center',
                         zIndex: 9999,
-                        padding: '1rem',
-                        overflow: 'hidden'
+                        padding: '2rem 1rem',
+                        overflowY: 'auto'
                     }}
                     onClick={(e) => {
                         if (e.target === e.currentTarget) {
@@ -449,10 +454,12 @@ export default function TrainingsTab({ employeeId }: Props) {
                         borderRadius: '16px',
                         width: '100%',
                         maxWidth: '500px',
-                        maxHeight: 'min(90vh, 700px)',
+                        maxHeight: 'calc(100vh - 4rem)',
                         display: 'flex',
                         flexDirection: 'column',
                         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                        margin: 'auto 0',
+
                         overflow: 'hidden'
                     }}>
                         {/* Fixed Header */}
