@@ -49,6 +49,11 @@ export interface Employee {
     contact_number?: string;
     email_address?: string;
     address?: string;
+    gender?: string;
+    religion?: string;
+    emergency_contact_name?: string;
+    emergency_contact_number?: string;
+    profile_picture?: string;
     sss_number?: string;
     philhealth_number?: string;
     pagibig_number?: string;
@@ -92,10 +97,15 @@ export interface EmployeeFormData {
     employment_status: string;
     date_hired: string;
     date_of_birth?: string;
+    gender?: string;
+    religion?: string;
+    address?: string;
+    emergency_contact_name?: string;
+    emergency_contact_number?: string;
+    profile_picture?: string;
     date_separated?: string;
     contact_number?: string;
     email_address?: string;
-    address?: string;
     sss_number?: string;
     philhealth_number?: string;
     pagibig_number?: string;
@@ -286,6 +296,10 @@ export async function archiveEmployee(id: number): Promise<void> {
 }
 
 export async function deleteEmployee(id: number): Promise<void> {
+    // Delete related records without ON DELETE CASCADE
+    await query(`DELETE FROM payslips WHERE employee_id = $1`, [id]);
+
+    // Now delete the employee
     await remove('employees', id);
 }
 
@@ -295,7 +309,7 @@ export async function searchEmployees(searchQuery: string): Promise<Employee[]> 
 
     const q = `%${trimmedQuery}%`;
 
-    if (isPostgres) {
+    if (isPostgres()) {
         const res = await query(
             `SELECT *, 
               (CASE 
@@ -399,6 +413,9 @@ export async function getDashboardStats() {
     const leavesRes = await query("SELECT COUNT(*) FROM leave_requests WHERE status LIKE 'Pending%'");
     const pendingLeaves = parseInt(leavesRes.rows[0].count);
 
+    const pendingUsersRes = await query("SELECT COUNT(*) FROM users WHERE is_active = 0");
+    const pendingUsers = parseInt(pendingUsersRes.rows[0].count);
+
     // Get Today's Attendance Stats
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
@@ -465,6 +482,7 @@ export async function getDashboardStats() {
         partialFiles,
         incompleteFiles,
         pendingLeaves,
+        pendingUsers,
         upcomingBirthdays,
         byDepartment,
         byStatus,
@@ -913,10 +931,25 @@ export async function recordAttendance(data: {
     status: string;
     remarks?: string;
 }): Promise<void> {
-    const res = await query("SELECT id FROM attendance WHERE employee_id = $1 AND date = $2", [data.employee_id, data.date]);
+    const isLeave = data.status.toLowerCase().includes('leave');
 
-    if (res.rows.length > 0) {
-        await update('attendance', res.rows[0].id, data);
+    // Check if record already exists
+    const res = await query("SELECT id, status FROM attendance WHERE employee_id = $1 AND date = $2", [data.employee_id, data.date]);
+    const existingRecord = res.rows[0];
+
+    if (isLeave) {
+        // If we are changing to leave or creating a new leave record
+        if (!existingRecord || !existingRecord.status.toLowerCase().includes('leave')) {
+            const year = new Date(data.date).getFullYear();
+            const used = await getEmployeeLeaveCount(data.employee_id, year);
+            if (used >= 5) {
+                throw new Error(`Leave limit exceeded for this year (Max 5 days). Current used: ${used}`);
+            }
+        }
+    }
+
+    if (existingRecord) {
+        await update('attendance', existingRecord.id, data);
     } else {
         await insert('attendance', data);
     }
@@ -932,40 +965,9 @@ export async function batchRecordAttendance(records: {
 }[]): Promise<void> {
     if (records.length === 0) return;
 
-    if (isPostgres) {
-        // Multi-row UPSERT for Postgres
-        const values: any[] = [];
-        let placeholderIndex = 1;
-        const valueStrings: string[] = [];
-
-        for (const record of records) {
-            valueStrings.push(`($${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++})`);
-            values.push(
-                record.employee_id,
-                record.date,
-                record.time_in || null,
-                record.time_out || null,
-                record.status,
-                record.remarks || null
-            );
-        }
-
-        const sql = `
-            INSERT INTO attendance (employee_id, date, time_in, time_out, status, remarks)
-            VALUES ${valueStrings.join(', ')}
-            ON CONFLICT (employee_id, date) 
-            DO UPDATE SET 
-                time_in = EXCLUDED.time_in,
-                time_out = EXCLUDED.time_out,
-                status = EXCLUDED.status,
-                remarks = EXCLUDED.remarks
-        `;
-        await query(sql, values);
-    } else {
-        // Fallback for local DB (still sequential but handled here)
-        for (const record of records) {
-            await recordAttendance(record);
-        }
+    // Use loop to ensure recordAttendance logic (like leave limit check) is run for each
+    for (const record of records) {
+        await recordAttendance(record);
     }
 }
 
@@ -1074,6 +1076,30 @@ export async function getPayslipsByRunId(runId: number): Promise<Payslip[]> {
     }));
 }
 
+export async function getEmployeePayslips(employeeId: number): Promise<any[]> {
+    const sql = `
+        SELECT p.*, pr.period_start, pr.period_end, pr.status as run_status
+        FROM payslips p
+        JOIN payroll_runs pr ON p.payroll_run_id = pr.id
+        WHERE p.employee_id = $1
+        ORDER BY pr.period_end DESC
+    `;
+    const res = await query(sql, [employeeId]);
+    return res.rows.map(row => ({
+        ...row,
+        deduction_details: typeof row.deduction_details === 'string' ? JSON.parse(row.deduction_details) : row.deduction_details,
+        allowance_details: typeof row.allowance_details === 'string' ? JSON.parse(row.allowance_details) : row.allowance_details
+    }));
+}
+
+export async function getEmployeeLeaveCount(employeeId: number, year: number): Promise<number> {
+    const res = await query(
+        "SELECT COUNT(*) FROM attendance WHERE employee_id = $1 AND EXTRACT(YEAR FROM date) = $2 AND status ILIKE 'Leave%'",
+        [employeeId, year]
+    );
+    return parseInt(res.rows[0].count);
+}
+
 export async function createPayslip(data: Omit<Payslip, 'id' | 'generated_at'>): Promise<number> {
     return await insert('payslips', {
         ...data,
@@ -1086,7 +1112,7 @@ export async function createPayslip(data: Omit<Payslip, 'id' | 'generated_at'>):
 export async function batchCreatePayslips(items: Omit<Payslip, 'id' | 'generated_at'>[]): Promise<void> {
     if (items.length === 0) return;
 
-    if (isPostgres) {
+    if (isPostgres()) {
         const values: any[] = [];
         let placeholderIndex = 1;
         const valueStrings: string[] = [];

@@ -12,6 +12,10 @@ import Modal from '@/components/Modal';
 import PersonalInfoTab from '@/components/employee/PersonalInfoTab';
 import FileList from '@/components/employee/FileList';
 import EditEmployeeModal from '@/components/employee/EditEmployeeModal';
+import AttendanceTab from '@/components/employee/AttendanceTab';
+import LeaveHistoryTab from '@/components/employee/LeaveHistoryTab';
+import PayrollHistoryTab from '@/components/employee/PayrollHistoryTab';
+import PayrollDetailsTab from '@/components/employee/PayrollDetailsTab';
 
 interface Employee {
     id: number;
@@ -53,9 +57,26 @@ export default function EmployeeDetailPage() {
     const [loading, setLoading] = useState(true);
     const [education, setEducation] = useState<any[]>([]);
 
+    const [user, setUser] = useState<any>(null);
+
     // Tab State
     const [activeTab, setActiveTab] = useState('Personal info');
-    const tabs = ['Personal info', 'Payroll details', 'Documents', 'Payroll history', 'Medical history', 'Leave history', 'Attendance'];
+    const [tabs, setTabs] = useState(['Personal info', 'Payroll details', 'Documents', 'Payroll history', 'Leave history', 'Attendance']);
+
+    useEffect(() => {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            try {
+                const parsedUser = JSON.parse(userData);
+                setUser(parsedUser);
+                if (parsedUser.role === 'Employee') {
+                    setTabs(['Personal info', 'Documents', 'Payroll history', 'Leave history', 'Attendance']);
+                }
+            } catch (e) {
+                console.error("Failed to parse user data", e);
+            }
+        }
+    }, []);
 
     // Modal State
     const [isEditModalOpen, setEditModalOpen] = useState(false);
@@ -71,6 +92,12 @@ export default function EmployeeDetailPage() {
     const [reportStartDate, setReportStartDate] = useState(format(new Date(new Date().getFullYear(), 0, 1), 'yyyy-MM-dd'));
     const [reportEndDate, setReportEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const [generatingProfile, setGeneratingProfile] = useState(false);
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
 
     // File Upload State
     const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -98,6 +125,14 @@ export default function EmployeeDetailPage() {
 
         const fetchData = async () => {
             try {
+                // Security Check for Employees
+                const userData = localStorage.getItem('user');
+                const loggedUser = userData ? JSON.parse(userData) : null;
+                if (loggedUser && loggedUser.role === 'Employee' && params.id !== String(loggedUser.employee_id)) {
+                    router.push('/dashboard');
+                    return;
+                }
+
                 // Fetch Employee
                 const empRes = await fetch(`/api/employees?id=${params.id}`);
                 const empData = await empRes.json();
@@ -175,7 +210,6 @@ export default function EmployeeDetailPage() {
         }
     };
 
-
     const handleEdit = (section: string) => {
         setEditSection(section);
         setEditModalOpen(true);
@@ -195,6 +229,51 @@ export default function EmployeeDetailPage() {
                 setEmployee({ ...employee, ...updatedData });
                 showAlert('Employee details updated successfully', 'Success');
                 setEditModalOpen(false);
+            } else {
+                const data = await res.json();
+                showAlert(`Failed to update: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Update failed', error);
+            showAlert('Failed to update due to network error');
+        }
+    };
+
+    const handleDeleteEmployee = async () => {
+        if (!employee) return;
+
+        showConfirm(
+            `Are you sure you want to delete ${employee.first_name} ${employee.last_name}? This action cannot be undone.`,
+            async () => {
+                try {
+                    const res = await fetch(`/api/employees?id=${employee.id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        router.push('/employees');
+                    } else {
+                        const data = await res.json();
+                        showAlert(`Delete failed: ${data.error}`);
+                    }
+                } catch (error) {
+                    console.error('Delete failed', error);
+                    showAlert('Failed to delete due to network error');
+                }
+            },
+            'Confirm Delete'
+        );
+    };
+
+    const handleUpdatePayrollDetails = async (salaryInfo: any) => {
+        if (!employee) return;
+        try {
+            const res = await fetch('/api/employees', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: employee.id, salary_info: salaryInfo })
+            });
+
+            if (res.ok) {
+                setEmployee({ ...employee, salary_info: salaryInfo });
+                showAlert('Payroll details updated successfully', 'Success');
             } else {
                 const data = await res.json();
                 showAlert(`Failed to update: ${data.error}`);
@@ -314,12 +393,30 @@ export default function EmployeeDetailPage() {
             autoTable(doc, {
                 startY: yPos,
                 body: [
+                    ['Gender', employee.gender || '-'],
+                    ['Religion', (employee as any).religion || '-'],
                     ['Date Hired', formatDate(employee.date_hired)],
                     ['Date of Birth', formatDate(employee.date_of_birth)],
                     ['Contact Number', employee.contact_number || '-'],
                     ['Email Address', employee.email_address || '-'],
                     ['Address', employee.address || '-'],
                     ['Civil Status', employee.civil_status || '-'],
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: primaryColor, textColor: 255 },
+                styles: { fontSize: 10, cellPadding: 3, textColor: 50 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50, fillColor: [245, 247, 250] } }
+            });
+
+            yPos = (doc as any).lastAutoTable.finalY + 15;
+
+            // --- EMERGENCY CONTACT ---
+            yPos = addSectionHeader('Emergency Contact', yPos);
+            autoTable(doc, {
+                startY: yPos,
+                body: [
+                    ['Contact Name', (employee as any).emergency_contact_name || 'Not set'],
+                    ['Contact Number', (employee as any).emergency_contact_number || '-'],
                 ],
                 theme: 'grid',
                 headStyles: { fillColor: primaryColor, textColor: 255 },
@@ -425,134 +522,277 @@ export default function EmployeeDetailPage() {
                 />
             )}
 
-            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem 2rem' }}>
-
-                {/* Header / Breadcrumbs */}
-                <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Link href="/employees" style={{ color: '#6b7280', textDecoration: 'none', fontSize: '0.875rem' }}>
-                        &larr; Back to Employees
-                    </Link>
-                    <button
-                        onClick={generateProfilePDF}
-                        disabled={generatingProfile}
-                        style={{
-                            padding: '0.5rem 1rem',
-                            background: '#2563eb',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: generatingProfile ? 'not-allowed' : 'pointer',
-                            fontSize: '0.875rem'
-                        }}
-                    >
-                        {generatingProfile ? 'Generating...' : 'Download 201 File PDF'}
-                    </button>
+            <div className="employee-branded-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{
+                        background: '#fbbf24',
+                        color: '#064e3b',
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 900,
+                        fontSize: '1.5rem',
+                        boxShadow: '0 0 15px rgba(251, 191, 36, 0.4)'
+                    }}>M</div>
+                    <div>
+                        <div style={{ fontWeight: 700, fontSize: '1.125rem', letterSpacing: '0.02em' }}>Melann Lending</div>
+                        <div style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 500 }}>Investor Corporation</div>
+                    </div>
                 </div>
+                <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{format(currentTime, 'EEEE, MMMM dd, yyyy')}</div>
+                    <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>at {format(currentTime, 'HH:mm:ss a')} PST</div>
+                </div>
+            </div>
 
-                {/* Navbar/Tabs */}
+            <div className="employee-201-bg" style={{ minHeight: 'calc(100vh - 70px)', padding: '2rem 0' }}>
+                <div className="employee-201-pattern"></div>
+
                 <div style={{
-                    borderBottom: '1px solid #e5e7eb',
-                    marginBottom: '2rem',
-                    display: 'flex',
-                    gap: '2rem',
-                    overflowX: 'auto'
+                    position: 'relative',
+                    zIndex: 1,
+                    maxWidth: '1200px',
+                    margin: '0 auto',
+                    padding: '0 1.5rem',
+                    textAlign: 'center',
+                    marginBottom: '3rem'
                 }}>
-                    {tabs.map(tab => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            style={{
-                                padding: '1rem 0',
-                                border: 'none',
-                                background: 'none',
-                                borderBottom: activeTab === tab ? '2px solid #2563eb' : '2px solid transparent',
-                                color: activeTab === tab ? '#2563eb' : '#6b7280',
-                                fontWeight: activeTab === tab ? 600 : 500,
-                                cursor: 'pointer',
-                                whiteSpace: 'nowrap'
-                            }}
-                        >
-                            {tab}
-                        </button>
-                    ))}
+                    <h1 style={{ color: 'white', fontSize: '2.5rem', fontWeight: 800, textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                        Employee 201 File Information
+                    </h1>
+                    <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '1.125rem', marginTop: '0.5rem', fontStyle: 'italic' }}>
+                        "Lend. Empower. Grow."
+                    </p>
                 </div>
 
-                {/* Tab Content */}
-                <div>
-                    {activeTab === 'Personal info' && (
-                        <PersonalInfoTab employee={employee} onEdit={handleEdit} />
-                    )}
+                <div style={{ position: 'relative', zIndex: 10, maxWidth: '1200px', margin: '0 auto', padding: '0 1rem 2rem' }}>
 
-                    {activeTab === 'Documents' && (
-                        <div>
-                            <div style={{
-                                background: 'white',
-                                padding: '1.5rem',
-                                borderRadius: '16px',
-                                border: '1px solid #f3f4f6',
-                                marginBottom: '1.5rem'
-                            }}>
-                                <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.125rem' }}>Upload Document</h3>
-                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                    <select
-                                        value={selectedDocType}
-                                        onChange={(e) => setSelectedDocType(e.target.value)}
-                                        style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid #d1d5db' }}
-                                    >
-                                        <option value="Contract">Contract</option>
-                                        <option value="Medical">Medical</option>
-                                        <option value="Identification">Identification</option>
-                                        <option value="Legal">Legal</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                    <input
-                                        type="file"
-                                        accept="application/pdf"
-                                        onChange={(e) => setPendingFile(e.target.files?.[0] || null)}
-                                    />
+                    {/* Header / Breadcrumbs */}
+                    <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Link href="/employees" style={{
+                            color: 'white',
+                            textDecoration: 'none',
+                            fontSize: '0.925rem',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.5rem 1rem',
+                            background: 'rgba(255,255,255,0.1)',
+                            borderRadius: '8px',
+                            backdropFilter: 'blur(4px)',
+                            border: '1px solid rgba(255,255,255,0.2)'
+                        }}>
+                            <span style={{ fontSize: '1.2rem' }}>←</span> Return to Masterlist
+                        </Link>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                            {user && user.role !== 'Employee' && (
+                                <>
                                     <button
-                                        onClick={handleFileUpload}
-                                        disabled={!pendingFile}
+                                        onClick={handleDeleteEmployee}
                                         style={{
                                             padding: '0.5rem 1rem',
-                                            background: pendingFile ? '#2563eb' : '#9ca3af',
+                                            background: '#fef2f2',
+                                            color: '#dc2626',
+                                            border: '1px solid #fee2e2',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.875rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem',
+                                            fontWeight: 600
+                                        }}
+                                    >
+                                        <span>🗑️</span> Delete Employee
+                                    </button>
+                                    <button
+                                        onClick={generateProfilePDF}
+                                        disabled={generatingProfile}
+                                        style={{
+                                            padding: '0.5rem 1rem',
+                                            background: '#2563eb',
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: '6px',
-                                            cursor: pendingFile ? 'pointer' : 'not-allowed'
+                                            cursor: generatingProfile ? 'not-allowed' : 'pointer',
+                                            fontSize: '0.875rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem'
                                         }}
                                     >
-                                        Upload
+                                        <span>📄</span> {generatingProfile ? 'Generating...' : 'Download 201 File PDF'}
                                     </button>
-                                </div>
-                            </div>
-                            <FileList
-                                employeeId={employee.employee_id}
-                                showAlert={showAlert}
-                                showConfirm={showConfirm}
-                                refreshTrigger={refreshFiles}
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Navbar/Tabs */}
+                    <div style={{
+                        background: 'white',
+                        padding: '0 1.5rem',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                        border: '1px solid var(--gray-200)',
+                        marginBottom: '2rem',
+                        display: 'flex',
+                        gap: '2.5rem',
+                        overflowX: 'auto',
+                        position: 'sticky',
+                        top: '70px',
+                        zIndex: 40
+                    }}>
+                        {tabs.map(tab => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                style={{
+                                    padding: '1.25rem 0',
+                                    border: 'none',
+                                    background: 'none',
+                                    borderBottom: activeTab === tab ? '3px solid var(--primary-600)' : '3px solid transparent',
+                                    color: activeTab === tab ? 'var(--primary-700)' : 'var(--gray-500)',
+                                    fontWeight: activeTab === tab ? 700 : 500,
+                                    cursor: 'pointer',
+                                    fontSize: '0.925rem',
+                                    whiteSpace: 'nowrap',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Tab Content */}
+                    <div>
+                        {activeTab === 'Personal info' && (
+                            <PersonalInfoTab
+                                employee={employee}
+                                onEdit={handleEdit}
+                                onSave={handleSaveEdit}
                             />
-                        </div>
-                    )}
+                        )}
 
-                    {activeTab === 'Attendance' && (
-                        <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', border: '1px solid #f3f4f6', textAlign: 'center', color: '#6b7280' }}>
-                            <p>Attendance Record functionality is available in the specific Attendance module.</p>
-                            <Link href="/attendance" style={{ color: '#2563eb', fontWeight: 600 }}>Go to Attendance Module</Link>
-                        </div>
-                    )}
+                        {activeTab === 'Documents' && (
+                            <div>
+                                {user && user.role !== 'Employee' && (
+                                    <div style={{
+                                        background: 'white',
+                                        padding: '1.5rem',
+                                        borderRadius: '16px',
+                                        border: '1px solid #f3f4f6',
+                                        marginBottom: '1.5rem'
+                                    }}>
+                                        <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.125rem' }}>Upload Document</h3>
+                                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                            <select
+                                                value={selectedDocType}
+                                                onChange={(e) => setSelectedDocType(e.target.value)}
+                                                style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                                            >
+                                                <option value="Contract">Contract</option>
+                                                <option value="Identification">Identification</option>
+                                                <option value="Legal">Legal</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                            <input
+                                                type="file"
+                                                accept="application/pdf"
+                                                onChange={(e) => setPendingFile(e.target.files?.[0] || null)}
+                                            />
+                                            <button
+                                                onClick={handleFileUpload}
+                                                disabled={!pendingFile}
+                                                style={{
+                                                    padding: '0.5rem 1rem',
+                                                    background: pendingFile ? '#2563eb' : '#9ca3af',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '6px',
+                                                    cursor: pendingFile ? 'pointer' : 'not-allowed'
+                                                }}
+                                            >
+                                                Upload
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                                <FileList
+                                    employeeId={employee.employee_id}
+                                    showAlert={showAlert}
+                                    showConfirm={showConfirm}
+                                    refreshTrigger={refreshFiles}
+                                />
+                            </div>
+                        )}
 
-                    {/* Handlers for other tabs (Placeholders) */}
-                    {['Payroll details', 'Payroll history', 'Medical history', 'Leave history'].includes(activeTab) && (
-                        <div style={{ background: 'white', padding: '3rem', borderRadius: '16px', border: '1px solid #f3f4f6', textAlign: 'center' }}>
-                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚧</div>
-                            <h3 style={{ color: '#111827' }}>{activeTab}</h3>
-                            <p style={{ color: '#6b7280' }}>This section is currently under development.</p>
-                        </div>
-                    )}
+                        {activeTab === 'Attendance' && (
+                            <AttendanceTab employeeId={employee.id} />
+                        )}
+
+                        {activeTab === 'Leave history' && (
+                            <LeaveHistoryTab employeeId={employee.id} />
+                        )}
+
+                        {activeTab === 'Payroll history' && (
+                            <PayrollHistoryTab employeeId={employee.id} />
+                        )}
+
+                        {activeTab === 'Payroll details' && (
+                            <PayrollDetailsTab
+                                employee={employee}
+                                onUpdate={handleUpdatePayrollDetails}
+                            />
+                        )}
+                    </div>
+
                 </div>
-
             </div>
+
+            <style jsx global>{`
+                .employee-201-bg {
+                    background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+                    background-attachment: fixed;
+                    position: relative;
+                    overflow: hidden;
+                }
+                .employee-201-pattern {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    opacity: 0.15;
+                    pointer-events: none;
+                    background-image: 
+                        linear-gradient(45deg, #fbbf24 25%, transparent 25%), 
+                        linear-gradient(-45deg, #fbbf24 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #fbbf24 75%), 
+                        linear-gradient(-45deg, transparent 75%, #fbbf24 75%);
+                    background-size: 100px 100px;
+                    background-position: 0 0, 0 50px, 50px 50px, 50px 0;
+                    z-index: 0;
+                }
+                .employee-branded-header {
+                    background: rgba(6, 78, 59, 0.95);
+                    backdrop-filter: blur(10px);
+                    border-bottom: 2px solid #fbbf24;
+                    padding: 1rem 2rem;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    color: white;
+                    position: sticky;
+                    top: 0;
+                    z-index: 100;
+                }
+            `}</style>
         </DashboardLayout>
     );
 }

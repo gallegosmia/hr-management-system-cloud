@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAll, getById, insert, update, query, remove } from '@/lib/database';
 import { hashPassword } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
     try {
         const sql = `
@@ -10,6 +12,8 @@ export async function GET(request: NextRequest) {
                 u.username, 
                 u.role, 
                 u.is_active, 
+                u.status,
+                u.password,
                 u.employee_id, 
                 u.last_login, 
                 u.created_at,
@@ -23,24 +27,26 @@ export async function GET(request: NextRequest) {
         `;
         const res = await query(sql);
 
-        const safeUsers = res.rows.map((u: any) => ({
+        const safeUsers = (res.rows || []).map((u: any) => ({
             id: u.id,
-            username: u.username,
-            role: u.role,
-            is_active: u.is_active,
+            username: u.username || 'unknown',
+            role: u.role || 'Employee',
+            is_active: u.is_active ?? 1,
+            status: u.status || 'ACTIVE',
             employee_id: u.employee_id,
             last_login: u.last_login,
             created_at: u.created_at,
             email: u.user_email || u.employee_email || u.email || '',
-            full_name: u.first_name ? `${u.first_name} ${u.last_name}` : u.username,
+            password: u.password,
+            full_name: u.first_name ? `${u.first_name} ${u.last_name}` : (u.full_name || u.username || 'User'),
             two_fa_enabled: u.two_fa_enabled === 1 || u.two_fa_enabled === true
         }));
 
         return NextResponse.json(safeUsers);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Get users error:', error);
         return NextResponse.json(
-            { error: 'Failed to fetch users' },
+            { error: 'Failed to fetch users', details: error.message },
             { status: 500 }
         );
     }
@@ -73,6 +79,7 @@ export async function POST(request: NextRequest) {
             password: hashedPassword,
             role: data.role,
             is_active: 1,
+            status: 'ACTIVE',
             employee_id: data.employee_id || null
         });
 
@@ -100,6 +107,16 @@ export async function PUT(request: NextRequest) {
         const updates: any = { ...data };
         if (data.password) {
             updates.password = hashPassword(data.password);
+        }
+
+        // Sync with status column if is_active is changed
+        if (data.is_active === 1) {
+            updates.status = 'ACTIVE';
+            // Update queue if it exists
+            await query("UPDATE admin_approval_queue SET status = 'APPROVED', processed_at = $1 WHERE user_id = $2", [new Date().toISOString(), id]);
+        } else if (data.is_active === -1) {
+            updates.status = 'REJECTED';
+            await query("UPDATE admin_approval_queue SET status = 'REJECTED', processed_at = $1 WHERE user_id = $2", [new Date().toISOString(), id]);
         }
 
         await update('users', id, updates);
@@ -134,7 +151,11 @@ export async function DELETE(request: NextRequest) {
             );
         }
 
-        await remove('users', parseInt(id));
+        // Soft delete: Mark as DELETED
+        await update('users', id, {
+            is_active: -2,
+            status: 'DELETED'
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {

@@ -95,74 +95,104 @@ export default function BonusesPage() {
     return (
         <DashboardLayout>
             <div className="card">
-                <div className="card-header">
+                <div className="card-header" style={{ background: 'white', borderBottom: '1px solid var(--gray-200)', padding: '1.5rem 2rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div className="card-title">
-                            <span>🎁</span>
-                            Employee Bonuses (Midyear & 13th Month)
+                        <div className="card-title" style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--gray-900)' }}>
+                            <span style={{
+                                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                                padding: '0.5rem',
+                                borderRadius: '12px',
+                                display: 'inline-flex',
+                                marginRight: '0.75rem',
+                                boxShadow: '0 4px 6px -1px rgba(245, 158, 11, 0.2)'
+                            }}>🎁</span>
+                            <span style={{ background: 'linear-gradient(90deg, var(--gray-900), var(--gray-600))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                                Employee Bonuses
+                            </span>
                         </div>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
                             <button
                                 onClick={() => setShowPreview(true)}
-                                className="btn btn-secondary btn-sm"
+                                className="btn btn-secondary"
+                                style={{ borderRadius: '10px', padding: '0.625rem 1.25rem', fontSize: '0.875rem' }}
                                 disabled={!selectedYear || employees.length === 0}
                             >
-                                👁️ View Receipt
+                                <span style={{ marginRight: '0.5rem' }}>👁️</span> View Acknowledgment
                             </button>
                             <button
                                 onClick={generatePDF}
-                                className="btn btn-primary btn-sm"
+                                className="btn btn-primary"
+                                style={{ borderRadius: '10px', padding: '0.625rem 1.25rem', fontSize: '0.875rem', boxShadow: '0 4px 10px rgba(37, 99, 235, 0.2)' }}
                                 disabled={!selectedYear || employees.length === 0}
                             >
-                                📄 Generate PDF Form
+                                <span style={{ marginRight: '0.5rem' }}>📄</span> Export PDF Receipt
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="card-body">
-                    <div style={{ marginBottom: '2rem' }}>
-                        <div style={{
-                            background: 'var(--primary-50)',
-                            padding: 'var(--spacing-md)',
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: 'var(--spacing-lg)'
+                    <div style={{ marginBottom: '2.5rem' }}>
+                        <div className="glass-effect" style={{
+                            padding: '1.25rem 1.75rem',
+                            borderRadius: 'var(--radius-lg)',
+                            marginBottom: '2rem',
+                            borderLeft: '4px solid var(--primary-500)',
+                            background: 'white',
+                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.05)'
                         }}>
-                            <p style={{ margin: 0, fontSize: '0.875rem' }}>
-                                <strong>ℹ️ Bonus Policy:</strong> Bonuses are calculated based on (Daily Rate × 30) / 2, pro-rated by individual months rendered.
-                            </p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <span style={{ fontSize: '1.5rem' }}>ℹ️</span>
+                                <div>
+                                    <h4 style={{ margin: 0, fontSize: '0.925rem', fontWeight: 700, color: 'var(--primary-800)' }}>Bonus Policy Details</h4>
+                                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                                        Bonuses are calculated based on <strong>(Daily Rate × 30) / 2</strong>, pro-rated by individual months rendered within the fiscal year.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="form-row" style={{ maxWidth: '600px' }}>
-                            <div className="form-group">
-                                <label className="form-label">Bonus Type</label>
+                        <div className="form-row" style={{
+                            background: '#f8fafc',
+                            padding: '1.5rem',
+                            borderRadius: 'var(--radius-lg)',
+                            border: '1px solid var(--gray-200)',
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                            gap: '1.5rem'
+                        }}>
+                            <div className="form-group" style={{ margin: 0 }}>
+                                <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--gray-500)' }}>Bonus Type</label>
                                 <select
                                     value={bonusType}
                                     onChange={(e: any) => setBonusType(e.target.value)}
                                     className="form-select"
+                                    style={{ background: 'white', fontWeight: 500 }}
                                 >
                                     <option value="Midyear">Midyear Bonus</option>
                                     <option value="13th Month">13th Month Pay</option>
                                 </select>
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">Year</label>
+                            <div className="form-group" style={{ margin: 0 }}>
+                                <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--gray-500)' }}>Fiscal Year</label>
                                 <select
                                     value={selectedYear}
                                     onChange={(e) => setSelectedYear(e.target.value)}
                                     className="form-select"
+                                    style={{ background: 'white', fontWeight: 500 }}
                                 >
                                     {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
                                         <option key={year} value={year}>{year}</option>
                                     ))}
                                 </select>
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">Branch</label>
+                            <div className="form-group" style={{ margin: 0 }}>
+                                <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--gray-500)' }}>Specific Branch</label>
                                 <select
                                     value={selectedBranch}
                                     onChange={(e) => setSelectedBranch(e.target.value)}
                                     className="form-select"
+                                    style={{ background: 'white', fontWeight: 500 }}
                                 >
                                     <option value="All">All Branches</option>
                                     <option value="Ormoc Branch">Ormoc Branch</option>
@@ -172,13 +202,13 @@ export default function BonusesPage() {
                         </div>
                     </div>
 
-                    <div className="table-container">
+                    <div className="table-container" style={{ border: '1px solid var(--gray-200)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
                         <table className="table">
                             <thead>
-                                <tr>
-                                    <th style={{ width: '50px' }}>No.</th>
+                                <tr style={{ background: 'var(--gray-50)' }}>
+                                    <th style={{ width: '60px', textAlign: 'center' }}>No.</th>
                                     <th>Employee Name</th>
-                                    <th style={{ width: '150px' }}>Months Rendered</th>
+                                    <th style={{ width: '180px' }}>Months Rendered</th>
                                     <th style={{ textAlign: 'right' }}>Monthly Rate</th>
                                     <th style={{ textAlign: 'right' }}>Bonus Amount</th>
                                 </tr>
@@ -222,11 +252,11 @@ export default function BonusesPage() {
                                 })}
                             </tbody>
                             <tfoot>
-                                <tr style={{ background: 'var(--gray-50)', fontWeight: 700 }}>
-                                    <td colSpan={4} style={{ textAlign: 'right', padding: '1rem' }}>
-                                        GRAND TOTAL ({employees.length} employees):
+                                <tr style={{ background: 'var(--gray-900)', color: 'white' }}>
+                                    <td colSpan={4} style={{ textAlign: 'right', padding: '1.25rem', fontWeight: 500, border: 'none' }}>
+                                        <span style={{ color: 'rgba(255,255,255,0.6)', marginRight: '0.5rem' }}>TOTAL FOR {employees.length} EMPLOYEES:</span>
                                     </td>
-                                    <td style={{ textAlign: 'right', padding: '1rem', fontFamily: 'monospace', fontSize: '1.125rem', color: 'var(--primary-700)' }}>
+                                    <td style={{ textAlign: 'right', padding: '1.25rem', fontFamily: 'monospace', fontSize: '1.25rem', fontWeight: 800, border: 'none', color: 'var(--warning-500)' }}>
                                         ₱{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                     </td>
                                 </tr>

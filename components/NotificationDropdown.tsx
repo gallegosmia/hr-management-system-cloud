@@ -88,7 +88,7 @@ export default function NotificationDropdown() {
                     message: alert.message,
                     type: 'alert',
                     severity: alert.severity,
-                    url: `/employees/${alert.employee_id}`,
+                    url: alert.type === 'NEW_USER_REGISTRATION' ? '/users' : `/employees/${alert.employee_id}`,
                     timestamp: alert.created_at || new Date().toISOString()
                 });
             });

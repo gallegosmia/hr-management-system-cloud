@@ -6,6 +6,7 @@ import autoTable from 'jspdf-autotable';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
 import EmployeeCard from '@/components/EmployeeCard';
+import Modal from '@/components/Modal';
 
 interface Employee {
     id: number;
@@ -27,6 +28,7 @@ interface Employee {
     pagibig_number?: string;
     tin?: string;
     civil_status?: string;
+    profile_picture?: string;
 }
 
 export default function EmployeesPage() {
@@ -37,11 +39,32 @@ export default function EmployeesPage() {
     const [departmentFilter, setDepartmentFilter] = useState('');
     const [branchFilter, setBranchFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
     const [departments, setDepartments] = useState<string[]>([]);
     const [branches, setBranches] = useState<string[]>([]);
 
+    // Modal State
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalTitle, setModalTitle] = useState('');
+    const [modalMessage, setModalMessage] = useState('');
+    const [modalType, setModalType] = useState<'alert' | 'confirm'>('alert');
+    const [onConfirm, setOnConfirm] = useState<() => void>(() => { });
+    const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
+
     useEffect(() => {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            try {
+                const user = JSON.parse(userData);
+                if (user.role === 'Employee') {
+                    window.location.href = '/profile';
+                    return;
+                }
+            } catch (e) {
+                console.error("Auth check failed", e);
+            }
+        }
         fetchEmployees();
         fetchDepartments();
         fetchBranches();
@@ -61,6 +84,31 @@ export default function EmployeesPage() {
             console.error('Failed to fetch employees:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteClick = (id: number, name: string) => {
+        setModalTitle('Confirm Delete');
+        setModalMessage(`Are you sure you want to delete ${name}? This action cannot be undone.`);
+        setModalType('confirm');
+        setSelectedEmployeeId(id);
+        setOnConfirm(() => () => performDelete(id));
+        setModalOpen(true);
+    };
+
+    const performDelete = async (id: number) => {
+        try {
+            const res = await fetch(`/api/employees?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setEmployees(prev => prev.filter(e => e.id !== id));
+                setFilteredEmployees(prev => prev.filter(e => e.id !== id));
+            } else {
+                const data = await res.json();
+                alert(`Delete failed: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Delete failed:', error);
+            alert('Failed to delete due to network error');
         }
     };
 
@@ -221,6 +269,14 @@ export default function EmployeesPage() {
 
     return (
         <DashboardLayout>
+            <Modal
+                isOpen={modalOpen}
+                onClose={() => setModalOpen(false)}
+                title={modalTitle}
+                message={modalMessage}
+                type={modalType}
+                onConfirm={onConfirm}
+            />
             <div style={{ padding: '0 0.5rem' }}>
 
                 {/* Header Section */}
@@ -305,20 +361,50 @@ export default function EmployeesPage() {
                     </div>
 
                     <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        {/* View Toggles (Visual Only) */}
+                        {/* View Toggles */}
                         <div style={{ display: 'flex', gap: '2px', background: '#e5e7eb', padding: '2px', borderRadius: '6px' }}>
-                            <button style={{ padding: '4px 8px', background: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>GridView</button>
-                            <button style={{ padding: '4px 8px', background: 'transparent', border: 'none', borderRadius: '4px', cursor: 'pointer', color: '#6b7280' }}>List</button>
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                style={{
+                                    padding: '4px 12px',
+                                    background: viewMode === 'grid' ? 'white' : 'transparent',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    boxShadow: viewMode === 'grid' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                                    color: viewMode === 'grid' ? '#111827' : '#6b7280',
+                                    fontWeight: 600,
+                                    fontSize: '0.8rem'
+                                }}
+                            >
+                                Grid
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                style={{
+                                    padding: '4px 12px',
+                                    background: viewMode === 'list' ? 'white' : 'transparent',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                                    color: viewMode === 'list' ? '#111827' : '#6b7280',
+                                    fontWeight: 600,
+                                    fontSize: '0.8rem'
+                                }}
+                            >
+                                List
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Employee Grid */}
+                {/* Content Rendering */}
                 {filteredEmployees.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>
                         <p>No employees found matching your filters.</p>
                     </div>
-                ) : (
+                ) : viewMode === 'grid' ? (
                     <div style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
@@ -328,6 +414,100 @@ export default function EmployeesPage() {
                         {filteredEmployees.map(emp => (
                             <EmployeeCard key={emp.id} employee={emp} />
                         ))}
+                    </div>
+                ) : (
+                    <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', marginBottom: '2rem' }}>
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
+                                <thead style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                                    <tr>
+                                        <th style={{ padding: '1rem', color: '#4b5563', fontWeight: 600, fontSize: '0.875rem' }}>Employee</th>
+                                        <th style={{ padding: '1rem', color: '#4b5563', fontWeight: 600, fontSize: '0.875rem' }}>ID</th>
+                                        <th style={{ padding: '1rem', color: '#4b5563', fontWeight: 600, fontSize: '0.875rem' }}>Position / Dept</th>
+                                        <th style={{ padding: '1rem', color: '#4b5563', fontWeight: 600, fontSize: '0.875rem' }}>Branch</th>
+                                        <th style={{ padding: '1rem', color: '#4b5563', fontWeight: 600, fontSize: '0.875rem' }}>Status</th>
+                                        <th style={{ padding: '1rem', color: '#4b5563', fontWeight: 600, fontSize: '0.875rem' }}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredEmployees.map(emp => (
+                                        <tr key={emp.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                                            <td style={{ padding: '1rem' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                    <div style={{
+                                                        width: '32px',
+                                                        height: '32px',
+                                                        borderRadius: '50%',
+                                                        background: '#e5e7eb',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '0.8rem',
+                                                        fontWeight: 600,
+                                                        color: '#4b5563',
+                                                        overflow: 'hidden'
+                                                    }}>
+                                                        {emp.profile_picture ? (
+                                                            <img src={emp.profile_picture} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                        ) : (
+                                                            <>{emp.first_name[0]}{emp.last_name[0]}</>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontWeight: 600, color: '#111827' }}>{emp.first_name} {emp.last_name}</div>
+                                                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{emp.email_address}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '1rem', fontSize: '0.875rem', color: '#4b5563' }}>{emp.employee_id}</td>
+                                            <td style={{ padding: '1rem' }}>
+                                                <div style={{ fontSize: '0.875rem', color: '#111827', fontWeight: 500 }}>{emp.position}</div>
+                                                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{emp.department}</div>
+                                            </td>
+                                            <td style={{ padding: '1rem', fontSize: '0.875rem', color: '#4b5563' }}>{emp.branch || 'N/A'}</td>
+                                            <td style={{ padding: '1rem' }}>
+                                                <span style={{
+                                                    display: 'inline-flex',
+                                                    padding: '0.25rem 0.625rem',
+                                                    borderRadius: '9999px',
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 600,
+                                                    background: (emp.employment_status === 'Resigned' || emp.employment_status === 'Terminated') ? '#f3f4f6' : '#ecfdf5',
+                                                    color: (emp.employment_status === 'Resigned' || emp.employment_status === 'Terminated') ? '#374151' : '#065f46'
+                                                }}>
+                                                    {emp.employment_status}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '1rem' }}>
+                                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                                    <Link href={`/employees/${emp.id}`} style={{ color: '#2563eb', fontWeight: 600, fontSize: '0.875rem', textDecoration: 'none' }}>
+                                                        View detail
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => handleDeleteClick(emp.id, `${emp.first_name} ${emp.last_name}`)}
+                                                        style={{
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            color: '#ef4444',
+                                                            cursor: 'pointer',
+                                                            padding: '4px',
+                                                            fontSize: '1rem',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            borderRadius: '4px'
+                                                        }}
+                                                        title="Delete Employee"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
 

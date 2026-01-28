@@ -10,6 +10,7 @@ interface User {
     username: string;
     full_name: string;
     email: string;
+    password?: string;
     role: string;
     is_active: number; // 1: Active, 0: Pending, -1: Rejected
     created_at: string;
@@ -173,10 +174,15 @@ export default function UserManagementSystem() {
             const res = await fetch(`/api/users?id=${id}`, { method: 'DELETE' });
             if (res.ok) {
                 await logAction('DELETE_USER', { user_id: id });
+                alert("User deleted successfully");
                 fetchUsers();
+            } else {
+                const err = await res.json();
+                alert(`Error: ${err.error || 'Failed to delete user'}`);
             }
         } catch (error) {
             console.error("Delete user error", error);
+            alert("System error during deletion");
         }
     };
 
@@ -189,10 +195,15 @@ export default function UserManagementSystem() {
             });
             if (res.ok) {
                 await logAction('APPROVE_USER', { user_id: user.id, username: user.username });
+                alert("User approved successfully");
                 fetchUsers();
+            } else {
+                const err = await res.json();
+                alert(`Error: ${err.error || 'Failed to approve user'}`);
             }
         } catch (error) {
             console.error("Approve user error", error);
+            alert("System error during approval");
         }
     };
 
@@ -206,10 +217,15 @@ export default function UserManagementSystem() {
             });
             if (res.ok) {
                 await logAction('REJECT_USER', { user_id: user.id, username: user.username });
+                alert("User rejected");
                 fetchUsers();
+            } else {
+                const err = await res.json();
+                alert(`Error: ${err.error || 'Failed to reject user'}`);
             }
         } catch (error) {
             console.error("Reject user error", error);
+            alert("System error during rejection");
         }
     };
 
@@ -289,11 +305,13 @@ export default function UserManagementSystem() {
             u.email?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesRole = roleFilter === 'All Roles' || u.role === roleFilter;
 
+        if (u.is_active === -2) return false; // Always exclude soft-deleted users
+
         let matchesStatus = true;
         if (statusFilter !== 'All Status') {
             if (statusFilter === 'Pending') matchesStatus = u.is_active === 0;
             else if (statusFilter === 'Active') matchesStatus = u.is_active === 1;
-            else if (statusFilter === 'Inactive/Rejected') matchesStatus = u.is_active === -1;
+            else if (statusFilter === 'Rejected') matchesStatus = u.is_active === -1;
         }
 
         const matches2fa = twoFaFilter === 'All 2FA' ||
@@ -310,8 +328,8 @@ export default function UserManagementSystem() {
 
     if (loading && users.length === 0) return <div className="loading-state">Loading User Management System...</div>;
 
-    // Access check
-    if (currentUser && currentUser.role !== 'Admin') {
+    // Access check - Allow Admin and HR
+    if (currentUser && !['Admin', 'HR'].includes(currentUser.role)) {
         return (
             <div className="access-denied-inline">
                 <h2>🚫 Access Denied</h2>
@@ -329,11 +347,16 @@ export default function UserManagementSystem() {
                     <p className="um-subtitle">Manage system access and security roles</p>
                 </div>
                 <div className="um-actions">
-                    <button className="um-btn um-btn-secondary" onClick={() => fetchUsers()} title="Refresh Data">
+                    <button
+                        className={`um-btn um-btn-secondary ${loading ? 'um-refresh-spinning' : ''}`}
+                        onClick={() => {
+                            fetchUsers();
+                            fetchEmployees();
+                        }}
+                        title="Refresh Data"
+                        disabled={loading}
+                    >
                         <span>🔄</span>
-                    </button>
-                    <button className="um-btn um-btn-secondary" onClick={handleExportCSV} title="Export CSV">
-                        <span>📊</span> CSV
                     </button>
                     <button className="um-btn um-btn-secondary" onClick={handleExportPDF} title="Export PDF">
                         <span>📄</span> PDF
@@ -431,13 +454,13 @@ export default function UserManagementSystem() {
                                 </td>
                                 <td>
                                     <div className="um-password-field">
-                                        <span className="um-password-masked">
-                                            {showPasswordMap[user.id] ? '********' : '••••••••'}
+                                        <span className={`um-password-masked ${showPasswordMap[user.id] ? 'unmasked' : ''}`}>
+                                            {showPasswordMap[user.id] ? user.password : '••••••••'}
                                         </span>
                                         <button
                                             className="um-eye-btn"
                                             onClick={() => togglePasswordVisibility(user.id)}
-                                            title={showPasswordMap[user.id] ? "Mask Password" : "Log Password View Intent"}
+                                            title={showPasswordMap[user.id] ? "Mask Password" : "View Password Hash"}
                                         >
                                             {showPasswordMap[user.id] ? '👁️‍🗨️' : '👁️'}
                                         </button>
@@ -463,7 +486,7 @@ export default function UserManagementSystem() {
                                             });
                                             setIsEditModalOpen(true);
                                         }}>✏️</button>
-                                        <button className="um-action-btn delete" onClick={() => handleDeleteUser(user.id)}>🗑️</button>
+                                        <button className="um-action-btn delete" onClick={() => handleDeleteUser(user.id)} title="Soft Delete">🗑️</button>
                                     </div>
                                 </td>
                             </tr>
@@ -918,6 +941,16 @@ export default function UserManagementSystem() {
                     font-family: monospace;
                     letter-spacing: 2px;
                     color: #94a3b8;
+                    transition: all 0.2s;
+                }
+
+                .um-password-masked.unmasked {
+                    color: #e2e8f0;
+                    letter-spacing: normal;
+                    font-size: 11px;
+                    word-break: break-all;
+                    max-width: 200px;
+                    display: inline-block;
                 }
 
                 .um-eye-btn {
@@ -1180,6 +1213,16 @@ export default function UserManagementSystem() {
                     padding: 50px;
                     text-align: center;
                     color: #64748b;
+                }
+
+                .um-refresh-spinning span {
+                    display: inline-block;
+                    animation: um-spin 1s linear infinite;
+                }
+
+                @keyframes um-spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
                 }
             `}</style>
         </div>

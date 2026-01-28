@@ -26,6 +26,11 @@ export async function GET(request: NextRequest) {
             if (!employee) {
                 return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
             }
+
+            // Fetch Education Records for the Personal Info Tab
+            const eduRes = await query("SELECT * FROM education WHERE employee_id = $1 ORDER BY year_graduated DESC", [employee.id]);
+            employee.education = eduRes.rows;
+
             return NextResponse.json(employee);
         }
 

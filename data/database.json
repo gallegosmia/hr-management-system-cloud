@@ -1,104 +1,88 @@
 {
   "users": [
     {
+      "id": 11,
+      "username": "admin2",
+      "password": "$2a$10$vXTuG8Rd8fALPp3aNHo.UeRzHJOF6LRV0nz1BQGKOkz3.Ue/.OySu",
+      "role": "Executive",
+      "employee_id": null,
+      "created_at": "2026-01-26T08:27:20.453Z",
+      "last_login": null,
+      "is_active": 1,
+      "email": null,
+      "reset_otp": null,
+      "reset_otp_expires_at": null,
+      "status": "ACTIVE"
+    },
+    {
+      "id": 12,
+      "username": "shahanie1",
+      "password": "$2a$10$Xf1UJUxqYyyQ5xiY1.jo2u9MBtXXL3YfWoFzcK/nO/qQZr04R7nja",
+      "role": "Employee",
+      "employee_id": null,
+      "created_at": "2026-01-27T02:33:41.948Z",
+      "last_login": null,
+      "is_active": 0,
+      "email": "shahaniemaelerio1@gmail.com",
+      "reset_otp": "777370",
+      "reset_otp_expires_at": "2026-01-27T02:39:21.287Z",
+      "status": "ACTIVE"
+    },
+    {
+      "id": 5,
+      "username": "mia",
+      "password": "$2a$10$U6RWVT0PAIhaSaX/kqk6WeQ3L9MszRgE4ofdOFeduO6viqI12rIky",
+      "role": "HR",
+      "employee_id": 9,
+      "created_at": "2026-01-09T06:13:35.334Z",
+      "last_login": "2026-01-27T09:27:20.094Z",
+      "is_active": 1,
+      "email": "gmia0519@gmail.com",
+      "reset_otp": "249902",
+      "reset_otp_expires_at": "2026-01-26T10:41:21.281Z",
+      "status": "ACTIVE"
+    },
+    {
+      "id": 13,
+      "username": "lhyn",
+      "password": "$2a$10$YkBxj316NtE6F1MDAQh4eufH8HXLy5z4wjN.48./v0YI0iZsmyawi",
+      "role": "Manager",
+      "employee_id": null,
+      "created_at": "2026-01-28T00:20:19.473Z",
+      "last_login": null,
+      "is_active": 0,
+      "email": "relobamarilyn81.mlic@gmail.com",
+      "reset_otp": null,
+      "reset_otp_expires_at": null,
+      "status": "ACTIVE"
+    },
+    {
+      "id": 14,
+      "username": "shan",
+      "password": "$2a$10$AZVmOKZk7eca0fmFEqy9seo509B8vHgzUSEiO2S8VYRH8JvoSbQz2",
+      "role": "Employee",
+      "employee_id": null,
+      "created_at": "2026-01-28T00:28:31.452Z",
+      "last_login": null,
+      "is_active": 0,
+      "email": "shahaniemaelerio1@gmail.com",
+      "reset_otp": null,
+      "reset_otp_expires_at": null,
+      "status": "PENDING_APPROVAL"
+    },
+    {
       "id": 1,
       "username": "admin",
       "password": "$2a$10$QGFm03nJ5NNtgMQi1J6zreAPHhWMO9M0EGMPtZf257D/Ardnculra",
       "role": "Admin",
-      "employee_id": "",
+      "employee_id": null,
       "created_at": "2026-01-08T02:04:53.152Z",
-      "last_login": "2026-01-12T10:53:57.670Z",
+      "last_login": "2026-01-28T00:28:46.677Z",
       "is_active": 1,
-      "last_updated": "2026-01-12T10:53:57.671Z",
       "email": "admin@example.com",
       "reset_otp": null,
-      "reset_otp_expires_at": null
-    },
-    {
-      "username": "mia",
-      "password": "$2a$10$Tfo1GCzWknoFlmbd/E9ZXexZo/NuCv7a3KPwF6DM3tdkINCLZdI3C",
-      "role": "HR",
-      "is_active": 1,
-      "employee_id": 9,
-      "id": 5,
-      "created_at": "2026-01-09T06:13:35.334Z",
-      "last_login": "2026-01-24T03:40:01.141Z",
-      "last_updated": "2026-01-13T02:38:47.589Z",
-      "email": "gmia0519@gmail.com",
-      "reset_otp": null,
-      "reset_otp_expires_at": null
-    },
-    {
-      "username": "shan",
-      "password": "$2a$10$Eq7U1U7fW2iIhgjJauHz1O5IIhuaMxuPGJ.b0w5QKfVo6/mFOWsyO",
-      "role": "Employee",
-      "is_active": 1,
-      "employee_id": "",
-      "id": 6,
-      "created_at": "2026-01-09T06:17:30.257Z",
-      "last_login": "2026-01-09T06:30:51.688Z",
-      "last_updated": "2026-01-10T08:37:22.171Z",
-      "email": null,
-      "reset_otp": null,
-      "reset_otp_expires_at": null
-    },
-    {
-      "username": "lhynn",
-      "password": "$2a$10$BAlN8oUoTx9XSMZUispCouDTKiMP9NvLiswP3OYNhU7VsHa8eci16",
-      "role": "Manager",
-      "is_active": 1,
-      "employee_id": null,
-      "id": 7,
-      "created_at": "2026-01-09T06:31:25.169Z",
-      "last_login": "2026-01-09T06:35:09.215Z",
-      "last_updated": "2026-01-09T06:35:09.215Z",
-      "email": null,
-      "reset_otp": null,
-      "reset_otp_expires_at": null
-    },
-    {
-      "username": "jhun",
-      "password": "$2a$10$LHTTOL2qLhWWdO/L9uoreeS0pHcmk6saPRaIoZegEgdKs0idgM1mW",
-      "role": "Manager",
-      "is_active": 1,
-      "employee_id": null,
-      "id": 8,
-      "created_at": "2026-01-09T06:36:55.944Z",
-      "last_login": "2026-01-09T06:37:48.728Z",
-      "last_updated": "2026-01-09T06:37:48.729Z",
-      "email": null,
-      "reset_otp": null,
-      "reset_otp_expires_at": null
-    },
-    {
-      "username": "ann",
-      "password": "$2a$10$bQnrTrCzgPbTuETSEkBPcuRpYp4GLVhru95.tqmk4vmchIZXL48Y.",
-      "role": "Vice President",
-      "is_active": 1,
-      "employee_id": null,
-      "id": 9,
-      "created_at": "2026-01-09T06:39:27.224Z",
-      "email": null,
-      "reset_otp": null,
-      "reset_otp_expires_at": null
-    },
-    {
-      "username": "Mel",
-      "password": "$2a$10$0WO8Hv/SZUiUXN.tf6Kcsu/5QHnlVeE3Il/i.kEhBI.M6Q25LqjKq",
-      "role": "HR",
-      "id": 10,
-      "email": null,
-      "reset_otp": null,
-      "reset_otp_expires_at": null
-    },
-    {
-      "username": "admin2",
-      "password": "$2a$10$vXTuG8Rd8fALPp3aNHo.UeRzHJOF6LRV0nz1BQGKOkz3.Ue/.OySu",
-      "role": "Executive",
-      "id": 11,
-      "email": null,
-      "reset_otp": null,
-      "reset_otp_expires_at": null
+      "reset_otp_expires_at": null,
+      "status": "ACTIVE"
     }
   ],
   "employees": [
@@ -2848,6 +2832,54 @@
       "new_value": "{\"basic_salary\":13560,\"daily_rate\":452,\"hourly_rate\":56.5,\"pay_frequency\":\"Semi-Monthly\",\"allowances\":{\"special\":1000},\"deductions\":{\"sss_contribution\":700,\"philhealth_contribution\":281.25,\"pagibig_contribution\":200,\"company_cash_fund\":300,\"company_loan\":{\"balance\":20500,\"amortization\":2000},\"sss_loan\":{\"balance\":0,\"amortization\":0},\"pagibig_loan\":{\"balance\":0,\"amortization\":0},\"cash_advance\":0,\"other_deductions\":[]}}",
       "details": "{\"table_name\":\"employees\",\"old_value\":\"{\\\"basic_salary\\\":0,\\\"daily_rate\\\":0,\\\"hourly_rate\\\":0,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":0},\\\"deductions\\\":{\\\"sss_contribution\\\":0,\\\"philhealth_contribution\\\":0,\\\"pagibig_contribution\\\":0,\\\"company_cash_fund\\\":0,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":20500,\\\"amortization\\\":2000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
       "id": 214
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_USER",
+      "details": "{\"user_id\":6}",
+      "ip_address": "127.0.0.1",
+      "created_at": "2026-01-27T09:27:43.302Z",
+      "id": 215
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_USER",
+      "details": "{\"user_id\":7}",
+      "ip_address": "127.0.0.1",
+      "created_at": "2026-01-27T09:27:45.998Z",
+      "id": 216
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_USER",
+      "details": "{\"user_id\":9}",
+      "ip_address": "127.0.0.1",
+      "created_at": "2026-01-27T09:27:48.043Z",
+      "id": 217
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_USER",
+      "details": "{\"user_id\":10}",
+      "ip_address": "127.0.0.1",
+      "created_at": "2026-01-27T09:27:49.972Z",
+      "id": 218
+    },
+    {
+      "user_id": 1,
+      "action": "DELETE_USER",
+      "details": "{\"user_id\":11}",
+      "ip_address": "127.0.0.1",
+      "created_at": "2026-01-27T09:27:52.962Z",
+      "id": 219
+    },
+    {
+      "user_id": 1,
+      "action": "VIEW_PASSWORD_MASK",
+      "details": "{\"target_user_id\":1}",
+      "ip_address": "127.0.0.1",
+      "created_at": "2026-01-27T09:34:16.105Z",
+      "id": 220
     }
   ],
   "settings": [
@@ -3317,6 +3349,19 @@
       "honors_awards": "",
       "employee_id": 10,
       "id": 16
+    }
+  ],
+  "admin_approval_queue": [
+    {
+      "id": 1,
+      "user_id": 14,
+      "full_name": "shan",
+      "email": "shahaniemaelerio1@gmail.com",
+      "role": "Employee",
+      "status": "PENDING",
+      "created_at": "2026-01-28T00:28:31.501Z",
+      "processed_at": null,
+      "processed_by": null
     }
   ]
 }

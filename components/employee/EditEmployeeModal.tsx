@@ -113,7 +113,7 @@ export default function EditEmployeeModal({ isOpen, onClose, onSave, employee, s
                     <>
                         <div className="form-group">
                             <label>Email Address</label>
-                            <input type="email" name="email_address" value={formData.email_address || ''} onChange={handleChange} />
+                            <input type="text" name="email_address" value={formData.email_address || ''} onChange={handleChange} placeholder="N/A" />
                         </div>
                         <div className="form-group">
                             <label>Mobile Number</label>

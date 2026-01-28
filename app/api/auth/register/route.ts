@@ -46,11 +46,23 @@ export async function POST(request: NextRequest) {
         // Set is_active to 0 (Pending Approval)
 
         const insertResult = await query(
-            "INSERT INTO users (username, email, password, role, is_active, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, role",
-            [username, email, hashedPassword, role, 0, new Date().toISOString()]
+            "INSERT INTO users (username, email, password, role, is_active, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, username, role, email",
+            [username, email, hashedPassword, role, 0, 'PENDING_APPROVAL', new Date().toISOString()]
         );
 
         const newUser = insertResult.rows[0];
+
+        // 3. Insert into Admin Approval Queue
+        try {
+            await query(
+                "INSERT INTO admin_approval_queue (user_id, full_name, email, role, status, created_at) VALUES ($1, $2, $3, $4, $5, $6)",
+                [newUser.id, username, newUser.email, newUser.role, 'PENDING', new Date().toISOString()]
+            );
+        } catch (queueError) {
+            // Requirement 4: If no admin notification is sent (or registration in queue fails), treat as system error and log it.
+            console.error('[SYSTEM ERROR] Failed to insert into Admin Approval Queue:', queueError);
+            // We still return success for the user registration, but log the system error.
+        }
 
         // NO Auto-login: Do not create session
 

@@ -383,13 +383,25 @@ export default function CreatePayrollPage() {
                                         </td>
                                         <td>{item.branch || '-'}</td>
                                         <td style={{ textAlign: 'center' }}>
-                                            <input
-                                                type="number"
-                                                value={item.days_present}
-                                                onChange={(e) => handleUpdateItem(index, 'days_present', e.target.value)}
-                                                className="form-input"
-                                                style={{ width: '40px', textAlign: 'center' }}
-                                            />
+                                            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                                <input
+                                                    type="number"
+                                                    value={item.days_present}
+                                                    onChange={(e) => handleUpdateItem(index, 'days_present', e.target.value)}
+                                                    className="form-input"
+                                                    style={{
+                                                        width: '60px',
+                                                        textAlign: 'center',
+                                                        padding: '0.4rem',
+                                                        borderRadius: '8px',
+                                                        fontWeight: '600',
+                                                        border: '2px solid #e5e7eb'
+                                                    }}
+                                                    placeholder="15"
+                                                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                                                    onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+                                                />
+                                            </div>
                                         </td>
                                         <td style={{ textAlign: 'right' }}>₱{item.gross_pay?.toLocaleString()}</td>
                                         <td style={{ textAlign: 'right' }}>₱{item.allowances?.toLocaleString()}</td>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAll } from '@/lib/database';
+import { getAll, query } from '@/lib/database';
 import { differenceInDays } from 'date-fns';
 
 export const dynamic = 'force-dynamic';
@@ -23,6 +23,24 @@ export async function GET(request: NextRequest) {
 
         const employees = await getAll('employees');
         const alerts: Alert[] = [];
+
+        // Check for Pending User Registrations
+        try {
+            const pendingUsersRes = await query("SELECT * FROM admin_approval_queue WHERE status = 'PENDING'");
+            (pendingUsersRes.rows || []).forEach((reg: any) => {
+                alerts.push({
+                    id: `reg-${reg.id}`,
+                    employee_id: 0,
+                    employee_name: reg.full_name,
+                    type: 'NEW_USER_REGISTRATION' as any,
+                    severity: 'high',
+                    message: `New user registration pending approval: ${reg.full_name} (${reg.email})`,
+                    created_at: reg.created_at
+                } as any);
+            });
+        } catch (err) {
+            console.error('[SYSTEM ERROR] Failed to fetch pending registrations for alerts:', err);
+        }
 
         employees.forEach((emp: any) => {
             const daysSinceHire = differenceInDays(new Date(), new Date(emp.date_hired));
