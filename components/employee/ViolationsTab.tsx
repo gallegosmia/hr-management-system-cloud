@@ -490,8 +490,10 @@ export default function ViolationsTab({ employeeId }: Props) {
                         alignItems: 'center',
                         justifyContent: 'center',
                         zIndex: 9999,
-                        padding: '1rem'
+                        padding: '1rem',
+                        overflow: 'hidden'
                     }}
+
                     onClick={(e) => {
                         if (e.target === e.currentTarget) {
                             setShowAddModal(false);
@@ -500,223 +502,280 @@ export default function ViolationsTab({ employeeId }: Props) {
                         }
                     }}
                 >
+                    {/* Modal Container */}
                     <div style={{
                         background: 'white',
                         borderRadius: '16px',
-                        padding: '1.5rem',
                         width: '100%',
                         maxWidth: '500px',
-                        maxHeight: '85vh',
-                        overflowY: 'auto',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                        maxHeight: 'min(90vh, 700px)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                        overflow: 'hidden'
                     }}>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#b91c1c', marginBottom: '1.5rem', marginTop: 0 }}>
-                            {editingItem ? 'Edit' : 'Add'} {activeSection === 'violations' ? 'Violation' : 'Warning'}
-                        </h3>
-
-
-                        {activeSection === 'violations' ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Violation Type *
-                                        </label>
-                                        <select
-                                            value={formData.violation_type || ''}
-                                            onChange={(e) => setFormData({ ...formData, violation_type: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        >
-                                            <option value="">Select type</option>
-                                            <option value="Tardiness">Tardiness</option>
-                                            <option value="Absence">Absence</option>
-                                            <option value="Misconduct">Misconduct</option>
-                                            <option value="Policy Violation">Policy Violation</option>
-                                            <option value="Insubordination">Insubordination</option>
-                                            <option value="Negligence">Negligence</option>
-                                            <option value="Harassment">Harassment</option>
-                                            <option value="Theft">Theft</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Severity *
-                                        </label>
-                                        <select
-                                            value={formData.severity || 'Minor'}
-                                            onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        >
-                                            <option value="Minor">Minor</option>
-                                            <option value="Major">Major</option>
-                                            <option value="Serious">Serious</option>
-                                            <option value="Grave">Grave</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                        Incident Date *
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={formData.incident_date || ''}
-                                        onChange={(e) => setFormData({ ...formData, incident_date: e.target.value })}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                        Description *
-                                    </label>
-                                    <textarea
-                                        value={formData.description || ''}
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', minHeight: '100px' }}
-                                        placeholder="Describe the incident in detail..."
-                                    />
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Action Taken
-                                        </label>
-                                        <select
-                                            value={formData.action_taken || ''}
-                                            onChange={(e) => setFormData({ ...formData, action_taken: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        >
-                                            <option value="">Select action</option>
-                                            <option value="Verbal Warning">Verbal Warning</option>
-                                            <option value="Written Warning">Written Warning</option>
-                                            <option value="Final Warning">Final Warning</option>
-                                            <option value="Suspension">Suspension</option>
-                                            <option value="Termination">Termination</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Status
-                                        </label>
-                                        <select
-                                            value={formData.status || 'Active'}
-                                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        >
-                                            <option value="Active">Active</option>
-                                            <option value="Resolved">Resolved</option>
-                                            <option value="Appealed">Appealed</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                        Remarks
-                                    </label>
-                                    <textarea
-                                        value={formData.remarks || ''}
-                                        onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', minHeight: '80px' }}
-                                        placeholder="Additional notes..."
-                                    />
-                                </div>
-                            </div>
-                        ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Warning Type *
-                                        </label>
-                                        <select
-                                            value={formData.warning_type || ''}
-                                            onChange={(e) => setFormData({ ...formData, warning_type: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        >
-                                            <option value="">Select type</option>
-                                            <option value="Verbal">Verbal Warning</option>
-                                            <option value="Written">Written Warning</option>
-                                            <option value="Final">Final Warning</option>
-                                            <option value="Suspension Notice">Suspension Notice</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Date *
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={formData.warning_date || ''}
-                                            onChange={(e) => setFormData({ ...formData, warning_date: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                        Reason *
-                                    </label>
-                                    <textarea
-                                        value={formData.reason || ''}
-                                        onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', minHeight: '100px' }}
-                                        placeholder="Reason for the warning..."
-                                    />
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Suspension Days (if applicable)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={formData.duration_days || ''}
-                                            onChange={(e) => setFormData({ ...formData, duration_days: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                            placeholder="e.g., 3"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Status
-                                        </label>
-                                        <select
-                                            value={formData.status || 'Active'}
-                                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db' }}
-                                        >
-                                            <option value="Active">Active</option>
-                                            <option value="Served">Served</option>
-                                            <option value="Lifted">Lifted</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                        Remarks
-                                    </label>
-                                    <textarea
-                                        value={formData.remarks || ''}
-                                        onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', minHeight: '80px' }}
-                                        placeholder="Additional notes..."
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+                        {/* Fixed Header */}
+                        <div style={{
+                            padding: '1.25rem 1.5rem',
+                            borderBottom: '1px solid #e5e7eb',
+                            background: 'linear-gradient(135deg, #b91c1c, #dc2626)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexShrink: 0
+                        }}>
+                            <h3 style={{
+                                fontSize: '1.125rem',
+                                fontWeight: 700,
+                                color: 'white',
+                                margin: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                            }}>
+                                {activeSection === 'violations' ? '⚠️' : '📋'} {editingItem ? 'Edit' : 'Add'} {activeSection === 'violations' ? 'Violation' : 'Warning'}
+                            </h3>
                             <button
                                 onClick={() => { setShowAddModal(false); setEditingItem(null); setFormData({}); }}
                                 style={{
-                                    padding: '0.75rem 1.5rem',
-                                    background: '#f3f4f6',
-                                    color: '#374151',
+                                    background: 'rgba(255,255,255,0.2)',
                                     border: 'none',
-                                    borderRadius: '10px',
+                                    borderRadius: '8px',
+                                    width: '32px',
+                                    height: '32px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: 'white',
+                                    fontSize: '1.25rem',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        {/* Scrollable Body */}
+                        <div style={{
+                            flex: 1,
+                            overflowY: 'auto',
+                            padding: '1.25rem 1.5rem',
+                            minHeight: 0
+                        }}>
+                            {activeSection === 'violations' ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Violation Type *
+                                            </label>
+                                            <select
+                                                value={formData.violation_type || ''}
+                                                onChange={(e) => setFormData({ ...formData, violation_type: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            >
+                                                <option value="">Select type</option>
+                                                <option value="Tardiness">Tardiness</option>
+                                                <option value="Absence">Absence</option>
+                                                <option value="Misconduct">Misconduct</option>
+                                                <option value="Policy Violation">Policy Violation</option>
+                                                <option value="Insubordination">Insubordination</option>
+                                                <option value="Negligence">Negligence</option>
+                                                <option value="Harassment">Harassment</option>
+                                                <option value="Theft">Theft</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Severity *
+                                            </label>
+                                            <select
+                                                value={formData.severity || 'Minor'}
+                                                onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            >
+                                                <option value="Minor">Minor</option>
+                                                <option value="Major">Major</option>
+                                                <option value="Serious">Serious</option>
+                                                <option value="Grave">Grave</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                            Incident Date *
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={formData.incident_date || ''}
+                                            onChange={(e) => setFormData({ ...formData, incident_date: e.target.value })}
+                                            style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                            Description *
+                                        </label>
+                                        <textarea
+                                            value={formData.description || ''}
+                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                            style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', minHeight: '80px', fontSize: '0.9rem', boxSizing: 'border-box', resize: 'vertical' }}
+                                            placeholder="Describe the incident in detail..."
+                                        />
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Action Taken
+                                            </label>
+                                            <select
+                                                value={formData.action_taken || ''}
+                                                onChange={(e) => setFormData({ ...formData, action_taken: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            >
+                                                <option value="">Select action</option>
+                                                <option value="Verbal Warning">Verbal Warning</option>
+                                                <option value="Written Warning">Written Warning</option>
+                                                <option value="Final Warning">Final Warning</option>
+                                                <option value="Suspension">Suspension</option>
+                                                <option value="Termination">Termination</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Status
+                                            </label>
+                                            <select
+                                                value={formData.status || 'Active'}
+                                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            >
+                                                <option value="Active">Active</option>
+                                                <option value="Resolved">Resolved</option>
+                                                <option value="Appealed">Appealed</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                            Remarks
+                                        </label>
+                                        <textarea
+                                            value={formData.remarks || ''}
+                                            onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                                            style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', minHeight: '70px', fontSize: '0.9rem', boxSizing: 'border-box', resize: 'vertical' }}
+                                            placeholder="Additional notes..."
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Warning Type *
+                                            </label>
+                                            <select
+                                                value={formData.warning_type || ''}
+                                                onChange={(e) => setFormData({ ...formData, warning_type: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            >
+                                                <option value="">Select type</option>
+                                                <option value="Verbal">Verbal Warning</option>
+                                                <option value="Written">Written Warning</option>
+                                                <option value="Final">Final Warning</option>
+                                                <option value="Suspension Notice">Suspension Notice</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Date *
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={formData.warning_date || ''}
+                                                onChange={(e) => setFormData({ ...formData, warning_date: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                            Reason *
+                                        </label>
+                                        <textarea
+                                            value={formData.reason || ''}
+                                            onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                                            style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', minHeight: '80px', fontSize: '0.9rem', boxSizing: 'border-box', resize: 'vertical' }}
+                                            placeholder="Reason for the warning..."
+                                        />
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Suspension Days
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={formData.duration_days || ''}
+                                                onChange={(e) => setFormData({ ...formData, duration_days: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                                placeholder="e.g., 3"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                                Status
+                                            </label>
+                                            <select
+                                                value={formData.status || 'Active'}
+                                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                                style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                                            >
+                                                <option value="Active">Active</option>
+                                                <option value="Served">Served</option>
+                                                <option value="Lifted">Lifted</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
+                                            Remarks
+                                        </label>
+                                        <textarea
+                                            value={formData.remarks || ''}
+                                            onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                                            style={{ width: '100%', padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', minHeight: '70px', fontSize: '0.9rem', boxSizing: 'border-box', resize: 'vertical' }}
+                                            placeholder="Additional notes..."
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Fixed Footer */}
+                        <div style={{
+                            padding: '1rem 1.5rem',
+                            borderTop: '1px solid #e5e7eb',
+                            background: '#f9fafb',
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            gap: '0.75rem',
+                            flexShrink: 0
+                        }}>
+                            <button
+                                onClick={() => { setShowAddModal(false); setEditingItem(null); setFormData({}); }}
+                                style={{
+                                    padding: '0.625rem 1.25rem',
+                                    background: 'white',
+                                    color: '#374151',
+                                    border: '1px solid #d1d5db',
+                                    borderRadius: '8px',
                                     fontWeight: 600,
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem'
                                 }}
                             >
                                 Cancel
@@ -724,13 +783,14 @@ export default function ViolationsTab({ employeeId }: Props) {
                             <button
                                 onClick={handleSave}
                                 style={{
-                                    padding: '0.75rem 1.5rem',
+                                    padding: '0.625rem 1.25rem',
                                     background: 'linear-gradient(135deg, #b91c1c, #dc2626)',
                                     color: 'white',
                                     border: 'none',
-                                    borderRadius: '10px',
+                                    borderRadius: '8px',
                                     fontWeight: 700,
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem'
                                 }}
                             >
                                 {editingItem ? 'Update' : 'Save'}
@@ -739,6 +799,7 @@ export default function ViolationsTab({ employeeId }: Props) {
                     </div>
                 </div>
             )}
+
         </div>
     );
 }
