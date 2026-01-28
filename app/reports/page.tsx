@@ -153,7 +153,7 @@ export default function ReportsPage() {
     };
 
     const genAttendancePDF = () => {
-        if (!data) return;
+        if (!data?.attendanceSummary) return;
         const doc = new jsPDF();
         addReportHeader(doc, 'Attendance Summary');
         const tableData = filterData(data.attendanceSummary)
@@ -177,7 +177,7 @@ export default function ReportsPage() {
     };
 
     const genLatesAbsencesPDF = () => {
-        if (!data) return;
+        if (!data?.latesAbsencesSummary) return;
         const doc = new jsPDF();
         addReportHeader(doc, 'Monthly Lates & Absences Summary');
 
@@ -217,7 +217,7 @@ export default function ReportsPage() {
     };
 
     const genLeavePDF = () => {
-        if (!data) return;
+        if (!data?.leaveUsage) return;
         const doc = new jsPDF();
         addReportHeader(doc, 'Leave Credit & Usage Report');
         const tableData = filterData(data.leaveUsage)
@@ -242,17 +242,26 @@ export default function ReportsPage() {
     };
 
     const genPayrollPDF = () => {
-        if (!data) return;
+        if (!data?.payrollSummary) return;
         const doc = new jsPDF();
         addReportHeader(doc, 'Payroll & Benefits Expenditure');
         const summary = data.payrollSummary;
+
+        // Ensure numeric values
+        const totalBasic = Number(summary.totalBasicRate || 0);
+        const totalAllowances = Number(summary.totalAllowances || 0);
+        const totalSSS = Number(summary.totalSSS || 0);
+        const totalPhilHealth = Number(summary.totalPhilHealth || 0);
+        const totalPagIBIG = Number(summary.totalPagIBIG || 0);
+        const totalLiability = totalBasic + totalAllowances + totalSSS + totalPhilHealth + totalPagIBIG;
+
         const tableData = [
-            ['Total Basic Salaries', `PHP ${summary.totalBasicRate.toLocaleString()}`],
-            ['Total Allowances', `PHP ${summary.totalAllowances.toLocaleString()}`],
-            ['SSS Contributions', `PHP ${summary.totalSSS.toLocaleString()}`],
-            ['PhilHealth Contributions', `PHP ${summary.totalPhilHealth.toLocaleString()}`],
-            ['Pag-IBIG Contributions', `PHP ${summary.totalPagIBIG.toLocaleString()}`],
-            ['Total Monthly Liability', `PHP ${(summary.totalBasicRate + summary.totalAllowances + summary.totalSSS + summary.totalPhilHealth + summary.totalPagIBIG).toLocaleString()}`]
+            ['Total Basic Salaries', `PHP ${totalBasic.toLocaleString()}`],
+            ['Total Allowances', `PHP ${totalAllowances.toLocaleString()}`],
+            ['SSS Contributions', `PHP ${totalSSS.toLocaleString()}`],
+            ['PhilHealth Contributions', `PHP ${totalPhilHealth.toLocaleString()}`],
+            ['Pag-IBIG Contributions', `PHP ${totalPagIBIG.toLocaleString()}`],
+            ['Total Monthly Liability', `PHP ${totalLiability.toLocaleString()}`]
         ];
         autoTable(doc, {
             head: [['Expense Category', 'Total Amount']],
@@ -265,7 +274,7 @@ export default function ReportsPage() {
     };
 
     const genCompliancePDF = () => {
-        if (!data) return;
+        if (!data?.complianceAudit) return;
         const doc = new jsPDF();
         addReportHeader(doc, '201 File Compliance Audit');
         const tableData = filterData(data.complianceAudit)
@@ -280,7 +289,7 @@ export default function ReportsPage() {
     };
 
     const genTenurePDF = () => {
-        if (!data) return;
+        if (!data?.tenureData) return;
         const doc = new jsPDF();
         addReportHeader(doc, 'Employee Tenure & Anniversaries');
         const tableData = filterData(data.tenureData)
@@ -301,15 +310,15 @@ export default function ReportsPage() {
     };
 
     const genRemittancePDF = () => {
-        if (!data) return;
+        if (!data?.governmentRemittance) return;
         const doc = new jsPDF();
         addReportHeader(doc, 'Government Remittance Checklist');
         const remit = data.governmentRemittance;
         const tableData = [
-            ['SSS Contribution Total', `PHP ${remit.sss.toLocaleString()}`],
-            ['PhilHealth Contribution Total', `PHP ${remit.philhealth.toLocaleString()}`],
-            ['Pag-IBIG Contribution Total', `PHP ${remit.pagibig.toLocaleString()}`],
-            ['GRAND TOTAL', `PHP ${remit.total.toLocaleString()}`]
+            ['SSS Contribution Total', `PHP ${Number(remit.sss || 0).toLocaleString()}`],
+            ['PhilHealth Contribution Total', `PHP ${Number(remit.philhealth || 0).toLocaleString()}`],
+            ['Pag-IBIG Contribution Total', `PHP ${Number(remit.pagibig || 0).toLocaleString()}`],
+            ['GRAND TOTAL', `PHP ${Number(remit.total || 0).toLocaleString()}`]
         ];
         autoTable(doc, {
             head: [['Agency', 'Amount to Remit']],
@@ -321,10 +330,10 @@ export default function ReportsPage() {
     };
 
     const genHeadcountPDF = () => {
-        if (!data) return;
+        if (!data?.headcount) return;
         const doc = new jsPDF();
         addReportHeader(doc, 'Headcount & Growth Report');
-        const tableData = data.headcount.byDepartment.map(dept => [dept.name, dept.count, `${Math.round((dept.count / data.headcount.total) * 100)}%`]);
+        const tableData = data.headcount.byDepartment.map(dept => [dept.name, dept.count, `${Math.round((dept.count / (data.headcount.total || 1)) * 100)}%`]);
         autoTable(doc, {
             head: [['Department', 'Staff Count', 'Organization %']],
             body: tableData,
