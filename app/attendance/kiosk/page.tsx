@@ -22,7 +22,8 @@ export default function AttendanceKioskPage() {
     const [isKioskMode, setIsKioskMode] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [user, setUser] = useState<any>(null);
-    const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+    const [status, setStatus] = useState<string>('Standby');
+    const html5QrCodeRef = useRef<any>(null);
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -39,45 +40,72 @@ export default function AttendanceKioskPage() {
         if (!scanResult && user) {
             const timer = setTimeout(() => {
                 startScanner();
-            }, 500);
+            }, 800);
             return () => {
                 clearTimeout(timer);
-                if (scannerRef.current) {
-                    scannerRef.current.clear().catch(err => console.error("Failed to clear scanner", err));
-                    scannerRef.current = null;
-                }
+                stopScanner();
             };
         }
     }, [scanResult, user]);
 
-    const startScanner = () => {
-        const readerElement = document.getElementById("reader");
-        if (!readerElement) {
-            console.error("Reader element not found");
-            return;
+    const stopScanner = async () => {
+        if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+            try {
+                await html5QrCodeRef.current.stop();
+                setStatus('Scanner Stopped');
+            } catch (err) {
+                console.error("Failed to stop scanner:", err);
+            }
         }
+    };
+
+    const startScanner = async () => {
+        const readerElement = document.getElementById("reader");
+        if (!readerElement) return;
 
         try {
-            const scanner = new Html5QrcodeScanner(
-                "reader",
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                /* verbose= */ false
-            );
+            // Import Html5Qrcode only on client side
+            const { Html5Qrcode } = await import('html5-qrcode');
 
-            scanner.render(onScanSuccess, onScanFailure);
-            scannerRef.current = scanner;
+            if (!html5QrCodeRef.current) {
+                html5QrCodeRef.current = new Html5Qrcode("reader");
+            }
+
+            if (html5QrCodeRef.current.isScanning) {
+                await stopScanner();
+            }
+
+            setStatus('Initializing camera...');
+
+            await html5QrCodeRef.current.start(
+                { facingMode: "user" }, // Better for Kiosks (front camera)
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                },
+                onScanSuccess,
+                onScanFailure
+            ).then(() => {
+                setStatus('Active - Searching for QR ID');
+            }).catch((err: any) => {
+                console.error("Scanner start failed:", err);
+                setStatus('Camera Error');
+                setError('Failed to access camera. Please ensure permissions are granted.');
+            });
+
         } catch (err) {
             console.error("Failed to start scanner:", err);
+            setStatus('Error');
         }
     };
 
     const onScanSuccess = async (decodedText: string) => {
         if (isLoading) return;
         setIsLoading(true);
+        setStatus('Processing scan...');
         setError(null);
 
         try {
-            // Assume the QR code contains the Employee ID
             const response = await fetch('/api/attendance/scan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -91,25 +119,28 @@ export default function AttendanceKioskPage() {
 
             if (response.ok) {
                 setScanResult(data.employee);
-                if (scannerRef.current) {
-                    await scannerRef.current.clear();
-                }
+                setStatus('Success');
+                await stopScanner();
             } else {
                 setError(data.error || 'Failed to log attendance');
-                // Don't clear scanner on error, just show message
+                setStatus('Scan Error');
+                // Auto reset error after 3 seconds for kiosk usability
+                setTimeout(() => setError(null), 3000);
             }
         } catch (err) {
             setError('An error occurred during scanning');
+            setStatus('Network Error');
         } finally {
             setIsLoading(false);
         }
     };
 
     const onScanFailure = (error: any) => {
-        // Standard scan failure (e.g. no QR in frame) - ignore
+        // Just searching...
     };
 
     const getDeviceInfo = () => {
+        if (typeof window === 'undefined') return "Server";
         const ua = navigator.userAgent;
         if (/tablet|ipad|playbook|silk/i.test(ua)) return "Tablet";
         if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Opera Mini/i.test(ua)) return "Mobile";
@@ -119,31 +150,37 @@ export default function AttendanceKioskPage() {
     const handleSave = () => {
         setScanResult(null);
         setError(null);
+        setStatus('Standby');
     };
 
     const handlePrint = () => {
         if (!scanResult) return;
 
         const printContent = `
-            <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; border: 1px solid #ccc; width: 300px; margin: auto;">
-                <h2 style="margin-bottom: 5px;">Melann Lending</h2>
-                <h4 style="margin-top: 0; margin-bottom: 20px; color: #666;">Attendance Slip</h4>
-                <hr />
-                <div style="text-align: left; margin: 20px 0;">
-                    <p><strong>Name:</strong> ${scanResult.first_name} ${scanResult.last_name}</p>
-                    <p><strong>ID:</strong> ${scanResult.employee_id}</p>
-                    <p><strong>Date/Time:</strong> ${scanResult.logged_at}</p>
+            <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; border: 1px dashed #064e3b; width: 280px; margin: auto; background: #fff;">
+                <h2 style="margin: 0; color: #064e3b; font-size: 18px;">MELANN LENDING</h2>
+                <p style="margin: 2px 0 15px; font-size: 10px; color: #666;">INVESTOR CORPORATION</p>
+                <h3 style="margin: 10px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 5px 0; font-size: 14px;">ATTENDANCE SLIP</h3>
+                <div style="text-align: left; margin: 15px 0; font-size: 12px; line-height: 1.6;">
+                    <p><strong>NAME:</strong> ${scanResult.first_name} ${scanResult.last_name}</p>
+                    <p><strong>EMP ID:</strong> ${scanResult.employee_id}</p>
+                    <p><strong>DEPT:</strong> ${scanResult.department}</p>
+                    <p><strong>LOGGED AT:</strong> ${scanResult.logged_at}</p>
                 </div>
-                <hr />
-                <p style="font-size: 10px; color: #999;">System Generated Attendance Log</p>
+                <div style="margin-top: 15px; font-size: 9px; color: #999;">
+                    "Lend • Empower • Grow"
+                </div>
             </div>
         `;
 
-        const printWindow = window.open('', '_blank');
+        const printWindow = window.open('', '_blank', 'width=400,height=600');
         if (printWindow) {
-            printWindow.document.write(`<html><head><title>Print Attendance Slip</title></head><body>${printContent}</body></html>`);
+            printWindow.document.write(`<html><head><title>Print Slip</title></head><body style="margin:0;">${printContent}</body></html>`);
             printWindow.document.close();
-            printWindow.print();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
         }
     };
 
@@ -151,164 +188,260 @@ export default function AttendanceKioskPage() {
         <DashboardLayout hideSidebar={isKioskMode} hideNavbar={isKioskMode}>
             <div className="kiosk-container" style={{
                 minHeight: '100vh',
-                background: isKioskMode ? '#064e3b' : 'transparent',
-                padding: '2rem',
+                background: isKioskMode ? '#f0fdf4' : 'transparent',
+                padding: isKioskMode ? '0' : '2rem',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                transition: 'all 0.3s ease'
             }}>
                 <div style={{
                     width: '100%',
-                    maxWidth: '600px',
+                    maxWidth: isKioskMode ? '100%' : '600px',
+                    height: isKioskMode ? '100vh' : 'auto',
                     background: 'white',
-                    borderRadius: '24px',
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                    borderRadius: isKioskMode ? '0' : '24px',
+                    boxShadow: isKioskMode ? 'none' : '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                     padding: '2.5rem',
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center'
                 }}>
                     <header style={{ marginBottom: '2rem' }}>
-                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#064e3b', marginBottom: '0.5rem' }}>
-                            Attendance Kiosk Scanner
-                        </h1>
-                        <p style={{ color: '#6b7280', fontSize: '1rem' }}>
-                            Scan your QR Code to log your attendance
-                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                            <div style={{ background: '#fbbf24', color: '#064e3b', width: '40px', height: '40px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.5rem' }}>M</div>
+                            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#064e3b', margin: 0 }}>
+                                Attendance Kiosk
+                            </h1>
+                        </div>
+                        <div style={{
+                            display: 'inline-block',
+                            padding: '0.4rem 1rem',
+                            background: status.includes('Active') ? '#f0fdf4' : '#f3f4f6',
+                            color: status.includes('Active') ? '#10b981' : '#6b7280',
+                            borderRadius: '99px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em'
+                        }}>
+                            {status}
+                        </div>
                     </header>
 
                     {error && (
                         <div style={{
                             background: '#fef2f2',
                             color: '#dc2626',
-                            padding: '1rem',
-                            borderRadius: '12px',
+                            padding: '1.25rem',
+                            borderRadius: '16px',
                             marginBottom: '1.5rem',
                             border: '1px solid #fee2e2',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '0.5rem'
+                            gap: '0.75rem',
+                            fontWeight: 600,
+                            animation: 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both'
                         }}>
                             <span>⚠️</span> {error}
                         </div>
                     )}
 
                     {!scanResult ? (
-                        <div id="reader" style={{
-                            width: '100%',
-                            minHeight: '300px',
-                            borderRadius: '16px',
-                            overflow: 'hidden',
-                            border: '2px dashed #064e3b'
-                        }}></div>
+                        <div style={{ position: 'relative', width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+                            <div id="reader" style={{
+                                width: '100%',
+                                minHeight: '300px',
+                                borderRadius: '24px',
+                                overflow: 'hidden',
+                                border: '4px solid #064e3b',
+                                background: '#000'
+                            }}></div>
+                            <div style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                width: '250px',
+                                height: '250px',
+                                border: '2px solid #fbbf24',
+                                borderRadius: '12px',
+                                pointerEvents: 'none',
+                                opacity: status.includes('Active') ? 1 : 0.2,
+                                transition: 'opacity 0.3s'
+                            }}>
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    width: '20px',
+                                    height: '20px',
+                                    borderTop: '6px solid #fbbf24',
+                                    borderLeft: '6px solid #fbbf24',
+                                    borderRadius: '4px 0 0 0'
+                                }}></div>
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    width: '20px',
+                                    height: '20px',
+                                    borderTop: '6px solid #fbbf24',
+                                    borderRight: '6px solid #fbbf24',
+                                    borderRadius: '0 4px 0 0'
+                                }}></div>
+                                <div style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    left: 0,
+                                    width: '20px',
+                                    height: '20px',
+                                    borderBottom: '6px solid #fbbf24',
+                                    borderLeft: '6px solid #fbbf24',
+                                    borderRadius: '0 0 0 4px'
+                                }}></div>
+                                <div style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    right: 0,
+                                    width: '20px',
+                                    height: '20px',
+                                    borderBottom: '6px solid #fbbf24',
+                                    borderRight: '6px solid #fbbf24',
+                                    borderRadius: '0 0 4px 0'
+                                }}></div>
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '0%',
+                                    left: '0',
+                                    width: '100%',
+                                    height: '2px',
+                                    background: 'rgba(251, 191, 36, 0.5)',
+                                    boxShadow: '0 0 15px #fbbf24',
+                                    animation: 'scan-line 2s linear infinite'
+                                }}></div>
+                            </div>
+                        </div>
                     ) : (
                         <div className="id-card-success">
                             <div style={{
                                 background: '#f0fdf4',
                                 color: '#16a34a',
-                                padding: '0.75rem',
+                                padding: '1rem 2rem',
                                 borderRadius: '9999px',
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: '0.5rem',
-                                fontWeight: 700,
-                                marginBottom: '2rem'
+                                gap: '0.75rem',
+                                fontWeight: 800,
+                                marginBottom: '2rem',
+                                border: '1px solid #dcfce7'
                             }}>
-                                <span>✅</span> Attendance Logged Successfully
+                                <span>🎉</span> Attendance Logged Successfully
                             </div>
 
-                            {/* ID CARD UI */}
                             <div style={{
                                 margin: '0 auto',
                                 width: '100%',
                                 maxWidth: '350px',
-                                background: 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)',
-                                borderRadius: '20px',
-                                padding: '1.5rem',
+                                background: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)',
+                                borderRadius: '24px',
+                                padding: '2rem',
                                 color: 'white',
                                 textAlign: 'left',
                                 position: 'relative',
-                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+                                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                                border: '1px solid rgba(255,255,255,0.1)'
                             }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                                    <div style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 700 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
+                                    <div style={{ fontSize: '0.85rem', opacity: 0.9, fontWeight: 700, letterSpacing: '0.05em' }}>
                                         MELANN LENDING<br />INVESTOR CORP.
                                     </div>
-                                    <div style={{ background: '#fbbf24', color: '#064e3b', width: '24px', height: '24px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>M</div>
+                                    <div style={{ background: '#fbbf24', color: '#064e3b', width: '30px', height: '30px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>M</div>
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                                    <div style={{ width: '100px', height: '100px', borderRadius: '12px', overflow: 'hidden', background: 'white', border: '3px solid #fbbf24' }}>
+                                    <div style={{ width: '110px', height: '110px', borderRadius: '16px', overflow: 'hidden', background: 'white', border: '4px solid #fbbf24', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
                                         {scanResult.profile_picture ? (
                                             <img src={scanResult.profile_picture} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         ) : (
-                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: '#064e3b', fontWeight: 700 }}>
+                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', color: '#064e3b', fontWeight: 800 }}>
                                                 {scanResult.first_name[0]}{scanResult.last_name[0]}
                                             </div>
                                         )}
                                     </div>
                                     <div style={{ flex: 1 }}>
-                                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>{scanResult.first_name}<br />{scanResult.last_name}</h3>
-                                        <div style={{ fontSize: '0.875rem', opacity: 0.9, marginTop: '0.25rem' }}>{scanResult.position}</div>
-                                        <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>{scanResult.department}</div>
+                                        <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.1 }}>{scanResult.first_name}<br />{scanResult.last_name}</h3>
+                                        <div style={{ fontSize: '0.9rem', color: '#fbbf24', fontWeight: 700, marginTop: '0.5rem' }}>{scanResult.position}</div>
+                                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>{scanResult.department}</div>
                                     </div>
                                 </div>
 
-                                <div style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between' }}>
+                                <div style={{ marginTop: '2rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '1rem', display: 'flex', justifyContent: 'space-between' }}>
                                     <div>
-                                        <div style={{ fontSize: '0.65rem', opacity: 0.6, textTransform: 'uppercase' }}>Employee ID</div>
-                                        <div style={{ fontSize: '0.875rem', fontWeight: 700 }}>{scanResult.employee_id}</div>
+                                        <div style={{ fontSize: '0.7rem', opacity: 0.6, textTransform: 'uppercase', fontWeight: 700 }}>Employee ID</div>
+                                        <div style={{ fontSize: '1rem', fontWeight: 800, letterSpacing: '0.05em' }}>{scanResult.employee_id}</div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
-                                        <div style={{ fontSize: '0.65rem', opacity: 0.6, textTransform: 'uppercase' }}>Time In</div>
-                                        <div style={{ fontSize: '0.875rem', fontWeight: 700 }}>{format(new Date(), 'HH:mm:ss')}</div>
+                                        <div style={{ fontSize: '0.7rem', opacity: 0.6, textTransform: 'uppercase', fontWeight: 700 }}>Logged In</div>
+                                        <div style={{ fontSize: '1rem', fontWeight: 800 }}>{format(new Date(), 'HH:mm a')}</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem', justifyContent: 'center' }}>
+                            <div style={{ display: 'flex', gap: '1.5rem', marginTop: '3rem', justifyContent: 'center' }}>
                                 <button onClick={handleSave} style={{
                                     flex: 1,
-                                    padding: '1rem',
-                                    borderRadius: '12px',
+                                    padding: '1.25rem',
+                                    borderRadius: '16px',
                                     border: 'none',
                                     background: '#064e3b',
                                     color: 'white',
-                                    fontWeight: 700,
+                                    fontWeight: 800,
+                                    fontSize: '1rem',
                                     cursor: 'pointer',
-                                    boxShadow: '0 4px 6px rgba(6, 78, 59, 0.2)'
+                                    boxShadow: '0 10px 15px -3px rgba(6, 78, 59, 0.4)',
+                                    transition: 'transform 0.2s'
                                 }}>
-                                    SAVE & RESET
+                                    CONTINUE
                                 </button>
                                 <button onClick={handlePrint} style={{
-                                    padding: '1rem 1.5rem',
-                                    borderRadius: '12px',
-                                    border: '1px solid #d1d5db',
+                                    padding: '1.25rem 2rem',
+                                    borderRadius: '16px',
+                                    border: '2px solid #e5e7eb',
                                     background: 'white',
                                     color: '#374151',
                                     fontWeight: 700,
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
                                 }}>
-                                    🖨️ PRINT SLIP
+                                    🖨️ PRINT
                                 </button>
                             </div>
                         </div>
                     )}
 
                     {user && (user.role === 'Admin' || user.role === 'HR') && (
-                        <div style={{ marginTop: '2rem', borderTop: '1px solid #f3f4f6', paddingTop: '1.5rem' }}>
+                        <div style={{ marginTop: '3rem', borderTop: '1px solid #f3f4f6', paddingTop: '1.5rem' }}>
                             <button
                                 onClick={() => setIsKioskMode(!isKioskMode)}
                                 style={{
-                                    color: isKioskMode ? '#fbbf24' : '#6b7280',
+                                    color: isKioskMode ? '#064e3b' : '#9ca3af',
                                     fontSize: '0.875rem',
                                     background: 'none',
                                     border: 'none',
                                     cursor: 'pointer',
-                                    textDecoration: 'underline'
+                                    fontWeight: 600,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '0.5rem',
+                                    margin: '0 auto'
                                 }}
                             >
-                                {isKioskMode ? 'Disable Kiosk Mode' : 'Enable Kiosk Mode'}
+                                🖥️ {isKioskMode ? 'Exit Fullscreen Kiosk' : 'Switch to Fullscreen Kiosk'}
                             </button>
                         </div>
                     )}
@@ -316,20 +449,28 @@ export default function AttendanceKioskPage() {
             </div>
 
             <style jsx global>{`
+                @keyframes scan-line {
+                    0% { top: 0%; }
+                    100% { top: 100%; }
+                }
+                @keyframes shake {
+                    10%, 90% { transform: translate3d(-1px, 0, 0); }
+                    20%, 80% { transform: translate3d(2px, 0, 0); }
+                    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+                    40%, 60% { transform: translate3d(4px, 0, 0); }
+                }
+                video {
+                    object-fit: cover !important;
+                    border-radius: 20px;
+                }
                 #reader__scan_region {
-                    background: white !important;
+                    background: #000 !important;
                 }
                 #reader__dashboard {
-                    padding: 1rem !important;
+                    display: none !important;
                 }
-                #reader__dashboard_section_csr button {
-                    background: #064e3b !important;
-                    color: white !important;
+                #reader {
                     border: none !important;
-                    padding: 0.5rem 1rem !important;
-                    border-radius: 6px !important;
-                    cursor: pointer !important;
-                    font-weight: 600 !important;
                 }
             `}</style>
         </DashboardLayout>
