@@ -132,7 +132,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
 
     const navigation = [
         { name: 'Dashboard', href: '/dashboard', icon: '📊', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President', 'Employee'] },
-        { name: 'My Profile', href: '/profile', icon: '👤', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President', 'Employee'] },
+        { name: 'My Profile', href: '/profile', icon: '👤', roles: ['Employee'] },
         { name: '201 Files', href: '/employees', icon: '📋', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
         { name: 'Attendance', href: '/attendance', icon: '⏰', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President', 'Employee'] },
         { name: 'Leave Requests', href: '/leave', icon: '🏖️', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President', 'Employee'] },
