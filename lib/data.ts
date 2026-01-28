@@ -936,6 +936,22 @@ export async function recordAttendance(data: {
     status: string;
     remarks?: string;
 }): Promise<void> {
+    // Auto-determine Leave vs Absent if no times are provided
+    if (!data.morning_in && !data.afternoon_in && !data.time_in && !data.morning_out && !data.afternoon_out) {
+        const year = new Date(data.date).getFullYear();
+        try {
+            const used = await getEmployeeLeaveCount(data.employee_id, year);
+            if (used < 5) {
+                data.status = 'On Leave';
+            } else {
+                data.status = 'Absent';
+            }
+        } catch (e) {
+            console.error('Failed to auto-calc leave status:', e);
+            data.status = 'Absent'; // Fallback
+        }
+    }
+
     const isLeave = data.status.toLowerCase().includes('leave');
 
     // Check if record already exists
