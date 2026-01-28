@@ -436,7 +436,7 @@ export default function TrainingsTab({ employeeId }: Props) {
                         display: 'flex',
                         alignItems: 'flex-start',
                         justifyContent: 'center',
-                        zIndex: 9999,
+                        zIndex: 2147483647,
                         padding: '2rem 1rem',
                         overflowY: 'auto'
                     }}

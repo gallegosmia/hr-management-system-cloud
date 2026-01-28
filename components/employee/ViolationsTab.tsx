@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 
 interface Violation {
@@ -62,6 +62,19 @@ export default function ViolationsTab({ employeeId }: Props) {
 
     // Form state
     const [formData, setFormData] = useState<any>({});
+    const modalBodyRef = useRef<HTMLDivElement>(null);
+
+    // Scroll modal body to top when it opens
+    useEffect(() => {
+        if (showAddModal && modalBodyRef.current) {
+            // Use setTimeout to ensure scroll happens after render and any auto-focus
+            setTimeout(() => {
+                if (modalBodyRef.current) {
+                    modalBodyRef.current.scrollTop = 0;
+                }
+            }, 50);
+        }
+    }, [showAddModal]);
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -487,11 +500,11 @@ export default function ViolationsTab({ employeeId }: Props) {
                         bottom: 0,
                         background: 'rgba(0,0,0,0.6)',
                         display: 'flex',
-                        alignItems: 'center',
+                        alignItems: 'flex-start',
                         justifyContent: 'center',
-                        zIndex: 9999,
-                        padding: '1rem',
-                        overflow: 'hidden'
+                        zIndex: 2147483647,
+                        padding: '2rem 1rem',
+                        overflowY: 'auto'
                     }}
 
                     onClick={(e) => {
@@ -508,10 +521,11 @@ export default function ViolationsTab({ employeeId }: Props) {
                         borderRadius: '16px',
                         width: '100%',
                         maxWidth: '500px',
-                        maxHeight: 'min(90vh, 700px)',
+                        maxHeight: 'calc(100vh - 4rem)',
                         display: 'flex',
                         flexDirection: 'column',
                         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                        margin: 'auto 0',
                         overflow: 'hidden'
                     }}>
                         {/* Fixed Header */}
@@ -557,12 +571,14 @@ export default function ViolationsTab({ employeeId }: Props) {
                         </div>
 
                         {/* Scrollable Body */}
-                        <div style={{
-                            flex: 1,
-                            overflowY: 'auto',
-                            padding: '1.25rem 1.5rem',
-                            minHeight: 0
-                        }}>
+                        <div
+                            ref={modalBodyRef}
+                            style={{
+                                flex: 1,
+                                overflowY: 'auto',
+                                padding: '1.25rem 1.5rem',
+                                minHeight: 0
+                            }}>
                             {activeSection === 'violations' ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
