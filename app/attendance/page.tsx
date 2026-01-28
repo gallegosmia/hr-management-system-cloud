@@ -392,7 +392,7 @@ export default function AttendancePage() {
             row.morning_out || '-',
             row.afternoon_in || '-',
             row.afternoon_out || '-',
-            row.total_hours ? `${row.total_hours.toFixed(1)}h` : '-',
+            row.total_hours ? `${Number(row.total_hours).toFixed(1)}h` : '-',
             row.status,
             row.remarks || ''
         ]);
