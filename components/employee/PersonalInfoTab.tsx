@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import EditProfileForm from './EditProfileForm';
 
@@ -105,6 +105,12 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
     const [profilePicture, setProfilePicture] = useState(employee.profile_picture);
     const qrRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -511,309 +517,194 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div style={{
+            background: '#fff1f2',
+            backgroundImage: 'radial-gradient(#e11d48 0.5px, transparent 0.5px)',
+            backgroundSize: '24px 24px',
+            minHeight: '100%',
+            padding: '2rem',
+            borderRadius: '16px'
+        }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', fontFamily: "'Inter', sans-serif" }}>
 
-            {/* Basic Information */}
-            <Card style={{ padding: '2.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
-                    <div style={{ display: 'flex', gap: '2.5rem', alignItems: 'center' }}>
-                        {/* Profile Picture with Upload */}
-                        <div style={{ position: 'relative' }}>
-                            <div style={{
-                                width: '180px',
-                                height: '180px',
-                                minWidth: '180px',
-                                minHeight: '180px',
-                                aspectRatio: '1 / 1',
-                                borderRadius: '50%',
-                                background: 'white',
-                                border: '8px solid var(--primary-50)',
-                                overflow: 'hidden',
-                                flexShrink: 0,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 15px 30px -10px rgba(0,0,0,0.1)'
-                            }}>
-                                {profilePicture ?
-                                    <img src={profilePicture} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '1 / 1' }} />
-                                    : <span style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--primary-200)' }}>{employee.first_name?.[0]}{employee.last_name?.[0]}</span>
-                                }
-                            </div>
-                        </div>
-                        <div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                                <h2 style={{ fontSize: '2.25rem', fontWeight: 900, color: 'var(--gray-900)', margin: 0, letterSpacing: '-0.02em' }}>
-                                    {employee.first_name} {employee.last_name}
-                                </h2>
-                                <span style={{
-                                    background: '#10b981',
-                                    color: 'white',
-                                    width: '24px',
-                                    height: '24px',
-                                    borderRadius: '50%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '0.75rem',
-                                    boxShadow: '0 4px 6px rgba(16, 185, 129, 0.3)'
-                                }}>✓</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--gray-500)', fontWeight: 600, fontSize: '0.925rem', marginBottom: '1.5rem' }}>
-                                <span style={{ color: 'var(--primary-600)' }}>🆔 {employee.employee_id}</span>
-                                <span>•</span>
-                                <span>💼 {employee.position}</span>
-                            </div>
-
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', fontSize: '0.875rem' }}>
-                                <div style={{ background: 'var(--gray-50)', padding: '0.75rem 1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid var(--gray-100)' }}>
-                                    <span style={{ fontSize: '1.1rem' }}>✉️</span>
-                                    <span style={{ color: 'var(--gray-700)', fontWeight: 500 }}>{employee.email_address || 'No email provided'}</span>
-                                </div>
-                                <div style={{ background: 'var(--gray-50)', padding: '0.75rem 1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid var(--gray-100)' }}>
-                                    <span style={{ fontSize: '1.1rem' }}>📞</span>
-                                    <span style={{ color: 'var(--gray-700)', fontWeight: 500 }}>{employee.contact_number || 'No contact set'}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '1rem' }}>
-                        {user && user.role !== 'Employee' && (
-                            <button
-                                onClick={() => setIsEditing(true)}
-                                style={{
-                                    padding: '0.75rem 1.25rem',
-                                    background: 'var(--primary-600)',
-                                    color: 'white',
-                                    borderRadius: '12px',
-                                    border: 'none',
-                                    fontWeight: 700,
-                                    fontSize: '0.875rem',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.625rem',
-                                    boxShadow: '0 8px 15px rgba(37, 99, 235, 0.2)',
-                                    transition: 'all 0.2s',
-                                    whiteSpace: 'nowrap'
-                                }}
-                            >
-                                <span>✏️</span> Edit Basic File
-                            </button>
-                        )}
-
-                        {/* Digital QR ID Section */}
-                        <div style={{
-                            padding: '1rem',
-                            background: 'white',
-                            borderRadius: '16px',
-                            border: '1px solid var(--gray-200)',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                            textAlign: 'center',
-                            width: '140px'
-                        }}>
-                            <div style={{ marginBottom: '0.5rem', fontSize: '0.65rem', fontWeight: 800, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                Digital QR ID
-                            </div>
-                            <div ref={qrRef} style={{ background: 'white', padding: '0.5rem', borderRadius: '8px', display: 'inline-block' }}>
-                                <QRCodeSVG
-                                    value={employee.employee_id}
-                                    size={100}
-                                    level="H"
-                                    includeMargin={false}
-                                />
-                            </div>
-                            <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary-700)' }}>
-                                {employee.employee_id}
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={handlePrintID}
-                            style={{
-                                width: '100%',
-                                padding: '0.625rem',
-                                background: 'white',
-                                color: 'var(--gray-700)',
-                                borderRadius: '10px',
-                                border: '1px solid var(--gray-200)',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '0.5rem',
-                                transition: 'all 0.2s',
-                                marginBottom: '0.5rem'
-                            }}
-                            onMouseOver={(e) => {
-                                e.currentTarget.style.background = '#f9fafb';
-                                e.currentTarget.style.borderColor = 'var(--primary-200)';
-                            }}
-                            onMouseOut={(e) => {
-                                e.currentTarget.style.background = 'white';
-                                e.currentTarget.style.borderColor = 'var(--gray-200)';
-                            }}
-                        >
-                            <span>🖨️</span> Print ID Card
-                        </button>
-
-                        <button
-                            onClick={handleDownloadQR}
-                            style={{
-                                width: '100%',
-                                padding: '0.625rem',
-                                background: '#f8fafc',
-                                color: 'var(--primary-700)',
-                                borderRadius: '10px',
-                                border: '1px solid var(--primary-100)',
-                                fontSize: '0.75rem',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '0.5rem',
-                                transition: 'all 0.2s'
-                            }}
-                            onMouseOver={(e) => {
-                                e.currentTarget.style.background = 'var(--primary-50)';
-                            }}
-                            onMouseOut={(e) => {
-                                e.currentTarget.style.background = '#f8fafc';
-                            }}
-                        >
-                            <span>💾</span> Save QR Image
-                        </button>
-
-                        <div style={{
-                            marginTop: '0.75rem',
-                            fontSize: '0.65rem',
-                            color: '#ef4444',
-                            fontWeight: 600,
-                            lineHeight: 1.4,
-                            fontStyle: 'italic',
-                            textAlign: 'center'
-                        }}>
-                            ⚠️ IF LOST QR CODE, ASK THE ADMINISTRATOR TO GENERATE QR CODE AGAIN
-                        </div>
-                    </div>
-
-                </div>
-
+                {/* Header Section */}
                 <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '2rem',
-                    padding: '2rem',
-                    background: '#f8fafc',
-                    borderRadius: '20px',
-                    border: '1px solid var(--gray-100)'
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: 'white', padding: '1.25rem 2rem', borderRadius: '16px',
+                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', marginBottom: '2rem',
+                    borderLeft: '6px solid #8B2635'
                 }}>
-                    <div>
-                        <span style={{ display: 'block', textTransform: 'uppercase', fontSize: '0.7rem', fontWeight: 800, color: 'var(--gray-400)', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>Birth Date</span>
-                        <span style={{ color: 'var(--gray-700)', fontWeight: 700, fontSize: '1rem' }}>{formatDate(employee.date_of_birth)}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, #8B2635, #E74C3C)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '900', fontSize: '1.2rem', boxShadow: '0 4px 10px rgba(231, 76, 60, 0.3)' }}>ML</div>
+                        <div>
+                            <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', margin: 0, lineHeight: 1.2 }}>MELANN LENDING</h1>
+                            <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Investor Corporation</span>
+                        </div>
                     </div>
-                    <div>
-                        <span style={{ display: 'block', textTransform: 'uppercase', fontSize: '0.7rem', fontWeight: 800, color: 'var(--gray-400)', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>Civil Status</span>
-                        <span style={{ color: 'var(--gray-700)', fontWeight: 700, fontSize: '1rem' }}>{employee.civil_status || 'Not defined'}</span>
-                    </div>
-                    <div>
-                        <span style={{ display: 'block', textTransform: 'uppercase', fontSize: '0.7rem', fontWeight: 800, color: 'var(--gray-400)', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>Religion</span>
-                        <span style={{ color: 'var(--gray-700)', fontWeight: 700, fontSize: '1rem' }}>{employee.religion || 'Not specified'}</span>
-                    </div>
-                    <div>
-                        <span style={{ display: 'block', textTransform: 'uppercase', fontSize: '0.7rem', fontWeight: 800, color: 'var(--gray-400)', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>Branch Unit</span>
-                        <span style={{ color: 'var(--gray-700)', fontWeight: 700, fontSize: '1rem' }}>{employee.branch || 'Head Office'}</span>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#8B2635', fontFamily: 'monospace', lineHeight: 1 }}>
+                            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 500, marginTop: '0.2rem' }}>
+                            {currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                        </div>
                     </div>
                 </div>
-            </Card>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                {/* Main Content Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', alignItems: 'start' }}>
 
-                {/* Address */}
-                <Card>
-                    <CardHeader title="Residential Address" icon="📍" onEdit={() => onEdit('address')} />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                        <div style={{ background: 'var(--primary-50)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid var(--primary-500)' }}>
-                            <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary-700)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Residence</span>
-                            <span style={{ fontSize: '0.925rem', color: 'var(--gray-700)', fontWeight: 500, lineHeight: 1.6 }}>
-                                {employee.address || 'Street/Barangay info not provided'}
-                            </span>
-                        </div>
-                        <div>
-                            <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--gray-400)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Citizen ID Address</span>
-                            <span style={{ fontSize: '0.875rem', color: 'var(--gray-600)', fontWeight: 500 }}>
-                                {employee.citizen_id_address || 'Matches residential address'}
-                            </span>
-                        </div>
-                    </div>
-                </Card>
+                    {/* Basic Info Card (Full Width) */}
+                    <div style={{ gridColumn: 'span 12' }}>
+                        <Card style={{ padding: '2.5rem', position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute', top: 0, right: 0, width: '200px', height: '200px', background: 'radial-gradient(circle, var(--primary-50) 0%, transparent 70%)', borderRadius: '0 0 0 100%' }}></div>
 
-                {/* Emergency Contact */}
-                <Card>
-                    <CardHeader title="Emergency Contact" icon="🆘" onEdit={() => onEdit('emergency')} />
-                    <div style={{ background: '#fffef3', padding: '1.5rem', borderRadius: '16px', border: '1px dashed var(--warning-200)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--warning-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
-                                👤
-                            </div>
-                            <div>
-                                <div style={{ fontSize: '1.125rem', fontWeight: 800, color: 'var(--gray-800)' }}>
-                                    {employee.emergency_contact_name || 'Guardian Not Set'}
+                            <div style={{ display: 'flex', gap: '3rem', alignItems: 'center', flexWrap: 'wrap', position: 'relative', zIndex: 10 }}>
+                                <div style={{ position: 'relative' }}>
+                                    <div style={{
+                                        width: '160px', height: '160px', borderRadius: '50%',
+                                        background: 'white', padding: '0.5rem',
+                                        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
+                                        border: '1px solid var(--gray-100)'
+                                    }}>
+                                        <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', background: 'var(--gray-50)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            {profilePicture ?
+                                                <img src={profilePicture} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                : <span style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--primary-300)' }}>{employee.first_name?.[0]}{employee.last_name?.[0]}</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div style={{
+                                        position: 'absolute', bottom: '10px', right: '10px',
+                                        background: '#10b981', color: 'white',
+                                        width: '32px', height: '32px', borderRadius: '50%',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: '1rem', border: '3px solid white',
+                                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                    }}>âœ“</div>
                                 </div>
-                                <div style={{ color: 'var(--warning-700)', fontWeight: 700, fontSize: '0.925rem', marginTop: '0.25rem' }}>
-                                    📞 {employee.emergency_contact_number || 'No emergency number'}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </Card>
 
-                {/* Education */}
-                <Card style={{ gridColumn: 'span 2' }}>
-                    <CardHeader title="Educational Background" icon="🎓" onEdit={() => onEdit('education')} />
+                                <div style={{ flex: 1, minWidth: '300px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <div>
+                                            <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#1f2937', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                                                {employee.first_name} {employee.last_name}
+                                            </h2>
+                                            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', alignItems: 'center' }}>
+                                                <span style={{ background: '#fef2f2', color: '#991b1b', padding: '0.2rem 0.8rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                    {employee.department}
+                                                </span>
+                                                <span style={{ color: '#6b7280', fontSize: '1rem', fontWeight: 500 }}>
+                                                    {employee.position}
+                                                </span>
+                                            </div>
+                                        </div>
 
-                    {(!employee.education || employee.education.length === 0) ? (
-                        <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--gray-50)', borderRadius: '16px', border: '2px dashed var(--gray-200)' }}>
-                            <span style={{ fontSize: '2rem', display: 'block', marginBottom: '1rem' }}>📚</span>
-                            <p style={{ color: 'var(--gray-400)', fontWeight: 600 }}>No educational records found in database.</p>
-                        </div>
-                    ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-                            {employee.education.map((edu, idx) => (
-                                <div key={idx} style={{
-                                    padding: '1.25rem',
-                                    borderRadius: '16px',
-                                    background: 'white',
-                                    border: '1px solid var(--gray-100)',
-                                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
-                                    display: 'flex',
-                                    gap: '1rem'
-                                }}>
-                                    <div style={{ fontSize: '1.5rem', opacity: 0.5 }}>🏫</div>
-                                    <div>
-                                        <div style={{ fontWeight: 800, color: 'var(--gray-900)', fontSize: '1rem', marginBottom: '0.25rem' }}>
-                                            {edu.level}
+                                        {user && user.role !== 'Employee' && (
+                                            <button onClick={() => setIsEditing(true)} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#4b5563', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                                                âœï¸
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
+                                        <div>
+                                            <div style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.25rem' }}>Full ID</div>
+                                            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#374151', fontFamily: 'monospace' }}>{employee.employee_id}</div>
                                         </div>
-                                        <div style={{ fontSize: '0.925rem', color: 'var(--primary-700)', fontWeight: 700 }}>
-                                            {edu.school_name}
+                                        <div>
+                                            <div style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.25rem' }}>Email Address</div>
+                                            <div style={{ fontSize: '1rem', fontWeight: 600, color: '#374151' }}>{employee.email_address || '-'}</div>
                                         </div>
-                                        <div style={{ fontSize: '0.875rem', color: 'var(--gray-600)', marginTop: '0.4rem', fontWeight: 500 }}>
-                                            {edu.degree_course}
+                                        <div>
+                                            <div style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.25rem' }}>Phone</div>
+                                            <div style={{ fontSize: '1rem', fontWeight: 600, color: '#374151' }}>{employee.contact_number || '-'}</div>
                                         </div>
-                                        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem' }}>
-                                            <span style={{ background: 'var(--gray-100)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 800, color: 'var(--gray-500)' }}>GRADUATED: {edu.year_graduated}</span>
-                                            {edu.grade && <span style={{ background: 'var(--success-50)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 800, color: 'var(--success-700)' }}>GPA: {edu.grade}</span>}
+                                        <div>
+                                            <div style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.25rem' }}>Birth Date</div>
+                                            <div style={{ fontSize: '1rem', fontWeight: 600, color: '#374151' }}>{formatDate(employee.date_of_birth)}</div>
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.25rem' }}>Civil Status</div>
+                                            <div style={{ fontSize: '1rem', fontWeight: 600, color: '#374151' }}>{employee.civil_status || '-'}</div>
                                         </div>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    )}
-                </Card>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <button onClick={handlePrintID} style={{ padding: '0.5rem 1rem', borderRadius: '8px', background: 'white', border: '1px solid #e5e7eb', color: '#4b5563', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        ðŸ–¨ï¸ Print ID
+                                    </button>
+                                    <button onClick={handleDownloadQR} style={{ padding: '0.5rem 1rem', borderRadius: '8px', background: 'white', border: '1px solid #e5e7eb', color: '#4b5563', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        ðŸ’¾ Save QR
+                                    </button>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+
+                    {/* Sub Cards Row 1 */}
+                    <div style={{ gridColumn: 'span 6' }}>
+                        <Card>
+                            <CardHeader title="Residential Address" icon="ðŸ“" onEdit={() => onEdit('address')} />
+                            <div style={{ background: '#f9fafb', padding: '1.5rem', borderRadius: '12px', border: '1px solid #f3f4f6' }}>
+                                <p style={{ margin: 0, color: '#374151', lineHeight: '1.6', fontWeight: 500 }}>
+                                    {employee.address || 'Address not updated'}
+                                </p>
+                            </div>
+                        </Card>
+                    </div>
+
+                    <div style={{ gridColumn: 'span 6' }}>
+                        <Card>
+                            <CardHeader title="Emergency Contact" icon="ðŸ†˜" onEdit={() => onEdit('emergency')} />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: '#fff7ed', padding: '1.5rem', borderRadius: '12px', border: '1px dashed #fdba74' }}>
+                                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#ffedd5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>ðŸ“ž</div>
+                                <div>
+                                    <div style={{ fontWeight: 700, color: '#1f2937' }}>{employee.emergency_contact_name || 'Not Listed'}</div>
+                                    <div style={{ fontSize: '0.9rem', color: '#c2410c', fontWeight: 600 }}>{employee.emergency_contact_number || '-'}</div>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+
+                    {/* Sub Cards Row 2 */}
+                    <div style={{ gridColumn: 'span 6' }}>
+                        <Card>
+                            <CardHeader title="Work & Legal Info" icon="ðŸ¢" onEdit={() => onEdit('address')} />
+                            <div style={{ display: 'grid', gap: '1rem' }}>
+                                <div>
+                                    <div style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase' }}>Company Address / Branch</div>
+                                    <div style={{ fontWeight: 600, color: '#374151', marginTop: '0.25rem' }}>{employee.branch || 'Head Office'}</div>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase' }}>Citizen ID Address</div>
+                                    <div style={{ fontWeight: 600, color: '#374151', marginTop: '0.25rem', whiteSpace: 'pre-wrap' }}>{employee.citizen_id_address || 'Same as residential'}</div>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+
+                    <div style={{ gridColumn: 'span 6' }}>
+                        <Card>
+                            <CardHeader title="Education" icon="ðŸŽ“" onEdit={() => onEdit('education')} />
+                            {(!employee.education || employee.education.length === 0) ? (
+                                <div style={{ color: '#9ca3af', fontStyle: 'italic', padding: '1rem', textAlign: 'center' }}>No records found</div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    {employee.education.slice(0, 3).map((edu, i) => (
+                                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: i < employee.education!.length - 1 ? '1px solid #f3f4f6' : 'none', paddingBottom: '0.5rem' }}>
+                                            <div style={{ fontWeight: 600, color: '#374151' }}>{edu.level}</div>
+                                            <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>{edu.year_graduated}</div>
+                                        </div>
+                                    ))}
+                                    {employee.education.length > 3 && <div style={{ fontSize: '0.8rem', color: '#3b82f6', textAlign: 'center' }}>+ {employee.education.length - 3} more</div>}
+                                </div>
+                            )}
+                        </Card>
+                    </div>
+
+                </div>
             </div>
         </div>
     );
