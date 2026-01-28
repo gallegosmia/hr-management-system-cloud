@@ -470,6 +470,9 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                             <div style={{
                                 width: '180px',
                                 height: '180px',
+                                minWidth: '180px',
+                                minHeight: '180px',
+                                aspectRatio: '1 / 1',
                                 borderRadius: '50%',
                                 background: 'white',
                                 border: '8px solid var(--primary-50)',
@@ -481,7 +484,7 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                                 boxShadow: '0 15px 30px -10px rgba(0,0,0,0.1)'
                             }}>
                                 {profilePicture ?
-                                    <img src={profilePicture} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img src={profilePicture} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '1 / 1' }} />
                                     : <span style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--primary-200)' }}>{employee.first_name?.[0]}{employee.last_name?.[0]}</span>
                                 }
                             </div>

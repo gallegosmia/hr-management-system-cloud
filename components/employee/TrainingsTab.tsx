@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 
 interface Training {
@@ -57,6 +57,14 @@ export default function TrainingsTab({ employeeId }: Props) {
 
     // Form state
     const [formData, setFormData] = useState<any>({});
+    const modalBodyRef = useRef<HTMLDivElement>(null);
+
+    // Scroll modal body to top when it opens
+    useEffect(() => {
+        if (showAddModal && modalBodyRef.current) {
+            modalBodyRef.current.scrollTop = 0;
+        }
+    }, [showAddModal]);
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -490,12 +498,14 @@ export default function TrainingsTab({ employeeId }: Props) {
                         </div>
 
                         {/* Scrollable Body */}
-                        <div style={{
-                            flex: 1,
-                            overflowY: 'auto',
-                            padding: '1.25rem 1.5rem',
-                            minHeight: 0
-                        }}>
+                        <div
+                            ref={modalBodyRef}
+                            style={{
+                                flex: 1,
+                                overflowY: 'auto',
+                                padding: '1.25rem 1.5rem',
+                                minHeight: 0
+                            }}>
                             {activeSection === 'trainings' ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     <div>
