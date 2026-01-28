@@ -478,28 +478,37 @@ export default function ViolationsTab({ employeeId }: Props) {
 
             {/* Add/Edit Modal */}
             {showAddModal && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 1000,
-                    padding: '2rem'
-                }}>
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0,0,0,0.6)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 9999,
+                        padding: '1rem'
+                    }}
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setShowAddModal(false);
+                            setEditingItem(null);
+                            setFormData({});
+                        }
+                    }}
+                >
                     <div style={{
                         background: 'white',
                         borderRadius: '16px',
-                        padding: '2rem',
+                        padding: '1.5rem',
                         width: '100%',
                         maxWidth: '500px',
-                        maxHeight: 'calc(100vh - 4rem)',
+                        maxHeight: '85vh',
                         overflowY: 'auto',
-                        margin: 'auto'
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
                     }}>
                         <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#b91c1c', marginBottom: '1.5rem', marginTop: 0 }}>
                             {editingItem ? 'Edit' : 'Add'} {activeSection === 'violations' ? 'Violation' : 'Warning'}
