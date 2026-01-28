@@ -198,6 +198,8 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                 <head>
                     <title>Employee ID - ${employee.first_name} ${employee.last_name}</title>
                     <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap');
+                        
                         body { 
                             font-family: 'Inter', system-ui, -apple-system, sans-serif;
                             display: flex;
@@ -205,90 +207,85 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                             align-items: center;
                             height: 100vh;
                             margin: 0;
-                            background: #f3f4f6;
+                            background: #e5e5e5;
                         }
                         .id-card {
-                            width: 330px;
-                            height: 520px;
-                            background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+                            /* SQUARE ASPECT RATIO 1:1 */
+                            width: 500px;
+                            height: 500px;
+                            background: white;
                             border-radius: 20px;
-                            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
                             position: relative;
                             overflow: hidden;
                             display: flex;
                             flex-direction: column;
                             align-items: center;
                             text-align: center;
-                            border: 1px solid #dcfce7;
+                            box-sizing: border-box;
+                            border: 1px solid #e2e8f0;
                         }
+                        
+                        /* Header Section */
                         .card-header {
                             width: 100%;
-                            height: 140px;
+                            height: 130px;
                             background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
                             display: flex;
-                            flex-direction: column;
                             justify-content: center;
-                            align-items: center;
-                            color: white;
-                            padding: 20px 10px 0;
-                            box-sizing: border-box;
+                            align-items: flex-start;
+                            padding-top: 25px;
                             position: relative;
                         }
-                        .card-header::after {
-                            content: '';
-                            position: absolute;
-                            bottom: 0;
-                            left: 0;
-                            right: 0;
-                            height: 40px;
-                            background: linear-gradient(to top, rgba(255,255,255,0.1), transparent);
-                        }
-                        .header-top {
+                        .header-content {
                             display: flex;
                             align-items: center;
-                            gap: 12px;
-                            margin-bottom: 8px;
-                            z-index: 2;
+                            gap: 15px;
+                            z-index: 5;
                         }
-                        .logo-svg {
+                        .logo-box {
                             width: 45px;
                             height: 45px;
-                            background: white;
-                            padding: 5px;
+                            background: rgba(255,255,255,0.95);
                             border-radius: 10px;
-                            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            padding: 6px;
+                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
                         }
                         .company-info {
                             text-align: left;
+                            color: white;
                         }
                         .company-name {
-                            font-weight: 900;
-                            font-size: 1rem;
-                            letter-spacing: 0.02em;
-                            margin: 0;
+                            font-weight: 800;
+                            font-size: 1.1rem;
                             line-height: 1.1;
-                            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+                            letter-spacing: 0.02em;
                         }
                         .company-tag {
-                            font-size: 0.6rem;
-                            opacity: 0.95;
-                            font-weight: 600;
+                            font-size: 0.7rem;
                             text-transform: uppercase;
-                            letter-spacing: 0.08em;
+                            opacity: 0.9;
+                            margin-top: 4px;
+                            letter-spacing: 0.1em;
+                            font-weight: 600;
                         }
+
+                        /* Profile Photo - Overlapping Header and Body */
                         .profile-container {
-                            width: 140px;
-                            height: 140px;
+                            width: 130px;
+                            height: 130px;
                             border-radius: 50%;
                             background: white;
-                            border: 6px solid #10b981;
-                            margin-top: -15px;
+                            border: 6px solid white;
+                            margin-top: -65px; /* Half overlapping */
+                            z-index: 10;
                             overflow: hidden;
+                            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
                             display: flex;
                             align-items: center;
                             justify-content: center;
-                            z-index: 10;
-                            box-shadow: 0 12px 20px -5px rgba(5, 150, 105, 0.25);
                         }
                         .profile-img {
                             width: 100%;
@@ -296,105 +293,140 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                             object-fit: cover;
                         }
                         .initials {
-                            font-size: 3.5rem;
+                            font-size: 3rem;
                             font-weight: 800;
                             color: #059669;
                         }
+
+                        /* Employee Info */
                         .emp-info {
                             margin-top: 15px;
-                            padding: 0 20px;
-                        }
-                        .emp-name {
-                            font-size: 1.6rem;
-                            font-weight: 950;
-                            color: #064e3b;
-                            margin: 0;
-                            line-height: 1.2;
-                            text-transform: uppercase;
-                            letter-spacing: -0.02em;
-                        }
-                        .emp-pos {
-                            font-size: 1.1rem;
-                            color: #059669;
-                            font-weight: 800;
-                            margin-top: 5px;
-                            letter-spacing: 0.02em;
-                        }
-                        .emp-dept {
-                            font-size: 0.85rem;
-                            color: #64748b;
-                            font-weight: 600;
-                            margin-top: 2px;
-                            text-transform: uppercase;
-                        }
-                        .qr-section {
-                            margin-top: auto;
-                            padding-bottom: 25px;
+                            flex: 1;
                             display: flex;
                             flex-direction: column;
                             align-items: center;
-                            gap: 8px;
+                            width: 90%;
                         }
-                        .qr-code {
+                        .emp-name {
+                            font-size: 1.75rem;
+                            font-weight: 900;
+                            color: #111827;
+                            margin: 0;
+                            line-height: 1.1;
+                            letter-spacing: -0.03em;
+                            margin-bottom: 6px;
+                        }
+                        .emp-pos {
+                            font-size: 1rem;
+                            font-weight: 700;
+                            color: #059669;
+                            text-transform: uppercase;
+                            letter-spacing: 0.05em;
+                            margin-bottom: 2px;
+                        }
+                        .emp-dept {
+                            font-size: 0.85rem;
+                            font-weight: 600;
+                            color: #6b7280;
+                            background: #f3f4f6;
+                            padding: 4px 12px;
+                            border-radius: 100px;
+                            margin-top: 4px;
+                        }
+
+                        /* QR and Footer Area */
+                        .footer-section {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            width: 100%;
+                            padding-bottom: 20px;
+                            margin-top: auto;
+                        }
+                        .qr-box {
                             background: white;
-                            padding: 8px;
+                            padding: 6px;
                             border-radius: 12px;
-                            border: 2px solid #ecfdf5;
-                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                            border: 1px solid #e5e7eb;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                            margin-bottom: 8px;
                         }
                         .id-number {
                             font-family: 'JetBrains Mono', monospace;
-                            font-weight: 900;
-                            color: #064e3b;
-                            font-size: 1.25rem;
-                            letter-spacing: 0.18em;
+                            font-size: 1.1rem;
+                            font-weight: 800;
+                            color: #374151;
+                            letter-spacing: 0.1em;
                         }
-                        .footer-bar {
+
+                        /* Footer Line */
+                        .bottom-bar {
                             position: absolute;
                             bottom: 0;
-                            height: 10px;
-                            width: 100%;
+                            left: 0;
+                            right: 0;
+                            height: 8px;
                             background: linear-gradient(90deg, #064e3b, #10b981, #064e3b);
                         }
+
                         @media print {
-                            body { background: white; }
-                            .id-card { box-shadow: none; border: 1px solid #e2e8f0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                            body { 
+                                background: white; 
+                                height: auto;
+                                display: block;
+                            }
+                            .id-card {
+                                border: 1px solid #ddd;
+                                margin: 0 auto;
+                                page-break-inside: avoid;
+                                -webkit-print-color-adjust: exact;
+                                print-color-adjust: exact;
+                            }
                         }
                     </style>
                 </head>
                 <body>
                     <div class="id-card">
+                        <!-- Header -->
                         <div class="card-header">
-                            <div class="header-top">
-                                <div class="logo-svg">
-                                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <rect x="10" y="50" width="20" height="40" rx="4" fill="#064e3b" />
-                                        <rect x="40" y="30" width="20" height="60" rx="4" fill="#059669" />
-                                        <rect x="70" y="10" width="20" height="80" rx="4" fill="#10b981" />
+                            <div class="header-content">
+                                <div class="logo-box">
+                                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+                                        <rect x="15" y="50" width="18" height="35" rx="3" fill="#064e3b" />
+                                        <rect x="41" y="30" width="18" height="55" rx="3" fill="#059669" />
+                                        <rect x="67" y="15" width="18" height="70" rx="3" fill="#10b981" />
                                     </svg>
                                 </div>
                                 <div class="company-info">
-                                    <div class="company-name">MELANN LENDING</div>
-                                    <div class="company-name">INVESTOR CORPORATION</div>
+                                    <div class="company-name">MELANN LENDING<br>INVESTOR CORP.</div>
                                     <div class="company-tag">Lend • Empower • Grow</div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Profile Photo -->
                         <div class="profile-container">
                             ${profilePic ? `<img src="${profilePic}" class="profile-img" />` : `<div class="initials">${initials}</div>`}
                         </div>
+
+                        <!-- Main Info -->
                         <div class="emp-info">
-                            <h1 class="emp-name">${employee.first_name}<br/>${employee.last_name}</h1>
+                            <h2 class="emp-name">${employee.first_name} ${employee.last_name}</h2>
                             <div class="emp-pos">${employee.position}</div>
                             <div class="emp-dept">${employee.department}</div>
                         </div>
-                        <div class="qr-section">
-                            <div class="qr-code">
-                                ${qrSvg}
+
+                        <!-- Footer / QR -->
+                        <div class="footer-section">
+                            <div class="qr-box">
+                                <div style="width: 85px; height: 85px;">
+                                    ${qrSvg}
+                                </div>
                             </div>
                             <div class="id-number">${employee.employee_id}</div>
                         </div>
-                        <div class="footer-bar"></div>
+
+                        <div class="bottom-bar"></div>
                     </div>
                 </body>
             </html>

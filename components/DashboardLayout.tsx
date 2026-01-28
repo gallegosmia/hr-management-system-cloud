@@ -451,7 +451,8 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     justify-content: center;
                     gap: 15px;
                     transition: height 0.3s ease;
-                    z-index: 100;
+                    position: relative;
+                    z-index: 999;
                     overflow: visible; /* Prevent clipping of dropdowns/badges */
                 }
 
