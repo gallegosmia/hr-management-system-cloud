@@ -47,10 +47,19 @@ export default function LeaveHistoryTab({ employeeId }: LeaveHistoryTabProps) {
 
     const fetchBalance = async () => {
         try {
-            const res = await fetch(`/api/employees/${employeeId}/leave-balance`);
+            const res = await fetch(`/api/employees?id=${employeeId}`);
             if (res.ok) {
                 const data = await res.json();
-                setBalanceInfo(data);
+                const balance = data.leave_balance ?? 5;
+                const limit = 5;
+                const count = Math.max(0, limit - balance);
+
+                setBalanceInfo({
+                    count,
+                    limit,
+                    balance,
+                    year: new Date().getFullYear()
+                });
             }
         } catch (error) {
             console.error('Failed to fetch balance:', error);
