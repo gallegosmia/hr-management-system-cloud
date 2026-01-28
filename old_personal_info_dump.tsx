@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import EditProfileForm from './EditProfileForm';
 
@@ -198,7 +198,7 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                 <head>
                     <title>Employee ID - ${employee.first_name} ${employee.last_name}</title>
                     <style>
-                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap');
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap');
                         
                         body { 
                             font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -399,7 +399,7 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                                 </div>
                                 <div class="company-info">
                                     <div class="company-name">MELANN LENDING<br>INVESTOR CORP.</div>
-                                    <div class="company-tag">Lend • Empower • Grow</div>
+                                    <div class="company-tag">Lend ΓÇó Empower ΓÇó Grow</div>
                                 </div>
                             </div>
                         </div>
@@ -538,21 +538,21 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                                     justifyContent: 'center',
                                     fontSize: '0.75rem',
                                     boxShadow: '0 4px 6px rgba(16, 185, 129, 0.3)'
-                                }}>✓</span>
+                                }}>Γ£ô</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--gray-500)', fontWeight: 600, fontSize: '0.925rem', marginBottom: '1.5rem' }}>
-                                <span style={{ color: 'var(--primary-600)' }}>🆔 {employee.employee_id}</span>
-                                <span>•</span>
-                                <span>💼 {employee.position}</span>
+                                <span style={{ color: 'var(--primary-600)' }}>≡ƒåö {employee.employee_id}</span>
+                                <span>ΓÇó</span>
+                                <span>≡ƒÆ╝ {employee.position}</span>
                             </div>
 
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', fontSize: '0.875rem' }}>
                                 <div style={{ background: 'var(--gray-50)', padding: '0.75rem 1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid var(--gray-100)' }}>
-                                    <span style={{ fontSize: '1.1rem' }}>✉️</span>
+                                    <span style={{ fontSize: '1.1rem' }}>Γ£ë∩╕Å</span>
                                     <span style={{ color: 'var(--gray-700)', fontWeight: 500 }}>{employee.email_address || 'No email provided'}</span>
                                 </div>
                                 <div style={{ background: 'var(--gray-50)', padding: '0.75rem 1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid var(--gray-100)' }}>
-                                    <span style={{ fontSize: '1.1rem' }}>📞</span>
+                                    <span style={{ fontSize: '1.1rem' }}>≡ƒô₧</span>
                                     <span style={{ color: 'var(--gray-700)', fontWeight: 500 }}>{employee.contact_number || 'No contact set'}</span>
                                 </div>
                             </div>
@@ -579,7 +579,7 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                                     whiteSpace: 'nowrap'
                                 }}
                             >
-                                <span>✏️</span> Edit Basic File
+                                <span>Γ£Å∩╕Å</span> Edit Basic File
                             </button>
                         )}
 
@@ -637,7 +637,7 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                                 e.currentTarget.style.borderColor = 'var(--gray-200)';
                             }}
                         >
-                            <span>🖨️</span> Print ID Card
+                            <span>≡ƒû¿∩╕Å</span> Print ID Card
                         </button>
 
                         <button
@@ -665,7 +665,7 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                                 e.currentTarget.style.background = '#f8fafc';
                             }}
                         >
-                            <span>💾</span> Save QR Image
+                            <span>≡ƒÆ╛</span> Save QR Image
                         </button>
 
                         <div style={{
@@ -677,7 +677,7 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                             fontStyle: 'italic',
                             textAlign: 'center'
                         }}>
-                            ⚠️ IF LOST QR CODE, ASK THE ADMINISTRATOR TO GENERATE QR CODE AGAIN
+                            ΓÜá∩╕Å IF LOST QR CODE, ASK THE ADMINISTRATOR TO GENERATE QR CODE AGAIN
                         </div>
                     </div>
 
@@ -715,7 +715,7 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
 
                 {/* Address */}
                 <Card>
-                    <CardHeader title="Residential Address" icon="📍" onEdit={() => onEdit('address')} />
+                    <CardHeader title="Residential Address" icon="≡ƒôì" onEdit={() => onEdit('address')} />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                         <div style={{ background: 'var(--primary-50)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid var(--primary-500)' }}>
                             <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary-700)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Residence</span>
@@ -734,18 +734,18 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
 
                 {/* Emergency Contact */}
                 <Card>
-                    <CardHeader title="Emergency Contact" icon="🆘" onEdit={() => onEdit('emergency')} />
+                    <CardHeader title="Emergency Contact" icon="≡ƒåÿ" onEdit={() => onEdit('emergency')} />
                     <div style={{ background: '#fffef3', padding: '1.5rem', borderRadius: '16px', border: '1px dashed var(--warning-200)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                             <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--warning-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
-                                👤
+                                ≡ƒæñ
                             </div>
                             <div>
                                 <div style={{ fontSize: '1.125rem', fontWeight: 800, color: 'var(--gray-800)' }}>
                                     {employee.emergency_contact_name || 'Guardian Not Set'}
                                 </div>
                                 <div style={{ color: 'var(--warning-700)', fontWeight: 700, fontSize: '0.925rem', marginTop: '0.25rem' }}>
-                                    📞 {employee.emergency_contact_number || 'No emergency number'}
+                                    ≡ƒô₧ {employee.emergency_contact_number || 'No emergency number'}
                                 </div>
                             </div>
                         </div>
@@ -754,11 +754,11 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
 
                 {/* Education */}
                 <Card style={{ gridColumn: 'span 2' }}>
-                    <CardHeader title="Educational Background" icon="🎓" onEdit={() => onEdit('education')} />
+                    <CardHeader title="Educational Background" icon="≡ƒÄô" onEdit={() => onEdit('education')} />
 
                     {(!employee.education || employee.education.length === 0) ? (
                         <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--gray-50)', borderRadius: '16px', border: '2px dashed var(--gray-200)' }}>
-                            <span style={{ fontSize: '2rem', display: 'block', marginBottom: '1rem' }}>📚</span>
+                            <span style={{ fontSize: '2rem', display: 'block', marginBottom: '1rem' }}>≡ƒôÜ</span>
                             <p style={{ color: 'var(--gray-400)', fontWeight: 600 }}>No educational records found in database.</p>
                         </div>
                     ) : (
@@ -773,7 +773,7 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                                     display: 'flex',
                                     gap: '1rem'
                                 }}>
-                                    <div style={{ fontSize: '1.5rem', opacity: 0.5 }}>🏫</div>
+                                    <div style={{ fontSize: '1.5rem', opacity: 0.5 }}>≡ƒÅ½</div>
                                     <div>
                                         <div style={{ fontWeight: 800, color: 'var(--gray-900)', fontSize: '1rem', marginBottom: '0.25rem' }}>
                                             {edu.level}
