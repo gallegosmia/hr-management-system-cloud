@@ -101,7 +101,10 @@ const Card = ({ children, style = {} }: { children: React.ReactNode, style?: Rea
 export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalInfoTabProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [user, setUser] = useState<any>(null);
+    const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+    const [profilePicture, setProfilePicture] = useState(employee.profile_picture);
     const qrRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -113,6 +116,72 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
             }
         }
     }, []);
+
+    useEffect(() => {
+        setProfilePicture(employee.profile_picture);
+    }, [employee.profile_picture]);
+
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Image size should be less than 5MB');
+            return;
+        }
+
+        setIsUploadingPhoto(true);
+
+        try {
+            // Convert to base64
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const base64 = event.target?.result as string;
+
+                // Upload to server
+                const response = await fetch('/api/employees/photo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        employee_id: employee.id,
+                        photo: base64
+                    })
+                });
+
+                if (response.ok) {
+                    setProfilePicture(base64);
+                    alert('Photo uploaded successfully!');
+                    // Refresh the page to show updated photo
+                    window.location.reload();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to upload photo');
+                }
+                setIsUploadingPhoto(false);
+            };
+            reader.onerror = () => {
+                alert('Failed to read image file');
+                setIsUploadingPhoto(false);
+            };
+            reader.readAsDataURL(file);
+        } catch (error) {
+            console.error('Photo upload error:', error);
+            alert('Failed to upload photo');
+            setIsUploadingPhoto(false);
+        }
+
+        // Reset file input
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
 
     const handlePrintID = () => {
         if (!qrRef.current) return;
@@ -396,25 +465,29 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
             <Card style={{ padding: '2.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
                     <div style={{ display: 'flex', gap: '2.5rem', alignItems: 'center' }}>
-                        <div style={{
-                            width: '180px',
-                            height: '180px',
-                            borderRadius: '50%',
-                            background: 'white',
-                            border: '8px solid var(--primary-50)',
-                            overflow: 'hidden',
-                            flexShrink: 0,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: '0 15px 30px -10px rgba(0,0,0,0.1)'
-                        }}>
-                            {employee.profile_picture ?
-                                <img src={employee.profile_picture} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                : <span style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--primary-200)' }}>{employee.first_name?.[0]}{employee.last_name?.[0]}</span>
-                            }
+                        {/* Profile Picture with Upload */}
+                        <div style={{ position: 'relative' }}>
+                            <div style={{
+                                width: '180px',
+                                height: '180px',
+                                borderRadius: '50%',
+                                background: 'white',
+                                border: '8px solid var(--primary-50)',
+                                overflow: 'hidden',
+                                flexShrink: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 15px 30px -10px rgba(0,0,0,0.1)'
+                            }}>
+                                {profilePicture ?
+                                    <img src={profilePicture} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    : <span style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--primary-200)' }}>{employee.first_name?.[0]}{employee.last_name?.[0]}</span>
+                                }
+                            </div>
                         </div>
                         <div>
+
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
                                 <h2 style={{ fontSize: '2.25rem', fontWeight: 900, color: 'var(--gray-900)', margin: 0, letterSpacing: '-0.02em' }}>
                                     {employee.first_name} {employee.last_name}
@@ -560,6 +633,46 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                             <span>💾</span> Save QR Image
                         </button>
 
+                        {/* Upload Photo Button */}
+                        {user && user.role !== 'Employee' && (
+                            <>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handlePhotoUpload}
+                                    style={{ display: 'none' }}
+                                    id="photo-upload"
+                                />
+                                <label
+                                    htmlFor="photo-upload"
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.625rem',
+                                        background: isUploadingPhoto ? '#d1d5db' : 'linear-gradient(135deg, #064e3b 0%, #059669 100%)',
+                                        color: 'white',
+                                        borderRadius: '10px',
+                                        border: 'none',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 700,
+                                        cursor: isUploadingPhoto ? 'wait' : 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '0.5rem',
+                                        transition: 'all 0.2s',
+                                        boxShadow: '0 4px 6px rgba(5, 150, 105, 0.2)'
+                                    }}
+                                >
+                                    {isUploadingPhoto ? (
+                                        <>⏳ Uploading...</>
+                                    ) : (
+                                        <><span>📷</span> Upload Photo</>
+                                    )}
+                                </label>
+                            </>
+                        )}
+
                         <div style={{
                             marginTop: '0.75rem',
                             fontSize: '0.65rem',
@@ -572,6 +685,7 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                             ⚠️ IF LOST QR CODE, ASK THE ADMINISTRATOR TO GENERATE QR CODE AGAIN
                         </div>
                     </div>
+
                 </div>
 
                 <div style={{
