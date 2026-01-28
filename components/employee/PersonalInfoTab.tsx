@@ -633,46 +633,6 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                             <span>💾</span> Save QR Image
                         </button>
 
-                        {/* Upload Photo Button */}
-                        {user && user.role !== 'Employee' && (
-                            <>
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handlePhotoUpload}
-                                    style={{ display: 'none' }}
-                                    id="photo-upload"
-                                />
-                                <label
-                                    htmlFor="photo-upload"
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.625rem',
-                                        background: isUploadingPhoto ? '#d1d5db' : 'linear-gradient(135deg, #064e3b 0%, #059669 100%)',
-                                        color: 'white',
-                                        borderRadius: '10px',
-                                        border: 'none',
-                                        fontSize: '0.75rem',
-                                        fontWeight: 700,
-                                        cursor: isUploadingPhoto ? 'wait' : 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '0.5rem',
-                                        transition: 'all 0.2s',
-                                        boxShadow: '0 4px 6px rgba(5, 150, 105, 0.2)'
-                                    }}
-                                >
-                                    {isUploadingPhoto ? (
-                                        <>⏳ Uploading...</>
-                                    ) : (
-                                        <><span>📷</span> Upload Photo</>
-                                    )}
-                                </label>
-                            </>
-                        )}
-
                         <div style={{
                             marginTop: '0.75rem',
                             fontSize: '0.65rem',
