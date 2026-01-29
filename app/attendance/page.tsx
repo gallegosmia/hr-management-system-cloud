@@ -252,23 +252,43 @@ export default function AttendancePage() {
     const fetchEmployees = async () => {
         try {
             const res = await fetch('/api/employees');
+            if (!res.ok) {
+                console.error('Failed to fetch employees');
+                setEmployees([]);
+                return;
+            }
             const data = await res.json();
-            const activeEmployees = data.filter((emp: any) =>
-                emp.employment_status !== 'Resigned' && emp.employment_status !== 'Terminated'
-            );
-            setEmployees(activeEmployees);
+            if (Array.isArray(data)) {
+                const activeEmployees = data.filter((emp: any) =>
+                    emp.employment_status !== 'Resigned' && emp.employment_status !== 'Terminated'
+                );
+                setEmployees(activeEmployees);
+            } else {
+                console.error('Employees data is not an array:', data);
+                setEmployees([]);
+            }
         } catch (err) {
             console.error(err);
+            setEmployees([]);
         }
     };
 
     const fetchBranches = async () => {
         try {
             const response = await fetch('/api/employees/branches');
+            if (!response.ok) {
+                setBranches([]);
+                return;
+            }
             const data = await response.json();
-            setBranches(data);
+            if (Array.isArray(data)) {
+                setBranches(data);
+            } else {
+                setBranches([]);
+            }
         } catch (error) {
             console.error('Failed to fetch branches:', error);
+            setBranches([]);
         }
     };
 
@@ -276,24 +296,36 @@ export default function AttendancePage() {
         setLoading(true);
         try {
             const res = await fetch(`/api/attendance?start_date=${startDate}&end_date=${endDate}&t=${new Date().getTime()}`);
+            if (!res.ok) {
+                console.error('Failed to fetch attendance');
+                setAttendance([]);
+                return;
+            }
             const data = await res.json();
-            setAttendance(data);
+            if (Array.isArray(data)) {
+                setAttendance(data);
+            } else {
+                console.error('Attendance data is not an array:', data);
+                setAttendance([]);
+            }
         } catch (err) {
             console.error(err);
+            setAttendance([]);
         } finally {
             setLoading(false);
         }
     };
 
     const applyFilters = () => {
-        let result = [...attendance];
+        let result = Array.isArray(attendance) ? [...attendance] : [];
 
         if (searchTerm) {
             const lower = searchTerm.toLowerCase();
             result = result.filter(r => {
                 const emp = employees.find(e => e.id === r.employee_id);
                 const name = emp ? `${emp.first_name} ${emp.last_name}`.toLowerCase() : '';
-                return name.includes(lower) || r.status.toLowerCase().includes(lower);
+                const status = r.status ? r.status.toLowerCase() : '';
+                return name.includes(lower) || status.includes(lower);
             });
         }
 
@@ -588,16 +620,15 @@ export default function AttendancePage() {
                                 <th style={{ textAlign: 'center', padding: '0.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#0891b2', background: '#cffafe' }}>☀️ AM Out</th>
                                 <th style={{ textAlign: 'center', padding: '0.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#7c3aed', background: '#ede9fe' }}>🌤️ PM In</th>
                                 <th style={{ textAlign: 'center', padding: '0.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#c026d3', background: '#fae8ff' }}>🌙 PM Out</th>
-                                <th style={{ textAlign: 'center', padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#374151' }}>Total</th>
                                 <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#374151' }}>Status</th>
                                 <th style={{ textAlign: 'center', padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#374151' }}>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan={9} style={{ padding: '2rem', textAlign: 'center' }}>Loading...</td></tr>
+                                <tr><td colSpan={8} style={{ padding: '2rem', textAlign: 'center' }}>Loading...</td></tr>
                             ) : paginatedRecords.length === 0 ? (
-                                <tr><td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>No attendance records found for this period.</td></tr>
+                                <tr><td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>No attendance records found for this period.</td></tr>
                             ) : (
                                 paginatedRecords.map((record, idx) => (
                                     <tr key={idx} style={{ borderBottom: '1px solid #f9fafb', transition: 'background 0.2s' }} className="hover:bg-gray-50">
@@ -624,9 +655,6 @@ export default function AttendancePage() {
                                         </td>
                                         <td style={{ padding: '0.5rem', textAlign: 'center' }}>
                                             <CheckpointCell time={record.afternoon_out || record.time_out} label="" />
-                                        </td>
-                                        <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 600, color: '#064e3b' }}>
-                                            {calculateTotalHours(record)}
                                         </td>
                                         <td style={{ padding: '0.75rem 1rem' }}><StatusBadge status={record.status} /></td>
                                         <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
