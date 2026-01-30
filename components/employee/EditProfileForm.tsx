@@ -17,6 +17,7 @@ interface Employee {
     emergency_contact_name?: string;
     emergency_contact_number?: string;
     profile_picture?: string;
+    citizen_id_address?: string;
     [key: string]: any;
 }
 
@@ -41,8 +42,12 @@ export default function EditProfileForm({ employee, onSave, onCancel }: EditProf
         employment_status: employee.employment_status || '',
         emergency_contact_name: employee.emergency_contact_name || '',
         emergency_contact_number: employee.emergency_contact_number || '',
+        emergency_contact_relationship: employee.emergency_contact_relationship || '',
+        emergency_contact_address: employee.emergency_contact_address || '',
         profile_picture: employee.profile_picture || '',
-        branch: employee.branch || ''
+        branch: employee.branch || '',
+        citizen_id_address: employee.citizen_id_address || '',
+        date_hired: employee.date_hired ? new Date(employee.date_hired).toISOString().split('T')[0] : ''
     });
 
     const [branches, setBranches] = useState<string[]>([]);
@@ -53,7 +58,10 @@ export default function EditProfileForm({ employee, onSave, onCancel }: EditProf
     useEffect(() => {
         const fetchBranches = async () => {
             try {
-                const response = await fetch('/api/employees/branches');
+                const sessionId = localStorage.getItem('sessionId');
+                const response = await fetch('/api/employees/branches', {
+                    headers: { 'x-session-id': sessionId || '' }
+                });
                 if (response.ok) {
                     const data = await response.json();
                     setBranches(data);
@@ -319,26 +327,52 @@ export default function EditProfileForm({ employee, onSave, onCancel }: EditProf
                             name="address"
                             value={formData.address}
                             onChange={handleChange}
+                            placeholder="Current Residence"
                             style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem' }}
                         />
                     </div>
 
                     <div className="form-group">
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Employment Status</label>
-                        <select
-                            name="employment_status"
-                            value={formData.employment_status}
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Citizen ID Address</label>
+                        <input
+                            type="text"
+                            name="citizen_id_address"
+                            value={formData.citizen_id_address}
                             onChange={handleChange}
-                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem', background: 'white' }}
-                        >
-                            <option value="">Select Status</option>
-                            <option value="Regular">Regular</option>
-                            <option value="Probationary">Probationary</option>
-                            <option value="Contractual">Contractual</option>
-                            <option value="Resigned">Resigned</option>
-                            <option value="Terminated">Terminated</option>
-                        </select>
+                            placeholder="Matches residential address if blank"
+                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem' }}
+                        />
                     </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                        <div className="form-group">
+                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Employment Status</label>
+                            <select
+                                name="employment_status"
+                                value={formData.employment_status}
+                                onChange={handleChange}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem', background: 'white' }}
+                            >
+                                <option value="">Select Status</option>
+                                <option value="Regular">Regular</option>
+                                <option value="Probationary">Probationary</option>
+                                <option value="Contractual">Contractual</option>
+                                <option value="Resigned">Resigned</option>
+                                <option value="Terminated">Terminated</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Date Hired</label>
+                            <input
+                                type="date"
+                                name="date_hired"
+                                value={formData.date_hired}
+                                onChange={handleChange}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem' }}
+                            />
+                        </div>
+                    </div>
+
                     <div className="form-group">
                         <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Branch Assigned</label>
                         <select
@@ -356,7 +390,7 @@ export default function EditProfileForm({ employee, onSave, onCancel }: EditProf
 
                     <div style={{ padding: '1rem 0', borderTop: '1px solid #f3f4f6', marginTop: '1rem' }}>
                         <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#111827', marginBottom: '1.5rem' }}>Emergency Contact Person</h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
                             <div className="form-group">
                                 <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Contact Name</label>
                                 <input
@@ -374,6 +408,30 @@ export default function EditProfileForm({ employee, onSave, onCancel }: EditProf
                                     name="emergency_contact_number"
                                     value={formData.emergency_contact_number}
                                     onChange={handleChange}
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem' }}
+                                />
+                            </div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                            <div className="form-group">
+                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Relationship</label>
+                                <input
+                                    type="text"
+                                    name="emergency_contact_relationship"
+                                    value={formData.emergency_contact_relationship}
+                                    onChange={handleChange}
+                                    placeholder="e.g. Spouse / Parent"
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem' }}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Full Address</label>
+                                <input
+                                    type="text"
+                                    name="emergency_contact_address"
+                                    value={formData.emergency_contact_address}
+                                    onChange={handleChange}
+                                    placeholder="Barangay, City, Province"
                                     style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem' }}
                                 />
                             </div>

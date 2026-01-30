@@ -9,7 +9,8 @@ let pool: Pool | null = null;
 function getPool(): Pool | null {
   if (pool) return pool;
 
-  let url = process.env.DATABASE_URL;
+  // let url = process.env.DATABASE_URL; // Ignore cached env
+  let url = null;
   if (!url && fs.existsSync(path.join(process.cwd(), '.env'))) {
     const env = fs.readFileSync(path.join(process.cwd(), '.env'), 'utf-8');
     const match = env.match(/^DATABASE_URL=(.+)$/m);
@@ -66,8 +67,30 @@ function loadDB() {
   };
 }
 
+// Global Polyfill for BigInt JSON serialization
+if (typeof BigInt !== 'undefined' && !(BigInt.prototype as any).toJSON) {
+  (BigInt.prototype as any).toJSON = function () {
+    return this.toString();
+  };
+}
+
+/**
+ * Helper to make data JSON safe (handles BigInt)
+ */
+function safeJson(data: any) {
+  if (data === undefined || data === null) return data;
+  try {
+    return JSON.parse(JSON.stringify(data));
+  } catch (e) {
+    console.error('safeJson error:', e);
+    return data;
+  }
+}
+
 function saveDB(data: any) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+  fs.writeFileSync(DB_FILE, JSON.stringify(data, (key, value) =>
+    typeof value === 'bigint' ? value.toString() : value
+    , 2));
 }
 
 /**
@@ -79,7 +102,7 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
     try {
       const res = await activePool.query(sql, params);
       return {
-        rows: res.rows,
+        rows: safeJson(res.rows),
         rowCount: res.rowCount || 0
       };
     } catch (error: any) {
@@ -148,7 +171,10 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
         return { rows: [{ count: results.length }], rowCount: 1 };
       }
 
-      return { rows: results, rowCount: results.length };
+      return {
+        rows: safeJson(results),
+        rowCount: results.length
+      };
     }
 
     if (normalizedSql.match(/^INSERT/i)) {
@@ -171,7 +197,8 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
 
       db[table].push(newItem);
       saveDB(db);
-      return { rows: [{ id: newItem.id }], rowCount: 1 };
+      // Return full item to simulate RETURNING *
+      return { rows: safeJson([newItem]), rowCount: 1 };
     }
 
     if (normalizedSql.match(/^UPDATE/i)) {
@@ -182,6 +209,7 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
 
       const conditions = whereMatch[1];
       let updatedCount = 0;
+      const updatedRows: any[] = [];
 
       if (!db[table]) return { rows: [], rowCount: 0 };
 
@@ -220,12 +248,13 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
             });
           }
           updatedCount++;
+          updatedRows.push(row);
         }
         return row;
       });
 
       if (updatedCount > 0) saveDB(db);
-      return { rows: [], rowCount: updatedCount };
+      return { rows: safeJson(updatedRows), rowCount: updatedCount };
     }
 
     if (normalizedSql.match(/^DELETE/i)) {
@@ -259,18 +288,23 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
 }
 
 export async function getAll(table: string): Promise<any[]> {
-  const res = await query(`SELECT * FROM ${table}`);
-  return res.rows;
+  const activePool = getPool();
+  if (activePool) {
+    const res = await activePool.query(`SELECT * FROM ${table}`);
+    return safeJson(res.rows);
+  }
+  const db = loadDB();
+  return safeJson(db[table] || []);
 }
 
 export async function getById(table: string, id: number | string): Promise<any | undefined> {
   const activePool = getPool();
   if (activePool) {
     const res = await activePool.query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
-    return res.rows[0];
+    return safeJson(res.rows[0]);
   }
   const db = loadDB();
-  return (db[table] || []).find((item: any) => item.id == id);
+  return safeJson((db[table] || []).find((item: any) => String(item.id) === String(id)));
 }
 
 export async function insert(table: string, data: any): Promise<number> {

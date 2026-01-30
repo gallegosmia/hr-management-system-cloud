@@ -69,9 +69,13 @@ export default function CreatePayrollPage() {
     const handleGenerate = async () => {
         setLoading(true);
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const response = await fetch('/api/payroll/calculate', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
                 body: JSON.stringify({
                     startDate: dates.start,
                     endDate: dates.end,
@@ -98,9 +102,13 @@ export default function CreatePayrollPage() {
     const handleSave = async (status: 'Draft' | 'Finalized' = 'Finalized') => {
         setSaving(true);
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const response = await fetch('/api/payroll', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
                 body: JSON.stringify({
                     period_start: dates.start,
                     period_end: dates.end,

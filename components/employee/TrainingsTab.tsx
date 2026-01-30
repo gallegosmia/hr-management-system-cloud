@@ -55,6 +55,7 @@ export default function TrainingsTab({ employeeId }: Props) {
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingItem, setEditingItem] = useState<Training | Certificate | null>(null);
     const [user, setUser] = useState<any>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState<any>({});
@@ -88,9 +89,14 @@ export default function TrainingsTab({ employeeId }: Props) {
     const fetchData = async () => {
         setLoading(true);
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const [trainingsRes, certsRes] = await Promise.all([
-                fetch(`/api/employees/trainings?employee_id=${employeeId}&type=trainings`),
-                fetch(`/api/employees/trainings?employee_id=${employeeId}&type=certificates`)
+                fetch(`/api/employees/trainings?employee_id=${employeeId}&type=trainings`, {
+                    headers: { 'x-session-id': sessionId || '' }
+                }),
+                fetch(`/api/employees/trainings?employee_id=${employeeId}&type=certificates`, {
+                    headers: { 'x-session-id': sessionId || '' }
+                })
             ]);
 
             if (trainingsRes.ok) {
@@ -119,6 +125,7 @@ export default function TrainingsTab({ employeeId }: Props) {
             }
         }
 
+        setIsSaving(true);
         try {
             const isEditing = !!editingItem;
             const endpoint = '/api/employees/trainings';
@@ -131,14 +138,18 @@ export default function TrainingsTab({ employeeId }: Props) {
                 id: isEditing ? (editingItem as any).id : undefined
             };
 
+            const sessionId = localStorage.getItem('sessionId');
             const res = await fetch(endpoint, {
                 method,
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
                 body: JSON.stringify(payload)
             });
 
             if (res.ok) {
-                fetchData();
+                await fetchData();
                 setShowAddModal(false);
                 setEditingItem(null);
                 setFormData({});
@@ -149,6 +160,8 @@ export default function TrainingsTab({ employeeId }: Props) {
         } catch (error) {
             console.error('Save error:', error);
             alert('Failed to save');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -157,8 +170,10 @@ export default function TrainingsTab({ employeeId }: Props) {
         if (!confirm('Are you sure you want to delete this record?')) return;
 
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const res = await fetch(`/api/employees/trainings?id=${id}&type=${type}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: { 'x-session-id': sessionId || '' }
             });
             if (res.ok) {
                 fetchData();
@@ -255,7 +270,7 @@ export default function TrainingsTab({ employeeId }: Props) {
                                 gap: '0.5rem'
                             }}
                         >
-                            🏆 Certificates ({certificates.length})
+                            🏆 Awards & Certificates ({certificates.length})
                         </button>
                     </div>
 
@@ -276,7 +291,7 @@ export default function TrainingsTab({ employeeId }: Props) {
                                 fontSize: '0.875rem'
                             }}
                         >
-                            ➕ Add {activeSection === 'trainings' ? 'Training' : 'Certificate'}
+                            ➕ Add {activeSection === 'trainings' ? 'Training' : 'Award/Certificate'}
                         </button>
                     )}
                 </div>
@@ -360,7 +375,7 @@ export default function TrainingsTab({ employeeId }: Props) {
             {activeSection === 'certificates' && (
                 <Card>
                     <h3 style={{ fontSize: '1.125rem', fontWeight: 800, color: '#064e3b', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        🏆 Certifications & Licenses
+                        🏆 Awards, Certifications & Licenses
                     </h3>
 
                     {certificates.length === 0 ? (
@@ -482,7 +497,7 @@ export default function TrainingsTab({ employeeId }: Props) {
                                 alignItems: 'center',
                                 gap: '0.5rem'
                             }}>
-                                {activeSection === 'trainings' ? '📚' : '🏆'} {editingItem ? 'Edit' : 'Add'} {activeSection === 'trainings' ? 'Training' : 'Certificate'}
+                                {activeSection === 'trainings' ? '📚' : '🏆'} {editingItem ? 'Edit' : 'Add'} {activeSection === 'trainings' ? 'Training' : 'Award/Certificate'}
                             </h3>
                             <button
                                 onClick={() => { setShowAddModal(false); setEditingItem(null); setFormData({}); }}
@@ -638,7 +653,7 @@ export default function TrainingsTab({ employeeId }: Props) {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     <div>
                                         <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.25rem' }}>
-                                            Certificate Name *
+                                            Award / Certificate Name *
                                         </label>
                                         <input
                                             type="text"
@@ -753,18 +768,36 @@ export default function TrainingsTab({ employeeId }: Props) {
                             </button>
                             <button
                                 onClick={handleSave}
+                                disabled={isSaving}
                                 style={{
                                     padding: '0.625rem 1.25rem',
-                                    background: 'linear-gradient(135deg, #064e3b, #059669)',
+                                    background: isSaving ? '#9ca3af' : 'linear-gradient(135deg, #064e3b, #059669)',
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '8px',
                                     fontWeight: 700,
-                                    cursor: 'pointer',
-                                    fontSize: '0.875rem'
+                                    cursor: isSaving ? 'not-allowed' : 'pointer',
+                                    fontSize: '0.875rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
                                 }}
                             >
-                                {editingItem ? 'Update' : 'Save'}
+                                {isSaving ? (
+                                    <>
+                                        <span className="spinner" style={{
+                                            width: '12px',
+                                            height: '12px',
+                                            border: '2px solid rgba(255,255,255,0.3)',
+                                            borderTop: '2px solid white',
+                                            borderRadius: '50%',
+                                            animation: 'spin 1s linear infinite'
+                                        }}></span>
+                                        Saving...
+                                    </>
+                                ) : (
+                                    editingItem ? 'Update' : 'Save'
+                                )}
                             </button>
                         </div>
                     </div>

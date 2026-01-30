@@ -29,7 +29,10 @@ export default function PayrollHistoryTab({ employeeId }: PayrollHistoryTabProps
     const fetchPayslips = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/employees/${employeeId}/payslips`);
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch(`/api/employees/${employeeId}/payslips`, {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             if (res.ok) {
                 const data = await res.json();
                 // Filter for finalized runs if needed, but usually we show all payslips generated

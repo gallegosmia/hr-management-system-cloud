@@ -73,7 +73,10 @@ export default function LeavePage() {
                 url += `?employee_id=${parsedUser.employee_id}`;
             }
 
-            const response = await fetch(url);
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch(url, {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             const data = await response.json();
             setRequests(data);
         } catch (error) {
@@ -85,11 +88,18 @@ export default function LeavePage() {
 
     const fetchEmployees = async () => {
         try {
-            const response = await fetch('/api/employees');
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch('/api/employees', {
+                headers: {
+                    'x-session-id': sessionId || ''
+                }
+            });
             const data = await response.json();
-            setEmployees(data);
+            // Ensure data is always an array
+            setEmployees(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to fetch employees:', error);
+            setEmployees([]); // Set to empty array on error
         }
     };
 
@@ -99,9 +109,12 @@ export default function LeavePage() {
             return;
         }
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const start = '2020-01-01';
             const end = new Date().toISOString().split('T')[0];
-            const res = await fetch(`/api/attendance/report/individual?employeeId=${employeeId}&start=${start}&end=${end}`);
+            const res = await fetch(`/api/attendance/report/individual?employeeId=${employeeId}&start=${start}&end=${end}`, {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             if (res.ok) {
                 const data = await res.json();
                 setLeaveDaysUsed(data.summary.paidLeavesUsed);
@@ -156,9 +169,13 @@ export default function LeavePage() {
                 (body as any).id = editingId;
             }
 
+            const sessionId = localStorage.getItem('sessionId');
             const response = await fetch(url, {
                 method,
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
                 body: JSON.stringify(body)
             });
 
@@ -203,9 +220,13 @@ export default function LeavePage() {
         }
 
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const response = await fetch('/api/leave', {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
                 body: JSON.stringify({
                     id,
                     status,
@@ -229,8 +250,10 @@ export default function LeavePage() {
         if (!confirm('Are you sure you want to permanently delete this leave request?')) return;
 
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const response = await fetch(`/api/leave?id=${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: { 'x-session-id': sessionId || '' }
             });
 
             if (response.ok) {
@@ -560,13 +583,13 @@ export default function LeavePage() {
                                     >
                                         <option value="">Select Employee</option>
                                         {user?.role === 'Employee' ? (
-                                            employees.filter(e => e.id === Number(user.employee_id)).map(emp => (
+                                            Array.isArray(employees) && employees.filter(e => e.id === Number(user.employee_id)).map(emp => (
                                                 <option key={emp.id} value={emp.id}>
                                                     {emp.last_name}, {emp.first_name}
                                                 </option>
                                             ))
                                         ) : (
-                                            employees.map(emp => (
+                                            Array.isArray(employees) && employees.map(emp => (
                                                 <option key={emp.id} value={emp.id}>
                                                     {emp.last_name}, {emp.first_name}
                                                 </option>

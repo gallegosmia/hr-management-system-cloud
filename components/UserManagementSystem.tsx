@@ -94,11 +94,18 @@ export default function UserManagementSystem() {
 
     const fetchEmployees = async () => {
         try {
-            const res = await fetch('/api/employees');
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch('/api/employees', {
+                headers: {
+                    'x-session-id': sessionId || ''
+                }
+            });
             const data = await res.json();
-            setEmployees(data);
+            // Ensure data is always an array
+            setEmployees(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error("Failed to fetch employees", error);
+            setEmployees([]); // Set to empty array on error
         }
     };
 
@@ -328,12 +335,15 @@ export default function UserManagementSystem() {
 
     if (loading && users.length === 0) return <div className="loading-state">Loading User Management System...</div>;
 
-    // Access check - Allow Admin and HR
-    if (currentUser && !['Admin', 'HR'].includes(currentUser.role)) {
+    // Access check - ONLY superadmin account can access User Management
+    if (currentUser && currentUser.username !== 'superadmin') {
         return (
             <div className="access-denied-inline">
                 <h2>🚫 Access Denied</h2>
-                <p>Only administrators can access user management system.</p>
+                <p>Only the Super Administrator (superadmin account) can access user management and approve accounts.</p>
+                <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#64748b' }}>
+                    Your account: <strong>{currentUser.username}</strong> ({currentUser.role})
+                </p>
             </div>
         );
     }
@@ -381,11 +391,9 @@ export default function UserManagementSystem() {
                 <div className="um-filter-groups">
                     <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
                         <option>All Roles</option>
-                        <option>Admin</option>
-                        <option>HR</option>
-                        <option>Manager</option>
                         <option>President</option>
                         <option>Vice President</option>
+                        <option>HR</option>
                         <option>Employee</option>
                     </select>
                     <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
@@ -486,7 +494,12 @@ export default function UserManagementSystem() {
                                             });
                                             setIsEditModalOpen(true);
                                         }}>✏️</button>
-                                        <button className="um-action-btn delete" onClick={() => handleDeleteUser(user.id)} title="Soft Delete">🗑️</button>
+                                        {/* Hide delete button for protected system accounts */}
+                                        {user.username !== 'admin' && user.username !== 'superadmin' ? (
+                                            <button className="um-action-btn delete" onClick={() => handleDeleteUser(user.id)} title="Soft Delete">🗑️</button>
+                                        ) : (
+                                            <span className="um-protected-badge" title="Protected system account">🔒</span>
+                                        )}
                                     </div>
                                 </td>
                             </tr>
@@ -579,11 +592,9 @@ export default function UserManagementSystem() {
                                             value={userForm.role}
                                             onChange={e => setUserForm({ ...userForm, role: e.target.value })}
                                         >
-                                            <option>Admin</option>
-                                            <option>HR</option>
                                             <option>President</option>
                                             <option>Vice President</option>
-                                            <option>Manager</option>
+                                            <option>HR</option>
                                             <option>Employee</option>
                                         </select>
                                     </div>
@@ -594,7 +605,7 @@ export default function UserManagementSystem() {
                                             onChange={e => setUserForm({ ...userForm, employee_id: e.target.value })}
                                         >
                                             <option value="">Select Employee</option>
-                                            {employees.map(emp => (
+                                            {Array.isArray(employees) && employees.map(emp => (
                                                 <option key={emp.id} value={emp.id}>{emp.last_name}, {emp.first_name}</option>
                                             ))}
                                         </select>
@@ -656,11 +667,9 @@ export default function UserManagementSystem() {
                                             value={userForm.role}
                                             onChange={e => setUserForm({ ...userForm, role: e.target.value })}
                                         >
-                                            <option>Admin</option>
-                                            <option>HR</option>
                                             <option>President</option>
                                             <option>Vice President</option>
-                                            <option>Manager</option>
+                                            <option>HR</option>
                                             <option>Employee</option>
                                         </select>
                                     </div>
@@ -682,7 +691,7 @@ export default function UserManagementSystem() {
                                             onChange={e => setUserForm({ ...userForm, employee_id: e.target.value })}
                                         >
                                             <option value="">Select Employee</option>
-                                            {employees.map(emp => (
+                                            {Array.isArray(employees) && employees.map(emp => (
                                                 <option key={emp.id} value={emp.id}>{emp.last_name}, {emp.first_name}</option>
                                             ))}
                                         </select>
@@ -1007,6 +1016,19 @@ export default function UserManagementSystem() {
                 .um-action-btn.delete:hover {
                     background: #ef4444;
                     border-color: #ef4444;
+                }
+
+                .um-protected-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.25rem;
+                    color: #f59e0b;
+                    background: rgba(245, 158, 11, 0.1);
+                    border: 1px solid rgba(245, 158, 11, 0.3);
+                    padding: 6px 10px;
+                    border-radius: 8px;
+                    cursor: not-allowed;
                 }
 
                 .um-pagination {

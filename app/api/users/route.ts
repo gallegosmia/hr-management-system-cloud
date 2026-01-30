@@ -144,9 +144,9 @@ export async function DELETE(request: NextRequest) {
         }
 
         const user = await getById('users', parseInt(id));
-        if (user && user.username === 'admin') {
+        if (user && (user.username === 'admin' || user.username === 'superadmin')) {
             return NextResponse.json(
-                { error: 'Protected system user cannot be deleted' },
+                { error: 'Protected system user cannot be deleted. This account is critical for system administration.' },
                 { status: 403 }
             );
         }

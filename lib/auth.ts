@@ -13,31 +13,39 @@ export interface User {
     id: number;
     username: string;
     email?: string;
-    role: 'Admin' | 'HR' | 'Manager' | 'Employee' | 'President' | 'Vice President';
+    role: 'HR' | 'Employee' | 'President' | 'Vice President'; // Simplified 3-role system
     employee_id?: number;
     is_active: number;
+    assigned_branch?: string; // Branch assignment for access control
+    hr_approval_status?: string | null; // PENDING, APPROVED, REJECTED (for HR users)
+    hr_approved_by?: number | null; // User ID of approving Super Admin
+    hr_approved_at?: string | null; // Timestamp of approval
 }
 
 export interface Session {
     id: string;
     user_id: number;
     expires_at: string;
+    selected_branch?: string; // Runtime branch context
     user?: User; // Joined user data
 }
 
-export async function createSession(user: User): Promise<string> {
+export async function createSession(user: User, selectedBranch?: string): Promise<string> {
     const sessionId = generateSessionId();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
 
+    // Use provided selectedBranch, or fall back to user's assigned_branch
+    const branchToStore = selectedBranch || user.assigned_branch || null;
+
     await query(
-        "INSERT INTO sessions (id, user_id, expires_at) VALUES ($1, $2, $3)",
-        [sessionId, user.id, expiresAt]
+        "INSERT INTO sessions (id, user_id, expires_at, selected_branch) VALUES ($1, $2, $3, $4)",
+        [sessionId, user.id, expiresAt, branchToStore]
     );
 
     return sessionId;
 }
 
-export async function getSession(sessionId: string): Promise<{ user: User; expiresAt: number } | null> {
+export async function getSession(sessionId: string): Promise<{ user: User; expiresAt: number; selectedBranch?: string } | null> {
     const sessionRes = await query("SELECT * FROM sessions WHERE id = $1", [sessionId]);
     if (sessionRes.rows.length === 0) return null;
 
@@ -60,8 +68,13 @@ export async function getSession(sessionId: string): Promise<{ user: User; expir
             email: user.email,
             role: user.role,
             employee_id: user.employee_id,
-            is_active: user.is_active
+            is_active: user.is_active,
+            assigned_branch: user.assigned_branch,
+            hr_approval_status: user.hr_approval_status,
+            hr_approved_by: user.hr_approved_by,
+            hr_approved_at: user.hr_approved_at
         },
+        selectedBranch: session.selected_branch,
         expiresAt
     };
 }

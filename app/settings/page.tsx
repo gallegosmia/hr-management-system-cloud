@@ -50,10 +50,13 @@ export default function SettingsPage() {
 
     const fetchData = async () => {
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const [settingsRes, usersRes, employeesRes] = await Promise.all([
                 fetch('/api/settings'),
                 fetch('/api/users'),
-                fetch('/api/employees')
+                fetch('/api/employees', {
+                    headers: { 'x-session-id': sessionId || '' }
+                })
             ]);
 
             const settingsData = await settingsRes.json();
@@ -65,9 +68,11 @@ export default function SettingsPage() {
                 setLeaveSettings(settingsData.leave_config);
             }
             setUsers(usersData);
-            setEmployees(employeesData);
+            // Ensure employeesData is an array
+            setEmployees(Array.isArray(employeesData) ? employeesData : []);
         } catch (error) {
             console.error('Failed to fetch data:', error);
+            setEmployees([]); // Fallback to empty array
         } finally {
             setLoading(false);
         }
@@ -234,6 +239,12 @@ export default function SettingsPage() {
                 >
                     Leave Configuration
                 </button>
+                <button
+                    className={`px-4 py-2 font-medium ${activeTab === 'backup' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    onClick={() => setActiveTab('backup')}
+                >
+                    Backup & Restore
+                </button>
             </div>
 
             {activeTab === 'general' && (
@@ -365,6 +376,78 @@ export default function SettingsPage() {
                     </div>
                 </div>
             )}
+
+            {activeTab === 'backup' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="card">
+                        <div className="card-body">
+                            <h3 className="text-lg font-medium mb-2">Backup Database</h3>
+                            <p className="text-gray-500 text-sm mb-6">
+                                Create a backup of your current database (JSON format). You can use this file to restore your data later if needed.
+                            </p>
+                            <button
+                                onClick={() => window.open('/api/system/backup', '_blank')}
+                                className="btn bg-green-600 text-white hover:bg-green-700 w-full flex items-center justify-center gap-2"
+                            >
+                                <span>⬇️</span> Download Backup
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <div className="card-body">
+                            <h3 className="text-lg font-medium mb-2">Restore Database</h3>
+                            <p className="text-gray-500 text-sm mb-6">
+                                Upload a previously saved backup file (.json) to restore your system data.
+                                <br />
+                                <span className="text-red-500 font-bold">WARNING: This will overwrite your current data!</span>
+                            </p>
+
+                            <input
+                                type="file"
+                                accept=".json"
+                                id="restore-file"
+                                className="block w-full text-sm text-gray-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-md file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-blue-50 file:text-blue-700
+                                hover:file:bg-blue-100 mb-4"
+                                onChange={async (e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                        if (confirm("Are you sure you want to RESTORE the database? This will overwrite all current data and cannot be undone.")) {
+                                            const formData = new FormData();
+                                            formData.append('file', e.target.files[0]);
+
+                                            try {
+                                                const res = await fetch('/api/system/backup', {
+                                                    method: 'POST',
+                                                    body: formData
+                                                });
+                                                const data = await res.json();
+                                                if (res.ok) {
+                                                    alert('Database restored successfully! The page will now reload.');
+                                                    window.location.reload();
+                                                } else {
+                                                    alert('Restore failed: ' + data.error);
+                                                }
+                                            } catch (err) {
+                                                console.error(err);
+                                                alert('An error occurred during restoration.');
+                                            }
+                                            // Reset input
+                                            e.target.value = '';
+                                        } else {
+                                            e.target.value = ''; // Cancelled
+                                        }
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </DashboardLayout>
     );
 }

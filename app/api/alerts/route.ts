@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
             const daysSinceHire = differenceInDays(new Date(), new Date(emp.date_hired));
             const missingItems: string[] = [];
 
+            /* 
             // Check 201 file completion
             const checklistFields = [
                 { field: 'personal_info_complete', label: 'Personal Information' },
@@ -93,6 +94,7 @@ export async function GET(request: NextRequest) {
                     created_at: new Date().toISOString()
                 });
             }
+            */
 
             // Alert: Probationary period ending (within 30 days of 6 months)
             if (emp.employment_status === 'Probationary') {

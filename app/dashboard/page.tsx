@@ -25,21 +25,25 @@ export default function DashboardPage() {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
+            const sessionId = localStorage.getItem('sessionId');
             const [statsRes, leavesRes, empRes] = await Promise.all([
                 fetch('/api/dashboard/stats'),
                 fetch('/api/leave?status=Approved'),
-                fetch('/api/employees')
+                fetch('/api/employees', {
+                    headers: { 'x-session-id': sessionId || '' }
+                })
             ]);
 
             const statsData = await statsRes.json();
             const leavesData = await leavesRes.json();
             const empData = await empRes.json();
+            const employees = Array.isArray(empData) ? empData : [];
 
             setStats(statsData);
-            setLeaves(leavesData.slice(0, 10)); // Limit to 10 for timeline
+            setLeaves(Array.isArray(leavesData) ? leavesData.slice(0, 10) : []);
 
             // Get last 4 hired employees for onboarding
-            const recentlyHired = empData
+            const recentlyHired = employees
                 .sort((a: any, b: any) => new Date(b.date_hired).getTime() - new Date(a.date_hired).getTime())
                 .slice(0, 4);
             setOnboarding(recentlyHired);

@@ -1,0 +1,6 @@
+﻿Testing ID: 1
+Attempting getEmployeeById...
+Found employee: JOSEPHINE ARRADAZA
+Testing ID: 2025-0001
+Attempting query by employee_id...
+Found employee: JOSEPHINE ARRADAZA

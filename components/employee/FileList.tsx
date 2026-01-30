@@ -14,7 +14,10 @@ function FileList({ employeeId, showAlert, showConfirm, refreshTrigger }: {
     useEffect(() => {
         const fetchFiles = async () => {
             try {
-                const res = await fetch(`/api/employees/documents?employeeId=${employeeId}`);
+                const sessionId = localStorage.getItem('sessionId');
+                const res = await fetch(`/api/employees/documents?employeeId=${employeeId}`, {
+                    headers: { 'x-session-id': sessionId || '' }
+                });
                 if (res.ok) {
                     const data = await res.json();
                     setFiles(data);
@@ -43,8 +46,10 @@ function FileList({ employeeId, showAlert, showConfirm, refreshTrigger }: {
     const handleDelete = (filename: string) => {
         showConfirm('Are you sure you want to delete this file?', async () => {
             try {
+                const sessionId = localStorage.getItem('sessionId');
                 const res = await fetch(`/api/employees/documents?employeeId=${employeeId}&filename=${filename}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: { 'x-session-id': sessionId || '' }
                 });
                 if (res.ok) {
                     setFiles(prev => prev.filter(f => f.filename !== filename));

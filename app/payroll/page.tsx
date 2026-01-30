@@ -28,9 +28,14 @@ export default function PayrollPage() {
 
     const fetchData = async () => {
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const [runsRes, empRes] = await Promise.all([
-                fetch('/api/payroll'),
-                fetch('/api/employees')
+                fetch('/api/payroll', {
+                    headers: { 'x-session-id': sessionId || '' }
+                }),
+                fetch('/api/employees', {
+                    headers: { 'x-session-id': sessionId || '' }
+                })
             ]);
 
             if (runsRes.ok && empRes.ok) {
@@ -46,7 +51,7 @@ export default function PayrollPage() {
 
                 setStats({
                     totalCost,
-                    employeeCount: employees.length,
+                    employeeCount: Array.isArray(employees) ? employees.length : 0,
                     pendingReimbursements: 4500 // Mock data for now as per design
                 });
             }
@@ -61,7 +66,11 @@ export default function PayrollPage() {
         if (!confirm('Are you sure you want to delete this payroll run? This action cannot be undone.')) return;
 
         try {
-            const response = await fetch(`/api/payroll/${id}`, { method: 'DELETE' });
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch(`/api/payroll/${id}`, {
+                method: 'DELETE',
+                headers: { 'x-session-id': sessionId || '' }
+            });
             if (response.ok) {
                 setPayrollRuns(prev => prev.filter(run => run.id !== id));
             } else {

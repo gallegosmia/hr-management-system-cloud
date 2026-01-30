@@ -10,7 +10,21 @@ export interface PayrollInput {
 export function calculateEmployeePayroll(input: PayrollInput) {
     const { employee, selectedDeductions, is15th, isEnd } = input;
 
-    if (!employee.salary_info) return null;
+    if (!employee.salary_info) {
+        return {
+            employee_id: employee.id,
+            employee_name: `${employee.last_name}, ${employee.first_name}`,
+            department: employee.department,
+            position: employee.position,
+            branch: employee.branch || 'N/A',
+            gross_pay: 0,
+            allowances: 0,
+            deductions: 0,
+            deduction_details: {},
+            net_pay: 0,
+            daily_rate: 0
+        };
+    }
     if (['Resigned', 'Terminated'].includes(employee.employment_status)) return null;
 
     const safeDailyRate = parseFloat(employee.salary_info.daily_rate) || 0;

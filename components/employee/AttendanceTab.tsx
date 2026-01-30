@@ -29,7 +29,10 @@ export default function AttendanceTab({ employeeId }: AttendanceTabProps) {
     const fetchAttendance = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/attendance?employee_id=${employeeId}&start_date=${startDate}&end_date=${endDate}`);
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch(`/api/attendance?employee_id=${employeeId}&start_date=${startDate}&end_date=${endDate}`, {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             if (res.ok) {
                 const data = await res.json();
                 setRecords(data);

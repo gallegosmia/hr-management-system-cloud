@@ -31,7 +31,10 @@ export default function LeaveHistoryTab({ employeeId }: LeaveHistoryTabProps) {
             const year = new Date().getFullYear();
             const startStr = `${year}-01-01`;
             const endStr = `${year}-12-31`;
-            const res = await fetch(`/api/attendance?employee_id=${employeeId}&start_date=${startStr}&end_date=${endStr}`);
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch(`/api/attendance?employee_id=${employeeId}&start_date=${startStr}&end_date=${endStr}`, {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             if (res.ok) {
                 const data = await res.json();
                 // Filter for leave records
@@ -47,7 +50,10 @@ export default function LeaveHistoryTab({ employeeId }: LeaveHistoryTabProps) {
 
     const fetchBalance = async () => {
         try {
-            const res = await fetch(`/api/employees?id=${employeeId}`);
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch(`/api/employees?id=${employeeId}`, {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             if (res.ok) {
                 const data = await res.json();
                 const balance = data.leave_balance ?? 5;

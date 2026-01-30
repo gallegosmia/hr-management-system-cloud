@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 
+// Helper to make response serializable
+const serialize = (obj: any) => {
+    if (obj === undefined || obj === null) return obj;
+    return JSON.parse(JSON.stringify(obj));
+};
+
 // GET - Fetch violations and warnings for an employee
 export async function GET(request: NextRequest) {
     try {
@@ -22,7 +28,7 @@ export async function GET(request: NextRequest) {
                  ORDER BY w.warning_date DESC`,
                 [employeeId]
             );
-            return NextResponse.json(result.rows);
+            return NextResponse.json(serialize(result.rows));
         }
 
         // Default to violations
@@ -35,11 +41,11 @@ export async function GET(request: NextRequest) {
              ORDER BY v.incident_date DESC`,
             [employeeId]
         );
-        return NextResponse.json(result.rows);
+        return NextResponse.json(serialize(result.rows));
 
     } catch (error: any) {
         console.error('Fetch violations error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json(serialize({ error: error.message }), { status: 500 });
     }
 }
 
@@ -72,7 +78,7 @@ export async function POST(request: NextRequest) {
                     recordData.remarks
                 ]
             );
-            return NextResponse.json(result.rows[0]);
+            return NextResponse.json(serialize(result.rows[0]));
         }
 
         // Default: Add violation
@@ -95,11 +101,10 @@ export async function POST(request: NextRequest) {
                 recordData.remarks
             ]
         );
-        return NextResponse.json(result.rows[0]);
-
+        return NextResponse.json(serialize(result.rows[0]));
     } catch (error: any) {
         console.error('Add violation error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json(serialize({ error: error.message }), { status: 500 });
     }
 }
 
@@ -141,7 +146,7 @@ export async function PUT(request: NextRequest) {
                     id
                 ]
             );
-            return NextResponse.json(result.rows[0]);
+            return NextResponse.json(serialize(result.rows[0]));
         }
 
         // Default: Update violation
@@ -176,11 +181,10 @@ export async function PUT(request: NextRequest) {
                 id
             ]
         );
-        return NextResponse.json(result.rows[0]);
-
+        return NextResponse.json(serialize(result.rows[0]));
     } catch (error: any) {
         console.error('Update violation error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json(serialize({ error: error.message }), { status: 500 });
     }
 }
 

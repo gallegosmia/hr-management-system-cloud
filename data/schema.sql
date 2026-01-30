@@ -11,7 +11,11 @@ CREATE TABLE IF NOT EXISTS users (
     employee_id INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP WITH TIME ZONE,
-    is_active INTEGER DEFAULT 0, -- 0 for pending, 1 for active
+    is_active INTEGER DEFAULT 0,
+    assigned_branch VARCHAR(100),
+    hr_approval_status VARCHAR(50), -- PENDING, APPROVED, REJECTED (for HR roles)
+    hr_approved_by INTEGER REFERENCES users(id),
+    hr_approved_at TIMESTAMP WITH TIME ZONE, -- Branch assignment for access control -- 0 for pending, 1 for active
     status VARCHAR(50) DEFAULT 'PENDING_APPROVAL',
     reset_otp VARCHAR(20),
     reset_otp_expires_at TIMESTAMP WITH TIME ZONE
@@ -216,7 +220,8 @@ CREATE TABLE IF NOT EXISTS education (
 CREATE TABLE IF NOT EXISTS sessions (
     id TEXT PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    expires_at TIMESTAMP,
+    selected_branch VARCHAR(100) -- Runtime branch context WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
