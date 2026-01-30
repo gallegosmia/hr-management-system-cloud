@@ -48,6 +48,10 @@ interface Employee {
     blood_type?: string;
     religion?: string;
     citizen_id_address?: string;
+    emergency_contact_name?: string;
+    emergency_contact_number?: string;
+    emergency_contact_relationship?: string;
+    emergency_contact_address?: string;
     training_details?: string;
     disciplinary_details?: string;
 }
@@ -63,7 +67,7 @@ export default function EmployeeDetailPage() {
 
     // Tab State
     const [activeTab, setActiveTab] = useState('Personal info');
-    const [tabs, setTabs] = useState(['Personal info', 'Payroll details', 'Documents', 'Payroll history', 'Leave history', 'Attendance', 'Trainings', 'Violations']);
+    const [tabs, setTabs] = useState(['Personal info', 'Payroll details', 'Documents', 'Payroll history', 'Leave history', 'Attendance', 'Trainings and Awards', 'Violations']);
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -73,7 +77,7 @@ export default function EmployeeDetailPage() {
                 setUser(parsedUser);
                 if (parsedUser.role === 'Employee') {
                     // Employees can see Trainings but not Violations
-                    setTabs(['Personal info', 'Documents', 'Payroll history', 'Leave history', 'Attendance', 'Trainings']);
+                    setTabs(['Personal info', 'Documents', 'Payroll history', 'Leave history', 'Attendance', 'Trainings and Awards']);
                 }
             } catch (e) {
                 console.error("Failed to parse user data", e);
@@ -96,12 +100,7 @@ export default function EmployeeDetailPage() {
     const [reportStartDate, setReportStartDate] = useState(format(new Date(new Date().getFullYear(), 0, 1), 'yyyy-MM-dd'));
     const [reportEndDate, setReportEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const [generatingProfile, setGeneratingProfile] = useState(false);
-    const [currentTime, setCurrentTime] = useState(new Date());
 
-    useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-        return () => clearInterval(timer);
-    }, []);
 
     // File Upload State
     const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -137,14 +136,21 @@ export default function EmployeeDetailPage() {
                     return;
                 }
 
+                const sessionId = localStorage.getItem('sessionId');
+
                 // Fetch Employee
-                const empRes = await fetch(`/api/employees?id=${params.id}`);
+                const empRes = await fetch(`/api/employees?id=${params.id}`, {
+                    headers: { 'x-session-id': sessionId || '' }
+                });
                 const empData = await empRes.json();
 
                 if (empRes.ok) {
                     // Fetch Education
                     try {
-                        const eduRes = await fetch(`/api/employees/education?employee_id=${empData.id}`);
+                        const sessionId = localStorage.getItem('sessionId');
+                        const eduRes = await fetch(`/api/employees/education?employee_id=${empData.id}`, {
+                            headers: { 'x-session-id': sessionId || '' }
+                        });
                         if (eduRes.ok) {
                             const eduData = await eduRes.json();
                             empData.education = eduData;
@@ -175,7 +181,10 @@ export default function EmployeeDetailPage() {
 
     const fetchAttendanceSummary = async (empId: number, start: string, end: string) => {
         try {
-            const res = await fetch(`/api/attendance/report/individual?employeeId=${empId}&start=${start}&end=${end}`);
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch(`/api/attendance/report/individual?employeeId=${empId}&start=${start}&end=${end}`, {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             if (res.ok) {
                 const data = await res.json();
                 setAttendanceSummary({
@@ -200,7 +209,12 @@ export default function EmployeeDetailPage() {
         formData.append('documentType', selectedDocType);
 
         try {
-            const res = await fetch('/api/employees/documents', { method: 'POST', body: formData });
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch('/api/employees/documents', {
+                method: 'POST',
+                headers: { 'x-session-id': sessionId || '' },
+                body: formData
+            });
             if (res.ok) {
                 showAlert('File uploaded successfully');
                 setPendingFile(null);
@@ -223,9 +237,37 @@ export default function EmployeeDetailPage() {
         if (!employee) return;
 
         try {
+            // Handle Educational Background section separately
+            if (editSection === 'education' && updatedData.education) {
+                const sessionId = localStorage.getItem('sessionId');
+                const res = await fetch('/api/employees/education', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-session-id': sessionId || ''
+                    },
+                    body: JSON.stringify({ employee_id: employee.id, education: updatedData.education })
+                });
+
+                if (res.ok) {
+                    setEmployee({ ...employee, education: updatedData.education as any });
+                    setEducation(updatedData.education as any);
+                    showAlert('Educational background updated successfully', 'Success');
+                    setEditModalOpen(false);
+                } else {
+                    const data = await res.json();
+                    showAlert(`Failed to update education: ${data.error}`);
+                }
+                return;
+            }
+
+            const sessionId = localStorage.getItem('sessionId');
             const res = await fetch('/api/employees', {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
                 body: JSON.stringify({ id: employee.id, ...updatedData })
             });
 
@@ -250,7 +292,11 @@ export default function EmployeeDetailPage() {
             `Are you sure you want to delete ${employee.first_name} ${employee.last_name}? This action cannot be undone.`,
             async () => {
                 try {
-                    const res = await fetch(`/api/employees?id=${employee.id}`, { method: 'DELETE' });
+                    const sessionId = localStorage.getItem('sessionId');
+                    const res = await fetch(`/api/employees?id=${employee.id}`, {
+                        method: 'DELETE',
+                        headers: { 'x-session-id': sessionId || '' }
+                    });
                     if (res.ok) {
                         router.push('/employees');
                     } else {
@@ -269,9 +315,13 @@ export default function EmployeeDetailPage() {
     const handleUpdatePayrollDetails = async (salaryInfo: any) => {
         if (!employee) return;
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const res = await fetch('/api/employees', {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
                 body: JSON.stringify({ id: employee.id, salary_info: salaryInfo })
             });
 
@@ -526,33 +576,9 @@ export default function EmployeeDetailPage() {
                 />
             )}
 
-            <div className="employee-branded-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{
-                        background: '#fbbf24',
-                        color: '#064e3b',
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 900,
-                        fontSize: '1.5rem',
-                        boxShadow: '0 0 15px rgba(251, 191, 36, 0.4)'
-                    }}>M</div>
-                    <div>
-                        <div style={{ fontWeight: 700, fontSize: '1.125rem', letterSpacing: '0.02em' }}>Melann Lending</div>
-                        <div style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 500 }}>Investor Corporation</div>
-                    </div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{format(currentTime, 'EEEE, MMMM dd, yyyy')}</div>
-                    <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>at {format(currentTime, 'HH:mm:ss a')} PST</div>
-                </div>
-            </div>
 
-            <div className="employee-201-bg" style={{ minHeight: 'calc(100vh - 70px)', padding: '2rem 0' }}>
+
+            <div className="employee-201-bg" style={{ minHeight: 'calc(100vh - 70px)', padding: '1rem 0' }}>
                 <div className="employee-201-pattern"></div>
 
                 <div style={{
@@ -561,34 +587,39 @@ export default function EmployeeDetailPage() {
                     maxWidth: '1200px',
                     margin: '0 auto',
                     padding: '0 1.5rem',
-                    textAlign: 'center',
-                    marginBottom: '3rem'
+                    textAlign: 'left',
+                    marginBottom: '0.75rem',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'baseline',
+                    borderBottom: '1px solid rgba(255,255,255,0.2)',
+                    paddingBottom: '0.5rem'
                 }}>
-                    <h1 style={{ color: 'white', fontSize: '2.5rem', fontWeight: 800, textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                        Employee 201 File Information
+                    <h1 style={{ color: 'white', fontSize: '1.25rem', fontWeight: 800, textShadow: '0 2px 4px rgba(0,0,0,0.2)', margin: 0 }}>
+                        201 File Information
                     </h1>
-                    <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '1.125rem', marginTop: '0.5rem', fontStyle: 'italic' }}>
+                    <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', margin: 0, fontStyle: 'italic' }}>
                         "Lend. Empower. Grow."
                     </p>
                 </div>
 
-                <div style={{ position: 'relative', zIndex: 10, maxWidth: '1200px', margin: '0 auto', padding: '0 1rem 2rem' }}>
+                <div style={{ position: 'relative', zIndex: 10, maxWidth: '1200px', margin: '0 auto', padding: '0 1rem 0.5rem' }}>
 
                     {/* Header / Breadcrumbs */}
-                    <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Link href="/employees" style={{
                             color: 'white',
                             textDecoration: 'none',
-                            fontSize: '0.925rem',
+                            fontSize: '0.75rem',
                             fontWeight: 600,
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.5rem',
-                            padding: '0.5rem 1rem',
+                            gap: '0.3rem',
+                            padding: '0.3rem 0.6rem',
                             background: 'rgba(255,255,255,0.1)',
-                            borderRadius: '8px',
+                            borderRadius: '4px',
                             backdropFilter: 'blur(4px)',
-                            border: '1px solid rgba(255,255,255,0.2)'
+                            border: '1px solid rgba(255,255,255,0.1)'
                         }}>
                             <span style={{ fontSize: '1.2rem' }}>←</span> Return to Masterlist
                         </Link>
@@ -598,38 +629,38 @@ export default function EmployeeDetailPage() {
                                     <button
                                         onClick={handleDeleteEmployee}
                                         style={{
-                                            padding: '0.5rem 1rem',
+                                            padding: '0.4rem 0.75rem',
                                             background: '#fef2f2',
                                             color: '#dc2626',
                                             border: '1px solid #fee2e2',
                                             borderRadius: '6px',
                                             cursor: 'pointer',
-                                            fontSize: '0.875rem',
+                                            fontSize: '0.8rem',
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: '0.5rem',
+                                            gap: '0.4rem',
                                             fontWeight: 600
                                         }}
                                     >
-                                        <span>🗑️</span> Delete Employee
+                                        <span>🗑️</span> Delete
                                     </button>
                                     <button
                                         onClick={generateProfilePDF}
                                         disabled={generatingProfile}
                                         style={{
-                                            padding: '0.5rem 1rem',
+                                            padding: '0.4rem 0.75rem',
                                             background: '#2563eb',
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: '6px',
                                             cursor: generatingProfile ? 'not-allowed' : 'pointer',
-                                            fontSize: '0.875rem',
+                                            fontSize: '0.8rem',
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: '0.5rem'
+                                            gap: '0.4rem'
                                         }}
                                     >
-                                        <span>📄</span> {generatingProfile ? 'Generating...' : 'Download 201 File PDF'}
+                                        <span>📄</span> {generatingProfile ? '...' : 'Download PDF'}
                                     </button>
                                 </>
                             )}
@@ -639,16 +670,16 @@ export default function EmployeeDetailPage() {
                     {/* Navbar/Tabs */}
                     <div style={{
                         background: 'white',
-                        padding: '0 1.5rem',
-                        borderRadius: '12px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                        padding: '0 1rem',
+                        borderRadius: '8px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
                         border: '1px solid var(--gray-200)',
-                        marginBottom: '2rem',
+                        marginBottom: '0.5rem',
                         display: 'flex',
-                        gap: '2.5rem',
+                        gap: '1.25rem',
                         overflowX: 'auto',
                         position: 'sticky',
-                        top: '70px',
+                        top: '48px',
                         zIndex: 40
                     }}>
                         {tabs.map(tab => (
@@ -656,14 +687,14 @@ export default function EmployeeDetailPage() {
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 style={{
-                                    padding: '1.25rem 0',
+                                    padding: '0.5rem 0',
                                     border: 'none',
                                     background: 'none',
                                     borderBottom: activeTab === tab ? '3px solid var(--primary-600)' : '3px solid transparent',
                                     color: activeTab === tab ? 'var(--primary-700)' : 'var(--gray-500)',
                                     fontWeight: activeTab === tab ? 700 : 500,
                                     cursor: 'pointer',
-                                    fontSize: '0.925rem',
+                                    fontSize: '0.8rem',
                                     whiteSpace: 'nowrap',
                                     transition: 'all 0.2s'
                                 }}
@@ -755,7 +786,7 @@ export default function EmployeeDetailPage() {
                             />
                         )}
 
-                        {activeTab === 'Trainings' && (
+                        {activeTab === 'Trainings and Awards' && (
                             <TrainingsTab employeeId={employee.id} />
                         )}
 
@@ -796,7 +827,7 @@ export default function EmployeeDetailPage() {
                     background: rgba(6, 78, 59, 0.95);
                     backdrop-filter: blur(10px);
                     border-bottom: 2px solid #fbbf24;
-                    padding: 1rem 2rem;
+                    padding: 0.5rem 1.5rem;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;

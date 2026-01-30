@@ -25,7 +25,12 @@ export default function TransportationAllowancePage() {
 
     const fetchEmployees = async () => {
         try {
-            const response = await fetch('/api/employees');
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch('/api/employees', {
+                headers: {
+                    'x-session-id': sessionId || ''
+                }
+            });
             if (response.ok) {
                 const data = await response.json();
                 if (Array.isArray(data)) {
@@ -46,6 +51,7 @@ export default function TransportationAllowancePage() {
             }
         } catch (error) {
             console.error('Error fetching employees:', error);
+            setEmployees([]);
         } finally {
             setLoading(false);
         }

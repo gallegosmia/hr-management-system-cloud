@@ -76,12 +76,39 @@ export default function EmployeesPage() {
 
     const fetchEmployees = async () => {
         try {
-            const response = await fetch('/api/employees');
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch('/api/employees', {
+                headers: {
+                    'x-session-id': sessionId || ''
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    // Session invalid or unauthorized, redirect to login
+                    localStorage.removeItem('sessionId');
+                    localStorage.removeItem('user');
+                    window.location.href = '/';
+                    return;
+                }
+                throw new Error('Failed to fetch employees');
+            }
+
             const data = await response.json();
-            setEmployees(data);
-            setFilteredEmployees(data);
+
+            // Ensure data is an array
+            if (Array.isArray(data)) {
+                setEmployees(data);
+                setFilteredEmployees(data);
+            } else {
+                console.error('Invalid data format received:', data);
+                setEmployees([]);
+                setFilteredEmployees([]);
+            }
         } catch (error) {
             console.error('Failed to fetch employees:', error);
+            setEmployees([]);
+            setFilteredEmployees([]);
         } finally {
             setLoading(false);
         }
@@ -98,7 +125,13 @@ export default function EmployeesPage() {
 
     const performDelete = async (id: number) => {
         try {
-            const res = await fetch(`/api/employees?id=${id}`, { method: 'DELETE' });
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch(`/api/employees?id=${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'x-session-id': sessionId || ''
+                }
+            });
             if (res.ok) {
                 setEmployees(prev => prev.filter(e => e.id !== id));
                 setFilteredEmployees(prev => prev.filter(e => e.id !== id));
@@ -114,7 +147,10 @@ export default function EmployeesPage() {
 
     const fetchDepartments = async () => {
         try {
-            const response = await fetch('/api/employees/departments');
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch('/api/employees/departments', {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             const data = await response.json();
             setDepartments(data);
         } catch (error) {
@@ -124,7 +160,10 @@ export default function EmployeesPage() {
 
     const fetchBranches = async () => {
         try {
-            const response = await fetch('/api/employees/branches');
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch('/api/employees/branches', {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             const data = await response.json();
             setBranches(data);
         } catch (error) {
@@ -280,65 +319,85 @@ export default function EmployeesPage() {
             <div style={{ padding: '0 0.5rem' }}>
 
                 {/* Header Section */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                     <div>
-                        <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#111827', margin: 0, marginBottom: '0.5rem' }}>Employee</h1>
-                        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem' }}>
-                            <span style={{ color: '#10b981', fontWeight: 600 }}>• Active {activeCount}</span>
-                            <span style={{ color: '#6b7280' }}>• Inactive {inactiveCount}</span>
+                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: 0, letterSpacing: '-0.5px' }}>Staff Registry</h1>
+                        <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: '4px 0 0 0' }}>Centralized 201 file management and directory services.</p>
+                        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', marginTop: '8px', fontWeight: 600 }}>
+                            <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></span>
+                                Active {activeCount}
+                            </span>
+                            <span style={{ color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#9ca3af' }}></span>
+                                Inactive {inactiveCount}
+                            </span>
                         </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '0.75rem' }}>
-
-                        <button onClick={exportToPDF} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', fontWeight: 500, color: '#374151', cursor: 'pointer' }}>
+                        <button onClick={exportToPDF} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '10px', fontWeight: 600, color: '#4b5563', cursor: 'pointer', fontSize: '0.875rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                             <span>📄</span> Export
                         </button>
-                        <Link href="/employees/add" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#065f46', color: 'white', borderRadius: '8px', fontWeight: 600, textDecoration: 'none', border: 'none' }}>
-                            <span>+</span> Add Employee
+                        <Link href="/employees/add" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', background: '#10b981', color: 'white', borderRadius: '10px', fontWeight: 700, textDecoration: 'none', border: 'none', fontSize: '0.875rem', boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)' }}>
+                            <span>+</span> REGISTER NEW EMPLOYEE
                         </Link>
                     </div>
                 </div>
 
                 {/* Filters Section */}
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{
+                    display: 'flex',
+                    gap: '1rem',
+                    marginBottom: '1.5rem',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    background: '#ffffff',
+                    padding: '1rem',
+                    borderRadius: '16px',
+                    border: '1px solid #f1f5f9',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
+                }}>
 
                     {/* Search */}
-                    <div style={{ position: 'relative', minWidth: '300px' }}>
+                    <div style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
                         <input
                             type="text"
-                            placeholder="Search..."
+                            placeholder="Search by name, ID or position..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             style={{
                                 width: '100%',
-                                padding: '0.75rem 1rem 0.75rem 2.5rem',
-                                borderRadius: '8px',
-                                border: '1px solid #e5e7eb',
+                                padding: '0.625rem 1rem 0.625rem 2.5rem',
+                                borderRadius: '10px',
+                                border: '1px solid #e2e8f0',
                                 outline: 'none',
-                                background: 'white'
+                                background: '#f8fafc',
+                                fontSize: '0.875rem',
+                                color: '#1e293b',
+                                transition: 'all 0.2s'
                             }}
                         />
-                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}>🔍</span>
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.9rem' }}>🔍</span>
                     </div>
 
-                    {/* Filter Buttons (Simulated Dropdowns) */}
-                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    {/* Filter Buttons */}
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
                         <select
                             value={departments.includes(departmentFilter) ? departmentFilter : ''}
                             onChange={(e) => setDepartmentFilter(e.target.value)}
-                            style={{ padding: '0.75rem 1rem', borderRadius: '8px', border: 'none', background: '#f3f4f6', color: '#4b5563', fontWeight: 500, cursor: 'pointer', outline: 'none' }}
+                            style={{ padding: '0.625rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#4b5563', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', outline: 'none', minWidth: '160px' }}
                         >
-                            <option value="">Role / Dept</option>
+                            <option value="">ALL DEPARTMENTS</option>
                             {departments.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
 
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            style={{ padding: '0.75rem 1rem', borderRadius: '8px', border: 'none', background: '#f3f4f6', color: '#4b5563', fontWeight: 500, cursor: 'pointer', outline: 'none' }}
+                            style={{ padding: '0.625rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#4b5563', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', outline: 'none' }}
                         >
-                            <option value="">Status</option>
+                            <option value="">ALL STATUS</option>
                             <option value="Regular">Regular</option>
                             <option value="Probationary">Probationary</option>
                             <option value="Contractual">Contractual</option>
@@ -349,51 +408,55 @@ export default function EmployeesPage() {
                         <select
                             value={branchFilter}
                             onChange={(e) => setBranchFilter(e.target.value)}
-                            style={{ padding: '0.75rem 1rem', borderRadius: '8px', border: 'none', background: '#f3f4f6', color: '#4b5563', fontWeight: 500, cursor: 'pointer', outline: 'none' }}
+                            style={{ padding: '0.625rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#4b5563', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', outline: 'none', minWidth: '140px' }}
                         >
-                            <option value="">Branch</option>
+                            <option value="">ALL BRANCHES</option>
                             {branches.map(b => <option key={b} value={b}>{b}</option>)}
                         </select>
 
-                        <button style={{ padding: '0.75rem 1rem', borderRadius: '8px', border: 'none', background: '#f3f4f6', color: '#4b5563', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span>⚡</span> Advance Filter
+                        <button style={{ padding: '0.625rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#4b5563', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span>⚡</span> Filters
                         </button>
                     </div>
 
-                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         {/* View Toggles */}
-                        <div style={{ display: 'flex', gap: '2px', background: '#e5e7eb', padding: '2px', borderRadius: '6px' }}>
+                        <div style={{ display: 'flex', gap: '2px', background: '#f1f5f9', padding: '3px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                             <button
                                 onClick={() => setViewMode('grid')}
                                 style={{
-                                    padding: '4px 12px',
-                                    background: viewMode === 'grid' ? 'white' : 'transparent',
+                                    padding: '4px 8px',
+                                    background: viewMode === 'grid' ? '#ffffff' : 'transparent',
                                     border: 'none',
-                                    borderRadius: '4px',
+                                    borderRadius: '7px',
                                     cursor: 'pointer',
-                                    boxShadow: viewMode === 'grid' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
-                                    color: viewMode === 'grid' ? '#111827' : '#6b7280',
-                                    fontWeight: 600,
-                                    fontSize: '0.8rem'
+                                    boxShadow: viewMode === 'grid' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                                    color: viewMode === 'grid' ? '#10b981' : '#94a3b8',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
                                 }}
+                                title="Grid View"
                             >
-                                Grid
+                                <span style={{ fontSize: '1.2rem' }}>⊞</span>
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
                                 style={{
-                                    padding: '4px 12px',
-                                    background: viewMode === 'list' ? 'white' : 'transparent',
+                                    padding: '4px 8px',
+                                    background: viewMode === 'list' ? '#ffffff' : 'transparent',
                                     border: 'none',
-                                    borderRadius: '4px',
+                                    borderRadius: '7px',
                                     cursor: 'pointer',
-                                    boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
-                                    color: viewMode === 'list' ? '#111827' : '#6b7280',
-                                    fontWeight: 600,
-                                    fontSize: '0.8rem'
+                                    boxShadow: viewMode === 'list' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                                    color: viewMode === 'list' ? '#10b981' : '#94a3b8',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
                                 }}
+                                title="List View"
                             >
-                                List
+                                <span style={{ fontSize: '1.2rem' }}>≡</span>
                             </button>
                         </div>
                     </div>
@@ -407,9 +470,9 @@ export default function EmployeesPage() {
                 ) : viewMode === 'grid' ? (
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                        gap: '1.5rem',
-                        paddingBottom: '2rem'
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                        gap: '1rem',
+                        paddingBottom: '1.5rem'
                     }}>
                         {filteredEmployees.map(emp => (
                             <EmployeeCard key={emp.id} employee={emp} />

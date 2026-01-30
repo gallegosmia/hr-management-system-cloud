@@ -131,22 +131,27 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
     }
 
     const navigation = [
-        { name: 'Dashboard', href: '/dashboard', icon: '📊', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President', 'Employee'] },
+        { name: 'Dashboard', href: '/dashboard', icon: '📊', roles: ['HR', 'President', 'Vice President', 'Employee'] },
         { name: 'My Profile', href: '/profile', icon: '👤', roles: ['Employee'] },
-        { name: '201 Files', href: '/employees', icon: '📋', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
-        { name: 'Attendance', href: '/attendance', icon: '⏰', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President', 'Employee'] },
-        { name: 'Leave Requests', href: '/leave', icon: '🏖️', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President', 'Employee'] },
-        { name: 'Payroll', href: '/payroll', icon: '🧾', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
-        { name: 'Employee Bonuses', href: '/bonuses', icon: '🎁', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
-        { name: 'Transportation Allowance', href: '/transportation', icon: '🚗', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
-        { name: 'Reports', href: '/reports', icon: '📈', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President'] },
-        { name: 'Kiosk Scanner', href: '/attendance/kiosk', icon: '📱', roles: ['Admin', 'HR', 'Manager', 'President', 'Vice President', 'Employee'] },
-        { name: 'User Management', href: '/users', icon: '👥', roles: ['Admin'] },
+        { name: '201 Files', href: '/employees', icon: '📋', roles: ['HR', 'President', 'Vice President'] },
+        { name: 'Attendance', href: '/attendance', icon: '⏰', roles: ['HR', 'President', 'Vice President', 'Employee'] },
+        { name: 'Leave Requests', href: '/leave', icon: '🏖️', roles: ['HR', 'President', 'Vice President', 'Employee'] },
+        { name: 'Payroll', href: '/payroll', icon: '🧾', roles: ['HR', 'President', 'Vice President'] },
+        { name: 'Employee Bonuses', href: '/bonuses', icon: '🎁', roles: ['HR', 'President', 'Vice President'] },
+        { name: 'Transportation Allowance', href: '/transportation', icon: '🚗', roles: ['HR', 'President', 'Vice President'] },
+        { name: 'Reports', href: '/reports', icon: '📈', roles: ['HR', 'President', 'Vice President'] },
+        { name: 'Kiosk Scanner', href: '/attendance/kiosk', icon: '📱', roles: ['HR', 'President', 'Vice President', 'Employee'] },
+        { name: 'User Management', href: '/users', icon: '👥', roles: ['President', 'Vice President'] },
     ];
 
-    const filteredNavigation = navigation.filter(item =>
-        item.roles.includes(user.role)
-    );
+    const filteredNavigation = navigation.filter(item => {
+        // User Management is ONLY for superadmin account
+        if (item.name === 'User Management') {
+            return user.username === 'superadmin';
+        }
+        // All other items filtered by role
+        return item.roles.includes(user.role);
+    });
 
     return (
         <div className="premium-dashboard-container">

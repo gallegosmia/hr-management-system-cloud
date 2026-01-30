@@ -93,9 +93,14 @@ export default function ViolationsTab({ employeeId }: Props) {
     const fetchData = async () => {
         setLoading(true);
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const [violationsRes, warningsRes] = await Promise.all([
-                fetch(`/api/employees/violations?employee_id=${employeeId}&type=violations`),
-                fetch(`/api/employees/violations?employee_id=${employeeId}&type=warnings`)
+                fetch(`/api/employees/violations?employee_id=${employeeId}&type=violations`, {
+                    headers: { 'x-session-id': sessionId || '' }
+                }),
+                fetch(`/api/employees/violations?employee_id=${employeeId}&type=warnings`, {
+                    headers: { 'x-session-id': sessionId || '' }
+                })
             ]);
 
             if (violationsRes.ok) {
@@ -124,9 +129,13 @@ export default function ViolationsTab({ employeeId }: Props) {
                 issued_by: user?.employee_id_ref || null
             };
 
+            const sessionId = localStorage.getItem('sessionId');
             const res = await fetch(endpoint, {
                 method,
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
                 body: JSON.stringify(payload)
             });
 
@@ -149,8 +158,10 @@ export default function ViolationsTab({ employeeId }: Props) {
         if (!confirm('Are you sure you want to delete this record?')) return;
 
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const res = await fetch(`/api/employees/violations?id=${id}&type=${type}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: { 'x-session-id': sessionId || '' }
             });
             if (res.ok) {
                 fetchData();

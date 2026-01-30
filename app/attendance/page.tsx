@@ -218,7 +218,10 @@ export default function AttendancePage() {
     // --- Effects ---
     useEffect(() => {
         if (editingRecord?.employee_id) {
-            fetch(`/api/employees?id=${editingRecord.employee_id}`)
+            const sessionId = localStorage.getItem('sessionId');
+            fetch(`/api/employees?id=${editingRecord.employee_id}`, {
+                headers: { 'x-session-id': sessionId || '' }
+            })
                 .then(res => res.json())
                 .then(data => {
                     setLeaveBalance(data.leave_balance !== undefined ? data.leave_balance : null);
@@ -251,7 +254,12 @@ export default function AttendancePage() {
     // --- Data Fetching ---
     const fetchEmployees = async () => {
         try {
-            const res = await fetch('/api/employees');
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch('/api/employees', {
+                headers: {
+                    'x-session-id': sessionId || ''
+                }
+            });
             if (!res.ok) {
                 console.error('Failed to fetch employees');
                 setEmployees([]);
@@ -275,7 +283,10 @@ export default function AttendancePage() {
 
     const fetchBranches = async () => {
         try {
-            const response = await fetch('/api/employees/branches');
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch('/api/employees/branches', {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             if (!response.ok) {
                 setBranches([]);
                 return;
@@ -295,7 +306,10 @@ export default function AttendancePage() {
     const fetchAttendance = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/attendance?start_date=${startDate}&end_date=${endDate}&t=${new Date().getTime()}`);
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch(`/api/attendance?start_date=${startDate}&end_date=${endDate}&t=${new Date().getTime()}`, {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             if (!res.ok) {
                 console.error('Failed to fetch attendance');
                 setAttendance([]);
@@ -383,9 +397,13 @@ export default function AttendancePage() {
         if (!editingRecord) return;
 
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const res = await fetch('/api/attendance', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
                 body: JSON.stringify({
                     date: editingRecord.date,
                     records: [{
@@ -417,7 +435,11 @@ export default function AttendancePage() {
         if (!confirm('Are you sure you want to delete this attendance record?')) return;
 
         try {
-            const res = await fetch(`/api/attendance?id=${id}`, { method: 'DELETE' });
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch(`/api/attendance?id=${id}`, {
+                method: 'DELETE',
+                headers: { 'x-session-id': sessionId || '' }
+            });
             if (res.ok) {
                 fetchAttendance();
             } else {

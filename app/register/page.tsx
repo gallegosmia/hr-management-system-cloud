@@ -9,6 +9,8 @@ export default function RegisterPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('Employee');
+    const [assignedBranch, setAssignedBranch] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -23,7 +25,7 @@ export default function RegisterPage() {
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, password, role }),
+                body: JSON.stringify({ username, email, password, role, assigned_branch: assignedBranch || null }),
             });
 
             const data = await response.json();
@@ -125,14 +127,42 @@ export default function RegisterPage() {
 
                             <div className="login-input-group">
                                 <label className="form-label">Password</label>
-                                <input
-                                    type="password"
-                                    className="form-input"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                    placeholder="Create a strong password"
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        className="form-input"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                        placeholder="Create a strong password"
+                                        style={{ paddingRight: '45px' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        style={{
+                                            position: 'absolute',
+                                            right: '12px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            background: 'transparent',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            fontSize: '1.25rem',
+                                            padding: '4px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#64748b',
+                                            transition: 'color 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.color = '#1e293b'}
+                                        onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+                                        title={showPassword ? "Hide password" : "Show password"}
+                                    >
+                                        {showPassword ? '👁️‍🗨️' : '👁️'}
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="login-input-group">
@@ -140,15 +170,64 @@ export default function RegisterPage() {
                                 <select
                                     className="form-select"
                                     value={role}
-                                    onChange={(e) => setRole(e.target.value)}
+                                    onChange={(e) => {
+                                        setRole(e.target.value);
+                                        // Clear branch if switching to/from Super Admin
+                                        if (e.target.value === 'President' || e.target.value === 'Vice President') {
+                                            setAssignedBranch('');
+                                        }
+                                    }}
                                     required
                                 >
                                     <option value="Employee">Employee</option>
                                     <option value="HR">HR Officer</option>
-                                    <option value="Manager">Manager</option>
-                                    <option value="Executive">Executive</option>
+                                    <option value="President">President (Super Admin)</option>
+                                    <option value="Vice President">Vice President (Super Admin)</option>
                                 </select>
+                                <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.5rem' }}>
+                                    {role === 'HR' && '⚠️ HR role requires Super Admin approval'}
+                                    {(role === 'President' || role === 'Vice President') && '⚠️ Super Admin roles require security review'}
+                                    {role === 'Employee' && 'ℹ️ Employee role has limited system access'}
+                                </p>
                             </div>
+
+                            {/* Show Branch Dropdown only for HR and Employee roles */}
+                            {(role === 'HR' || role === 'Employee') && (
+                                <div className="login-input-group">
+                                    <label className="form-label">
+                                        Assigned Branch {role === 'HR' && <span style={{ color: '#ef4444' }}>*</span>}
+                                    </label>
+                                    <select
+                                        className="form-select"
+                                        value={assignedBranch}
+                                        onChange={(e) => setAssignedBranch(e.target.value)}
+                                        required={role === 'HR'}
+                                    >
+                                        <option value="">Select Branch</option>
+                                        <option value="Naval">Naval Branch</option>
+                                        <option value="Ormoc">Ormoc Branch</option>
+                                    </select>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.5rem' }}>
+                                        {role === 'HR' ? '⚠️ Required: You will only access employees from this branch' : 'ℹ️ Optional: Your home branch location'}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Show message for Super Admin */}
+                            {(role === 'President' || role === 'Vice President') && (
+                                <div style={{
+                                    padding: '1rem',
+                                    background: '#fef3c7',
+                                    borderRadius: '0.75rem',
+                                    marginBottom: '1.5rem',
+                                    fontSize: '0.8125rem',
+                                    color: '#92400e',
+                                    border: '1px solid #fde68a'
+                                }}>
+                                    <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>👑 Super Admin Access</p>
+                                    <p style={{ margin: 0 }}>Super Admins have access to ALL branches and ALL modules. This role requires security review and manual approval.</p>
+                                </div>
+                            )}
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', marginTop: '0.5rem' }}>
                                 <label className="ios-switch">

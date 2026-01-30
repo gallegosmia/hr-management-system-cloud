@@ -59,6 +59,11 @@ export default function EditEmployeePage() {
         disciplinary_records: 0,
         training_records: 0,
         separation_records: 0,
+        gender: '',
+        religion: '',
+        emergency_contact_name: '',
+        emergency_contact_number: '',
+        citizen_id_address: '',
         salary_info: {
             basic_salary: 0,
             allowances: {
@@ -127,6 +132,11 @@ export default function EditEmployeePage() {
                     remarks: data.remarks || '',
                     training_details: data.training_details || '',
                     disciplinary_details: data.disciplinary_details || '',
+                    gender: data.gender || '',
+                    religion: data.religion || '',
+                    emergency_contact_name: data.emergency_contact_name || '',
+                    emergency_contact_number: data.emergency_contact_number || '',
+                    citizen_id_address: data.citizen_id_address || '',
                     salary_info: {
                         basic_salary: data.salary_info?.basic_salary || 0,
                         daily_rate: data.salary_info?.daily_rate || 0,
@@ -767,8 +777,45 @@ export default function EditEmployeePage() {
                                         value={(formData as any).address || ''}
                                         onChange={handleChange}
                                         className="form-input"
-                                        placeholder="123 Example Street, City, Province"
+                                        placeholder="Current Residence"
                                     />
+                                </div>
+                                <div className="form-group" style={{ marginTop: 'var(--spacing-md)' }}>
+                                    <label className="form-label">Citizen ID Address</label>
+                                    <input
+                                        type="text"
+                                        name="citizen_id_address"
+                                        value={(formData as any).citizen_id_address || ''}
+                                        onChange={handleChange}
+                                        className="form-input"
+                                        placeholder="Matches residential address if blank"
+                                    />
+                                </div>
+
+                                <div style={{ marginTop: 'var(--spacing-lg)', borderTop: '1px solid var(--border-color)', paddingTop: 'var(--spacing-md)' }}>
+                                    <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: 'var(--spacing-md)' }}>🚨 Emergency Contact</h4>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label className="form-label">Contact Name</label>
+                                            <input
+                                                type="text"
+                                                name="emergency_contact_name"
+                                                value={(formData as any).emergency_contact_name}
+                                                onChange={handleChange}
+                                                className="form-input"
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Contact Number</label>
+                                            <input
+                                                type="tel"
+                                                name="emergency_contact_number"
+                                                value={(formData as any).emergency_contact_number}
+                                                onChange={handleChange}
+                                                className="form-input"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -831,39 +878,7 @@ export default function EditEmployeePage() {
                             </div>
 
 
-                            {/* 201 Information Section */}
-                            <div style={{
-                                background: 'var(--bg-secondary)',
-                                padding: 'var(--spacing-lg)',
-                                borderRadius: 'var(--radius-md)',
-                                marginBottom: 'var(--spacing-xl)'
-                            }}>
-                                <h3 style={{ marginBottom: 'var(--spacing-lg)', fontSize: '1.125rem' }}>
-                                    📄 201 Information
-                                </h3>
-                                <div className="form-group" style={{ marginBottom: 'var(--spacing-md)' }}>
-                                    <label className="form-label">Trainings & Certificates</label>
-                                    <textarea
-                                        name="training_details"
-                                        value={formData.training_details}
-                                        onChange={handleChange}
-                                        className="form-textarea"
-                                        rows={3}
-                                        placeholder="List down trainings, seminars, and certificates earned..."
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Violations & Warnings</label>
-                                    <textarea
-                                        name="disciplinary_details"
-                                        value={formData.disciplinary_details}
-                                        onChange={handleChange}
-                                        className="form-textarea"
-                                        rows={3}
-                                        placeholder="Record any disciplinary actions, violations, or warnings..."
-                                    />
-                                </div>
-                            </div>
+
 
                             {/* Remarks Section */}
                             <div className="form-group">

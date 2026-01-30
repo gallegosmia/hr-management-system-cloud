@@ -55,13 +55,17 @@ export async function POST(request: NextRequest) {
             console.error('Failed to update last_login (non-fatal):', updateError);
         }
 
-        // Create session
+        // Create session with branch context
         const sessionId = await createSession({
             id: user.id,
             username: user.username,
             role: user.role,
             employee_id: user.employee_id,
-            is_active: user.is_active
+            is_active: user.is_active,
+            assigned_branch: user.assigned_branch,
+            hr_approval_status: user.hr_approval_status,
+            hr_approved_by: user.hr_approved_by,
+            hr_approved_at: user.hr_approved_at
         });
 
         // Return user data (without password)
@@ -71,6 +75,7 @@ export async function POST(request: NextRequest) {
             sessionId,
             user: userWithoutPassword
         });
+
     } catch (error: any) {
         console.error('Login error:', error);
         return NextResponse.json(

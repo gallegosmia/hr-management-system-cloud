@@ -80,7 +80,10 @@ export default function ReportsPage() {
     const fetchReports = async () => {
         try {
             setLoading(true);
-            const res = await fetch(`/api/reports?start=${config.startDate}&end=${config.endDate}&branch=${config.branch}`);
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch(`/api/reports?start=${config.startDate}&end=${config.endDate}&branch=${config.branch}`, {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             const result = await res.json();
             setData(result);
         } catch (error) {
@@ -92,9 +95,17 @@ export default function ReportsPage() {
 
     const fetchBranches = async () => {
         try {
-            const res = await fetch('/api/employees/branches');
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch('/api/employees/branches', {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             const result = await res.json();
-            setBranches(result);
+            if (Array.isArray(result)) {
+                setBranches(result);
+            } else {
+                console.error('Branches response is not an array:', result);
+                setBranches([]);
+            }
         } catch (error) {
             console.error('Failed to fetch branches:', error);
         }
@@ -102,12 +113,29 @@ export default function ReportsPage() {
 
     const fetchDepartments = async () => {
         try {
-            const res = await fetch('/api/employees/departments');
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch('/api/employees/departments', {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             const result = await res.json();
-            setDepartments(result);
+            if (Array.isArray(result)) {
+                setDepartments(result);
+            } else {
+                console.error('Departments response is not an array:', result);
+                setDepartments([]);
+            }
         } catch (error) {
             console.error('Failed to fetch departments:', error);
         }
+    };
+
+    const filterData = (rows: any[]) => {
+        if (!rows) return [];
+        return rows.filter(row => {
+            const deptMatch = config.department === 'All Departments' || row.department === config.department;
+            const branchMatch = config.branch === 'All Branches' || row.branch === config.branch;
+            return deptMatch && branchMatch;
+        });
     };
 
     const addReportHeader = (doc: jsPDF, title: string) => {
@@ -128,36 +156,236 @@ export default function ReportsPage() {
         doc.setTextColor(0, 0, 0);
     };
 
-    // PDF Generators (Linked to the reportType)
-    const handleGenerate = () => {
+    const handlePrint = () => {
         if (!data) return;
-        switch (config.reportType) {
-            case 'attendance': genAttendancePDF(); break;
-            case 'latesAbsences': genLatesAbsencesPDF(); break;
-            case 'leave': genLeavePDF(); break;
-            case 'payroll': genPayrollPDF(); break;
-            case 'compliance': genCompliancePDF(); break;
-            case 'tenure': genTenurePDF(); break;
-            case 'remittance': genRemittancePDF(); break;
-            case 'headcount': genHeadcountPDF(); break;
+        const width = 1000;
+        const height = 800;
+        const left = (window.screen.width / 2) - (width / 2);
+        const top = (window.screen.height / 2) - (height / 2);
+
+        const printWindow = window.open('', '', `width=${width},height=${height},left=${left},top=${top}`);
+        if (!printWindow) return;
+
+        const tableStyle = "width: 100%; border-collapse: collapse; margin-top: 20px; font-family: Arial, sans-serif; font-size: 12px;";
+        const thStyle = "background-color: #f3f4f6; color: #1f2937; font-weight: bold; padding: 10px; border: 1px solid #e5e7eb; text-align: left;";
+        const tdStyle = "padding: 8px; border: 1px solid #e5e7eb; color: #374151;";
+
+        let reportTitle = reportOptions.find(o => o.id === config.reportType)?.title || 'Report';
+        let tableContent = '';
+
+        if (config.reportType === 'latesAbsences' && data.latesAbsencesSummary) {
+            let rows = filterData(data.latesAbsencesSummary || [])
+                .map(row => `
+                    <tr>
+                        <td style="${tdStyle}">${row.name}</td>
+                        <td style="${tdStyle}">${row.department}</td>
+                        <td style="${tdStyle}; text-align: center; color: ${row.lateCount > 0 ? '#dc2626' : 'inherit'}; font-weight: ${row.lateCount > 0 ? 'bold' : 'normal'}">${row.lateCount}</td>
+                        <td style="${tdStyle}; text-align: center;">${row.absentCount}</td>
+                        <td style="${tdStyle}; text-align: right;">${row.isThresholdExceeded ? '<span style="color: #dc2626; font-weight: bold;">⚠️ EXCEEDED</span>' : '<span style="color: #16a34a;">Normal</span>'}</td>
+                    </tr>
+                `).join('');
+
+            tableContent = `
+                <thead>
+                    <tr>
+                        <th style="${thStyle}">Employee</th>
+                        <th style="${thStyle}">Department</th>
+                        <th style="${thStyle}; text-align: center;">Lates</th>
+                        <th style="${thStyle}; text-align: center;">Absences</th>
+                        <th style="${thStyle}; text-align: right;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            `;
+        } else if (config.reportType === 'attendance' && data.attendanceSummary) {
+            let rows = filterData(data.attendanceSummary || [])
+                .map(row => `
+                    <tr>
+                         <td style="${tdStyle}">${row.name}</td>
+                         <td style="${tdStyle}">${row.department}</td>
+                         <td style="${tdStyle}; text-align: center;">${row.present}</td>
+                         <td style="${tdStyle}; text-align: center; color: ${row.late > 0 ? '#dc2626' : 'inherit'};">${row.late}</td>
+                         <td style="${tdStyle}; text-align: center; color: ${row.absent > 0 ? '#dc2626' : 'inherit'};">${row.absent}</td>
+                         <td style="${tdStyle}; text-align: center;">${row.onLeave || 0}</td>
+                         <td style="${tdStyle}; text-align: right;">${row.tardinessRate}%</td>
+                    </tr>
+                `).join('');
+
+            tableContent = `
+                <thead>
+                    <tr>
+                        <th style="${thStyle}">Employee</th>
+                        <th style="${thStyle}">Department</th>
+                        <th style="${thStyle}; text-align: center;">Present</th>
+                        <th style="${thStyle}; text-align: center;">Late</th>
+                        <th style="${thStyle}; text-align: center;">Absent</th>
+                         <th style="${thStyle}; text-align: center;">On Leave</th>
+                        <th style="${thStyle}; text-align: right;">Tardiness</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            `;
+        } else if (config.reportType === 'leave' && data.leaveUsage) {
+            let rows = filterData(data.leaveUsage || [])
+                .map(row => `
+                    <tr>
+                         <td style="${tdStyle}">${row.name}</td>
+                         <td style="${tdStyle}">${row.department}</td>
+                         <td style="${tdStyle}; text-align: center;">${row.entitlement}</td>
+                         <td style="${tdStyle}; text-align: center;">${row.used}</td>
+                         <td style="${tdStyle}; text-align: center; font-weight: bold;">${row.remaining}</td>
+                    </tr>
+                `).join('');
+
+            tableContent = `
+                <thead>
+                    <tr>
+                        <th style="${thStyle}">Employee</th>
+                        <th style="${thStyle}">Department</th>
+                        <th style="${thStyle}; text-align: center;">Entitlement</th>
+                        <th style="${thStyle}; text-align: center;">Used</th>
+                        <th style="${thStyle}; text-align: center;">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            `;
+        } else if (config.reportType === 'payroll' && data.payrollSummary) {
+            const s = data.payrollSummary;
+            tableContent = `
+                <tbody>
+                    <tr><td style="${tdStyle}">Total Basic Salaries</td><td style="${tdStyle}; text-align: right; font-weight: bold;">PHP ${Number(s.totalBasicRate).toLocaleString()}</td></tr>
+                    <tr><td style="${tdStyle}">Total Allowances</td><td style="${tdStyle}; text-align: right; font-weight: bold;">PHP ${Number(s.totalAllowances).toLocaleString()}</td></tr>
+                    <tr><td style="${tdStyle}">SSS Contributions</td><td style="${tdStyle}; text-align: right; font-weight: bold;">PHP ${Number(s.totalSSS).toLocaleString()}</td></tr>
+                    <tr><td style="${tdStyle}">PhilHealth Contributions</td><td style="${tdStyle}; text-align: right; font-weight: bold;">PHP ${Number(s.totalPhilHealth).toLocaleString()}</td></tr>
+                    <tr><td style="${tdStyle}">Pag-IBIG Contributions</td><td style="${tdStyle}; text-align: right; font-weight: bold;">PHP ${Number(s.totalPagIBIG).toLocaleString()}</td></tr>
+                     <tr style="background: #fdf2f8;"><td style="${tdStyle}; font-weight: bold; font-size: 14px;">TOTAL MONTHLY LIABILITY</td><td style="${tdStyle}; text-align: right; font-weight: bold; font-size: 14px; color: #db2777;">PHP ${(Number(s.totalBasicRate) + Number(s.totalAllowances) + Number(s.totalSSS) + Number(s.totalPhilHealth) + Number(s.totalPagIBIG)).toLocaleString()}</td></tr>
+                </tbody>
+             `;
+        } else if (config.reportType === 'remittance' && data.governmentRemittance) {
+            const remit = data.governmentRemittance;
+            tableContent = `
+                <thead>
+                    <tr>
+                        <th style="${thStyle}">Agency</th>
+                        <th style="${thStyle}">Amount to Remit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td style="${tdStyle}">SSS Contribution Total</td><td style="${tdStyle}; font-weight: bold;">PHP ${Number(remit.sss || 0).toLocaleString()}</td></tr>
+                    <tr><td style="${tdStyle}">PhilHealth Contribution Total</td><td style="${tdStyle}; font-weight: bold;">PHP ${Number(remit.philhealth || 0).toLocaleString()}</td></tr>
+                    <tr><td style="${tdStyle}">Pag-IBIG Contribution Total</td><td style="${tdStyle}; font-weight: bold;">PHP ${Number(remit.pagibig || 0).toLocaleString()}</td></tr>
+                    <tr style="background: #eff6ff;"><td style="${tdStyle}; font-weight: bold;">GRAND TOTAL</td><td style="${tdStyle}; font-weight: bold; color: #2563eb;">PHP ${Number(remit.total || 0).toLocaleString()}</td></tr>
+                </tbody>
+             `;
+        } else if (config.reportType === 'headcount' && data.headcount) {
+            let rows = data.headcount.byDepartment.map(dept => `
+                <tr>
+                    <td style="${tdStyle}">${dept.name}</td>
+                    <td style="${tdStyle}; text-align: center;">${dept.count}</td>
+                    <td style="${tdStyle}; text-align: right;">${Math.round((dept.count / (data.headcount.total || 1)) * 100)}%</td>
+                </tr>
+             `).join('');
+
+            tableContent = `
+                <thead>
+                    <tr>
+                        <th style="${thStyle}">Department</th>
+                        <th style="${thStyle}; text-align: center;">Staff Count</th>
+                        <th style="${thStyle}; text-align: right;">Organization %</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+             `;
+        } else if (config.reportType === 'compliance' && data.complianceAudit) {
+            let rows = filterData(data.complianceAudit)
+                .map(row => `
+                    <tr>
+                         <td style="${tdStyle}">${row.name}</td>
+                         <td style="${tdStyle}">${row.department}</td>
+                         <td style="${tdStyle}">${row.status}</td>
+                         <td style="${tdStyle}; color: #dc2626;">${row.missingFields.join(', ') || 'NONE'}</td>
+                    </tr>
+                `).join('');
+            tableContent = `
+                <thead>
+                    <tr>
+                        <th style="${thStyle}">Employee</th>
+                        <th style="${thStyle}">Department</th>
+                        <th style="${thStyle}">Status</th>
+                        <th style="${thStyle}">Missing Info</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+             `;
+        } else if (config.reportType === 'tenure' && data.tenureData) {
+            let rows = filterData(data.tenureData)
+                .map(row => `
+                    <tr>
+                         <td style="${tdStyle}">${row.name}</td>
+                         <td style="${tdStyle}">${row.department}</td>
+                         <td style="${tdStyle}">${row.dateHired ? new Date(row.dateHired).toLocaleDateString() : '-'}</td>
+                         <td style="${tdStyle}">${row.tenure}</td>
+                         <td style="${tdStyle}">${row.daysToAnniversary <= 30 ? `IN ${row.daysToAnniversary} DAYS!` : `${row.daysToAnniversary} d`}</td>
+                    </tr>
+                `).join('');
+            tableContent = `
+                <thead>
+                    <tr>
+                        <th style="${thStyle}">Employee</th>
+                        <th style="${thStyle}">Department</th>
+                        <th style="${thStyle}">Date Hired</th>
+                        <th style="${thStyle}">Tenure</th>
+                        <th style="${thStyle}">Next Anniversary</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            `;
+        } else {
+            tableContent = `<tbody><tr><td style="padding: 20px; text-align: center;">Print view not available for this report type.</td></tr></tbody>`;
         }
+
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>${reportTitle} - Print</title>
+                </head>
+                <body style="font-family: Arial, sans-serif; padding: 40px; color: #111;">
+                    <div style="margin-bottom: 30px; border-bottom: 2px solid #1e3a8a; padding-bottom: 20px;">
+                        <h1 style="color: #1e3a8a; margin: 0; font-size: 24px;">${reportTitle}</h1>
+                        <p style="margin: 5px 0 0; color: #666; font-size: 14px;">
+                            Period: <strong>${config.startDate}</strong> to <strong>${config.endDate}</strong>
+                            <span style="float: right;">Generated: ${new Date().toLocaleString()}</span>
+                        </p>
+                         <p style="margin: 5px 0 0; color: #666; font-size: 14px;">
+                            Branch: <strong>${config.branch}</strong>
+                        </p>
+                    </div>
+                    
+                    <table style="${tableStyle}">
+                        ${tableContent}
+                    </table>
+
+                    <div style="margin-top: 50px; font-size: 11px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 10px;">
+                        CONFIDENTIAL | HR Management System
+                    </div>
+
+                    <script>
+                        window.onload = function() { window.print(); window.close(); }
+                    </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
     };
 
-    const filterData = (rows: any[]) => {
-        if (!rows) return [];
-        return rows.filter(row => {
-            const deptMatch = config.department === 'All Departments' || row.department === config.department;
-            const branchMatch = config.branch === 'All Branches' || row.branch === config.branch;
-            return deptMatch && branchMatch;
-        });
-    };
+
 
     const genAttendancePDF = () => {
         if (!data?.attendanceSummary) return;
         const doc = new jsPDF();
         addReportHeader(doc, 'Attendance Summary');
         const tableData = filterData(data.attendanceSummary)
-            .map(row => [row.name, row.department, row.present, row.late, row.absent, row.onLeave || 0, `${row.tardinessRate}%`]);
+            .map(row => [row.name, row.department, row.present, row.late, row.absent, row.onLeave || 0, row.tardinessRate + '%']);
         autoTable(doc, {
             head: [['Employee', 'Department', 'Present', 'Late', 'Absent', 'On Leave', 'Tardiness Rate']],
             body: tableData,
@@ -173,7 +401,7 @@ export default function ReportsPage() {
                 }
             }
         });
-        doc.save(`Attendance_Report.pdf`);
+        doc.save('Attendance_Report.pdf');
     };
 
     const genLatesAbsencesPDF = () => {
@@ -213,7 +441,7 @@ export default function ReportsPage() {
                 }
             }
         });
-        doc.save(`Lates_Absences_Summary_${config.startDate}.pdf`);
+        doc.save('Lates_Absences_Summary_' + config.startDate + '.pdf');
     };
 
     const genLeavePDF = () => {
@@ -238,7 +466,7 @@ export default function ReportsPage() {
                 }
             }
         });
-        doc.save(`Leave_Credits_Report.pdf`);
+        doc.save('Leave_Credits_Report.pdf');
     };
 
     const genPayrollPDF = () => {
@@ -256,12 +484,12 @@ export default function ReportsPage() {
         const totalLiability = totalBasic + totalAllowances + totalSSS + totalPhilHealth + totalPagIBIG;
 
         const tableData = [
-            ['Total Basic Salaries', `PHP ${totalBasic.toLocaleString()}`],
-            ['Total Allowances', `PHP ${totalAllowances.toLocaleString()}`],
-            ['SSS Contributions', `PHP ${totalSSS.toLocaleString()}`],
-            ['PhilHealth Contributions', `PHP ${totalPhilHealth.toLocaleString()}`],
-            ['Pag-IBIG Contributions', `PHP ${totalPagIBIG.toLocaleString()}`],
-            ['Total Monthly Liability', `PHP ${totalLiability.toLocaleString()}`]
+            ['Total Basic Salaries', 'PHP ' + totalBasic.toLocaleString()],
+            ['Total Allowances', 'PHP ' + totalAllowances.toLocaleString()],
+            ['SSS Contributions', 'PHP ' + totalSSS.toLocaleString()],
+            ['PhilHealth Contributions', 'PHP ' + totalPhilHealth.toLocaleString()],
+            ['Pag-IBIG Contributions', 'PHP ' + totalPagIBIG.toLocaleString()],
+            ['Total Monthly Liability', 'PHP ' + totalLiability.toLocaleString()]
         ];
         autoTable(doc, {
             head: [['Expense Category', 'Total Amount']],
@@ -270,7 +498,7 @@ export default function ReportsPage() {
             theme: 'grid',
             headStyles: { fillColor: [245, 158, 11] },
         });
-        doc.save(`Payroll_Expenditure.pdf`);
+        doc.save('Payroll_Expenditure.pdf');
     };
 
     const genCompliancePDF = () => {
@@ -285,7 +513,7 @@ export default function ReportsPage() {
             startY: 50,
             headStyles: { fillColor: [239, 68, 68] },
         });
-        doc.save(`Compliance_Audit.pdf`);
+        doc.save('Compliance_Audit.pdf');
     };
 
     const genTenurePDF = () => {
@@ -298,7 +526,7 @@ export default function ReportsPage() {
                 row.department,
                 row.dateHired ? format(new Date(row.dateHired), 'MMMM dd, yyyy') : '-',
                 row.tenure,
-                row.daysToAnniversary <= 30 ? `IN ${row.daysToAnniversary} DAYS!` : `${row.daysToAnniversary} d`
+                row.daysToAnniversary <= 30 ? 'IN ' + row.daysToAnniversary + ' DAYS!' : row.daysToAnniversary + ' d'
             ]);
         autoTable(doc, {
             head: [['Employee', 'Department', 'Date Hired', 'Tenure', 'Next Anniversary']],
@@ -306,7 +534,7 @@ export default function ReportsPage() {
             startY: 50,
             headStyles: { fillColor: [139, 92, 246] },
         });
-        doc.save(`Tenure_Report.pdf`);
+        doc.save('Tenure_Report.pdf');
     };
 
     const genRemittancePDF = () => {
@@ -315,10 +543,10 @@ export default function ReportsPage() {
         addReportHeader(doc, 'Government Remittance Checklist');
         const remit = data.governmentRemittance;
         const tableData = [
-            ['SSS Contribution Total', `PHP ${Number(remit.sss || 0).toLocaleString()}`],
-            ['PhilHealth Contribution Total', `PHP ${Number(remit.philhealth || 0).toLocaleString()}`],
-            ['Pag-IBIG Contribution Total', `PHP ${Number(remit.pagibig || 0).toLocaleString()}`],
-            ['GRAND TOTAL', `PHP ${Number(remit.total || 0).toLocaleString()}`]
+            ['SSS Contribution Total', 'PHP ' + Number(remit.sss || 0).toLocaleString()],
+            ['PhilHealth Contribution Total', 'PHP ' + Number(remit.philhealth || 0).toLocaleString()],
+            ['Pag-IBIG Contribution Total', 'PHP ' + Number(remit.pagibig || 0).toLocaleString()],
+            ['GRAND TOTAL', 'PHP ' + Number(remit.total || 0).toLocaleString()]
         ];
         autoTable(doc, {
             head: [['Agency', 'Amount to Remit']],
@@ -326,21 +554,35 @@ export default function ReportsPage() {
             startY: 50,
             headStyles: { fillColor: [59, 130, 246] },
         });
-        doc.save(`Remittance_Checklist.pdf`);
+        doc.save('Remittance_Checklist.pdf');
     };
 
     const genHeadcountPDF = () => {
         if (!data?.headcount) return;
         const doc = new jsPDF();
         addReportHeader(doc, 'Headcount & Growth Report');
-        const tableData = data.headcount.byDepartment.map(dept => [dept.name, dept.count, `${Math.round((dept.count / (data.headcount.total || 1)) * 100)}%`]);
+        const tableData = data.headcount.byDepartment.map(dept => [dept.name, dept.count, Math.round((dept.count / (data.headcount.total || 1)) * 100) + '%']);
         autoTable(doc, {
             head: [['Department', 'Staff Count', 'Organization %']],
             body: tableData,
             startY: 50,
             headStyles: { fillColor: [107, 114, 128] },
         });
-        doc.save(`Headcount_Report.pdf`);
+        doc.save('Headcount_Report.pdf');
+    };
+
+    const handleGenerate = () => {
+        if (!data) return;
+        switch (config.reportType) {
+            case 'attendance': genAttendancePDF(); break;
+            case 'latesAbsences': genLatesAbsencesPDF(); break;
+            case 'leave': genLeavePDF(); break;
+            case 'payroll': genPayrollPDF(); break;
+            case 'compliance': genCompliancePDF(); break;
+            case 'tenure': genTenurePDF(); break;
+            case 'remittance': genRemittancePDF(); break;
+            case 'headcount': genHeadcountPDF(); break;
+        }
     };
 
     const inputClasses = "w-full border border-gray-300 rounded-lg py-3 px-4 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer";
@@ -401,7 +643,7 @@ export default function ReportsPage() {
                                 className={inputClasses}
                             >
                                 <option>All Departments</option>
-                                {departments.map(dept => (
+                                {Array.isArray(departments) && departments.map(dept => (
                                     <option key={dept} value={dept}>{dept}</option>
                                 ))}
                             </select>
@@ -416,7 +658,7 @@ export default function ReportsPage() {
                                 className={inputClasses}
                             >
                                 <option>All Branches</option>
-                                {branches.map(branch => (
+                                {Array.isArray(branches) && branches.map(branch => (
                                     <option key={branch} value={branch}>{branch}</option>
                                 ))}
                             </select>
@@ -464,7 +706,6 @@ export default function ReportsPage() {
                             </select>
                         </div>
                     </div>
-
                     <div className="mt-16 flex justify-end">
                         <button
                             onClick={handleGenerate}
@@ -476,76 +717,85 @@ export default function ReportsPage() {
                             ) : (
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             )}
-                            GENERATE REPORT
+                            GENERATE PDF
+                        </button>
+
+                        <button
+                            onClick={handlePrint}
+                            disabled={loading || !data}
+                            className="bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 px-12 rounded-2xl shadow-xl shadow-slate-200 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none ml-4"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                            PRINT REPORT
                         </button>
                     </div>
                 </div>
+            </div>
 
-                {/* Report Preview Section */}
-                <div className="mt-12 w-full max-w-6xl mx-auto pb-20">
-                    {!loading && data && (
-                        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                                <h2 className="text-xl font-bold text-slate-800">
-                                    {reportOptions.find(o => o.id === config.reportType)?.title} Preview
-                                </h2>
-                                <span className="text-sm font-medium text-slate-500 bg-white px-4 py-1.5 rounded-full border border-gray-100 shadow-sm">
-                                    {config.startDate} to {config.endDate}
-                                </span>
-                            </div>
-
-                            <div className="overflow-x-auto">
-                                {config.reportType === 'latesAbsences' && (
-                                    <table className="w-full border-collapse">
-                                        <thead>
-                                            <tr className="bg-red-700 text-left border-b border-gray-100">
-                                                <th className="p-5 text-xs font-bold text-white uppercase tracking-wider">Employee Name</th>
-                                                <th className="p-5 text-xs font-bold text-white uppercase tracking-wider">Department</th>
-                                                <th className="p-5 text-xs font-bold text-white uppercase tracking-wider text-center">Total Lates</th>
-                                                <th className="p-5 text-xs font-bold text-white uppercase tracking-wider text-center">Total Absences</th>
-                                                <th className="p-5 text-xs font-bold text-white uppercase tracking-wider text-right">Threshold Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filterData(data.latesAbsencesSummary || []).length === 0 ? (
-                                                <tr><td colSpan={5} className="p-10 text-center text-slate-400">No data available for the selected period.</td></tr>
-                                            ) : (
-                                                filterData(data.latesAbsencesSummary || []).map((row) => (
-                                                    <tr key={row.id} className={`border-b border-gray-50 hover:bg-slate-50/50 transition-colors ${row.isThresholdExceeded ? 'bg-red-50 text-red-700' : 'text-slate-600'}`}>
-                                                        <td className="p-5 whitespace-nowrap font-medium">{row.name}</td>
-                                                        <td className="p-5 whitespace-nowrap">{row.department}</td>
-                                                        <td className="p-5 text-center text-red-600 font-bold">{row.lateCount}</td>
-                                                        <td className="p-5 text-center">{row.absentCount}</td>
-                                                        <td className="p-5 text-right whitespace-nowrap">
-                                                            {row.isThresholdExceeded ? (
-                                                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
-                                                                    ⚠️ EXCEEDED (5L/10A)
-                                                                </span>
-                                                            ) : (
-                                                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                                                    Normal
-                                                                </span>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            )}
-                                        </tbody>
-                                    </table>
-                                )}
-
-                                {/* Preview implementation for other reports will go here */}
-                                {config.reportType !== 'latesAbsences' && (
-                                    <div className="p-20 text-center">
-                                        <div className="text-4xl mb-4">📥</div>
-                                        <h3 className="text-lg font-bold text-slate-800 mb-2">Ready to Export</h3>
-                                        <p className="text-slate-500">Visual preview for this report type is coming soon. Please click the generate button above to download the full PDF.</p>
-                                    </div>
-                                )}
-                            </div>
+            {/* Report Preview Section */}
+            <div className="mt-12 w-full max-w-6xl mx-auto pb-20">
+                {!loading && data && (
+                    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                            <h2 className="text-xl font-bold text-slate-800">
+                                {reportOptions.find(o => o.id === config.reportType)?.title} Preview
+                            </h2>
+                            <span className="text-sm font-medium text-slate-500 bg-white px-4 py-1.5 rounded-full border border-gray-100 shadow-sm">
+                                {config.startDate} to {config.endDate}
+                            </span>
                         </div>
-                    )}
-                </div>
+
+                        <div className="overflow-x-auto">
+                            {config.reportType === 'latesAbsences' && (
+                                <table className="w-full border-collapse">
+                                    <thead>
+                                        <tr className="bg-red-700 text-left border-b border-gray-100">
+                                            <th className="p-5 text-xs font-bold text-white uppercase tracking-wider">Employee Name</th>
+                                            <th className="p-5 text-xs font-bold text-white uppercase tracking-wider">Department</th>
+                                            <th className="p-5 text-xs font-bold text-white uppercase tracking-wider text-center">Total Lates</th>
+                                            <th className="p-5 text-xs font-bold text-white uppercase tracking-wider text-center">Total Absences</th>
+                                            <th className="p-5 text-xs font-bold text-white uppercase tracking-wider text-right">Threshold Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filterData(data.latesAbsencesSummary || []).length === 0 ? (
+                                            <tr><td colSpan={5} className="p-10 text-center text-slate-400">No data available for the selected period.</td></tr>
+                                        ) : (
+                                            filterData(data.latesAbsencesSummary || []).map((row) => (
+                                                <tr key={row.id} className={`border-b border-gray-50 hover:bg-slate-50/50 transition-colors ${row.isThresholdExceeded ? 'bg-red-50 text-red-700' : 'text-slate-600'}`}>
+                                                    <td className="p-5 whitespace-nowrap font-medium">{row.name}</td>
+                                                    <td className="p-5 whitespace-nowrap">{row.department}</td>
+                                                    <td className="p-5 text-center text-red-600 font-bold">{row.lateCount}</td>
+                                                    <td className="p-5 text-center">{row.absentCount}</td>
+                                                    <td className="p-5 text-right whitespace-nowrap">
+                                                        {row.isThresholdExceeded ? (
+                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                                                                ⚠️ EXCEEDED (5L/10A)
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                                                Normal
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            )}
+
+                            {/* Preview implementation for other reports will go here */}
+                            {config.reportType !== 'latesAbsences' && (
+                                <div className="p-20 text-center">
+                                    <div className="text-4xl mb-4">📥</div>
+                                    <h3 className="text-lg font-bold text-slate-800 mb-2">Ready to Export</h3>
+                                    <p className="text-slate-500">Visual preview for this report type is coming soon. Please click the generate button above to download the full PDF.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </DashboardLayout>
     );

@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 
+// Helper to make response serializable
+const serialize = (obj: any) => {
+    if (obj === undefined || obj === null) return obj;
+    return JSON.parse(JSON.stringify(obj));
+};
+
 // GET - Fetch trainings and certificates for an employee
 export async function GET(request: NextRequest) {
     try {
@@ -19,7 +25,7 @@ export async function GET(request: NextRequest) {
                  ORDER BY issue_date DESC`,
                 [employeeId]
             );
-            return NextResponse.json(result.rows);
+            return NextResponse.json(serialize(result.rows));
         }
 
         // Default to trainings
@@ -29,11 +35,11 @@ export async function GET(request: NextRequest) {
              ORDER BY date_completed DESC, date_started DESC`,
             [employeeId]
         );
-        return NextResponse.json(result.rows);
+        return NextResponse.json(serialize(result.rows));
 
     } catch (error: any) {
         console.error('Fetch trainings error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json(serialize({ error: error.message }), { status: 500 });
     }
 }
 
@@ -65,7 +71,7 @@ export async function POST(request: NextRequest) {
                     recordData.remarks
                 ]
             );
-            return NextResponse.json(result.rows[0]);
+            return NextResponse.json(serialize(result.rows[0]));
         }
 
         // Default: Add training
@@ -88,11 +94,11 @@ export async function POST(request: NextRequest) {
                 recordData.remarks
             ]
         );
-        return NextResponse.json(result.rows[0]);
+        return NextResponse.json(serialize(result.rows[0]));
 
     } catch (error: any) {
         console.error('Add training error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json(serialize({ error: error.message }), { status: 500 });
     }
 }
 
@@ -109,67 +115,77 @@ export async function PUT(request: NextRequest) {
         if (type === 'certificate') {
             const result = await query(
                 `UPDATE employee_certificates SET
-                 certificate_name = COALESCE($1, certificate_name),
-                 issuing_organization = COALESCE($2, issuing_organization),
-                 issue_date = COALESCE($3, issue_date),
+                 certificate_name = $1,
+                 issuing_organization = $2,
+                 issue_date = $3,
                  expiry_date = $4,
-                 certificate_number = COALESCE($5, certificate_number),
-                 certificate_file = COALESCE($6, certificate_file),
-                 status = COALESCE($7, status),
+                 certificate_number = $5,
+                 certificate_file = $6,
+                 status = $7,
                  remarks = $8,
                  updated_at = CURRENT_TIMESTAMP
                  WHERE id = $9
                  RETURNING *`,
                 [
-                    updateData.certificate_name,
-                    updateData.issuing_organization,
-                    updateData.issue_date,
-                    updateData.expiry_date,
-                    updateData.certificate_number,
-                    updateData.certificate_file,
-                    updateData.status,
-                    updateData.remarks,
+                    updateData.certificate_name || null,
+                    updateData.issuing_organization || null,
+                    updateData.issue_date || null,
+                    updateData.expiry_date || null,
+                    updateData.certificate_number || null,
+                    updateData.certificate_file || null,
+                    updateData.status || null,
+                    updateData.remarks || null,
                     id
                 ]
             );
-            return NextResponse.json(result.rows[0]);
+
+            if (result.rowCount === 0) {
+                return NextResponse.json({ error: 'Certificate record not found' }, { status: 404 });
+            }
+
+            return NextResponse.json(serialize(result.rows[0]));
         }
 
         // Default: Update training
         const result = await query(
             `UPDATE employee_trainings SET
-             training_name = COALESCE($1, training_name),
-             training_type = COALESCE($2, training_type),
-             provider = COALESCE($3, provider),
-             date_started = COALESCE($4, date_started),
+             training_name = $1,
+             training_type = $2,
+             provider = $3,
+             date_started = $4,
              date_completed = $5,
-             hours_completed = COALESCE($6, hours_completed),
-             certificate_number = COALESCE($7, certificate_number),
-             certificate_file = COALESCE($8, certificate_file),
-             status = COALESCE($9, status),
+             hours_completed = $6,
+             certificate_number = $7,
+             certificate_file = $8,
+             status = $9,
              remarks = $10,
              updated_at = CURRENT_TIMESTAMP
              WHERE id = $11
              RETURNING *`,
             [
-                updateData.training_name,
-                updateData.training_type,
-                updateData.provider,
-                updateData.date_started,
-                updateData.date_completed,
-                updateData.hours_completed,
-                updateData.certificate_number,
-                updateData.certificate_file,
-                updateData.status,
-                updateData.remarks,
+                updateData.training_name || null,
+                updateData.training_type || null,
+                updateData.provider || null,
+                updateData.date_started || null,
+                updateData.date_completed || null,
+                updateData.hours_completed || null,
+                updateData.certificate_number || null,
+                updateData.certificate_file || null,
+                updateData.status || null,
+                updateData.remarks || null,
                 id
             ]
         );
-        return NextResponse.json(result.rows[0]);
+
+        if (result.rowCount === 0) {
+            return NextResponse.json({ error: 'Training record not found' }, { status: 404 });
+        }
+
+        return NextResponse.json(serialize(result.rows[0]));
 
     } catch (error: any) {
         console.error('Update training error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json(serialize({ error: error.message }), { status: 500 });
     }
 }
 
@@ -191,6 +207,6 @@ export async function DELETE(request: NextRequest) {
 
     } catch (error: any) {
         console.error('Delete training error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json(serialize({ error: error.message }), { status: 500 });
     }
 }

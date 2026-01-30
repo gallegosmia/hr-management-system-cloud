@@ -102,6 +102,9 @@ export interface EmployeeFormData {
     address?: string;
     emergency_contact_name?: string;
     emergency_contact_number?: string;
+    emergency_contact_relationship?: string;
+    emergency_contact_address?: string;
+    citizen_id_address?: string;
     profile_picture?: string;
     date_separated?: string;
     contact_number?: string;

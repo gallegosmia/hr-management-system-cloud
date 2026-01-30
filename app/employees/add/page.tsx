@@ -43,7 +43,10 @@ export default function AddEmployeePage() {
         gender: '',
         religion: '',
         emergency_contact_name: '',
-        emergency_contact_number: ''
+        emergency_contact_number: '',
+        emergency_contact_relationship: '',
+        emergency_contact_address: '',
+        citizen_id_address: ''
     });
 
     // Education State
@@ -81,7 +84,10 @@ export default function AddEmployeePage() {
         const fetchNextId = async () => {
             const year = formData.date_hired.split('-')[0];
             try {
-                const res = await fetch(`/api/employees/next-id?year=${year}`);
+                const sessionId = localStorage.getItem('sessionId');
+                const res = await fetch(`/api/employees/next-id?year=${year}`, {
+                    headers: { 'x-session-id': sessionId || '' }
+                });
                 if (res.ok) {
                     const data = await res.json();
                     setFormData(prev => ({ ...prev, employee_id: data.nextId }));
@@ -107,9 +113,13 @@ export default function AddEmployeePage() {
         setLoading(true);
 
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const response = await fetch('/api/employees', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
                 body: JSON.stringify(formData)
             });
 
@@ -118,9 +128,13 @@ export default function AddEmployeePage() {
             if (response.ok) {
                 // Save Education Records
                 if (education.length > 0 && education.some(e => e.school_name)) {
+                    const sessionId = localStorage.getItem('sessionId');
                     await fetch('/api/employees/education', {
                         method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-session-id': sessionId || ''
+                        },
                         body: JSON.stringify({
                             employee_id: data.id,
                             education: education.filter(e => e.school_name) // Filter out empty entries
@@ -515,7 +529,19 @@ export default function AddEmployeePage() {
                                     value={(formData as any).address || ''}
                                     onChange={handleChange}
                                     className="form-input"
-                                    placeholder="123 Example Street, City, Province"
+                                    placeholder="Current Residence: 123 Example Street, City, Province"
+                                />
+                            </div>
+
+                            <div className="form-group" style={{ marginTop: 'var(--spacing-md)' }}>
+                                <label className="form-label">Citizen ID Address</label>
+                                <input
+                                    type="text"
+                                    name="citizen_id_address"
+                                    value={(formData as any).citizen_id_address || ''}
+                                    onChange={handleChange}
+                                    className="form-input"
+                                    placeholder="Matches residential address if blank"
                                 />
                             </div>
 
@@ -542,6 +568,28 @@ export default function AddEmployeePage() {
                                             onChange={handleChange}
                                             className="form-input"
                                             placeholder="Phone Number"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Relationship</label>
+                                        <input
+                                            type="text"
+                                            name="emergency_contact_relationship"
+                                            value={(formData as any).emergency_contact_relationship}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                            placeholder="e.g. Spouse / Parent"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Full Address</label>
+                                        <input
+                                            type="text"
+                                            name="emergency_contact_address"
+                                            value={(formData as any).emergency_contact_address}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                            placeholder="Barangay, City, Province"
                                         />
                                     </div>
                                 </div>
@@ -611,39 +659,7 @@ export default function AddEmployeePage() {
                         </div>
 
 
-                        {/* 201 Information Section */}
-                        <div style={{
-                            background: 'var(--bg-secondary)',
-                            padding: 'var(--spacing-lg)',
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: 'var(--spacing-xl)'
-                        }}>
-                            <h3 style={{ marginBottom: 'var(--spacing-lg)', fontSize: '1.125rem' }}>
-                                📄 201 Information
-                            </h3>
-                            <div className="form-group" style={{ marginBottom: 'var(--spacing-md)' }}>
-                                <label className="form-label">Trainings & Certificates</label>
-                                <textarea
-                                    name="training_details"
-                                    value={formData.training_details}
-                                    onChange={handleChange}
-                                    className="form-textarea"
-                                    rows={3}
-                                    placeholder="List down trainings, seminars, and certificates earned..."
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Violations & Warnings</label>
-                                <textarea
-                                    name="disciplinary_details"
-                                    value={formData.disciplinary_details}
-                                    onChange={handleChange}
-                                    className="form-textarea"
-                                    rows={3}
-                                    placeholder="Record any disciplinary actions, violations, or warnings..."
-                                />
-                            </div>
-                        </div>
+
 
                         {/* Remarks Section */}
                         <div className="form-group">

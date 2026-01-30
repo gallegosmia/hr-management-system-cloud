@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import fs from 'fs';
+import path from 'path';
+
+const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'documents');
+
+// Ensure directory exists
+if (!fs.existsSync(UPLOAD_DIR)) {
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -14,27 +23,24 @@ export async function POST(request: NextRequest) {
 
         const buffer = Buffer.from(await file.arrayBuffer());
 
-        // Check if employee exists first (optional but good practice)
-        // const empCheck = await query('SELECT id FROM employees WHERE employee_id = $1', [employeeId]);
-        // if (empCheck.rows.length === 0) throw new Error('Employee not found');
-        // const internalId = empCheck.rows[0].id; // We might need internal ID if using FK, but schema uses ID.
-        // The schema map: employee_id INTEGER. 
-        // Wait, schema says employee_id INTEGER REFERENCES employees(id). 
-        // But the frontend passes the string ID (e.g. 2024-001). 
-        // We need to look up the internal ID.
-
         const empRes = await query('SELECT id FROM employees WHERE employee_id = $1', [employeeId]);
         if (empRes.rows.length === 0) {
             return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
         }
         const internalId = empRes.rows[0].id;
 
-        const filename = `${documentType}_${Date.now()}_${file.name}`;
+        const filename = `${documentType}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const filePath = path.join(UPLOAD_DIR, filename);
 
-        // Insert into DB
+        // Save to disk
+        fs.writeFileSync(filePath, buffer);
+
+        // Insert into DB - Store relative path in file_path, and NULL for file_data
+        // Note: Assuming schema allows file_path. If using PostgreSQL, schema migration is needed. 
+        // For Local JSON, it's fine.
         await query(
-            'INSERT INTO documents (employee_id, category, document_name, file_size, uploaded_by, file_data) VALUES ($1, $2, $3, $4, $5, $6)',
-            [internalId, documentType, filename, file.size, 1, buffer]
+            'INSERT INTO documents (employee_id, category, document_name, file_size, uploaded_by, file_data, file_path) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            [internalId, documentType, filename, file.size, 1, null, `/uploads/documents/${filename}`]
         );
 
         return NextResponse.json({
@@ -102,6 +108,17 @@ export async function DELETE(request: NextRequest) {
         }
         const internalId = empRes.rows[0].id;
 
+        // Optional: Delete physical file if needed
+        // For now, just remove DB record. 
+        // We could look up the file_path and unlink it.
+        const fileRes = await query('SELECT file_path FROM documents WHERE employee_id = $1 AND document_name = $2', [internalId, filename]);
+        if (fileRes.rows.length > 0 && fileRes.rows[0].file_path) {
+            const absolutePath = path.join(process.cwd(), 'public', fileRes.rows[0].file_path);
+            if (fs.existsSync(absolutePath)) {
+                try { fs.unlinkSync(absolutePath); } catch (e) { }
+            }
+        }
+
         await query(
             'DELETE FROM documents WHERE employee_id = $1 AND document_name = $2',
             [internalId, filename]
@@ -113,4 +130,3 @@ export async function DELETE(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to delete file' }, { status: 500 });
     }
 }
-

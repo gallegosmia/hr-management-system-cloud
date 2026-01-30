@@ -53,7 +53,10 @@ function PayrollDetailsContent() {
 
     const fetchRunDetails = async () => {
         try {
-            const response = await fetch(`/api/payroll/${params.id}`);
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch(`/api/payroll/${params.id}`, {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             if (response.ok) {
                 const data = await response.json();
                 setRun(data);
@@ -82,9 +85,13 @@ function PayrollDetailsContent() {
         }
 
         try {
+            const sessionId = localStorage.getItem('sessionId');
             const response = await fetch(`/api/payroll/${params.id}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
                 body: JSON.stringify(approvalData)
             });
 
