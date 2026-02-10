@@ -83,7 +83,7 @@
       "email": "superadmin@melanninvestor.com",
       "employee_id": null,
       "created_at": "2026-01-30T05:53:34.971Z",
-      "last_login": "2026-01-30T08:27:41.738Z",
+      "last_login": "2026-01-31T03:34:21.909Z",
       "is_active": 1,
       "status": "ACTIVE",
       "assigned_branch": null,
@@ -142,6 +142,19 @@
       "created_at": "2026-01-30T08:27:26.065Z",
       "id": 20,
       "last_login": "2026-01-30T08:28:00.283Z"
+    },
+    {
+      "username": "aim19",
+      "email": "gmia0519@gmail.com",
+      "password": "$2a$10$xjwC3/24lwz7nS56YPfU7uSpOGcdTQ9/rn.MBzFfM8TNLY8iW4OXG",
+      "role": "HR",
+      "is_active": 1,
+      "status": "ACTIVE",
+      "assigned_branch": "Ormoc",
+      "hr_approval_status": null,
+      "created_at": "2026-01-31T03:34:09.637Z",
+      "id": 21,
+      "last_login": "2026-01-31T03:34:44.600Z"
     }
   ],
   "employees": [
@@ -408,8 +421,8 @@
           "pagibig_contribution": 200,
           "company_cash_fund": 300,
           "company_loan": {
-            "balance": 22500,
-            "amortization": 1000
+            "balance": 22000,
+            "amortization": 1500
           },
           "sss_loan": {
             "balance": 0,
@@ -417,7 +430,7 @@
           },
           "pagibig_loan": {
             "balance": 0,
-            "amortization": 370.98
+            "amortization": 371
           },
           "cash_advance": 0,
           "other_deductions": []
@@ -478,7 +491,7 @@
           "company_cash_fund": 300,
           "company_loan": {
             "balance": 16345,
-            "amortization": 2000
+            "amortization": 1000
           },
           "sss_loan": {
             "balance": 0,
@@ -674,8 +687,8 @@
           "pagibig_contribution": 200,
           "company_cash_fund": 300,
           "company_loan": {
-            "balance": 3500,
-            "amortization": 1000
+            "balance": 18500,
+            "amortization": 800
           },
           "sss_loan": {
             "balance": 0,
@@ -809,7 +822,36 @@
       "created_by": 1,
       "id": 11,
       "profile_picture": "/uploads/profile_pictures/11_1768292574184.png",
-      "last_updated": "2026-01-13T08:22:54.187Z"
+      "last_updated": "2026-01-13T08:22:54.187Z",
+      "salary_info": {
+        "basic_salary": 13560,
+        "allowances": {
+          "special": 1000
+        },
+        "daily_rate": 452,
+        "hourly_rate": 56.5,
+        "pay_frequency": "Semi-Monthly",
+        "deductions": {
+          "sss_contribution": 700,
+          "philhealth_contribution": 263.25,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 17000,
+            "amortization": 1000
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 656.6
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      }
     },
     {
       "employee_id": "2016-0001",
@@ -846,7 +888,36 @@
       "created_by": 1,
       "id": 12,
       "profile_picture": "/uploads/profile_pictures/12_1768292392947.jpg",
-      "last_updated": "2026-01-13T08:19:52.949Z"
+      "last_updated": "2026-01-13T08:19:52.949Z",
+      "salary_info": {
+        "basic_salary": 14310,
+        "allowances": {
+          "special": 1800
+        },
+        "daily_rate": 477,
+        "hourly_rate": 59.63,
+        "pay_frequency": "Semi-Monthly",
+        "deductions": {
+          "sss_contribution": 750,
+          "philhealth_contribution": 300,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 29520,
+            "amortization": 1000
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 1384.35
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 2673.88
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      }
     },
     {
       "employee_id": "2017-0001",
@@ -886,7 +957,36 @@
       "file_completion_status": "Incomplete",
       "created_by": 1,
       "id": 13,
-      "profile_picture": "/uploads/profile_photos/profile_13_1769750437314.png"
+      "profile_picture": "/uploads/profile_photos/profile_13_1769750437314.png",
+      "salary_info": {
+        "basic_salary": 15660,
+        "allowances": {
+          "special": 1800
+        },
+        "daily_rate": 522,
+        "hourly_rate": 65.25,
+        "pay_frequency": "Semi-Monthly",
+        "deductions": {
+          "sss_contribution": 850,
+          "philhealth_contribution": 333.75,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 6000,
+            "amortization": 1500
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      }
     },
     {
       "employee_id": "2022-0005",
@@ -926,7 +1026,36 @@
       "file_completion_status": "Incomplete",
       "created_by": 1,
       "id": 14,
-      "profile_picture": "/uploads/profile_photos/profile_14_1769750437315.jpeg"
+      "profile_picture": "/uploads/profile_photos/profile_14_1769750437315.jpeg",
+      "salary_info": {
+        "basic_salary": 13560,
+        "allowances": {
+          "special": 1000
+        },
+        "daily_rate": 452,
+        "hourly_rate": 56.5,
+        "pay_frequency": "Semi-Monthly",
+        "deductions": {
+          "sss_contribution": 675,
+          "philhealth_contribution": 281.25,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 8000,
+            "amortization": 1000
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      }
     },
     {
       "employee_id": "2022-0006",
@@ -966,7 +1095,41 @@
       "file_completion_status": "Incomplete",
       "created_by": 1,
       "id": 15,
-      "profile_picture": "/uploads/profile_photos/profile_15_1769750437316.png"
+      "profile_picture": "/uploads/profile_photos/profile_15_1769750437316.png",
+      "salary_info": {
+        "basic_salary": 13559.7,
+        "allowances": {
+          "special": 2500
+        },
+        "daily_rate": 451.99,
+        "hourly_rate": 56.5,
+        "pay_frequency": "Semi-Monthly",
+        "deductions": {
+          "sss_contribution": 700,
+          "philhealth_contribution": 281.25,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 18500,
+            "amortization": 800
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 1028.43
+          },
+          "cash_advance": 0,
+          "other_deductions": [
+            {
+              "name": "MOTOR LOAN",
+              "amount": 500
+            }
+          ]
+        }
+      }
     },
     {
       "employee_id": "2026-0001",
@@ -1006,7 +1169,39 @@
       "file_completion_status": "Incomplete",
       "created_by": 1,
       "id": 16,
-      "profile_picture": "/uploads/profile_photos/profile_16_1769750437317.jpeg"
+      "profile_picture": "/uploads/profile_photos/profile_16_1769750437317.jpeg",
+      "salary_info": {
+        "basic_salary": 13560,
+        "allowances": {
+          "special": 1000
+        },
+        "daily_rate": 452,
+        "hourly_rate": 56.5,
+        "pay_frequency": "Semi-Monthly",
+        "deductions": {
+          "sss_contribution": 675,
+          "philhealth_contribution": 281.25,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 8000,
+            "amortization": 800
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      },
+      "emergency_contact_relationship": null,
+      "emergency_contact_address": null,
+      "citizen_id_address": null
     },
     {
       "employee_id": "2026-0002",
@@ -1046,7 +1241,41 @@
       "file_completion_status": "Incomplete",
       "created_by": 1,
       "id": 17,
-      "profile_picture": "/uploads/profile_photos/profile_17_1769750437319.png"
+      "profile_picture": "/uploads/profile_photos/profile_17_1769750437319.png",
+      "salary_info": {
+        "basic_salary": 15060,
+        "allowances": {
+          "special": 1000
+        },
+        "daily_rate": 502,
+        "hourly_rate": 62.75,
+        "pay_frequency": "Semi-Monthly",
+        "deductions": {
+          "sss_contribution": 700,
+          "philhealth_contribution": 318.75,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 17600,
+            "amortization": 800
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "cash_advance": 0,
+          "other_deductions": [
+            {
+              "name": "MOTOR LOAN",
+              "amount": 1500
+            }
+          ]
+        }
+      }
     },
     {
       "employee_id": "2022-0007",
@@ -1233,7 +1462,36 @@
       "file_completion_status": "Incomplete",
       "created_by": 1,
       "id": 20,
-      "profile_picture": "/uploads/profile_photos/profile_20_1769750437323.png"
+      "profile_picture": "/uploads/profile_photos/profile_20_1769750437323.png",
+      "salary_info": {
+        "basic_salary": 24660,
+        "allowances": {
+          "special": 4500
+        },
+        "daily_rate": 822,
+        "hourly_rate": 102.75,
+        "pay_frequency": "Semi-Monthly",
+        "deductions": {
+          "sss_contribution": 1250,
+          "philhealth_contribution": 558.75,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 1504.11
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 1505
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      }
     },
     {
       "employee_id": "2016-0003",
@@ -1276,7 +1534,36 @@
       "file_completion_status": "Incomplete",
       "created_by": 1,
       "id": 21,
-      "profile_picture": "/uploads/profile_photos/profile_21_1769750437324.png"
+      "profile_picture": "/uploads/profile_photos/profile_21_1769750437324.png",
+      "salary_info": {
+        "basic_salary": 18660,
+        "allowances": {
+          "special": 3500
+        },
+        "daily_rate": 622,
+        "hourly_rate": 77.75,
+        "pay_frequency": "Semi-Monthly",
+        "deductions": {
+          "sss_contribution": 1025,
+          "philhealth_contribution": 408.75,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "cash_advance": 0,
+          "other_deductions": []
+        }
+      }
     },
     {
       "employee_id": "2026-0003",
@@ -1319,7 +1606,36 @@
       "file_completion_status": "Incomplete",
       "created_by": 1,
       "id": 22,
-      "profile_picture": "/uploads/profile_photos/profile_22_1769750437326.png"
+      "profile_picture": "/uploads/profile_photos/profile_22_1769750437326.png",
+      "salary_info": {
+        "basic_salary": 13560,
+        "allowances": {
+          "special": 1500
+        },
+        "daily_rate": 452,
+        "hourly_rate": 56.5,
+        "pay_frequency": "Semi-Monthly",
+        "deductions": {
+          "sss_contribution": 725,
+          "philhealth_contribution": 281.25,
+          "pagibig_contribution": 200,
+          "company_cash_fund": 300,
+          "company_loan": {
+            "balance": 57500,
+            "amortization": 500
+          },
+          "sss_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "pagibig_loan": {
+            "balance": 0,
+            "amortization": 0
+          },
+          "cash_advance": 4500,
+          "other_deductions": []
+        }
+      }
     }
   ],
   "documents": [
@@ -1874,7 +2190,246 @@
       "id": 55
     }
   ],
-  "attendance": [],
+  "attendance": [
+    {
+      "employee_id": 1,
+      "date": "2026-01-02",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "08:00",
+      "morning_out": "12:00",
+      "afternoon_in": "13:00",
+      "afternoon_out": "19:29",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 1
+    },
+    {
+      "employee_id": 2,
+      "date": "2026-01-02",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:50",
+      "morning_out": "09:01",
+      "afternoon_in": "17:05",
+      "afternoon_out": "17:17",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 2
+    },
+    {
+      "employee_id": 6,
+      "date": "2026-01-02",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:50",
+      "morning_out": "09:01",
+      "afternoon_in": "17:10",
+      "afternoon_out": "17:54",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 3
+    },
+    {
+      "employee_id": 4,
+      "date": "2026-01-02",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "08:08",
+      "morning_out": "09:00",
+      "afternoon_in": "16:40",
+      "afternoon_out": "17:26",
+      "total_hours": 0,
+      "status": "Late",
+      "remarks": null,
+      "id": 4
+    },
+    {
+      "employee_id": 11,
+      "date": "2026-01-02",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:35",
+      "morning_out": "09:00",
+      "afternoon_in": "16:40",
+      "afternoon_out": "17:46",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 5
+    },
+    {
+      "employee_id": 12,
+      "date": "2026-01-02",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:32",
+      "morning_out": "09:00",
+      "afternoon_in": "16:43",
+      "afternoon_out": "17:30",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 6
+    },
+    {
+      "employee_id": 13,
+      "date": "2026-01-02",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:55",
+      "morning_out": "09:01",
+      "afternoon_in": "17:01",
+      "afternoon_out": "17:34",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 7
+    },
+    {
+      "employee_id": 14,
+      "date": "2026-01-02",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:42",
+      "morning_out": "09:00",
+      "afternoon_in": "17:03",
+      "afternoon_out": "17:58",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 8
+    },
+    {
+      "employee_id": 15,
+      "date": "2026-01-02",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "08:12",
+      "morning_out": "12:00",
+      "afternoon_in": "13:00",
+      "afternoon_out": null,
+      "total_hours": 0,
+      "status": "Late",
+      "remarks": null,
+      "id": 9
+    },
+    {
+      "employee_id": 21,
+      "date": "2026-01-02",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:48",
+      "morning_out": "12:00",
+      "afternoon_in": "13:00",
+      "afternoon_out": "20:05",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 10
+    },
+    {
+      "employee_id": 20,
+      "date": "2026-01-02",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:58",
+      "morning_out": "12:00",
+      "afternoon_in": "13:00",
+      "afternoon_out": "20:06",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 11
+    },
+    {
+      "employee_id": 16,
+      "date": "2026-01-02",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:58",
+      "morning_out": "09:00",
+      "afternoon_in": "17:00",
+      "afternoon_out": "17:55",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 12
+    },
+    {
+      "employee_id": 17,
+      "date": "2026-01-02",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "08:00",
+      "morning_out": "09:00",
+      "afternoon_in": "17:07",
+      "afternoon_out": "17:33",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 13
+    },
+    {
+      "employee_id": 9,
+      "date": "2026-01-02",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": null,
+      "morning_out": null,
+      "afternoon_in": null,
+      "afternoon_out": null,
+      "total_hours": 0,
+      "status": "On Leave",
+      "remarks": null,
+      "id": 15
+    },
+    {
+      "employee_id": 1,
+      "date": "2026-01-03",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:58",
+      "morning_out": "12:00",
+      "afternoon_in": "13:00",
+      "afternoon_out": "18:29",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 16
+    },
+    {
+      "employee_id": 2,
+      "date": "2026-01-03",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:59",
+      "morning_out": "08:54",
+      "afternoon_in": "17:05",
+      "afternoon_out": "17:16",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 17
+    },
+    {
+      "employee_id": 6,
+      "date": "2026-01-03",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:43",
+      "morning_out": "08:53",
+      "afternoon_in": "17:05",
+      "afternoon_out": "17:50",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 18
+    }
+  ],
   "leave_requests": [],
   "disciplinary_records": [],
   "training_records": [],
@@ -4346,6 +4901,206 @@
       "ip_address": "127.0.0.1",
       "created_at": "2026-01-30T08:27:51.010Z",
       "id": 292
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":2,\"old_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1800},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1800},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 293
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":6,\"old_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":675,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":16345,\\\"amortization\\\":2000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1199.77},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1773.3},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":675,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":16345,\\\"amortization\\\":2000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1199.77},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1773.3},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 294
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":4,\"old_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":22500,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":530.67},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":370.98},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":22000,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":530.67},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":371},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 295
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":11,\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1000},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":263.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":17000,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":656.6},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 296
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":12,\"new_value\":\"{\\\"basic_salary\\\":14310,\\\"allowances\\\":{\\\"special\\\":1800},\\\"daily_rate\\\":477,\\\"hourly_rate\\\":59.63,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":750,\\\"philhealth_contribution\\\":300,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":29520,\\\"amortization\\\":2000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1384.35},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":2673.88},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 297
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":12,\"old_value\":\"{\\\"basic_salary\\\":14310,\\\"allowances\\\":{\\\"special\\\":1800},\\\"daily_rate\\\":477,\\\"hourly_rate\\\":59.63,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":750,\\\"philhealth_contribution\\\":300,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":29520,\\\"amortization\\\":2000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1384.35},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":2673.88},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":14310,\\\"allowances\\\":{\\\"special\\\":1800},\\\"daily_rate\\\":477,\\\"hourly_rate\\\":59.63,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":750,\\\"philhealth_contribution\\\":300,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":29520,\\\"amortization\\\":2000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1384.35},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":2673.88},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 298
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":13,\"new_value\":\"{\\\"basic_salary\\\":15660,\\\"allowances\\\":{\\\"special\\\":1800},\\\"daily_rate\\\":522,\\\"hourly_rate\\\":65.25,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":850,\\\"philhealth_contribution\\\":333.75,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":6000,\\\"amortization\\\":3000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 299
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":14,\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1000},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":675,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":8000,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 300
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":15,\"new_value\":\"{\\\"basic_salary\\\":13559.7,\\\"allowances\\\":{\\\"special\\\":2500},\\\"daily_rate\\\":451.99,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":18500,\\\"amortization\\\":1600},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1028.43},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 301
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":21,\"new_value\":\"{\\\"basic_salary\\\":18660,\\\"allowances\\\":{\\\"special\\\":3500},\\\"daily_rate\\\":622,\\\"hourly_rate\\\":77.75,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":1025,\\\"philhealth_contribution\\\":408.75,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 302
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":21,\"old_value\":\"{\\\"basic_salary\\\":18660,\\\"allowances\\\":{\\\"special\\\":3500},\\\"daily_rate\\\":622,\\\"hourly_rate\\\":77.75,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":1025,\\\"philhealth_contribution\\\":408.75,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":18660,\\\"allowances\\\":{\\\"special\\\":3500},\\\"daily_rate\\\":622,\\\"hourly_rate\\\":77.75,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":1025,\\\"philhealth_contribution\\\":408.75,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 303
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":20,\"new_value\":\"{\\\"basic_salary\\\":24660,\\\"allowances\\\":{\\\"special\\\":4500},\\\"daily_rate\\\":822,\\\"hourly_rate\\\":102.75,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":1250,\\\"philhealth_contribution\\\":558.75,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1504.11},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1505},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 304
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":20,\"old_value\":\"{\\\"basic_salary\\\":24660,\\\"allowances\\\":{\\\"special\\\":4500},\\\"daily_rate\\\":822,\\\"hourly_rate\\\":102.75,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":1250,\\\"philhealth_contribution\\\":558.75,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1504.11},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1505},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":24660,\\\"allowances\\\":{\\\"special\\\":4500},\\\"daily_rate\\\":822,\\\"hourly_rate\\\":102.75,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":1250,\\\"philhealth_contribution\\\":558.75,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1504.11},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1505},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 305
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":22,\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1500},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":725,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":57500,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 306
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":22,\"old_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1500},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":725,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":57500,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1500},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":725,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":57500,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":4500,\\\"other_deductions\\\":[]}}\"}",
+      "id": 307
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":16,\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1000},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":675,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":8000,\\\"amortization\\\":1600},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 308
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_EMPLOYEE",
+      "details": "{\"table_name\":\"employees\",\"record_id\":16,\"old_value\":\"{\\\"employee_id\\\":\\\"2026-0001\\\",\\\"last_name\\\":\\\"ROSAL\\\",\\\"first_name\\\":\\\"ALDIE\\\",\\\"middle_name\\\":\\\"ESTRERA\\\",\\\"department\\\":\\\"Operations\\\",\\\"position\\\":\\\"CI/COLLECTOR\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"date_hired\\\":\\\"2022-01-11\\\",\\\"date_of_birth\\\":\\\"1982-07-13\\\",\\\"contact_number\\\":\\\"09816343448\\\",\\\"email_address\\\":null,\\\"address\\\":\\\"BRGY DON FELIPE LARRAZABAL ORMOC CITY\\\",\\\"sss_number\\\":\\\"3384358077\\\",\\\"philhealth_number\\\":\\\"130252470906\\\",\\\"pagibig_number\\\":\\\"121082597375\\\",\\\"tin\\\":null,\\\"civil_status\\\":\\\"Single\\\",\\\"remarks\\\":null,\\\"training_details\\\":null,\\\"disciplinary_details\\\":null,\\\"personal_info_complete\\\":0,\\\"preemployment_req_complete\\\":0,\\\"government_docs_complete\\\":0,\\\"employment_records_complete\\\":0,\\\"attendance_records_complete\\\":0,\\\"payroll_records_complete\\\":0,\\\"disciplinary_records\\\":0,\\\"training_records\\\":0,\\\"separation_records\\\":0,\\\"gender\\\":\\\"Male\\\",\\\"religion\\\":\\\"ROMAN CATHOLIC\\\",\\\"emergency_contact_name\\\":null,\\\"emergency_contact_number\\\":null,\\\"file_completion_status\\\":\\\"Incomplete\\\",\\\"created_by\\\":1,\\\"id\\\":16,\\\"profile_picture\\\":\\\"/uploads/profile_photos/profile_16_1769750437317.jpeg\\\",\\\"salary_info\\\":{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1000},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":675,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":8000,\\\"amortization\\\":1600},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}}\",\"new_value\":\"{\\\"first_name\\\":\\\"ALDIE\\\",\\\"middle_name\\\":\\\"ESTRERA\\\",\\\"last_name\\\":\\\"ROSAL\\\",\\\"date_of_birth\\\":\\\"1982-07-13\\\",\\\"gender\\\":\\\"Male\\\",\\\"civil_status\\\":\\\"Single\\\",\\\"religion\\\":\\\"ROMAN CATHOLIC\\\",\\\"email_address\\\":null,\\\"contact_number\\\":\\\"09816343448\\\",\\\"address\\\":\\\"BRGY DON FELIPE LARRAZABAL ORMOC CITY\\\",\\\"employment_status\\\":\\\"Regular\\\",\\\"emergency_contact_name\\\":null,\\\"emergency_contact_number\\\":null,\\\"emergency_contact_relationship\\\":null,\\\"emergency_contact_address\\\":null,\\\"profile_picture\\\":\\\"/uploads/profile_photos/profile_16_1769750437317.jpeg\\\",\\\"branch\\\":\\\"Ormoc Branch\\\",\\\"citizen_id_address\\\":null,\\\"date_hired\\\":\\\"2022-01-11\\\"}\"}",
+      "id": 309
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":17,\"new_value\":\"{\\\"basic_salary\\\":15060,\\\"allowances\\\":{\\\"special\\\":1000},\\\"daily_rate\\\":502,\\\"hourly_rate\\\":62.75,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":318.75,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":17600,\\\"amortization\\\":1600},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[{\\\"name\\\":\\\"MOTOR LOAN\\\",\\\"amount\\\":1500}]}}\"}",
+      "id": 310
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":15,\"old_value\":\"{\\\"basic_salary\\\":13559.7,\\\"allowances\\\":{\\\"special\\\":2500},\\\"daily_rate\\\":451.99,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":18500,\\\"amortization\\\":1600},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1028.43},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13559.7,\\\"allowances\\\":{\\\"special\\\":2500},\\\"daily_rate\\\":451.99,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":18500,\\\"amortization\\\":1600},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1028.43},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[{\\\"name\\\":\\\"MOTOR LOAN\\\",\\\"amount\\\":500}]}}\"}",
+      "id": 311
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":9,\"old_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":2500},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":3500,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":587.95},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":2500},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":18500,\\\"amortization\\\":1600},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":587.95},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 312
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":6,\"old_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":675,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":16345,\\\"amortization\\\":2000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1199.77},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1773.3},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":675,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":16345,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1199.77},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1773.3},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 313
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":4,\"old_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":22000,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":530.67},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":371},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":22000,\\\"amortization\\\":500},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":530.67},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":371},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 314
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":4,\"old_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":22000,\\\"amortization\\\":500},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":530.67},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":371},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"allowances\\\":{\\\"special\\\":1000},\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":22000,\\\"amortization\\\":1500},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":530.67},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":371},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 315
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":11,\"old_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1000},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":263.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":17000,\\\"amortization\\\":0},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":656.6},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1000},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":263.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":17000,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":656.6},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 316
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":12,\"old_value\":\"{\\\"basic_salary\\\":14310,\\\"allowances\\\":{\\\"special\\\":1800},\\\"daily_rate\\\":477,\\\"hourly_rate\\\":59.63,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":750,\\\"philhealth_contribution\\\":300,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":29520,\\\"amortization\\\":2000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1384.35},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":2673.88},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":14310,\\\"allowances\\\":{\\\"special\\\":1800},\\\"daily_rate\\\":477,\\\"hourly_rate\\\":59.63,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":750,\\\"philhealth_contribution\\\":300,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":29520,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1384.35},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":2673.88},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 317
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":13,\"old_value\":\"{\\\"basic_salary\\\":15660,\\\"allowances\\\":{\\\"special\\\":1800},\\\"daily_rate\\\":522,\\\"hourly_rate\\\":65.25,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":850,\\\"philhealth_contribution\\\":333.75,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":6000,\\\"amortization\\\":3000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":15660,\\\"allowances\\\":{\\\"special\\\":1800},\\\"daily_rate\\\":522,\\\"hourly_rate\\\":65.25,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":850,\\\"philhealth_contribution\\\":333.75,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":6000,\\\"amortization\\\":1500},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 318
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":14,\"old_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1000},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":675,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":8000,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1000},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":675,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":8000,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 319
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":15,\"old_value\":\"{\\\"basic_salary\\\":13559.7,\\\"allowances\\\":{\\\"special\\\":2500},\\\"daily_rate\\\":451.99,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":18500,\\\"amortization\\\":1600},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1028.43},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[{\\\"name\\\":\\\"MOTOR LOAN\\\",\\\"amount\\\":500}]}}\",\"new_value\":\"{\\\"basic_salary\\\":13559.7,\\\"allowances\\\":{\\\"special\\\":2500},\\\"daily_rate\\\":451.99,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":18500,\\\"amortization\\\":800},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":1028.43},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[{\\\"name\\\":\\\"MOTOR LOAN\\\",\\\"amount\\\":500}]}}\"}",
+      "id": 320
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":22,\"old_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1500},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":725,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":57500,\\\"amortization\\\":1000},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":4500,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1500},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":725,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":57500,\\\"amortization\\\":500},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":4500,\\\"other_deductions\\\":[]}}\"}",
+      "id": 321
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":16,\"old_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1000},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":675,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":8000,\\\"amortization\\\":1600},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":1000},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":675,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":8000,\\\"amortization\\\":800},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 322
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":17,\"old_value\":\"{\\\"basic_salary\\\":15060,\\\"allowances\\\":{\\\"special\\\":1000},\\\"daily_rate\\\":502,\\\"hourly_rate\\\":62.75,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":318.75,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":17600,\\\"amortization\\\":1600},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[{\\\"name\\\":\\\"MOTOR LOAN\\\",\\\"amount\\\":1500}]}}\",\"new_value\":\"{\\\"basic_salary\\\":15060,\\\"allowances\\\":{\\\"special\\\":1000},\\\"daily_rate\\\":502,\\\"hourly_rate\\\":62.75,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":318.75,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":17600,\\\"amortization\\\":800},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[{\\\"name\\\":\\\"MOTOR LOAN\\\",\\\"amount\\\":1500}]}}\"}",
+      "id": 323
+    },
+    {
+      "user_id": 20,
+      "action": "UPDATE_SALARY_INFO",
+      "details": "{\"table_name\":\"employees\",\"record_id\":9,\"old_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":2500},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":18500,\\\"amortization\\\":1600},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":587.95},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\",\"new_value\":\"{\\\"basic_salary\\\":13560,\\\"allowances\\\":{\\\"special\\\":2500},\\\"daily_rate\\\":452,\\\"hourly_rate\\\":56.5,\\\"pay_frequency\\\":\\\"Semi-Monthly\\\",\\\"deductions\\\":{\\\"sss_contribution\\\":700,\\\"philhealth_contribution\\\":281.25,\\\"pagibig_contribution\\\":200,\\\"company_cash_fund\\\":300,\\\"company_loan\\\":{\\\"balance\\\":18500,\\\"amortization\\\":800},\\\"sss_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":587.95},\\\"pagibig_loan\\\":{\\\"balance\\\":0,\\\"amortization\\\":0},\\\"cash_advance\\\":0,\\\"other_deductions\\\":[]}}\"}",
+      "id": 324
+    },
+    {
+      "user_id": 16,
+      "action": "APPROVE_USER",
+      "details": "{\"user_id\":21,\"username\":\"aim19\"}",
+      "ip_address": "127.0.0.1",
+      "created_at": "2026-01-31T03:34:32.976Z",
+      "id": 325
     }
   ],
   "settings": [
@@ -4698,9 +5453,9 @@
       "expires_at": "2026-01-30T02:47:57.416Z"
     },
     {
-      "id": "b0fcc2e04efe438dd72f7bef12b959c3",
-      "user_id": 20,
-      "expires_at": "2026-01-31T08:28:00.307Z",
+      "id": "0d91aa550838f4161e6cd6d458a8da0b",
+      "user_id": 21,
+      "expires_at": "2026-02-01T03:34:44.617Z",
       "selected_branch": "Ormoc"
     }
   ],
@@ -4954,6 +5709,16 @@
       "created_at": "2026-01-30T08:27:26.080Z",
       "id": 6,
       "processed_at": "2026-01-30T08:27:50.966Z"
+    },
+    {
+      "user_id": 21,
+      "full_name": "aim19",
+      "email": "gmia0519@gmail.com",
+      "role": "HR",
+      "status": "APPROVED",
+      "created_at": "2026-01-31T03:34:09.659Z",
+      "id": 7,
+      "processed_at": "2026-01-31T03:34:32.817Z"
     }
   ],
   "employee_certificates": [

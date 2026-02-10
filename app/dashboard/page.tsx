@@ -3,16 +3,16 @@
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
+    const router = useRouter();
     const [stats, setStats] = useState<any>(null);
     const [leaves, setLeaves] = useState<any[]>([]);
     const [onboarding, setOnboarding] = useState<any[]>([]);
+    const [announcements, setAnnouncements] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [aiResponse, setAiResponse] = useState('');
-    const [aiLoading, setAiLoading] = useState(false);
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -26,23 +26,34 @@ export default function DashboardPage() {
         try {
             setLoading(true);
             const sessionId = localStorage.getItem('sessionId');
-            const [statsRes, leavesRes, empRes] = await Promise.all([
-                fetch('/api/dashboard/stats'),
-                fetch('/api/leave?status=Approved'),
-                fetch('/api/employees', {
-                    headers: { 'x-session-id': sessionId || '' }
-                })
+            const userData = localStorage.getItem('user');
+            const userParsed = userData ? JSON.parse(userData) : null;
+            const userBranch = userParsed?.username === 'superadmin' ? 'All' : (userParsed?.assigned_branch || 'All');
+
+            const headers = { 'x-session-id': sessionId || '' };
+
+            const [statsRes, leavesRes, empRes, annRes] = await Promise.all([
+                fetch('/api/dashboard/stats', { headers }),
+                fetch('/api/leave?status=Approved', { headers }),
+                fetch('/api/employees', { headers }),
+                fetch(`/api/announcements?is_active=true&branch=${encodeURIComponent(userBranch)}`, { headers })
             ]);
+
+            if (statsRes.status === 401) {
+                router.push('/login');
+                return;
+            }
 
             const statsData = await statsRes.json();
             const leavesData = await leavesRes.json();
             const empData = await empRes.json();
+            const annData = await annRes.json();
             const employees = Array.isArray(empData) ? empData : [];
 
             setStats(statsData);
-            setLeaves(Array.isArray(leavesData) ? leavesData.slice(0, 10) : []);
+            setLeaves(Array.isArray(leavesData) ? leavesData : []);
+            setAnnouncements(Array.isArray(annData) ? annData : []);
 
-            // Get last 4 hired employees for onboarding
             const recentlyHired = employees
                 .sort((a: any, b: any) => new Date(b.date_hired).getTime() - new Date(a.date_hired).getTime())
                 .slice(0, 4);
@@ -55,583 +66,558 @@ export default function DashboardPage() {
         }
     };
 
-    const handleAiSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!searchQuery.trim()) return;
-
-        setAiLoading(true);
-        // Simple mock AI response logic based on current system data
-        setTimeout(() => {
-            const query = searchQuery.toLowerCase();
-            if (query.includes('employee') || query.includes('who')) {
-                setAiResponse(`Found ${stats?.totalEmployees || 0} active employees. You can manage them in the Employees tab.`);
-            } else if (query.includes('leave') || query.includes('off')) {
-                setAiResponse(`There are currently ${stats?.pendingLeaves || 0} pending leave requests requiring your attention.`);
-            } else if (query.includes('birthday')) {
-                setAiResponse(`The next birthday is ${stats?.upcomingBirthdays?.[0]?.name || 'not soon'}.`);
-            } else {
-                setAiResponse("I'm Melann's AI assistant. I can help you find employees, check leave statuses, or generate reports.");
-            }
-            setAiLoading(false);
-        }, 800);
-    };
-
-    // Helper for timeline calculation
-    const getDaysInMonth = () => {
-        const now = new Date();
-        return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    };
-
-    const days = Array.from({ length: 16 }, (_, i) => i + 1); // Showing first 16 days for simplicity
+    const days = Array.from({ length: 14 }, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() + i);
+        return d;
+    });
 
     if (loading) {
         return (
             <DashboardLayout>
-                <div className="loading-container">
-                    <div className="spinner"></div>
-                    <p>Fetching real-time data...</p>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#64748b' }}>
+                    Loading...
                 </div>
-                <style jsx>{`
-                    .loading-container {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        height: 60vh;
-                        color: #64748b;
-                    }
-                    .spinner {
-                        width: 40px;
-                        height: 40px;
-                        border: 3px solid #e2e8f0;
-                        border-top-color: #6366f1;
-                        border-radius: 50%;
-                        animation: spin 1s linear infinite;
-                        margin-bottom: 1rem;
-                    }
-                    @keyframes spin { to { transform: rotate(360deg); } }
-                `}</style>
             </DashboardLayout>
         );
     }
 
     return (
         <DashboardLayout>
-            <div className="dashboard-wrapper">
-                {/* Section: Summary Metrics Card Row */}
-                <div className="metrics-grid">
-                    <div className="metric-card glass-effect">
-                        <div className="metric-info">
-                            <span className="metric-label">Total Employees</span>
-                            <h3 className="metric-value">{stats?.totalEmployees || 0}</h3>
-                            <div className={`metric-trend ${stats?.comparisons?.employees?.positive ? 'up' : 'down'}`}>
-                                {stats?.comparisons?.employees?.positive ? '↑' : '↓'} {stats?.comparisons?.employees?.value}%
-                                <span className="trend-label"> vs last year</span>
-                            </div>
-                        </div>
-                        <div className="metric-icon employees-icon">👥</div>
-                        <Link href="/employees" className="metric-details">Details ↗</Link>
-                    </div>
+            <div className="dashboard-container">
 
-                    <div className="metric-card glass-effect">
-                        <div className="metric-info">
-                            <span className="metric-label">Departments</span>
-                            <h3 className="metric-value">{stats?.totalDepartments || 0}</h3>
-                            <div className="metric-trend none">
-                                Company Divisions
-                            </div>
-                        </div>
-                        <div className="metric-icon dept-icon">🏢</div>
-                        <Link href="/employees" className="metric-details">View ↗</Link>
-                    </div>
-
-                    <div className="metric-card glass-effect">
-                        <div className="metric-info">
-                            <span className="metric-label">Today Presents</span>
-                            <h3 className="metric-value">{stats?.todayPresents || 0}</h3>
-                            <div className={`metric-trend ${stats?.comparisons?.attendance?.positive ? 'up' : 'down'}`}>
-                                {stats?.comparisons?.attendance?.positive ? '↑' : '↓'} {stats?.comparisons?.attendance?.value}%
-                                <span className="trend-label"> vs average</span>
-                            </div>
-                        </div>
-                        <div className="metric-icon present-icon">✅</div>
-                        <Link href="/attendance" className="metric-details">Attendance ↗</Link>
-                    </div>
-
-                    <div className="metric-card glass-effect">
-                        <div className="metric-info">
-                            <span className="metric-label">Today Absents</span>
-                            <h3 className="metric-value">{stats?.todayAbsents || 0}</h3>
-                            <div className="metric-trend down">
-                                {stats?.todayAbsents > 0 ? '⚠️' : '✨'} System tracking
-                            </div>
-                        </div>
-                        <div className="metric-icon absent-icon">❌</div>
-                        <Link href="/leave" className="metric-details">Leaves ↗</Link>
+                {/* Header - Compact */}
+                <div className="dashboard-header">
+                    <div>
+                        <h1>Good Morning, {user?.first_name || user?.username || 'Sarah'}</h1>
+                        <p>Here's what's happening today.</p>
                     </div>
                 </div>
 
-                {/* Section 1: Planned Absences Timeline (REAL DATA) */}
-                <section className="section-absences glass-effect">
-                    <div className="section-header">
-                        <div className="header-title">
-                            <h2>Planned Absences</h2>
-                            <span className="subtitle">Approved Leaves for {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
-                        </div>
-                        <div className="header-actions">
-                            <div className="date-display">
-                                <span className="calendar-icon">📅</span>
-                                <span>{new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                <div className="dashboard-content">
+
+                    {/* Metrics Row */}
+                    <div className="metrics-grid">
+                        <div className="metric-card">
+                            <div className="metric-icon blue">👥</div>
+                            <div className="metric-info">
+                                <span className="label">Total Employees</span>
+                                <span className="value">{stats?.totalEmployees || 0}</span>
                             </div>
-                            <button className="view-all-btn" onClick={() => window.location.href = '/leave'}>Manage Leaves ↗</button>
+                        </div>
+
+                        <div className="metric-card">
+                            <div className="metric-icon purple">🏢</div>
+                            <div className="metric-info">
+                                <span className="label">Departments</span>
+                                <span className="value">{stats?.totalDepartments || 0}</span>
+                            </div>
+                        </div>
+
+                        <div className="metric-card">
+                            <div className="metric-icon green">✅</div>
+                            <div className="metric-info">
+                                <span className="label">Present Today</span>
+                                <span className="value">{stats?.todayPresents || 0}</span>
+                            </div>
+                        </div>
+
+                        <div className="metric-card">
+                            <div className="metric-icon orange">❌</div>
+                            <div className="metric-info">
+                                <span className="label">Absent Today</span>
+                                <span className="value">{stats?.todayAbsents || 0}</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="absences-timeline-container">
-                        <div className="timeline-grid-header">
-                            <div className="empty-corner"></div>
-                            <div className="days-row">
-                                {days.map(d => {
-                                    const today = new Date().getDate();
-                                    return (
-                                        <div key={d} className={`day-col ${d === today ? 'today' : ''}`}>
-                                            <span className="day-name">{new Date(new Date().getFullYear(), new Date().getMonth(), d).toLocaleString('default', { weekday: 'short' })}</span>
-                                            <span className="day-num">{d}</span>
+                    <div className="main-grid">
+
+                        {/* Left Column: Timeline + Hires */}
+                        <div className="left-column">
+                            {/* Timeline - Takes more space */}
+                            <div className="card timeline-card">
+                                <div className="card-header">
+                                    <h3>Planned Absences</h3>
+                                    <Link href="/leave" className="view-link">View All</Link>
+                                </div>
+                                <div className="timeline-wrapper">
+                                    <div className="timeline-container">
+                                        <div className="timeline-dates">
+                                            <div className="spacer"></div>
+                                            {days.map((d, i) => (
+                                                <div key={i} className={`date-col ${i === 0 ? 'today' : ''}`}>
+                                                    <span className="day-name">{d.toLocaleDateString('en-US', { weekday: 'narrow' })}</span>
+                                                    <span className="day-num">{d.getDate()}</span>
+                                                </div>
+                                            ))}
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="timeline-body">
-                            {leaves.length > 0 ? (
-                                // Group leaves by employee to show rows
-                                Array.from(new Set(leaves.map(l => l.employee_id))).slice(0, 5).map(empId => {
-                                    const empLeaves = leaves.filter(l => l.employee_id === empId);
-                                    const empName = empLeaves[0].employee_name;
-                                    const dept = empLeaves[0].department;
-
-                                    return (
-                                        <div key={empId} className="employee-row">
-                                            <div className="employee-info">
-                                                <div className="emp-photo" style={{ background: `hsl(${empId * 40 % 360}, 70%, 60%)` }}>
-                                                    {empName.split(' ').map((n: any) => n[0]).join('')}
-                                                </div>
-                                                <div className="emp-text">
-                                                    <Link href={`/employees/${empId}`} className="name">{empName}</Link>
-                                                    <div className="role">{dept}</div>
-                                                </div>
-                                            </div>
-                                            <div className="timeline-slots">
-                                                {days.map((_, i) => (
-                                                    <div key={i} className={`slot-cell`}></div>
-                                                ))}
-                                                {empLeaves.map((l, idx) => {
-                                                    const start = new Date(l.start_date).getDate();
-                                                    const end = new Date(l.end_date).getDate();
-                                                    if (start > 16) return null;
-
-                                                    const width = Math.min(end - start + 1, 16 - start + 1);
-                                                    const typeClass = l.leave_type.toLowerCase().includes('sick') ? 'sick-leave' :
-                                                        l.leave_type.toLowerCase().includes('vacation') ? 'vacation-leave' : 'paid-leave';
-
+                                        <div className="timeline-body">
+                                            {leaves.length > 0 ? (
+                                                Array.from(new Set(leaves.map(l => l.employee_id))).slice(0, 8).map(empId => {
+                                                    const empLeaves = leaves.filter(l => l.employee_id === empId);
+                                                    const empName = empLeaves[0].employee_name;
                                                     return (
-                                                        <div key={idx} className={`leave-block ${typeClass}`}
-                                                            style={{
-                                                                left: `calc(${(start - 1) * 6.25}% + 2px)`,
-                                                                width: `calc(${width * 6.25}% - 4px)`
-                                                            }}>
-                                                            <span className="l-text">{l.leave_type}</span>
+                                                        <div key={empId} className="timeline-row">
+                                                            <div className="employee-info">
+                                                                <div className="avatar" style={{ background: `hsl(${empId * 40 % 360}, 70%, 85%)` }}>
+                                                                    {empName.charAt(0)}
+                                                                </div>
+                                                                <span className="name">{empName.split(' ')[0]}</span>
+                                                            </div>
+                                                            <div className="timeline-track">
+                                                                {days.map((d, i) => {
+                                                                    const dayTime = d.setHours(0, 0, 0, 0);
+                                                                    const activeLeave = empLeaves.find(l => {
+                                                                        const start = new Date(l.start_date).setHours(0, 0, 0, 0);
+                                                                        const end = new Date(l.end_date).setHours(0, 0, 0, 0);
+                                                                        return dayTime >= start && dayTime <= end;
+                                                                    });
+
+                                                                    if (activeLeave) {
+                                                                        const isStart = new Date(activeLeave.start_date).setHours(0, 0, 0, 0) === dayTime;
+                                                                        const isEnd = new Date(activeLeave.end_date).setHours(0, 0, 0, 0) === dayTime;
+                                                                        const typeClass = activeLeave.leave_type.toLowerCase().includes('sick') ? 'sick' : 'vacation';
+                                                                        return <div key={i} className={`timeline-cell active ${typeClass} ${isStart ? 'start' : ''} ${isEnd ? 'end' : ''}`} title={activeLeave.leave_type}></div>;
+                                                                    }
+                                                                    return <div key={i} className="timeline-cell"></div>;
+                                                                })}
+                                                            </div>
                                                         </div>
                                                     );
-                                                })}
+                                                })
+                                            ) : (
+                                                <div className="no-data">No upcoming leaves scheduled.</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Recent Hires - Compact list */}
+                            <div className="card recent-hires-card">
+                                <div className="card-header">
+                                    <h3>Recent Hires</h3>
+                                    <Link href="/employees" className="view-link">View All</Link>
+                                </div>
+                                <div className="hires-list">
+                                    {onboarding.length > 0 ? onboarding.map((emp, i) => (
+                                        <div key={i} className="hire-item">
+                                            <div className="avatar small" style={{ background: `hsl(${emp.id * 50 % 360}, 60%, 90%)` }}>
+                                                {emp.first_name[0]}{emp.last_name[0]}
                                             </div>
+                                            <div className="hire-info">
+                                                <div className="name">{emp.first_name} {emp.last_name}</div>
+                                                <div className="role">{emp.position}</div>
+                                            </div>
+                                            <div className="date">{new Date(emp.date_hired).toLocaleDateString()}</div>
                                         </div>
-                                    );
-                                })
-                            ) : (
-                                <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-                                    No approved absences for this period
+                                    )) : <div className="no-data">No recent hires</div>}
                                 </div>
-                            )}
+                            </div>
                         </div>
-                    </div>
-                </section>
 
-                {/* Bottom Row: Three columns */}
-                <div className="bottom-grid">
-                    {/* Column 1: Future Events (Birthdays from Real Data) */}
-                    <div className="grid-item glass-effect">
-                        <div className="item-header">
-                            <h3>Upcoming Birthdays</h3>
-                            <span className="view-link">Next 30 Days</span>
-                        </div>
-                        <div className="events-list">
-                            {stats?.upcomingBirthdays?.slice(0, 3).map((bday: any, i: number) => (
-                                <div key={i} className={`event-card ${bday.daysUntil === 0 ? 'active' : ''}`}>
-                                    {bday.daysUntil === 0 && <div className="corner-tag">TODAY! 🎈</div>}
-                                    <h4>{bday.name}</h4>
-                                    <p>{bday.department} • Birthday Celebration</p>
-                                    <div className="event-meta">
-                                        <div className="meta-pill">📅 {new Date(bday.date).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}</div>
-                                        <div className="meta-pill" style={{ color: bday.daysUntil === 0 ? '#b45309' : '#1e293b' }}>
-                                            {bday.daysUntil === 0 ? 'Happening Now' : `In ${bday.daysUntil} day${bday.daysUntil > 1 ? 's' : ''}`}
+                        {/* Right Column: Quick Actions + Announcements + Birthdays */}
+                        <div className="right-column">
+
+                            {/* Quick Actions */}
+                            <div className="card quick-actions-card">
+                                <h3>Quick Actions</h3>
+                                <div className="actions-grid">
+                                    <button onClick={() => router.push('/employees/add')} className="action-btn">
+                                        <span>👤</span> Add Emp
+                                    </button>
+                                    <button onClick={() => router.push('/reports')} className="action-btn">
+                                        <span>📄</span> Reports
+                                    </button>
+                                    <button onClick={() => router.push('/leave')} className="action-btn">
+                                        <span>🏖️</span> Leaves
+                                    </button>
+                                    <button onClick={() => router.push('/attendance')} className="action-btn">
+                                        <span>⏰</span> Attd.
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Announcements (Flex Grow) */}
+                            <div className="card announcements-card">
+                                <div className="card-header">
+                                    <h3>Announcements</h3>
+                                    <Link href="/announcements" className="view-link">All</Link>
+                                </div>
+                                <div className="announcements-list">
+                                    {announcements.length > 0 ? announcements.map((ann, i) => (
+                                        <div key={i} className={`announcement-item ${ann.priority.toLowerCase()}`}>
+                                            <div className="ann-top">
+                                                <span className="badge">{ann.category}</span>
+                                                <span className="date">{new Date(ann.created_at).toLocaleDateString()}</span>
+                                            </div>
+                                            <h4>{ann.title}</h4>
+                                            <p>{ann.content}</p>
                                         </div>
-                                    </div>
-                                </div>
-                            )) || (
-                                    <p style={{ textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>No birthdays soon</p>
-                                )}
-
-                            {/* Anniversaries/Events Mock if needed */}
-                            <div className="event-card">
-                                <h4>Monthly Staff Meeting</h4>
-                                <p>Conference Room A • All Staff</p>
-                                <div className="event-meta">
-                                    <div className="meta-pill">📅 Jan 30</div>
-                                    <div className="meta-pill">🕒 09:00 AM</div>
+                                    )) : <div className="no-data">No active announcements</div>}
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Column 2: Onboarding (REAL DATA - Recently Hired) */}
-                    <div className="grid-item glass-effect">
-                        <div className="item-header">
-                            <h3>Recent Hires</h3>
-                            <Link href="/employees" className="view-link">View All ↗</Link>
-                        </div>
-                        <div className="onboarding-grid">
-                            {onboarding.length > 0 ? onboarding.map((emp, i) => (
-                                <div key={i} className="onboard-card">
-                                    <div className="onboard-avatar" style={{ background: `hsl(${emp.id * 50 % 360}, 60%, 90%)` }}>
-                                        {emp.first_name[0]}{emp.last_name[0]}
-                                    </div>
-                                    <div className="onboard-name">{emp.first_name} {emp.last_name}</div>
-                                    <div className="onboard-role">{emp.position}</div>
-                                    <div className="onboard-stats">
-                                        Joined {new Date(emp.date_hired).toLocaleDateString()}
-                                    </div>
-                                    <div className="progress-bar-mini">
-                                        <div className="fill" style={{ width: `${emp.file_completion_status === 'Complete' ? 100 : emp.file_completion_status === 'Partial' ? 60 : 30}%` }}></div>
-                                    </div>
+                            {/* Upcoming Birthdays */}
+                            <div className="card birthdays-card">
+                                <h3>Birthdays</h3>
+                                <div className="birthdays-list">
+                                    {stats?.upcomingBirthdays?.slice(0, 3).map((bday: any, i: number) => (
+                                        <div key={i} className="birthday-item">
+                                            <div className="avatar small" style={{ background: `hsl(${i * 120}, 70%, 85%)` }}>
+                                                {bday.name.charAt(0)}
+                                            </div>
+                                            <div className="bday-info">
+                                                <span className="name">{bday.name}</span>
+                                                <span className="date">{new Date(bday.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                            </div>
+                                            <span className="days-left">{bday.daysUntil === 0 ? 'Today' : `${bday.daysUntil}d`}</span>
+                                        </div>
+                                    )) || <div className="no-data">No upcoming birthdays</div>}
                                 </div>
-                            )) : (
-                                <p style={{ gridColumn: '1/-1', textAlign: 'center', color: '#64748b' }}>No recent hires found</p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Column 3: AI Assistant (FUNCTIONAL) */}
-                    <div className="grid-item glass-effect no-padding welcome-widget-container">
-                        <div className="welcome-widget">
-                            <div className="glass-orbit-container">
-                                <div className="glass-sphere"></div>
-                            </div>
-                            <h2>Welcome, {user?.username?.split(' ')[0] || 'Member'}</h2>
-                            {aiResponse ? (
-                                <div className="ai-bubble-response glass-effect">
-                                    <p>{aiResponse}</p>
-                                    <button className="clear-ai" onClick={() => setAiResponse('')}>Ask another question</button>
-                                </div>
-                            ) : (
-                                <p className="help-text">What can I help with today?</p>
-                            )}
-
-                            <div className="action-grid">
-                                <button className="action-btn" onClick={() => window.location.href = '/employees/add'}>👤 Add new employee</button>
-                                <button className="action-btn" onClick={() => window.location.href = '/reports'}>📄 Generate reports</button>
-                                <button className="action-btn" onClick={() => window.location.href = '/leave'}>🏖️ Manage leave</button>
                             </div>
 
-                            <div className="ask-container">
-                                <form onSubmit={handleAiSubmit} className="ask-box">
-                                    <input
-                                        type="text"
-                                        placeholder="Type 'birthday', 'who is here', etc."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                    <div className="ask-icons">
-                                        <span className="icon">📎</span>
-                                        <button type="submit" className="create-submit-btn" disabled={aiLoading}>
-                                            {aiLoading ? 'Thinking...' : 'Search ↗'}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <style jsx>{`
-                .dashboard-wrapper {
+                .dashboard-container {
+                    padding: 0 16px 16px 0;
+                    height: calc(100vh - 80px); /* Subtract approximate header height + padding */
                     display: flex;
                     flex-direction: column;
-                    gap: 30px;
-                    padding-bottom: 40px;
+                    font-family: 'Inter', sans-serif;
+                    overflow: hidden; /* Lock main scroll */
                 }
-
-                /* Metrics Grid Styles */
-                .metrics-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-                    gap: 20px;
+                .dashboard-header {
+                    margin-bottom: 12px;
+                    flex-shrink: 0;
                 }
-
-                .metric-card {
-                    padding: 24px;
-                    border-radius: 28px;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: flex-start;
-                    position: relative;
-                    overflow: hidden;
-                    transition: all 0.3s ease;
-                    min-height: 140px;
-                }
-
-                .metric-card:hover {
-                    transform: translateY(-5px);
-                    box-shadow: 0 15px 30px rgba(0,0,0,0.08);
-                }
-
-                .metric-info {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 4px;
-                }
-
-                .metric-label {
-                    font-size: 0.875rem;
-                    font-weight: 600;
-                    color: #64748b;
-                    letter-spacing: -0.01em;
-                }
-
-                .metric-value {
-                    font-size: 2.25rem;
-                    font-weight: 800;
+                .dashboard-header h1 {
+                    font-size: 1.25rem;
+                    font-weight: 700;
                     color: #1e293b;
                     margin: 0;
-                    letter-spacing: -0.03em;
+                }
+                .dashboard-header p {
+                    color: #64748b;
+                    font-size: 0.8rem;
+                    margin: 0;
+                }
+                
+                .dashboard-content {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    min-height: 0; /* Important for flex child scrolling */
                 }
 
-                .metric-trend {
-                    font-size: 0.75rem;
-                    font-weight: 700;
+                .metrics-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 12px;
+                    flex-shrink: 0;
+                }
+                .metric-card {
+                    background: white;
+                    padding: 12px 16px;
+                    border-radius: 12px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
                     display: flex;
                     align-items: center;
-                    gap: 4px;
-                    margin-top: 8px;
+                    gap: 12px;
                 }
-
-                .metric-trend.up { color: #10b981; }
-                .metric-trend.down { color: #ef4444; }
-                .metric-trend.none { color: #94a3b8; }
-
-                .trend-label {
-                    font-weight: 500;
-                    color: #94a3b8;
-                }
-
                 .metric-icon {
-                    width: 48px;
-                    height: 48px;
-                    border-radius: 16px;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 10px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 1.5rem;
-                    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+                    font-size: 1.1rem;
                 }
+                .metric-icon.blue { background: #eff6ff; color: #3b82f6; }
+                .metric-icon.purple { background: #ede9fe; color: #7c3aed; }
+                .metric-icon.green { background: #ecfdf5; color: #10b981; }
+                .metric-icon.orange { background: #fff7ed; color: #f97316; }
 
-                .employees-icon { background: #eff6ff; }
-                .dept-icon { background: #f5f3ff; }
-                .present-icon { background: #ecfdf5; }
-                .absent-icon { background: #fff1f2; }
-
-                .metric-details {
-                    position: absolute;
-                    bottom: 20px;
-                    right: 24px;
-                    font-size: 0.75rem;
+                .metric-info .label {
+                    font-size: 0.7rem;
+                    font-weight: 500;
+                    color: #64748b;
+                    display: block;
+                }
+                .metric-info .value {
+                    font-size: 1.1rem;
                     font-weight: 700;
-                    color: #3b82f6;
-                    text-decoration: none;
-                    opacity: 0;
-                    transform: translateX(10px);
-                    transition: all 0.2s;
+                    color: #0f172a;
                 }
 
-                .metric-card:hover .metric-details {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-                
-                .section-absences {
-                    border-radius: 32px;
-                    padding: 30px;
+                .main-grid {
+                    flex: 1;
+                    display: grid;
+                    grid-template-columns: 2fr 1fr;
+                    gap: 12px;
+                    min-height: 0; /* Enable internal scrolling */
                 }
 
-                .section-header {
+                .left-column, .right-column {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    height: 100%;
+                    min-height: 0;
+                }
+
+                /* Cards */
+                .card {
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                    padding: 16px;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .card-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    margin-bottom: 30px;
+                    margin-bottom: 10px;
+                    flex-shrink: 0;
+                }
+                .card-header h3 {
+                    font-size: 0.85rem;
+                    font-weight: 700;
+                    color: #0f172a;
+                    margin: 0;
+                }
+                .view-link {
+                    font-size: 0.7rem;
+                    color: #3b82f6;
+                    font-weight: 600;
+                    text-decoration: none;
                 }
 
-                .header-title h2 { font-size: 1.75rem; margin: 0; color: #1e293b; }
-                .subtitle { font-size: 0.875rem; color: #64748b; font-weight: 500; }
-
-                .date-display {
+                /* Timeline */
+                .timeline-card {
+                    flex: 3;
+                    min-height: 0;
+                    overflow: hidden;
+                }
+                .timeline-wrapper {
+                    flex: 1;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .timeline-container {
+                    overflow-x: auto;
+                    overflow-y: auto;
+                    flex: 1;
+                }
+                .timeline-dates {
+                    display: flex;
+                    margin-bottom: 6px;
+                    position: sticky;
+                    top: 0;
                     background: white;
-                    padding: 8px 16px;
-                    border-radius: 12px;
-                    font-size: 0.875rem;
-                    font-weight: 500;
+                    z-index: 10;
+                    padding-bottom: 4px;
+                    border-bottom: 1px solid #f1f5f9;
+                }
+                .spacer { width: 120px; flex-shrink: 0; }
+                .date-col {
+                    flex: 1;
+                    min-width: 32px;
+                    text-align: center;
+                    padding: 2px;
+                }
+                .date-col.today { background: #eff6ff; border-radius: 4px; }
+                .day-name { font-size: 0.6rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; display: block; }
+                .day-num { font-size: 0.75rem; color: #334155; font-weight: 700; }
+
+                .timeline-body {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                }
+                .timeline-row {
+                    display: flex;
+                    align-items: center;
+                }
+                .employee-info {
+                    width: 120px;
+                    flex-shrink: 0;
                     display: flex;
                     align-items: center;
                     gap: 8px;
-                    border: 1px solid #f1f5f9;
                 }
-
-                .view-all-btn {
-                    padding: 8px 16px;
-                    border-radius: 12px;
-                    font-size: 0.875rem;
-                    font-weight: 600;
-                    border: none;
-                    background: #f1f5f9;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                }
-
-                .absences-timeline-container { overflow-x: auto; }
-                .timeline-grid-header { display: flex; margin-bottom: 10px; }
-                .empty-corner { min-width: 220px; }
-                .days-row { display: flex; flex: 1; }
-
-                .day-col {
-                    flex: 1;
-                    min-width: 60px;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 4px;
-                    color: #94a3b8;
-                    font-size: 0.75rem;
-                }
-
-                .day-col.today .day-num {
-                    background: #3b82f6;
-                    color: white;
-                    border-radius: 6px;
-                    width: 24px;
-                    height: 24px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .timeline-body { display: flex; flex-direction: column; gap: 15px; }
-                .employee-row { display: flex; align-items: center; height: 60px; position: relative; }
-                .employee-info { min-width: 220px; display: flex; align-items: center; gap: 12px; }
-
-                .emp-photo {
-                    width: 40px;
-                    height: 40px;
+                .avatar {
+                    width: 26px;
+                    height: 26px;
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    color: white;
-                    font-weight: bold;
-                    font-size: 0.8rem;
-                }
-
-                .emp-text .name { font-weight: 600; font-size: 0.9375rem; color: #1e293b; text-decoration: none; }
-                .emp-text .role { font-size: 0.75rem; color: #64748b; }
-
-                .timeline-slots {
-                    display: flex;
-                    flex: 1;
-                    height: 100%;
-                    background: rgba(248, 250, 252, 0.5);
-                    border-radius: 12px;
-                    position: relative;
-                }
-
-                .slot-cell { flex: 1; border-right: 1px solid rgba(226, 232, 240, 0.4); }
-
-                .leave-block {
-                    position: absolute;
-                    height: 28px;
-                    top: 16px;
-                    border-radius: 8px;
-                    display: flex;
-                    align-items: center;
-                    padding: 0 8px;
-                    font-size: 0.65rem;
                     font-weight: 700;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                    z-index: 5;
-                    overflow: hidden;
+                    font-size: 0.7rem;
+                    color: #334155;
+                }
+                .employee-info .name {
+                    font-size: 0.75rem;
+                    font-weight: 500;
+                    color: #334155;
                     white-space: nowrap;
+                    overflow: hidden;
                     text-overflow: ellipsis;
                 }
+                .timeline-track {
+                    flex: 1;
+                    display: flex;
+                    gap: 3px;
+                }
+                .timeline-cell {
+                    flex: 1;
+                    height: 24px;
+                    background: #f8fafc;
+                    border-radius: 4px;
+                    min-width: 32px;
+                }
+                .timeline-cell.sick { background: #fca5a5; }
+                .timeline-cell.vacation { background: #93c5fd; }
+                .timeline-cell.active { border: 1px solid rgba(0,0,0,0.05); }
 
-                .paid-leave { background: linear-gradient(135deg, #a78bfa, #8b5cf6); color: white; }
-                .sick-leave { background: #3b82f6; color: white; }
-                .vacation-leave { background: #10b981; color: white; }
+                /* Hires */
+                .recent-hires-card {
+                    flex: 2; 
+                    min-height: 0;
+                    overflow: hidden;
+                }
+                .hires-list {
+                    flex: 1;
+                    overflow-y: auto;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+                .hire-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .hire-info { flex: 1; min-width: 0; }
+                .hire-info .name { font-size: 0.75rem; font-weight: 600; color: #334155; }
+                .hire-info .role { font-size: 0.65rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                .hire-item .date { font-size: 0.65rem; color: #94a3b8; }
+                .avatar.small { width: 28px; height: 28px; font-size: 0.65rem; }
 
-                .bottom-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-                .grid-item { border-radius: 32px; padding: 24px; display: flex; flex-direction: column; }
-                .no-padding { padding: 0; }
-                .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-                .item-header h3 { margin: 0; font-size: 1.25rem; color: #1e293b; }
-                .view-link { font-size: 0.75rem; font-weight: 600; color: #64748b; text-decoration: none; }
+                /* Right Column Items */
+                .quick-actions-card {
+                    flex-shrink: 0;
+                }
+                .actions-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 8px;
+                }
+                .action-btn {
+                    padding: 8px;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    color: #475569;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                    cursor: pointer;
+                    font-size: 0.75rem;
+                    transition: all 0.2s;
+                }
+                .action-btn:hover { background: #f1f5f9; color: #0f172a; }
 
-                .events-list { display: flex; flex-direction: column; gap: 15px; }
-                .event-card { padding: 16px; border-radius: 20px; background: white; border: 1px solid #f1f5f9; position: relative; }
-                .event-card.active { background: linear-gradient(135deg, #fef9c3 0%, #fde68a 100%); border-color: #fde68a; }
-                .corner-tag { position: absolute; top: 10px; right: 10px; padding: 4px 8px; background: white; border-radius: 8px; font-size: 0.65rem; font-weight: 700; color: #b45309; }
-                .event-card h4 { margin: 0 0 5px 0; font-size: 0.9rem; color: #1e293b; }
-                .event-card p { font-size: 0.75rem; color: #64748b; margin: 0 0 10px 0; }
-                .event-meta { display: flex; gap: 6px; }
-                .meta-pill { background: white; padding: 4px 8px; border-radius: 8px; font-size: 0.65rem; font-weight: 600; color: #1e293b; border: 1px solid rgba(0,0,0,0.03); }
+                .announcements-card {
+                    flex: 3; /* Takes variable space */
+                    min-height: 0;
+                    overflow: hidden;
+                }
+                .announcements-list {
+                    flex: 1;
+                    overflow-y: auto;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    padding-right: 4px; /* Space for scrollbar */
+                }
+                .announcement-item {
+                    border-left: 3px solid #cbd5e1;
+                    padding-left: 8px;
+                }
+                .announcement-item.high { border-left-color: #ef4444; }
+                .announcement-item h4 {
+                    font-size: 0.8rem;
+                    margin: 0 0 2px 0;
+                    color: #0f172a;
+                }
+                .announcement-item p {
+                    font-size: 0.7rem;
+                    color: #64748b;
+                    margin: 0;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+                .ann-top {
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 0.65rem;
+                    margin-bottom: 2px;
+                }
+                .badge { background: #f1f5f9; padding: 1px 4px; border-radius: 4px; color: #64748b; font-weight: 600; }
 
-                .onboarding-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-                .onboard-card { padding: 14px; background: white; border-radius: 20px; border: 1px solid #f1f5f9; text-align: center; }
-                .onboard-avatar { width: 40px; height: 40px; border-radius: 12px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #1e293b; font-size: 0.8rem; }
-                .onboard-name { font-size: 0.8rem; font-weight: 600; color: #1e293b; }
-                .onboard-role { font-size: 0.7rem; color: #64748b; margin-bottom: 8px; }
-                .onboard-stats { font-size: 0.6rem; background: #f8fafc; padding: 2px 6px; border-radius: 6px; margin-bottom: 8px; }
-                .progress-bar-mini { height: 3px; background: #f1f5f9; border-radius: 2px; overflow: hidden; }
-                .progress-bar-mini .fill { height: 100%; background: #64748b; }
+                .birthdays-card {
+                    flex: 2;
+                    min-height: 0;
+                    overflow: hidden;
+                }
+                .birthdays-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                    overflow-y: auto;
+                }
+                .birthday-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 4px 0;
+                    border-bottom: 1px solid #f1f5f9;
+                }
+                .birthday-item:last-child { border-bottom: none; }
+                .bday-info { flex: 1; display: flex; flex-direction: column; }
+                .bday-info .name { font-size: 0.75rem; font-weight: 600; color: #334155; }
+                .bday-info .date { font-size: 0.65rem; color: #94a3b8; }
+                .days-left { font-size: 0.65rem; font-weight: 600; color: #64748b; }
 
-                .welcome-widget { padding: 30px; height: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; z-index: 5; }
-                .glass-orbit-container { margin-bottom: 20px; position: relative; }
-                .glass-sphere { width: 80px; height: 80px; background: radial-gradient(circle at 30% 30%, #bfdbfe, #3b82f6); border-radius: 50%; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4); }
-                .welcome-widget h2 { font-size: 1.5rem; margin: 0 0 8px 0; color: #1e293b; }
-                .help-text { font-size: 0.9rem; color: #64748b; margin-bottom: 25px; }
-
-                .ai-bubble-response { padding: 15px; border-radius: 16px; font-size: 0.875rem; color: #1e293b; background: #eff6ff; margin-bottom: 20px; position: relative; border: 1px solid #dbeafe; }
-                .clear-ai { background: none; border: none; font-size: 0.7rem; color: #3b82f6; text-decoration: underline; cursor: pointer; margin-top: 8px; font-weight: 600; }
-
-                .action-grid { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-bottom: 20px; }
-                .action-btn { padding: 10px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; font-size: 0.8rem; font-weight: 500; color: #1e293b; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
-                .action-btn:hover { background: #f1f5f9; }
-
-                .ask-container { width: 100%; margin-top: auto; }
-                .ask-box { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 8px 12px; display: flex; flex-direction: column; gap: 8px; }
-                .ask-box input { border: none; outline: none; font-size: 0.875rem; padding: 4px 0; color: #1e293b; }
-                .ask-icons { display: flex; align-items: center; justify-content: space-between; }
-                .create-submit-btn { padding: 6px 14px; background: #3b82f6; border: none; border-radius: 10px; font-size: 0.75rem; font-weight: 700; color: white; cursor: pointer; }
-                .create-submit-btn:disabled { opacity: 0.6; }
-
-                @media (max-width: 1200px) { .bottom-grid { grid-template-columns: 1fr; } }
+                /* Custom Scrollbar Styles */
+                ::-webkit-scrollbar { width: 4px; height: 4px; }
+                ::-webkit-scrollbar-track { background: transparent; }
+                ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+                ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+                
+                .no-data {
+                    text-align: center;
+                    padding: 10px;
+                    color: #94a3b8;
+                    font-size: 0.75rem;
+                    font-style: italic;
+                }
             `}</style>
         </DashboardLayout>
     );

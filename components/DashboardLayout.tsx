@@ -18,6 +18,8 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
     const [user, setUser] = useState<any>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [loadingStatus, setLoadingStatus] = useState('Preparing system...');
+    const [selectedBranch, setSelectedBranch] = useState<string>('All');
+    const [isUpdatingBranch, setIsUpdatingBranch] = useState(false);
 
     // Search States
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -31,6 +33,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
         try {
             const sessionId = localStorage.getItem('sessionId');
             const userData = localStorage.getItem('user');
+            const savedBranch = localStorage.getItem('selectedBranch');
 
             if (!sessionId || !userData || userData === 'undefined' || userData === 'null') {
                 setLoadingStatus('No active session. Redirecting...');
@@ -47,12 +50,60 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
 
             setLoadingStatus('Welcome, ' + parsedUser.username);
             setUser(parsedUser);
+
+            // STRICT BRANCH ENFORCEMENT
+            const isSuper = parsedUser.username === 'superadmin' || parsedUser.role === 'President' || parsedUser.role === 'Vice President';
+
+            if (!isSuper && parsedUser.role === 'HR') {
+                // Force strict assignment
+                const forced = parsedUser.assigned_branch || 'Head Office';
+                setSelectedBranch(forced);
+                localStorage.setItem('selectedBranch', forced);
+            } else {
+                // Normal logic for Super Users
+                if (savedBranch) {
+                    setSelectedBranch(savedBranch);
+                } else {
+                    setSelectedBranch(isSuper ? 'All' : (parsedUser.assigned_branch || 'All'));
+                }
+            }
         } catch (error) {
             console.error('Session error:', error);
             setLoadingStatus('Session error. Redirecting...');
             router.push('/');
         }
     }, [router]);
+
+    const handleBranchChange = async (branch: string) => {
+        setIsUpdatingBranch(true);
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch('/api/auth/branch', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
+                body: JSON.stringify({ branch })
+            });
+
+            if (response.ok) {
+                setSelectedBranch(branch);
+                localStorage.setItem('selectedBranch', branch);
+                // Refresh data by reloading or notifying children
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error('Failed to update branch:', error);
+        } finally {
+            setIsUpdatingBranch(false);
+        }
+    };
+
+    const isAuthorizedForBranchSwitch = user?.role === 'HR' ||
+        user?.role === 'President' ||
+        user?.role === 'Vice President' ||
+        user?.username === 'superadmin';
 
     const handleLogout = async () => {
         const sessionId = localStorage.getItem('sessionId');
@@ -72,11 +123,19 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
             if (trimmedQuery.length > 1) {
                 setIsSearching(true);
                 try {
-                    const res = await fetch(`/api/employees?search=${encodeURIComponent(trimmedQuery)}`);
+                    const sessionId = localStorage.getItem('sessionId');
+                    const res = await fetch(`/api/employees?search=${encodeURIComponent(trimmedQuery)}`, {
+                        headers: { 'x-session-id': sessionId || '' }
+                    });
                     const data = await res.json();
-                    setSearchResults(data.slice(0, 5));
+                    if (Array.isArray(data)) {
+                        setSearchResults(data.slice(0, 5));
+                    } else {
+                        setSearchResults([]);
+                    }
                 } catch (error) {
                     console.error("Search error:", error);
+                    setSearchResults([]);
                 } finally {
                     setIsSearching(false);
                 }
@@ -131,17 +190,20 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
     }
 
     const navigation = [
-        { name: 'Dashboard', href: '/dashboard', icon: '📊', roles: ['HR', 'President', 'Vice President', 'Employee'] },
-        { name: 'My Profile', href: '/profile', icon: '👤', roles: ['Employee'] },
-        { name: '201 Files', href: '/employees', icon: '📋', roles: ['HR', 'President', 'Vice President'] },
-        { name: 'Attendance', href: '/attendance', icon: '⏰', roles: ['HR', 'President', 'Vice President', 'Employee'] },
-        { name: 'Leave Requests', href: '/leave', icon: '🏖️', roles: ['HR', 'President', 'Vice President', 'Employee'] },
-        { name: 'Payroll', href: '/payroll', icon: '🧾', roles: ['HR', 'President', 'Vice President'] },
-        { name: 'Employee Bonuses', href: '/bonuses', icon: '🎁', roles: ['HR', 'President', 'Vice President'] },
-        { name: 'Transportation Allowance', href: '/transportation', icon: '🚗', roles: ['HR', 'President', 'Vice President'] },
-        { name: 'Reports', href: '/reports', icon: '📈', roles: ['HR', 'President', 'Vice President'] },
-        { name: 'Kiosk Scanner', href: '/attendance/kiosk', icon: '📱', roles: ['HR', 'President', 'Vice President', 'Employee'] },
-        { name: 'User Management', href: '/users', icon: '👥', roles: ['President', 'Vice President'] },
+        { name: 'Dashboard', href: '/dashboard', icon: '📊', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager'] },
+        { name: 'My Profile', href: '/profile', icon: '👤', roles: ['Employee', 'HR', 'President', 'Vice President', 'Admin', 'Manager'] },
+        { name: 'TRACKER', href: '/tracker', icon: '🛰️', roles: ['Employee'] },
+        { name: '201 Files', href: '/employees', icon: '📋', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager'] },
+        { name: 'Attendance', href: '/attendance', icon: '⏰', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager'] },
+        { name: 'Leave Requests', href: '/leave', icon: '🏖️', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager'] },
+        { name: 'Emergency Loans', href: '/loans', icon: '💰', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager'] },
+        { name: 'Employee Bonuses', href: '/bonuses', icon: '🎁', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager'] },
+        { name: 'Payroll', href: '/payroll', icon: '💰', roles: ['HR', 'President', 'Vice President', 'Admin', 'Finance'] },
+        { name: 'Transportation Allowance', href: '/transportation', icon: '🚗', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager'] },
+        { name: 'Reports', href: '/reports', icon: '📈', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager'] },
+        { name: 'Memos & Announcements', href: '/announcements', icon: '📢', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager'] },
+        { name: 'Kiosk Scanner', href: '/attendance/kiosk', icon: '📱', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager'] },
+        { name: 'User Management', href: '/users', icon: '👥', roles: ['President', 'Vice President', 'Admin'] },
     ];
 
     const filteredNavigation = navigation.filter(item => {
@@ -149,54 +211,86 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
         if (item.name === 'User Management') {
             return user.username === 'superadmin';
         }
+
+        // Hide My Profile and TRACKER for superadmin
+        if ((item.name === 'My Profile' || item.name === 'TRACKER') && user.username === 'superadmin') {
+            return false;
+        }
+
         // All other items filtered by role
-        return item.roles.includes(user.role);
+        return item.roles.includes(user.role) || user.username === 'superadmin';
     });
 
     return (
         <div className="premium-dashboard-container">
             {/* Fully Restored Original Sidebar */}
             {!hideSidebar && (
-                <aside className="main-sidebar original-sidebar">
-                    <div className="sidebar-branding">
-                        <div className="sidebar-logo-icon">
-                            <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="10" y="50" width="20" height="40" rx="4" fill="#8B2635" />
-                                <rect x="40" y="30" width="20" height="60" rx="4" fill="#D2691E" />
-                                <rect x="70" y="10" width="20" height="80" rx="4" fill="#E74C3C" />
-                            </svg>
+                <aside className="main-sidebar hr-pulse-sidebar" style={{ width: '260px', background: '#064e3b', borderRight: '1px solid #065f46', display: 'flex', flexDirection: 'column', padding: '24px 0' }}>
+
+                    {/* Branding */}
+                    <div className="sidebar-branding" style={{ padding: '0 24px', marginBottom: '40px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                            width: '32px', height: '32px',
+                            background: '#10b981',
+                            borderRadius: '8px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: 'white', fontWeight: 700
+                        }}>
+                            <span style={{ fontSize: '1.2rem' }}>M</span>
                         </div>
-                        <div className="sidebar-text-brand">
-                            <div className="brand-line">Melann</div>
-                            <div className="brand-line" style={{ fontSize: '1rem', opacity: 0.9 }}>HR Management</div>
-                            <div className="brand-line" style={{ fontSize: '1rem', opacity: 0.9 }}>System</div>
-                        </div>
+                        <span style={{ fontSize: '1rem', fontWeight: 700, color: 'white', fontFamily: "'Inter', sans-serif", lineHeight: 1.2 }}>Melann HR Management System</span>
                     </div>
 
-                    <div className="sidebar-divider"></div>
-
-                    <nav className="sidebar-nav">
-                        <ul className="nav-list">
-                            {filteredNavigation.map((item, idx) => (
-                                <li key={idx}>
-                                    <Link href={item.href} className={`nav-link ${pathname === item.href ? 'active' : ''}`}>
-                                        <span className="nav-icon">{item.icon}</span>
-                                        <span className="nav-label">{item.name}</span>
-                                    </Link>
-                                </li>
-                            ))}
+                    {/* Navigation */}
+                    <nav className="sidebar-nav" style={{ flex: 1, padding: '0 12px', overflowY: 'auto' }}>
+                        <ul className="nav-list" style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {filteredNavigation.map((item, idx) => {
+                                const isActive = pathname === item.href;
+                                return (
+                                    <li key={idx}>
+                                        <Link href={item.href} className={`nav-link ${isActive ? 'active' : ''}`}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                padding: '12px 16px',
+                                                borderRadius: '8px',
+                                                color: isActive ? 'white' : '#d1fae5',
+                                                background: isActive ? '#059669' : 'transparent',
+                                                fontWeight: isActive ? 600 : 500,
+                                                textDecoration: 'none',
+                                                transition: 'all 0.2s',
+                                                fontFamily: "'Inter', sans-serif",
+                                                fontSize: '0.95rem'
+                                            }}
+                                        >
+                                            <span className="nav-icon" style={{ marginRight: '12px', fontSize: '1.1rem' }}>{item.icon}</span>
+                                            <span className="nav-label">{item.name}</span>
+                                        </Link>
+                                    </li>
+                                );
+                            })}
                         </ul>
                     </nav>
 
-                    <div className="sidebar-footer">
-                        <Link href="/settings" className="nav-link">
-                            <span className="nav-icon">⚙️</span>
-                            <span className="nav-label">Settings</span>
-                        </Link>
-                        <button onClick={handleLogout} className="nav-link logout">
-                            <span className="nav-icon">🚪</span>
-                            <span className="nav-label">Logout</span>
-                        </button>
+                    {/* User Profile Footer */}
+                    <div className="sidebar-footer" style={{ padding: '24px', borderTop: '1px solid #065f46', marginTop: 'auto' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                            <div style={{
+                                width: '40px', height: '40px',
+                                background: '#34d399', borderRadius: '50%',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '1.2rem'
+                            }}>
+                                👤
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.username}</div>
+                                <div style={{ fontSize: '0.75rem', color: '#d1fae5' }}>{user?.role}</div>
+                            </div>
+                            <button onClick={handleLogout} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#a7f3d0', padding: '4px' }}>
+                                ⚙️
+                            </button>
+                        </div>
                     </div>
                 </aside>
             )}
@@ -222,6 +316,13 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                                                 autoFocus
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' && searchResults.length > 0) {
+                                                        router.push(`/employees/${searchResults[0].id}`);
+                                                        setIsSearchOpen(false);
+                                                        setSearchQuery('');
+                                                    }
+                                                }}
                                             />
                                         )}
                                     </div>
@@ -286,6 +387,32 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                             </div>
 
                             <div className="header-right">
+                                {/* Branch Selector - Strict Logic */}
+                                {user && (user.role === 'HR' || user.role === 'President' || user.role === 'Vice President' || user.username === 'superadmin') && (
+                                    <div className="branch-context-selector">
+                                        <div className="branch-label">Target Branch:</div>
+
+                                        {(user.username === 'superadmin' || user.role === 'President' || user.role === 'Vice President') ? (
+                                            <select
+                                                className="nav-branch-select"
+                                                value={selectedBranch}
+                                                onChange={(e) => handleBranchChange(e.target.value)}
+                                                disabled={isUpdatingBranch}
+                                            >
+                                                <option value="All">🌐 All Branches</option>
+                                                <option value="Head Office">📍 Head Office</option>
+                                                <option value="Naval">📍 Naval</option>
+                                                <option value="Ormoc">📍 Ormoc</option>
+                                            </select>
+                                        ) : (
+                                            <div className="branch-read-only">
+                                                📍 {user.assigned_branch || 'Unassigned'}
+                                                <span className="lock-icon">🔒</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 <div className="team-avatars">
                                     <div className="avatar-group">
                                         <div className="avatar-mini" style={{ background: '#f87171' }}>M</div>
@@ -328,7 +455,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                 }
 
                 .main-sidebar.original-sidebar {
-                    width: 280px;
+                    width: 240px;
                     height: 100vh;
                     background: #1e3a8a; /* Original Deep Blue */
                     display: flex;
@@ -338,17 +465,17 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                 }
 
                 .sidebar-branding {
-                    padding: 40px 25px 25px;
+                    padding: 24px 16px 16px;
                     display: flex;
                     align-items: center;
-                    gap: 15px;
+                    gap: 12px;
                 }
 
                 .sidebar-logo-icon {
-                    width: 54px;
-                    height: 54px;
+                    width: 40px;
+                    height: 40px;
                     background: white;
-                    border-radius: 12px;
+                    border-radius: 10px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -363,98 +490,29 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                 }
 
                 .brand-line {
-                    font-size: 1.5rem;
+                    font-size: 1.25rem;
                     font-weight: 800;
                     color: white;
                     font-family: var(--font-display);
                 }
-
-                .sidebar-divider {
-                    margin: 0 25px 20px;
-                    height: 1px;
-                    background: rgba(255, 255, 255, 0.1);
-                }
-
-                .sidebar-nav {
-                    flex: 1;
-                    padding: 0 15px;
-                    overflow-y: auto;
-                }
-
-                .nav-list {
-                    list-style: none;
-                    padding: 0;
-                    margin: 0;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 6px;
-                }
-
-                .nav-link {
-                    display: flex;
-                    align-items: center;
-                    gap: 15px;
-                    padding: 14px 20px;
-                    border-radius: 12px;
-                    color: rgba(255, 255, 255, 0.8);
-                    font-size: 0.95rem;
-                    font-weight: 600;
-                    text-decoration: none;
-                    transition: all 0.2s;
-                    border: none;
-                    background: transparent;
-                    width: 100%;
-                }
-
-                .nav-link:hover {
-                    color: white;
-                    background: rgba(255, 255, 255, 0.05);
-                }
-
-                .nav-link.active {
-                    background: #3b82f6; /* Bright Blue Active State */
-                    color: white;
-                    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-                }
-
-                .sidebar-footer {
-                    padding: 20px 15px;
-                    background: rgba(0, 0, 0, 0.1);
-                    display: flex;
-                    flex-direction: column;
-                    gap: 5px;
-                }
-
-                .nav-icon {
-                    font-size: 1.25rem;
-                    width: 24px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .logout:hover {
-                    color: #fee2e2;
-                    background: #991b1b;
-                }
-
+/* ... */
                 .main-viewport {
                     flex: 1;
-                    padding: 20px;
+                    padding: 16px;
                     display: flex;
                     flex-direction: column;
-                    gap: 20px;
+                    gap: 16px;
                     position: relative;
                 }
 
                 .premium-header {
-                    min-height: 70px;
-                    padding: 10px 20px;
-                    border-radius: 24px;
+                    min-height: 60px;
+                    padding: 8px 16px;
+                    border-radius: 20px;
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
-                    gap: 15px;
+                    gap: 12px;
                     transition: height 0.3s ease;
                     position: relative;
                     z-index: 999;
@@ -473,6 +531,34 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     align-items: center;
                     gap: 30px;
                     flex: 1;
+                }
+                .nav-link {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                    padding: 12px 16px;
+                    border-radius: 8px;
+                    color: rgba(255, 255, 255, 0.9) !important;
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                    text-decoration: none;
+                    transition: all 0.2s;
+                    border: none;
+                    background: transparent;
+                    width: 100%;
+                    cursor: pointer;
+                }
+
+                .nav-link:hover {
+                    color: white !important;
+                    background: rgba(255, 255, 255, 0.1);
+                }
+
+                .nav-link.active {
+                    background: #3b82f6;
+                    color: white !important;
+                    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                    font-weight: 600;
                 }
 
                 .header-tabs {
@@ -521,10 +607,14 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
 
                 .search-wrapper.open {
                     width: 100%;
-                    max-width: 400px;
+                    max-width: 550px;
                     background: white;
                     border-color: #3b82f6;
                     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+                }
+
+                .search-wrapper.open .search-icon {
+                    color: #3b82f6;
                 }
 
                 .search-trigger {
@@ -741,6 +831,64 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     border-radius: 16px;
                     color: #1e293b;
                     font-size: 0.875rem;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    border: 1px solid transparent;
+                    transition: all 0.2s;
+                }
+
+                .branch-context-selector {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    background: #f8fafc;
+                    padding: 6px 14px;
+                    border-radius: 16px;
+                    border: 1px solid #e2e8f0;
+                }
+
+                .branch-label {
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    letter-spacing: 0.025em;
+                }
+
+                .nav-branch-select {
+                    background: transparent;
+                    border: none;
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    color: #1e293b;
+                    outline: none;
+                    cursor: pointer;
+                    padding: 2px 4px;
+                }
+
+                .nav-branch-select:hover {
+                    color: #3b82f6;
+                }
+
+                .branch-read-only {
+                    font-size: 0.875rem;
+                    font-weight: 700;
+                    color: #0f172a;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    background: #e0f2fe;
+                    padding: 2px 8px;
+                    border-radius: 6px;
+                    border: 1px solid #bae6fd;
+                }
+
+                .lock-icon {
+                    font-size: 0.7rem;
+                    color: #0284c7;
+                }
                     font-weight: 500;
                     text-decoration: none;
                     display: flex;
