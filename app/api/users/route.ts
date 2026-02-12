@@ -157,6 +157,9 @@ export async function DELETE(request: NextRequest) {
             status: 'DELETED'
         });
 
+        // Also update registration queue if exists
+        await query("UPDATE admin_approval_queue SET status = 'REJECTED', processed_at = $1 WHERE user_id = $2", [new Date().toISOString(), id]);
+
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Delete user error:', error);

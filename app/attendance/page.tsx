@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -25,7 +25,7 @@ interface AttendanceRecord {
     morning_hours?: number;
     afternoon_hours?: number;
     total_hours?: number;
-    status: 'Present' | 'Late' | 'Absent' | 'Half-Day' | 'On Leave' | 'No Work';
+    status: 'Present' | 'Late' | 'Absent' | 'Half-Day' | 'On Leave' | 'No Work' | 'Sick Leave' | 'Vacation Leave' | 'Birthday Leave' | 'Official Business' | 'Holiday';
     remarks?: string;
     is_locked?: boolean;
 }
@@ -38,6 +38,7 @@ interface Employee {
     department: string;
     branch?: string;
     position?: string;
+    employment_status?: string;
 }
 
 // --- Icons ---
@@ -106,7 +107,7 @@ const StatusBadge = ({ status }: { status: string }) => {
             styles = { bg: '#fee2e2', color: '#dc2626', icon: '✖' };
             break;
         case 'Late':
-            styles = { bg: '#fff7ed', color: '#ea580c', icon: '⏰' };
+            styles = { bg: '#fff7ed', color: '#ea580c', icon: 'â°' };
             break;
         case 'Half-Day':
             styles = { bg: '#fef3c7', color: '#d97706', icon: '🌓' };
@@ -116,6 +117,21 @@ const StatusBadge = ({ status }: { status: string }) => {
             break;
         case 'No Work':
             styles = { bg: '#f3f4f6', color: '#9ca3af', icon: '🛑' };
+            break;
+        case 'Sick Leave':
+            styles = { bg: '#fee2e2', color: '#b91c1c', icon: '🤒' };
+            break;
+        case 'Vacation Leave':
+            styles = { bg: '#ecfdf5', color: '#047857', icon: 'ðŸ–ï¸' };
+            break;
+        case 'Birthday Leave':
+            styles = { bg: '#fdf2f8', color: '#be185d', icon: '🎂' };
+            break;
+        case 'Official Business':
+            styles = { bg: '#eff6ff', color: '#1d4ed8', icon: '💼' };
+            break;
+        case 'Holiday':
+            styles = { bg: '#faf5ff', color: '#7e22ce', icon: '🎉' };
             break;
     }
 
@@ -189,7 +205,7 @@ const CheckpointCell = ({ time, label }: { time?: string, label: string }) => {
 export default function AttendancePage() {
     // --- State ---
     const today = new Date();
-    const [startDate, setStartDate] = useState(format(new Date(today.getFullYear(), today.getMonth(), 1), 'yyyy-MM-dd'));
+    const [startDate, setStartDate] = useState(format(today, 'yyyy-MM-dd'));
     const [endDate, setEndDate] = useState(format(today, 'yyyy-MM-dd'));
 
     const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
@@ -214,6 +230,10 @@ export default function AttendancePage() {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [leaveBalance, setLeaveBalance] = useState<number | null>(null);
     const [latesCount, setLatesCount] = useState<number | null>(null);
+
+    const [departments, setDepartments] = useState<string[]>([]);
+    const [filterDepartment, setFilterDepartment] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
 
     // --- Effects ---
     useEffect(() => {
@@ -241,15 +261,22 @@ export default function AttendancePage() {
         if (userData) setUser(JSON.parse(userData));
         fetchEmployees();
         fetchBranches();
+        fetchDepartments();
     }, []);
 
     useEffect(() => {
+        if (user && user.role === 'HR' && user.assigned_branch) {
+            setFilterBranch(user.assigned_branch);
+        }
+    }, [user]);
+
+    useEffect(() => {
         fetchAttendance();
-    }, [startDate, endDate]);
+    }, [startDate, endDate, filterBranch]);
 
     useEffect(() => {
         applyFilters();
-    }, [attendance, searchTerm, employees, filterBranch]);
+    }, [attendance, searchTerm, employees, filterBranch, filterDepartment, filterStatus]);
 
     // --- Data Fetching ---
     const fetchEmployees = async () => {
@@ -267,10 +294,7 @@ export default function AttendancePage() {
             }
             const data = await res.json();
             if (Array.isArray(data)) {
-                const activeEmployees = data.filter((emp: any) =>
-                    emp.employment_status !== 'Resigned' && emp.employment_status !== 'Terminated'
-                );
-                setEmployees(activeEmployees);
+                setEmployees(data);
             } else {
                 console.error('Employees data is not an array:', data);
                 setEmployees([]);
@@ -303,11 +327,33 @@ export default function AttendancePage() {
         }
     };
 
+    const fetchDepartments = async () => {
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch('/api/employees/departments', {
+                headers: { 'x-session-id': sessionId || '' }
+            });
+            if (!response.ok) {
+                setDepartments([]);
+                return;
+            }
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                setDepartments(data);
+            } else {
+                setDepartments([]);
+            }
+        } catch (error) {
+            console.error('Failed to fetch departments:', error);
+            setDepartments([]);
+        }
+    };
+
     const fetchAttendance = async () => {
         setLoading(true);
         try {
             const sessionId = localStorage.getItem('sessionId');
-            const res = await fetch(`/api/attendance?start_date=${startDate}&end_date=${endDate}&t=${new Date().getTime()}`, {
+            const res = await fetch(`/api/attendance?start_date=${startDate}&end_date=${endDate}&branch=${filterBranch}&t=${new Date().getTime()}`, {
                 headers: { 'x-session-id': sessionId || '' }
             });
             if (!res.ok) {
@@ -332,35 +378,64 @@ export default function AttendancePage() {
 
     const applyFilters = () => {
         let result = Array.isArray(attendance) ? [...attendance] : [];
+        const normalize = (b: string | undefined | null) => (b || '').replace(/\s*branch\s*$/i, '').trim().toUpperCase();
 
         if (searchTerm) {
             const lower = searchTerm.toLowerCase();
             result = result.filter(r => {
-                const emp = employees.find(e => e.id === r.employee_id);
+                const emp = employees.find(e => String(e.id) === String(r.employee_id));
                 const name = emp ? `${emp.first_name} ${emp.last_name}`.toLowerCase() : '';
                 const status = r.status ? r.status.toLowerCase() : '';
-                return name.includes(lower) || status.includes(lower);
+                const dept = emp?.department?.toLowerCase() || '';
+                return name.includes(lower) || status.includes(lower) || dept.includes(lower);
             });
         }
 
-        if (filterBranch) {
+        if (user?.role === 'Employee') {
+            result = result.filter(r => String(r.employee_id) === String(user.employee_id));
+        }
+
+        if (user?.role === 'HR' && user.assigned_branch) {
+            const normalizedAssigned = normalize(user.assigned_branch);
             result = result.filter(r => {
-                const emp = employees.find(e => e.id === r.employee_id);
-                return emp?.branch === filterBranch;
+                const emp = employees.find(e => String(e.id) === String(r.employee_id));
+                return normalize(emp?.branch) === normalizedAssigned;
             });
+        }
+
+        // --- Restored UI Filters ---
+        if (filterBranch && filterBranch !== 'All Branches' && user?.role !== 'HR') {
+            const normalizedFilter = normalize(filterBranch);
+            result = result.filter(r => {
+                const emp = employees.find(e => String(e.id) === String(r.employee_id));
+                return normalize(emp?.branch) === normalizedFilter;
+            });
+        }
+
+        if (filterDepartment && filterDepartment !== 'All Departments') {
+            result = result.filter(r => {
+                const emp = employees.find(e => String(e.id) === String(r.employee_id));
+                return emp?.department === filterDepartment;
+            });
+        }
+
+        if (filterStatus && filterStatus !== 'All Statuses') {
+            result = result.filter(r => r.status === filterStatus);
         }
 
         const enriched = result.map(r => {
-            const emp = employees.find(e => e.id === r.employee_id);
+            const emp = employees.find(e => String(e.id) === String(r.employee_id));
             return {
                 ...r,
                 employee_name: emp ? `${emp.first_name} ${emp.last_name}` : 'Unknown',
                 department: emp?.department || '',
-                position: emp?.position || ''
+                position: emp?.position || '',
+                branch: emp?.branch || ''
             };
         });
 
         setFilteredAttendance(enriched);
+        setCurrentPage(1); // Reset to first page when any filter changes
     };
 
     // --- Helpers ---
@@ -386,7 +461,7 @@ export default function AttendancePage() {
     const handleAdd = () => {
         setEditingRecord({
             employee_id: 0,
-            date: format(new Date(), 'yyyy-MM-dd'),
+            date: startDate, // Sync with chosen date filter
             status: 'Present',
             remarks: ''
         });
@@ -523,283 +598,406 @@ export default function AttendancePage() {
     const startIndex = (currentPage - 1) * rowsPerPage;
     const paginatedRecords = filteredAttendance.slice(startIndex, startIndex + rowsPerPage);
 
+    const [viewMode, setViewMode] = useState('list');
+
     return (
         <DashboardLayout>
-            <div style={{ padding: '0.5rem' }}>
-
+            <div style={{ padding: '16px', fontFamily: "'Inter', sans-serif" }}>
                 {/* Header Section */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', margin: 0 }}>Attendance (4-Checkpoint)</h1>
-
-                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                        {/* Search */}
-                        <div style={{ position: 'relative' }}>
-                            <div style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}>
-                                <SearchIcon />
-                            </div>
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
-                                style={{
-                                    paddingLeft: '2.5rem', paddingRight: '1rem', paddingTop: '0.5rem', paddingBottom: '0.5rem',
-                                    borderRadius: '9999px', border: '1px solid #e5e7eb', outline: 'none', width: '200px'
-                                }}
-                            />
-                        </div>
-
-                        {/* Branch Filter */}
-                        <div style={{ position: 'relative' }}>
-                            <select
-                                value={filterBranch}
-                                onChange={(e) => setFilterBranch(e.target.value)}
-                                style={{
-                                    paddingLeft: '1rem', paddingRight: '2rem', paddingTop: '0.5rem', paddingBottom: '0.5rem',
-                                    borderRadius: '9999px', border: '1px solid #e5e7eb', outline: 'none', appearance: 'none',
-                                    backgroundColor: 'white', color: filterBranch ? '#1f2937' : '#9ca3af', fontWeight: 500,
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <option value="">All Branches</option>
-                                {branches.map(b => (
-                                    <option key={b} value={b}>{b}</option>
-                                ))}
-                            </select>
-                            <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#9ca3af' }}>
-                                ▼
-                            </div>
-                        </div>
-
-                        {/* Date Range */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'white', padding: '0.3rem 0.8rem', borderRadius: '9999px', border: '1px solid #e5e7eb' }}>
-                            <CalendarIcon />
-                            <input
-                                type="date"
-                                value={startDate}
-                                onChange={e => setStartDate(e.target.value)}
-                                style={{ border: 'none', outline: 'none', fontSize: '0.875rem', color: '#4b5563' }}
-                            />
-                            <span style={{ color: '#9ca3af' }}>–</span>
-                            <input
-                                type="date"
-                                value={endDate}
-                                onChange={e => setEndDate(e.target.value)}
-                                style={{ border: 'none', outline: 'none', fontSize: '0.875rem', color: '#4b5563' }}
-                            />
-                        </div>
-
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                    <div>
+                        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1f2937', margin: 0, letterSpacing: '-0.025em' }}>Attendance</h1>
+                        <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '4px' }}>View and manage daily attendance records.</p>
                     </div>
 
-                    {/* Add & Report Buttons */}
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '12px' }}>
                         <button
                             onClick={handleAdd}
                             style={{
-                                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                                backgroundColor: '#3b82f6', color: 'white', fontWeight: 600,
-                                padding: '0.5rem 1.25rem', borderRadius: '9999px', border: 'none', cursor: 'pointer',
-                                boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)'
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                background: '#f97316', color: 'white', border: 'none', // Orange accent from image
+                                padding: '10px 20px', borderRadius: '8px', cursor: 'pointer',
+                                fontSize: '0.875rem', fontWeight: 600, boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                             }}
                         >
-                            <span>+</span> Add
-                        </button>
-
-                        <button
-                            onClick={handleGenerateReport}
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                                backgroundColor: '#facc15', color: '#422006', fontWeight: 600,
-                                padding: '0.5rem 1.25rem', borderRadius: '9999px', border: 'none', cursor: 'pointer',
-                                boxShadow: '0 2px 4px rgba(250, 204, 21, 0.2)'
-                            }}
-                        >
-                            <DownloadIcon /> Report
+                            <span>+</span> Add Record
                         </button>
                     </div>
                 </div>
-            </div>
 
-            {/* Metrics Section */}
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-                <MetricCard title="Total Employees" value={stats.total} icon="👥" color="#d97706" />
-                <MetricCard title="Present" value={stats.present} icon="✔" color="#059669" />
-                <MetricCard title="Absent" value={stats.absent} icon="✖" color="#dc2626" />
-                <MetricCard title="Late" value={stats.late} icon="⏰" color="#d97706" />
-                <MetricCard title="Half-Day" value={stats.halfDay} icon="🌓" color="#c026d3" />
-                <MetricCard title="On Leave" value={stats.onLeave} icon="📅" color="#2563eb" />
-            </div>
-
-            {/* Table Section */}
-            <div style={{ background: 'white', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
-                <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead style={{ background: '#f9fafb', borderBottom: '1px solid #f3f4f6' }}>
-                            <tr>
-                                <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#374151' }}>Employee</th>
-                                <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#374151' }}>Date</th>
-                                <th style={{ textAlign: 'center', padding: '0.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#059669', background: '#dcfce7' }}>🌅 AM In</th>
-                                <th style={{ textAlign: 'center', padding: '0.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#0891b2', background: '#cffafe' }}>☀️ AM Out</th>
-                                <th style={{ textAlign: 'center', padding: '0.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#7c3aed', background: '#ede9fe' }}>🌤️ PM In</th>
-                                <th style={{ textAlign: 'center', padding: '0.5rem', fontSize: '0.7rem', fontWeight: 700, color: '#c026d3', background: '#fae8ff' }}>🌙 PM Out</th>
-                                <th style={{ textAlign: 'left', padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#374151' }}>Status</th>
-                                <th style={{ textAlign: 'center', padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: '#374151' }}>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan={8} style={{ padding: '2rem', textAlign: 'center' }}>Loading...</td></tr>
-                            ) : paginatedRecords.length === 0 ? (
-                                <tr><td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>No attendance records found for this period.</td></tr>
-                            ) : (
-                                paginatedRecords.map((record, idx) => (
-                                    <tr key={idx} style={{ borderBottom: '1px solid #f9fafb', transition: 'background 0.2s' }} className="hover:bg-gray-50">
-                                        <td style={{ padding: '0.75rem 1rem' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 600, color: '#4b5563' }}>
-                                                    {record.employee_name?.split(' ').map(n => n[0]).join('').substring(0, 2) || 'E'}
-                                                </div>
-                                                <div>
-                                                    <div style={{ fontWeight: 600, color: '#1f2937', fontSize: '0.85rem' }}>{record.employee_name}</div>
-                                                    <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{record.position || record.department || 'Employee'}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontSize: '0.85rem' }}>{format(new Date(record.date), 'MMM dd, yyyy')}</td>
-                                        <td style={{ padding: '0.5rem', textAlign: 'center' }}>
-                                            <CheckpointCell time={record.morning_in || record.time_in} label="" />
-                                        </td>
-                                        <td style={{ padding: '0.5rem', textAlign: 'center' }}>
-                                            <CheckpointCell time={record.morning_out} label="" />
-                                        </td>
-                                        <td style={{ padding: '0.5rem', textAlign: 'center' }}>
-                                            <CheckpointCell time={record.afternoon_in} label="" />
-                                        </td>
-                                        <td style={{ padding: '0.5rem', textAlign: 'center' }}>
-                                            <CheckpointCell time={record.afternoon_out || record.time_out} label="" />
-                                        </td>
-                                        <td style={{ padding: '0.75rem 1rem' }}><StatusBadge status={record.status} /></td>
-                                        <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
-                                            <div className="dropdown" style={{ position: 'relative', display: 'inline-block' }}>
-                                                <button
-                                                    className="action-btn"
-                                                    style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#9ca3af', padding: '0.25rem' }}
-                                                    onClick={(e) => {
-                                                        const menu = e.currentTarget.nextElementSibling as HTMLElement;
-                                                        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-                                                        document.querySelectorAll('.action-menu').forEach(el => {
-                                                            if (el !== menu) (el as HTMLElement).style.display = 'none';
-                                                        });
-                                                    }}
-                                                >
-                                                    <MoreVerticalIcon />
-                                                </button>
-                                                <div className="action-menu" style={{
-                                                    display: 'none',
-                                                    position: 'absolute', right: 0, top: '100%',
-                                                    backgroundColor: 'white', minWidth: '120px',
-                                                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                                    borderRadius: '8px', zIndex: 10, overflow: 'hidden',
-                                                    border: '1px solid #f3f4f6'
-                                                }}>
-                                                    <button
-                                                        style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: '#2563eb' }}
-                                                        onClick={(e) => {
-                                                            setEditingRecord({ ...record });
-                                                            setIsEditModalOpen(true);
-                                                            (e.target as HTMLElement).parentElement!.style.display = 'none';
-                                                        }}
-                                                    >
-                                                        ✎ Edit
-                                                    </button>
-                                                    <button
-                                                        style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: '#dc2626' }}
-                                                        onClick={(e) => {
-                                                            if (record.id) handleDelete(record.id);
-                                                            (e.target as HTMLElement).parentElement!.style.display = 'none';
-                                                        }}
-                                                    >
-                                                        🗑 Delete
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                {/* Metrics Section - Kept as is, but styled cleaner */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+                    {/* Helper for Metric Cards */}
+                    {[
+                        { title: "Total Employees", value: stats.total, color: "#f97316", icon: "👥" },
+                        { title: "Present", value: stats.present, color: "#10b981", icon: "✅" },
+                        { title: "Absent", value: stats.absent, color: "#ef4444", icon: "❌" },
+                        { title: "Late", value: stats.late, color: "#f59e0b", icon: "⏰" },
+                        { title: "Half-Day", value: stats.halfDay, color: "#a855f7", icon: "🌓" },
+                        { title: "On Leave", value: stats.onLeave, color: "#3b82f6", icon: "🏖️" }
+                    ].map((m, i) => (
+                        <div key={i} style={{ background: 'white', padding: '12px', borderRadius: '12px', border: '1px solid #f3f4f6', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1f2937' }}>{m.value}</span>
+                                <span style={{ fontSize: '1.25rem', opacity: 0.8 }}>{m.icon}</span>
+                            </div>
+                            <div style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: 500 }}>{m.title}</div>
+                        </div>
+                    ))}
                 </div>
 
-                {/* Pagination */}
-                <div style={{ padding: '1rem', borderTop: '1px solid #f3f4f6', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem' }}>
-                    <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                        Showing {(currentPage - 1) * rowsPerPage + 1} to {Math.min(currentPage * rowsPerPage, filteredAttendance.length)} of {filteredAttendance.length}
-                    </span>
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        <button
-                            disabled={currentPage === 1}
-                            onClick={() => setCurrentPage(p => p - 1)}
-                            style={{ padding: '0.25rem 0.75rem', border: '1px solid #e5e7eb', borderRadius: '4px', background: 'white', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
-                        >
-                            Prev
-                        </button>
-                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(p => (
-                            <button
-                                key={p}
-                                onClick={() => setCurrentPage(p)}
-                                style={{
-                                    padding: '0.25rem 0.75rem',
-                                    border: '1px solid',
-                                    borderColor: currentPage === p ? '#facc15' : '#e5e7eb',
-                                    borderRadius: '4px',
-                                    background: currentPage === p ? '#facc15' : 'white',
-                                    color: currentPage === p ? '#422006' : '#374151',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                {p}
-                            </button>
-                        ))}
-                        <button
-                            disabled={currentPage === totalPages}
-                            onClick={() => setCurrentPage(p => p + 1)}
-                            style={{ padding: '0.25rem 0.75rem', border: '1px solid #e5e7eb', borderRadius: '4px', background: 'white', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
-                        >
-                            Next
-                        </button>
-                    </div>
-                    <select
-                        value={rowsPerPage}
-                        onChange={e => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                        style={{ padding: '0.25rem', borderRadius: '4px', border: '1px solid #e5e7eb' }}
-                    >
-                        <option value={10}>10 / page</option>
-                        <option value={20}>20 / page</option>
-                        <option value={50}>50 / page</option>
-                    </select>
-                </div>
-            </div>
+                {/* Main Content Card (Toolbar + Table) */}
+                <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
 
-            {/* Edit/Add Modal with 4 Checkpoints */}
-            {isEditModalOpen && editingRecord && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-                    <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', width: '90%', maxWidth: '600px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', maxHeight: '90vh', overflowY: 'auto' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
-                                {editingRecord.id ? 'Edit Attendance' : 'Add Attendance'}
-                            </h3>
-                            <button onClick={() => setIsEditModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', lineHeight: 1 }}>&times;</button>
+                    {/* Toolbar Styled to match image */}
+                    <div style={{
+                        padding: '12px 16px',
+                        borderBottom: '1px solid #f3f4f6',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '16px'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f97316' }}>
+                            <span style={{ background: '#fff7ed', padding: '8px', borderRadius: '8px' }}>👤</span>
+                            <span style={{ fontWeight: 600, color: '#1f2937' }}>Attendance List</span>
                         </div>
 
-                        {editingRecord.is_locked && (
-                            <div style={{ background: '#fef2f2', color: '#dc2626', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.875rem' }}>
-                                ⚠️ This record is locked (payroll finalized). Changes are restricted.
+                        <div style={{ display: 'flex', gap: '12px', flex: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
+                            {/* View Toggle */}
+                            <div style={{ display: 'flex', background: '#f3f4f6', padding: '4px', borderRadius: '8px' }}>
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    style={{
+                                        padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer',
+                                        background: viewMode === 'list' ? 'white' : 'transparent',
+                                        boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                                        color: viewMode === 'list' ? '#f97316' : '#6b7280', fontWeight: 600, fontSize: '0.875rem'
+                                    }}
+                                >
+                                    List View
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('card')}
+                                    style={{
+                                        padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer',
+                                        background: viewMode === 'card' ? '#f97316' : 'transparent',
+                                        boxShadow: viewMode === 'card' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                                        color: viewMode === 'card' ? 'white' : '#6b7280', fontWeight: 600, fontSize: '0.875rem'
+                                    }}
+                                >
+                                    Card View
+                                </button>
                             </div>
+
+                            {/* Search */}
+                            <div style={{ position: 'relative', width: '240px' }}>
+                                <input
+                                    type="text"
+                                    placeholder="Search..."
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 12px 10px 40px',
+                                        borderRadius: '8px',
+                                        border: '1px solid #e5e7eb',
+                                        fontSize: '0.875rem',
+                                        background: '#f9fafb'
+                                    }}
+                                />
+                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }}>🔍</span>
+                            </div>
+
+                            {/* Filter Button */}
+                            <button style={{
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                padding: '10px 16px', borderRadius: '8px',
+                                border: '1px solid #e5e7eb', background: 'white',
+                                fontSize: '0.875rem', fontWeight: 600, color: '#4b5563',
+                                cursor: 'pointer'
+                            }}>
+                                <span>⚙️</span> Filter
+                            </button>
+
+                            {/* Sort Button */}
+                            <button style={{
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                padding: '10px 16px', borderRadius: '8px',
+                                border: '1px solid #e5e7eb', background: 'white',
+                                fontSize: '0.875rem', fontWeight: 600, color: '#4b5563',
+                                cursor: 'pointer'
+                            }}>
+                                <span>⇅</span> Sort
+                            </button>
+
+                            <button
+                                onClick={handleGenerateReport}
+                                style={{
+                                    padding: '10px 16px', borderRadius: '8px',
+                                    border: '1px solid #e5e7eb', background: 'white',
+                                    fontSize: '0.875rem', fontWeight: 600, color: '#4b5563',
+                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'
+                                }}
+                            >
+                                <DownloadIcon /> Export
+                            </button>
+                        </div>
+                    </div>
+
+
+                    {/* Secondary Filters for functionality (Keeping functional "arrangement") */}
+                    <div style={{ padding: '8px 16px', background: '#fcfcfc', borderBottom: '1px solid #f3f4f6', display: 'flex', gap: '12px', overflowX: 'auto' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'white', padding: '4px 12px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                            <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Date:</span>
+                            <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setEndDate(e.target.value) }} style={{ border: 'none', fontSize: '0.875rem' }} />
+                        </div>
+                        {user?.role !== 'Employee' && (
+                            <>
+                                <select value={filterBranch} onChange={(e) => setFilterBranch(e.target.value)} disabled={user?.role === 'HR'}
+                                    style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '0.875rem', background: 'white' }}>
+                                    {user?.role !== 'HR' && <option value="">All Branches</option>}
+                                    {branches.map(b => <option key={b} value={b}>{b}</option>)}
+                                </select>
+                                <select value={filterDepartment} onChange={(e) => setFilterDepartment(e.target.value)}
+                                    style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '0.875rem', background: 'white' }}>
+                                    <option value="">All Departments</option>
+                                    {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                                </select>
+                            </>
                         )}
+                        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+                            style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '0.875rem', background: 'white' }}>
+                            <option value="">All Status</option>
+                            <option value="Present">Present</option>
+                            <option value="Late">Late</option>
+                            <option value="Absent">Absent</option>
+                        </select>
+                    </div>
 
-                        <div style={{ display: 'grid', gap: '1rem' }}>
+                    {/* Content Area */}
+                    {loading ? (
+                        <div style={{ padding: '32px', textAlign: 'center', color: '#6b7280' }}>Loading...</div>
+                    ) : paginatedRecords.length === 0 ? (
+                        <div style={{ padding: '32px', textAlign: 'center', color: '#6b7280' }}>No records found.</div>
+                    ) : viewMode === 'list' ? (
+                        /* LIST VIEW TABLE */
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
+                                <thead>
+                                    <tr style={{ background: '#f9fafb' }}>
+                                        <th style={{ padding: '8px 12px', textAlign: 'left', fontSize: '0.7rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>Name</th>
+                                        <th style={{ padding: '8px 12px', textAlign: 'left', fontSize: '0.7rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>Date</th>
+                                        <th style={{ padding: '8px 12px', textAlign: 'center', fontSize: '0.7rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>AM Checkpoints</th>
+                                        <th style={{ padding: '8px 12px', textAlign: 'center', fontSize: '0.7rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>PM Checkpoints</th>
+                                        <th style={{ padding: '8px 12px', textAlign: 'left', fontSize: '0.7rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>Status</th>
+                                        <th style={{ padding: '8px 12px', textAlign: 'center', fontSize: '0.7rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {paginatedRecords.map((record, idx) => (
+                                        <tr key={idx} style={{ transition: 'background-color 0.2s' }} className="hover:bg-gray-50">
+                                            <td style={{ padding: '8px 12px', borderBottom: '1px solid #f3f4f6' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    <div style={{
+                                                        width: '40px', height: '40px', borderRadius: '50%',
+                                                        background: '#e0e7ff', color: '#4338ca',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        fontWeight: 700, fontSize: '0.875rem'
+                                                    }}>
+                                                        {record.employee_name?.split(' ').map(n => n[0]).join('').substring(0, 2) || 'E'}
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.875rem' }}>{record.employee_name}</div>
+                                                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{record.department || 'N/A'}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '8px 12px', borderBottom: '1px solid #f3f4f6', color: '#4b5563', fontSize: '0.875rem' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <span style={{ fontSize: '1rem', color: '#9ca3af' }}>📅</span>
+                                                    {format(new Date(record.date), 'MMM dd, yyyy')}
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '8px 12px', borderBottom: '1px solid #f3f4f6' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.65rem', color: '#9ca3af', textTransform: 'uppercase' }}>In</span>
+                                                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1f2937' }}>{record.morning_in || '--:--'}</span>
+                                                    </div>
+                                                    <div style={{ width: '1px', height: '24px', background: '#e5e7eb' }}></div>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.65rem', color: '#9ca3af', textTransform: 'uppercase' }}>Out</span>
+                                                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1f2937' }}>{record.morning_out || '--:--'}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '8px 12px', borderBottom: '1px solid #f3f4f6' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.65rem', color: '#9ca3af', textTransform: 'uppercase' }}>In</span>
+                                                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1f2937' }}>{record.afternoon_in || '--:--'}</span>
+                                                    </div>
+                                                    <div style={{ width: '1px', height: '24px', background: '#e5e7eb' }}></div>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.65rem', color: '#9ca3af', textTransform: 'uppercase' }}>Out</span>
+                                                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1f2937' }}>{record.afternoon_out || '--:--'}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '8px 12px', borderBottom: '1px solid #f3f4f6' }}>
+                                                {/* Styled Badge */}
+                                                <span style={{
+                                                    display: 'inline-flex', alignItems: 'center', padding: '4px 12px',
+                                                    borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600,
+                                                    background: record.status === 'Present' ? '#ecfdf5' : record.status === 'Absent' ? '#fef2f2' : '#fff7ed',
+                                                    color: record.status === 'Present' ? '#059669' : record.status === 'Absent' ? '#dc2626' : '#d97706'
+                                                }}>
+                                                    <span style={{
+                                                        width: '6px', height: '6px', borderRadius: '50%',
+                                                        marginRight: '6px',
+                                                        background: 'currentColor'
+                                                    }}></span>
+                                                    {record.status}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '8px 12px', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
+                                                <button
+                                                    onClick={() => { setEditingRecord({ ...record }); setIsEditModalOpen(true); }}
+                                                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: '4px' }}
+                                                >
+                                                    ✏️
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        /* CARD VIEW GRID */
+                        <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+                            {paginatedRecords.map((record, idx) => (
+                                <div key={idx} style={{
+                                    background: 'white', border: '1px solid #e5e7eb', borderRadius: '16px',
+                                    padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px',
+                                    transition: 'box-shadow 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <span style={{
+                                            padding: '4px 12px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600,
+                                            background: record.status === 'Present' ? '#ecfdf5' : record.status === 'Absent' ? '#fef2f2' : '#fff7ed',
+                                            color: record.status === 'Present' ? '#059669' : record.status === 'Absent' ? '#dc2626' : '#d97706'
+                                        }}>
+                                            {record.status}
+                                        </span>
+                                        <button onClick={() => { setEditingRecord({ ...record }); setIsEditModalOpen(true); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#9ca3af' }}>⋮</button>
+                                    </div>
 
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                        <div style={{
+                                            width: '56px', height: '56px', borderRadius: '50%',
+                                            background: '#e0e7ff', color: '#4338ca',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontWeight: 700, fontSize: '1.25rem'
+                                        }}>
+                                            {record.employee_name?.split(' ').map(n => n[0]).join('').substring(0, 2) || 'E'}
+                                        </div>
+                                        <div>
+                                            <div style={{ fontWeight: 700, fontSize: '1rem', color: '#111827' }}>{record.employee_name}</div>
+                                            <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>{record.department}</div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ height: '1px', background: '#f3f4f6', margin: '0 -20px' }}></div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                        <div>
+                                            <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '4px' }}>Date</div>
+                                            <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#374151' }}>{format(new Date(record.date), 'MMM dd, yyyy')}</div>
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '4px' }}>Payroll Code</div>
+                                            <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#374151' }}>{record.employee_id || 'N/A'}</div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', background: '#f9fafb', borderRadius: '8px', padding: '12px', justifyContent: 'space-around' }}>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <div style={{ fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', marginBottom: '2px' }}>AM In</div>
+                                            <div style={{ fontWeight: 700, color: '#111827' }}>{record.morning_in || '-'}</div>
+                                        </div>
+                                        <div style={{ width: '1px', background: '#e5e7eb' }}></div>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <div style={{ fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', marginBottom: '2px' }}>PM Out</div>
+                                            <div style={{ fontWeight: 700, color: '#111827' }}>{record.afternoon_out || '-'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Footer / Pagination matching image */}
+                    <div style={{
+                        padding: '12px 16px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        color: '#6b7280',
+                        fontSize: '0.875rem',
+                        borderTop: '1px solid #f3f4f6'
+                    }}>
+                        <div>
+                            Showing {Math.min(startIndex + 1, filteredAttendance.length)} to {Math.min(startIndex + rowsPerPage, filteredAttendance.length)} of {filteredAttendance.length} entries
+                        </div>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                            <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} style={{ padding: '6px 12px', border: '1px solid #e5e7eb', borderRadius: '6px', background: 'white', cursor: 'pointer' }}>{"<"}</button>
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                const p = i + 1;
+                                return (
+                                    <button key={p}
+                                        onClick={() => setCurrentPage(p)}
+                                        style={{
+                                            width: '32px', height: '32px',
+                                            border: p === currentPage ? '1px solid #f97316' : '1px solid #e5e7eb',
+                                            background: p === currentPage ? '#fff7ed' : 'white',
+                                            color: p === currentPage ? '#f97316' : '#6b7280',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer',
+                                            fontWeight: p === currentPage ? 700 : 400
+                                        }}
+                                    >
+                                        {p}
+                                    </button>
+                                );
+                            })}
+                            <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} style={{ padding: '6px 12px', border: '1px solid #e5e7eb', borderRadius: '6px', background: 'white', cursor: 'pointer' }}>{">"}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Modal remains unchanged */}
+            {isEditModalOpen && editingRecord && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.5)', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', zIndex: 1000
+                }}>
+                    <div style={{
+                        background: 'white', borderRadius: '16px', padding: '24px',
+                        width: '90%', maxWidth: '500px',
+                        maxHeight: '90vh', overflowY: 'auto',
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+                    }}>
+                        <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '16px', color: '#1f2937' }}>
+                            {editingRecord.id ? 'Edit Attendance' : 'Add Checkpoints'}
+                        </h2>
+
+                        <div style={{ display: 'grid', gap: '12px' }}>
                             {/* Employee Selection */}
                             <div>
                                 <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Employee</label>
@@ -820,9 +1018,11 @@ export default function AttendancePage() {
                                         style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
                                     >
                                         <option value="">Select Employee</option>
-                                        {employees.map(emp => (
-                                            <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
-                                        ))}
+                                        {employees
+                                            .filter(emp => emp.employment_status !== 'Resigned' && emp.employment_status !== 'Terminated')
+                                            .map(emp => (
+                                                <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
+                                            ))}
                                     </select>
                                 )}
                                 {leaveBalance !== null && (
@@ -833,30 +1033,37 @@ export default function AttendancePage() {
                                 {latesCount !== null && (
                                     <div style={{ marginTop: '0.25rem', fontSize: '0.8rem', color: latesCount >= 5 ? '#dc2626' : '#d97706', fontWeight: 600 }}>
                                         Lates This Month: {latesCount}
-                                        {latesCount >= 5 && <span style={{ marginLeft: '0.5rem', background: '#fee2e2', color: '#dc2626', padding: '0.1rem 0.3rem', borderRadius: '4px', fontSize: '0.7rem' }}>⚠️ Warning: Excessive</span>}
+                                        {latesCount >= 5 && <span style={{ marginLeft: '0.5rem', background: '#fee2e2', color: '#dc2626', padding: '0.1rem 0.3rem', borderRadius: '4px', fontSize: '0.7rem' }}>âš ï¸ Warning: Excessive</span>}
                                     </div>
                                 )}
                             </div>
 
-                            {/* Date Selection */}
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Date</label>
+                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#4b5563', marginBottom: '4px' }}>Date</label>
                                 <input
                                     type="date"
                                     value={editingRecord.date || ''}
                                     onChange={e => handleEditChange('date', e.target.value)}
-                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.5rem',
+                                        border: '1px solid #d1d5db',
+                                        borderRadius: '6px',
+                                        backgroundColor: !editingRecord.id ? '#f9fafb' : 'white'
+                                    }}
                                 />
+                                {!editingRecord.id && <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.25rem' }}>Inherited from your active date filter.</div>}
                             </div>
 
                             {/* 4 Checkpoints */}
-                            <div style={{ background: '#f9fafb', padding: '1rem', borderRadius: '8px' }}>
-                                <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#374151', marginBottom: '1rem' }}>Checkpoints</h4>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div style={{ background: '#f9fafb', padding: '0.75rem', borderRadius: '8px' }}>
+                                <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#374151', marginBottom: '0.75rem' }}>Checkpoints</h4>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                                     <div>
                                         <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: 600, color: '#059669', marginBottom: '0.25rem' }}>🌅 Morning In</label>
                                         <input
                                             type="time"
+                                            autoFocus={!editingRecord.id}
                                             value={editingRecord.morning_in || ''}
                                             onChange={e => handleEditChange('morning_in', e.target.value)}
                                             style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
@@ -904,6 +1111,11 @@ export default function AttendancePage() {
                                     <option value="Absent">Absent</option>
                                     <option value="Half-Day">Half-Day</option>
                                     <option value="On Leave">On Leave</option>
+                                    <option value="Sick Leave">Sick Leave</option>
+                                    <option value="Vacation Leave">Vacation Leave</option>
+                                    <option value="Birthday Leave">Birthday Leave</option>
+                                    <option value="Official Business">Official Business</option>
+                                    <option value="Holiday">Holiday</option>
                                     <option value="No Work">No Work</option>
                                 </select>
                             </div>
@@ -913,13 +1125,13 @@ export default function AttendancePage() {
                                 <textarea
                                     value={editingRecord.remarks || ''}
                                     onChange={e => handleEditChange('remarks', e.target.value)}
-                                    rows={3}
+                                    rows={2}
                                     style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
                                 />
                             </div>
                         </div>
 
-                        <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
                             <button onClick={() => setIsEditModalOpen(false)} style={{ padding: '0.5rem 1rem', background: 'white', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
                             <button
                                 onClick={handleSaveEdit}
@@ -940,10 +1152,9 @@ export default function AttendancePage() {
                 </div>
             )}
 
-            {/* Global Styles */}
             <style jsx>{`
                 .hover\\:bg-gray-50:hover { background-color: #f9fafb; }
             `}</style>
-        </DashboardLayout >
+        </DashboardLayout>
     );
 }

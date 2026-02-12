@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ===================================
    HR MANAGEMENT SYSTEM - DESIGN SYSTEM
    Modern, Professional, Philippine-Ready
@@ -77,9 +81,9 @@
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
+  --spacing-lg: 1.25rem;
+  --spacing-xl: 1.5rem;
+  --spacing-2xl: 2rem;
 
   /* Border Radius */
   --radius-sm: 0.375rem;
@@ -168,11 +172,11 @@ h6 {
 }
 
 h1 {
-  font-size: 2.5rem;
+  font-size: 2.25rem;
 }
 
 h2 {
-  font-size: 2rem;
+  font-size: 1.75rem;
 }
 
 h3 {
@@ -434,7 +438,7 @@ a:hover {
 }
 
 .card-body {
-  padding: var(--spacing-xl);
+  padding: var(--spacing-lg);
 }
 
 .card-footer {
@@ -751,7 +755,7 @@ a:hover {
 }
 
 .table th {
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: 0.75rem var(--spacing-lg);
   text-align: left;
   font-size: 0.75rem;
   font-weight: 700;
@@ -762,7 +766,7 @@ a:hover {
 }
 
 .table td {
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: 0.75rem var(--spacing-lg);
   border-bottom: 1px solid var(--border-color);
   font-size: 0.875rem;
   color: var(--text-primary);
@@ -1474,4 +1478,389 @@ a:hover {
 
 .payslip-print-container {
   display: none;
+}
+
+/* ===================================
+   CUSTOM SCROLLBAR STYLES
+   =================================== */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 10px;
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #facc15;
+  border-radius: 10px;
+  border: 2px solid #f3f4f6;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #eab308;
+}
+
+/* For Firefox */
+.custom-scrollbar {
+  scrollbar-width: auto;
+  scrollbar-color: #facc15 #f3f4f6;
+}
+
+/* Global scrollbar for premium feel */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ===================================
+   BATCH PAYSLIP PRINT LAYOUT (LEGAL LANDSCAPE)
+   Strict 3-Column Grid per Page
+   =================================== */
+
+/* ===================================
+   BATCH PAYSLIP PRINT LAYOUT (LEGAL LANDSCAPE)
+   Strict 3-Column Grid per Page
+   =================================== */
+
+.print-batch-container {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 5000;
+  background: #f1f5f9;
+  overflow-y: auto;
+  padding: 2rem;
+  padding-top: 1rem;
+}
+
+@media print {
+  .print-batch-container {
+    padding: 0;
+    position: static;
+    overflow: visible;
+    width: 100%;
+    height: auto;
+    background: white;
+    z-index: auto;
+  }
+}
+
+.print-batch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid #e2e8f0;
+}
+
+/* Screen Version of the Page Grid */
+.print-page-legal-landscape {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  /* Screen gap */
+  margin-bottom: 3rem;
+  /* Space between "Pages" */
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Modern Card Design */
+.modern-payslip-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid #e2e8f0;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+}
+
+.modern-payslip-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 0 0 1rem 0;
+  background: transparent;
+}
+
+.brand-section .brand-name {
+  font-size: 1.4rem;
+  font-weight: 900;
+  font-style: italic;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.brand-section .brand-tagline {
+  font-size: 0.6rem;
+  color: #64748b;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 0.2rem;
+}
+
+.payslip-badge {
+  text-align: right;
+}
+
+.badge-title {
+  background: #f0fdf4;
+  color: #15803d;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 0.2rem;
+  text-transform: uppercase;
+}
+
+.badge-label {
+  font-size: 0.55rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  display: block;
+}
+
+.badge-date {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.employee-info {
+  margin-bottom: 1.5rem;
+}
+
+.info-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.2rem;
+}
+
+.info-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 0.2rem;
+}
+
+.info-position {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.section-block {
+  margin-bottom: 1.25rem;
+}
+
+.section-head {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.line-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  margin-bottom: 0.4rem;
+  color: #334155;
+  font-weight: 500;
+}
+
+.line-item.subtle {
+  font-style: italic;
+  color: #94a3b8;
+  font-size: 0.75rem;
+}
+
+.line-item.total-line {
+  font-weight: 700;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 0.4rem;
+  margin-top: 0.4rem;
+  color: #0f172a;
+}
+
+.val-deduction {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.net-pay-container {
+  background: #f0fdf4;
+  border: 1px solid #dcfce7;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  margin-bottom: 1.5rem;
+}
+
+.net-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #166534;
+  text-transform: uppercase;
+}
+
+.net-amount {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #15803d;
+}
+
+.loan-balances {
+  font-size: 0.65rem;
+  color: #64748b;
+  margin-bottom: 0.2rem;
+  border-bottom: 1px dashed #dcfce7;
+  padding-bottom: 0.2rem;
+}
+
+.card-footer {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* Center align items vertically */
+  background: transparent;
+}
+
+.footer-label {
+  font-size: 0.55rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.footer-name {
+  font-size: 0.8rem;
+  font-weight: 800;
+  font-style: italic;
+  color: #0f172a;
+}
+
+.footer-title {
+  font-size: 0.6rem;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.footer-check {
+  font-size: 2rem;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  /* Ensure distinct line height */
+}
+
+
+@media print {
+  @page {
+    size: 14in 8.5in;
+    /* Legal Landscape */
+    margin: 0;
+  }
+
+  body {
+    background: white;
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide everything else */
+  .no-print,
+  .dashboard-layout-header,
+  .sidebar,
+  .topbar {
+    display: none !important;
+  }
+
+  main,
+  .main-viewport,
+  .dashboard-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  /* Show Print Container */
+  .print-batch-container {
+    display: block !important;
+  }
+
+  /* Page Layout */
+  .print-page-legal-landscape {
+    width: 14in;
+    height: 8.5in;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    /* 3 Columns */
+    gap: 0.4in;
+    padding: 0.4in;
+    box-sizing: border-box;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .modern-payslip-card {
+    box-shadow: none;
+    border: 1px solid #cbd5e1;
+    break-inside: avoid;
+    height: 100%;
+    /* Fill the grid cell height */
+  }
 }

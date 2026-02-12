@@ -26,6 +26,15 @@ interface Employee {
     last_name: string;
 }
 
+const safeDate = (dateStr: string | undefined | null, formatStr: string = 'yyyy-MM-dd') => {
+    if (!dateStr) return '--';
+    try {
+        return format(parseISO(dateStr), formatStr);
+    } catch (e) {
+        return '--';
+    }
+};
+
 export default function LeavePage() {
     const [requests, setRequests] = useState<LeaveRequest[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -131,6 +140,37 @@ export default function LeavePage() {
         const start = parseISO(formData.start_date);
         const end = parseISO(formData.end_date);
         const days = differenceInBusinessDays(end, start) + 1;
+
+        if (formData.leave_type === 'Birthday Leave') {
+            const emp = (employees as any[]).find(e => Number(e.id) === Number(formData.employee_id));
+            if (emp) {
+                if (emp.date_of_birth) {
+                    const bday = new Date(emp.date_of_birth);
+                    const selDate = new Date(formData.start_date);
+                    if (bday.getMonth() !== selDate.getMonth() || bday.getDate() !== selDate.getDate()) {
+                        if (!confirm(`Warning: Selected date (${format(selDate, 'MMMM dd')}) does not match employee's birthday (${format(bday, 'MMMM dd')}). Proceed anyway?`)) {
+                            return;
+                        }
+                    }
+                }
+
+                // Check for duplicate in current year
+                const currentYear = new Date().getFullYear();
+                const duplicates = requests.filter(r =>
+                    r.employee_id === Number(formData.employee_id) &&
+                    r.leave_type === 'Birthday Leave' &&
+                    new Date(r.start_date).getFullYear() === currentYear &&
+                    r.status !== 'Rejected' &&
+                    r.id !== editingId
+                );
+
+                if (duplicates.length > 0) {
+                    if (!confirm('Warning: Employee already has an approved/pending Birthday Leave for this year. Proceed anyway?')) {
+                        return;
+                    }
+                }
+            }
+        }
 
         try {
             const url = '/api/leave';
@@ -614,6 +654,7 @@ export default function LeavePage() {
                                         <option>Vacation Leave</option>
                                         <option>Sick Leave</option>
                                         <option>Emergency Leave</option>
+                                        <option>Birthday Leave</option>
                                     </select>
                                 </div>
                             </div>
@@ -798,10 +839,10 @@ export default function LeavePage() {
                                             <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.875rem' }}>{req.leave_type}</td>
                                             <td style={{ padding: '1.25rem 1.5rem' }}>
                                                 <div style={{ fontWeight: 500, color: '#475569', fontSize: '0.875rem' }}>
-                                                    {req.start_date ? format(parseISO(req.start_date), 'MMM d, yyyy') : '-'}
+                                                    {safeDate(req.start_date, 'MMM d, yyyy')}
                                                 </div>
                                                 <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>
-                                                    {req.end_date ? `to ${format(parseISO(req.end_date), 'MMM d, yyyy')}` : ''}
+                                                    {req.end_date ? `to ${safeDate(req.end_date, 'MMM d, yyyy')}` : ''}
                                                 </div>
                                             </td>
                                             <td style={{ padding: '1.25rem 1.5rem', fontWeight: 600, color: '#475569' }}>{req.days_count}</td>

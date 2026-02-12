@@ -1,39 +1,71 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAll, query } from '@/lib/database';
-import { recordAttendance, getAttendanceByDate, batchRecordAttendance } from '@/lib/data';
+import { recordAttendance, getAttendanceByDate, batchRecordAttendance, getEmployeeById } from '@/lib/data';
+import { requireBranchAuth, canModifyBranchData } from '@/lib/middleware/branch-auth';
+import { filterByBranch } from '@/lib/branch-access';
 
 export async function GET(request: NextRequest) {
     try {
+        const auth = await requireBranchAuth(request);
+        if (auth instanceof NextResponse) return auth;
+        const [user, selectedBranch] = auth;
+
         const { searchParams } = new URL(request.url);
         const date = searchParams.get('date');
         const employeeId = searchParams.get('employee_id');
         const startDate = searchParams.get('start_date');
         const endDate = searchParams.get('end_date');
 
-        if (date) {
-            const attendance = await getAttendanceByDate(date);
-            return NextResponse.json(attendance);
+        let results: any[] = [];
+
+        // Security: Overriding selectedBranch for HR users or via URL parameters for Super Admins
+        const branchParam = searchParams.get('branch');
+        let finalSelectedBranch = selectedBranch;
+
+        if (user.role === 'HR' && user.assigned_branch) {
+            finalSelectedBranch = user.assigned_branch;
+        } else if ((user.role === 'President' || user.role === 'Vice President') && branchParam) {
+            finalSelectedBranch = branchParam;
         }
 
-        if (employeeId && startDate && endDate) {
+        if (date) {
+            results = await getAttendanceByDate(date);
+        } else if (employeeId && startDate && endDate) {
             const res = await query(
-                "SELECT * FROM attendance WHERE employee_id = $1 AND date >= $2 AND date <= $3",
+                "SELECT a.*, e.branch FROM attendance a JOIN employees e ON a.employee_id = e.id WHERE a.employee_id = $1 AND a.date >= $2 AND a.date <= $3",
                 [parseInt(employeeId), startDate, endDate]
             );
-            return NextResponse.json(res.rows);
-        }
-
-        if (startDate && endDate) {
+            results = res.rows;
+        } else if (startDate && endDate) {
             const res = await query(
-                "SELECT * FROM attendance WHERE date >= $1 AND date <= $2 ORDER BY date DESC, time_in ASC",
+                "SELECT a.*, e.branch FROM attendance a JOIN employees e ON a.employee_id = e.id WHERE a.date >= $1 AND a.date <= $2 ORDER BY a.date DESC, a.time_in ASC",
                 [startDate, endDate]
             );
-            return NextResponse.json(res.rows);
+            results = res.rows;
+        } else {
+            // Join with employees to get branch for filtering
+            const res = await query("SELECT a.*, e.branch FROM attendance a JOIN employees e ON a.employee_id = e.id");
+            results = res.rows;
         }
 
-        // Get all attendance
-        const attendance = await getAll('attendance');
-        return NextResponse.json(attendance);
+        // Apply branch level filter
+        let filtered = filterByBranch(results, user.role, finalSelectedBranch);
+
+        // EXTRA SECURITY: Strictly enforce employee-only access
+        if (user.role === 'Employee') {
+            filtered = filtered.filter(a => String(a.employee_id) === String(user.employee_id));
+        }
+
+        // EXTRA SECURITY: Strictly enforce HR branch access (even if filterByBranch was bypassable)
+        if (user.role === 'HR' && user.assigned_branch) {
+            const normalizedAssigned = user.assigned_branch.replace(/\s*branch\s*$/i, '').trim().toUpperCase();
+            filtered = filtered.filter(a => {
+                const branch = (a.branch || '').replace(/\s*branch\s*$/i, '').trim().toUpperCase();
+                return branch === normalizedAssigned;
+            });
+        }
+
+        return NextResponse.json(filtered);
     } catch (error) {
         console.error('Get attendance error:', error);
         return NextResponse.json(

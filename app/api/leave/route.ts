@@ -1,17 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAll, getById, update, remove } from '@/lib/database';
 import { createLeaveRequest, getLeaveRequests, getLeaveSettings } from '@/lib/data';
+import { validateBranchRequest } from '@/lib/middleware/branch-auth';
+import { filterByBranch } from '@/lib/branch-access';
 
 export async function GET(request: NextRequest) {
     try {
+        const validation = await validateBranchRequest(request);
+        if (!validation.valid) return NextResponse.json({ error: validation.error }, { status: validation.errorCode || 401 });
+
+        const user = validation.user!;
         const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
         const status = searchParams.get('status');
         const employeeId = searchParams.get('employee_id');
+
+        if (id) {
+            const req = await getById('leave_requests', parseInt(id));
+            if (!req) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+            const employees = await getAll('employees');
+            const emp = employees.find((e: any) => Number(e.id) === Number(req.employee_id));
+
+            const leaveData = {
+                ...req,
+                employee_name: emp ? `${emp.first_name} ${emp.last_name}` : 'Unknown',
+                department: emp ? emp.department : 'Unknown',
+                branch: emp ? emp.branch : 'Unknown'
+            };
+
+            // Double check access to this specific request's branch
+            const filtered = filterByBranch([leaveData], user.role, validation.selectedBranch);
+            if (filtered.length === 0) {
+                return NextResponse.json({ error: 'Access denied: Leave request belongs to another branch' }, { status: 403 });
+            }
+
+            return NextResponse.json(leaveData);
+        }
 
         let requests = await getLeaveRequests(status || undefined);
 
         if (employeeId) {
-            requests = requests.filter((req: any) => req.employee_id === parseInt(employeeId));
+            requests = requests.filter((req: any) => Number(req.employee_id) === Number(employeeId));
+        }
+
+        // If employee role, extra restriction to own leaves
+        if (user.role === 'Employee') {
+            requests = requests.filter((req: any) => Number(req.employee_id) === Number(user.employee_id));
         }
 
         const employees = await getAll('employees');
@@ -20,11 +54,15 @@ export async function GET(request: NextRequest) {
             return {
                 ...req,
                 employee_name: emp ? `${emp.first_name} ${emp.last_name}` : 'Unknown',
-                department: emp ? emp.department : 'Unknown'
+                department: emp ? emp.department : 'Unknown',
+                branch: emp ? emp.branch : 'Unknown'
             };
         });
 
-        return NextResponse.json(enrichedRequests);
+        // Apply branch-based isolation
+        const filteredRequests = filterByBranch(enrichedRequests, user.role, validation.selectedBranch);
+
+        return NextResponse.json(filteredRequests);
     } catch (error) {
         console.error('Get leave requests error:', error);
         return NextResponse.json(
@@ -46,6 +84,32 @@ export async function POST(request: NextRequest) {
         }
 
         const settings = await getLeaveSettings();
+        if (data.leave_type === 'Birthday Leave') {
+            const employees = await getAll('employees');
+            const emp = employees.find((e: any) => Number(e.id) === Number(data.employee_id));
+            if (emp && emp.date_of_birth) {
+                const bday = new Date(emp.date_of_birth);
+                const start = new Date(data.start_date);
+                if (bday.getMonth() !== start.getMonth() || bday.getDate() !== start.getDate()) {
+                    console.log(`Birthday Leave date mismatch for ${emp.first_name}: ${data.start_date} vs ${emp.date_of_birth}`);
+                }
+            }
+
+            const year = new Date(data.start_date).getFullYear();
+            const leaves = await getAll('leave_requests');
+            const existing = leaves.filter((l: any) =>
+                l.employee_id === Number(data.employee_id) &&
+                l.leave_type === 'Birthday Leave' &&
+                new Date(l.start_date).getFullYear() === year &&
+                l.status !== 'Rejected' &&
+                l.status !== 'Cancelled'
+            );
+
+            if (existing.length > 0) {
+                console.log(`Duplicate Birthday Leave attempt for employee ${data.employee_id} in ${year}`);
+            }
+        }
+
         const id = await createLeaveRequest(data);
 
         return NextResponse.json({ success: true, id });

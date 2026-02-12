@@ -1,164 +1,345 @@
+/**
+ * Payroll Calculations Library
+ * Pure pay-based computation (NO attendance dependency)
+ * Date: February 9, 2026
+ */
+
 export interface PayrollInput {
-    employee: any;
-    startDate: string;
-    endDate: string;
-    selectedDeductions?: string[];
-    is15th: boolean;
-    isEnd: boolean;
+    dailyRate?: number;  // PRIMARY: Daily rate (preferred)
+    monthlySalary?: number;  // LEGACY: For backwards compatibility
+    payrollDays: number;
+    allowances?: {
+        regular?: number;
+        special?: number;
+        holiday?: number;
+        other?: number;
+    };
+    deductions?: {
+        // 15th cutoff only
+        phic?: number;
+        pagibig?: number;
+        pagibigLoan?: number;
+        companyFunds?: number;
+        // 30th cutoff only
+        sss?: number;
+        sssLoan?: number;
+        // Both cutoffs
+        companyLoan?: number;
+        cashAdvance?: number;
+        other?: number;
+    };
 }
 
-export function calculateEmployeePayroll(input: PayrollInput) {
-    const { employee, selectedDeductions, is15th, isEnd } = input;
+export interface PayrollOutput {
+    dailyRate: number;
+    basicPay: number;
+    grossPay: number;
+    totalDeductions: number;
+    netPay: number;
+    breakdown: {
+        earnings: {
+            basicPay: number;
+            regularAllowance: number;
+            specialAllowance: number;
+            holidayPay: number;
+            otherEarnings: number;
+        };
+        deductions: {
+            [key: string]: number;
+        };
+    };
+}
 
-    if (!employee.salary_info) {
+/**
+ * Compute payslip based on salary and payroll days
+ * NEW LOGIC (Preferred):
+ *   Daily Rate is provided directly
+ *   Monthly Salary = Daily Rate × 30
+ *   Basic Pay = Daily Rate × Payroll Days
+ * 
+ * LEGACY LOGIC (Backwards compatibility):
+ *   If dailyRate not provided, use monthlySalary
+ *   Daily Rate = Monthly Salary / 30
+ *   Basic Pay = Daily Rate × Payroll Days
+ * 
+ * Formula:
+ *   Gross Pay = Basic Pay + All Allowances
+ *   Net Pay = Gross Pay - Total Deductions
+ */
+export function computePayslip(
+    input: PayrollInput,
+    cutoffDay: 15 | 30 | 31
+): PayrollOutput {
+    // Step 1: Determine daily rate
+    // PRIORITY: Use dailyRate if provided, otherwise calculate from monthlySalary
+    let dailyRate: number;
+    if (input.dailyRate !== undefined && input.dailyRate > 0) {
+        // NEW LOGIC: Daily rate is primary
+        dailyRate = roundToTwo(input.dailyRate);
+    } else if (input.monthlySalary !== undefined && input.monthlySalary > 0) {
+        // LEGACY LOGIC: Calculate from monthly salary
+        dailyRate = roundToTwo(input.monthlySalary / 30);
+    } else {
+        // Fallback: No salary information provided
+        dailyRate = 0;
+    }
+
+    // Step 2: Calculate basic pay
+    const basicPay = roundToTwo(dailyRate * input.payrollDays);
+
+    // Step 3: Calculate total allowances
+    const allowances = input.allowances || {};
+    const totalAllowances =
+        (allowances.regular || 0) +
+        (allowances.special || 0) +
+        (allowances.holiday || 0) +
+        (allowances.other || 0);
+
+    // Step 4: Calculate gross pay
+    const grossPay = roundToTwo(basicPay + totalAllowances);
+
+    // Step 5: Calculate total deductions (filtered by cutoff)
+    const totalDeductions = getApplicableDeductions(
+        input.deductions || {},
+        cutoffDay
+    );
+
+    // Step 6: Calculate net pay
+    const netPay = roundToTwo(grossPay - totalDeductions);
+
+    // Return detailed breakdown
+    return {
+        dailyRate,
+        basicPay,
+        grossPay,
+        totalDeductions,
+        netPay,
+        breakdown: {
+            earnings: {
+                basicPay,
+                regularAllowance: allowances.regular || 0,
+                specialAllowance: allowances.special || 0,
+                holidayPay: allowances.holiday || 0,
+                otherEarnings: allowances.other || 0
+            },
+            deductions: getDeductionsBreakdown(input.deductions || {}, cutoffDay)
+        }
+    };
+}
+
+/**
+ * Get applicable deductions based on cutoff day
+ * 15th: PHIC, Pag-IBIG, Pag-IBIG Loan, Company Funds, Company Loan, Cash Advance, Other
+ * 30th/31st: SSS, SSS Loan, Pag-IBIG Loan, Company Loan, Cash Advance, Other
+ */
+function getApplicableDeductions(
+    deductions: NonNullable<PayrollInput['deductions']>,
+    cutoffDay: 15 | 30 | 31
+): number {
+    if (cutoffDay === 15) {
+        return roundToTwo(
+            (deductions.phic || 0) +
+            (deductions.pagibig || 0) +
+            (deductions.pagibigLoan || 0) +
+            (deductions.companyFunds || 0) +
+            (deductions.companyLoan || 0) +
+            (deductions.cashAdvance || 0) +
+            (deductions.other || 0)
+        );
+    } else {
+        return roundToTwo(
+            (deductions.sss || 0) +
+            (deductions.sssLoan || 0) +
+            (deductions.pagibigLoan || 0) +
+            (deductions.companyLoan || 0) +
+            (deductions.cashAdvance || 0) +
+            (deductions.other || 0)
+        );
+    }
+}
+
+/**
+ * Get deductions breakdown (only applicable ones)
+ */
+function getDeductionsBreakdown(
+    deductions: NonNullable<PayrollInput['deductions']>,
+    cutoffDay: 15 | 30 | 31
+): { [key: string]: number } {
+    const breakdown: { [key: string]: number } = {};
+
+    if (cutoffDay === 15) {
+        // 15th cutoff deductions
+        if (deductions.phic) breakdown.phic = deductions.phic;
+        if (deductions.pagibig) breakdown.pagibig = deductions.pagibig;
+        if (deductions.pagibigLoan) breakdown.pagibigLoan = deductions.pagibigLoan;
+        if (deductions.companyFunds) breakdown.companyFunds = deductions.companyFunds;
+    } else {
+        // 30th/31st cutoff deductions
+        if (deductions.sss) breakdown.sss = deductions.sss;
+        if (deductions.sssLoan) breakdown.sssLoan = deductions.sssLoan;
+        if (deductions.pagibigLoan) breakdown.pagibigLoan = deductions.pagibigLoan;
+    }
+
+    // Both cutoffs
+    if (deductions.companyLoan) breakdown.companyLoan = deductions.companyLoan;
+    if (deductions.cashAdvance) breakdown.cashAdvance = deductions.cashAdvance;
+    if (deductions.other) breakdown.other = deductions.other;
+
+    return breakdown;
+}
+
+/**
+ * Validate payroll days against period
+ */
+export function validatePayrollDays(
+    payrollDays: number,
+    periodStart: Date,
+    periodEnd: Date
+): { valid: boolean; error?: string } {
+    // Calculate actual days in period
+    const diffTime = Math.abs(periodEnd.getTime() - periodStart.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    // Relaxed validation: Allow up to 31 days regardless of period length to accommodate fixed semi-monthly rates (15/15)
+    if (payrollDays > 31) {
         return {
-            employee_id: employee.id,
-            employee_name: `${employee.last_name}, ${employee.first_name}`,
-            department: employee.department,
-            position: employee.position,
-            branch: employee.branch || 'N/A',
-            gross_pay: 0,
-            allowances: 0,
-            deductions: 0,
-            deduction_details: {},
-            net_pay: 0,
-            daily_rate: 0
+            valid: false,
+            error: `Payroll days (${payrollDays}) cannot exceed 31 days`
         };
     }
-    if (['Resigned', 'Terminated'].includes(employee.employment_status)) return null;
 
-    const safeDailyRate = parseFloat(employee.salary_info.daily_rate) || 0;
-    const grossPay = safeDailyRate * 15; // Semi-monthly standard (15 days)
-
-    let totalAllowances = 0;
-    if (employee.salary_info.allowances) {
-        const allowancesObj = employee.salary_info.allowances;
-        if (allowancesObj.special !== undefined) {
-            totalAllowances = parseFloat(allowancesObj.special) || 0;
-        } else {
-            totalAllowances = Object.values(allowancesObj as Record<string, any>)
-                .reduce((a: number, b: any) => a + (parseFloat(b) || 0), 0);
-        }
+    if (payrollDays <= 0) {
+        return {
+            valid: false,
+            error: 'Payroll days must be greater than 0'
+        };
     }
-    const allowances = totalAllowances / 2;
 
-    let totalDeductions = 0;
-    const deductionDetails: any = {};
-    const d = employee.salary_info.deductions || {};
+    return { valid: true };
+}
 
-    const shouldInclude = (id: string) => {
-        if (selectedDeductions && Array.isArray(selectedDeductions)) {
-            return selectedDeductions.includes(id);
-        }
-        if (['sss_loan', 'pagibig_loan', 'company_loan', 'cash_advance', 'other_deductions', 'philhealth', 'pagibig', 'sss', 'company_cash_fund'].includes(id)) {
-            return true;
-        }
-        return false;
+/**
+ * Generate payroll run number
+ * Format: BRANCH-YYYYMM-CUTOFF-SEQ
+ * Example: ORMOC-202602-15-001
+ */
+export function generateRunNumber(
+    branch: string,
+    periodStart: Date,
+    cutoffDay: number,
+    sequence: number
+): string {
+    const year = periodStart.getFullYear();
+    const month = String(periodStart.getMonth() + 1).padStart(2, '0');
+    const seq = String(sequence).padStart(3, '0');
+
+    return `${branch.toUpperCase()}-${year}${month}-${cutoffDay}-${seq}`;
+}
+
+/**
+ * Get deduction columns for cutoff
+ */
+export function getDeductionColumns(cutoffDay: 15 | 30 | 31): string[] {
+    if (cutoffDay === 15) {
+        return [
+            'phic',
+            'pagibig',
+            'pagibigLoan',
+            'companyFunds',
+            'companyLoan',
+            'cashAdvance',
+            'other'
+        ];
+    } else {
+        return [
+            'sss',
+            'sssLoan',
+            'pagibigLoan',
+            'companyLoan',
+            'cashAdvance',
+            'other'
+        ];
+    }
+}
+
+/**
+ * Get deduction display names
+ */
+export function getDeductionDisplayName(key: string): string {
+    const names: { [key: string]: string } = {
+        phic: 'PhilHealth (PHIC)',
+        pagibig: 'Pag-IBIG',
+        pagibigLoan: 'Pag-IBIG Loan',
+        companyFunds: 'Company Funds',
+        sss: 'SSS',
+        sssLoan: 'SSS Loan',
+        companyLoan: 'Company Loan',
+        cashAdvance: 'Cash Advance',
+        other: 'Other Deductions'
     };
 
-    if (shouldInclude('pagibig') && d.pagibig_contribution) {
-        const amount = parseFloat(d.pagibig_contribution) || 0;
-        totalDeductions += amount;
-        deductionDetails.pagibig = amount;
-    }
+    return names[key] || key;
+}
 
-    if (shouldInclude('company_cash_fund') && d.company_cash_fund) {
-        const amount = parseFloat(d.company_cash_fund) || 0;
-        totalDeductions += amount;
-        deductionDetails.company_cash_fund = amount;
-    }
+/**
+ * Batch compute payslips for multiple employees
+ */
+export function batchComputePayslips(
+    employees: Array<{
+        id: number;
+        monthlySalary: number;
+        payrollDays: number;
+        allowances?: PayrollInput['allowances'];
+        deductions?: PayrollInput['deductions'];
+    }>,
+    cutoffDay: 15 | 30 | 31
+): Array<PayrollOutput & { employeeId: number }> {
+    return employees.map(emp => ({
+        employeeId: emp.id,
+        ...computePayslip(
+            {
+                monthlySalary: emp.monthlySalary,
+                payrollDays: emp.payrollDays,
+                allowances: emp.allowances,
+                deductions: emp.deductions
+            },
+            cutoffDay
+        )
+    }));
+}
 
-    if (shouldInclude('philhealth') && d.philhealth_contribution) {
-        const amount = parseFloat(d.philhealth_contribution) || 0;
-        totalDeductions += amount;
-        deductionDetails.philhealth = amount;
-    }
+/**
+ * Helper: Round to 2 decimal places
+ */
+function roundToTwo(num: number): number {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+}
 
-    if (shouldInclude('sss') && d.sss_contribution) {
-        const amount = parseFloat(d.sss_contribution) || 0;
-        totalDeductions += amount;
-        deductionDetails.sss = amount;
-    }
+/**
+ * Format currency for display
+ */
+export function formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount);
+}
 
-    if (shouldInclude('sss_loan') && d.sss_loan) {
-        const amortization = typeof d.sss_loan.amortization === 'string' ? parseFloat(d.sss_loan.amortization) : d.sss_loan.amortization;
-        if (amortization > 0) {
-            totalDeductions += amortization;
-            deductionDetails.sss_loan = amortization;
-            // Removed sss_loan_balance as requested
-        }
-    }
+/**
+ * Format currency without symbol
+ */
+export function formatAmount(amount: number): string {
+    return new Intl.NumberFormat('en-PH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount);
+}
 
-    if (shouldInclude('company_loan') && d.company_loan && d.company_loan.balance > 0) {
-        const balance = typeof d.company_loan.balance === 'string' ? parseFloat(d.company_loan.balance) : d.company_loan.balance;
-        const amortization = typeof d.company_loan.amortization === 'string' ? parseFloat(d.company_loan.amortization) : d.company_loan.amortization;
-        if (amortization > 0) {
-            const amount = Math.min(balance || 0, amortization);
-            totalDeductions += amount;
-            deductionDetails.company_loan = amount;
-            deductionDetails.company_loan_balance = (balance || 0) - amount;
-        }
-    }
-
-    if (shouldInclude('cash_advance') && d.cash_advance) {
-        let amount = 0;
-        if (typeof d.cash_advance === 'number') {
-            amount = d.cash_advance;
-        } else if (typeof d.cash_advance === 'string') {
-            amount = parseFloat(d.cash_advance) || 0;
-        } else if (d.cash_advance.balance > 0) {
-            const balance = typeof d.cash_advance.balance === 'string' ? parseFloat(d.cash_advance.balance) : d.cash_advance.balance;
-            const amortization = typeof d.cash_advance.amortization === 'string' ? parseFloat(d.cash_advance.amortization) : (d.cash_advance.amortization || balance);
-            amount = Math.min(balance || 0, (typeof amortization === 'string' ? parseFloat(amortization) : amortization) || 0);
-            deductionDetails.cash_advance_balance = (balance || 0) - amount;
-        }
-
-        if (amount > 0) {
-            totalDeductions += amount;
-            deductionDetails.cash_advance = amount;
-        }
-    }
-
-    if (shouldInclude('pagibig_loan') && d.pagibig_loan) {
-        const amortization = typeof d.pagibig_loan.amortization === 'string' ? parseFloat(d.pagibig_loan.amortization) : d.pagibig_loan.amortization;
-        if (amortization > 0) {
-            totalDeductions += amortization;
-            deductionDetails.pagibig_loan = amortization;
-            // Removed pagibig_loan_balance for consistency
-        }
-    }
-
-    if (shouldInclude('other_deductions') && d.other_deductions && d.other_deductions.length > 0) {
-        let otherTotal = 0;
-        d.other_deductions.forEach((od: any) => {
-            const amount = parseFloat(od.amount) || 0;
-            if (amount > 0) {
-                totalDeductions += amount;
-                otherTotal += amount;
-                deductionDetails[od.name || 'Other Deduction'] = amount;
-            }
-        });
-        deductionDetails.other_deductions = otherTotal;
-    }
-
-    const safeGross = isNaN(grossPay) ? 0 : grossPay;
-    const safeAllowances = isNaN(allowances) ? 0 : allowances;
-    const safeDeductions = isNaN(totalDeductions) ? 0 : totalDeductions;
-
-
-    const netPay = safeGross + safeAllowances - safeDeductions;
-
-    return {
-        employee_id: employee.id,
-        employee_name: `${employee.last_name}, ${employee.first_name}`,
-        department: employee.department,
-        position: employee.position,
-        branch: employee.branch || 'N/A',
-        gross_pay: safeGross,
-        allowances: safeAllowances,
-        deductions: safeDeductions,
-        deduction_details: deductionDetails,
-        net_pay: netPay,
-        daily_rate: safeDailyRate
-    };
+/**
+ * Parse currency string to number
+ */
+export function parseCurrency(value: string): number {
+    return parseFloat(value.replace(/[^0-9.-]+/g, '')) || 0;
 }

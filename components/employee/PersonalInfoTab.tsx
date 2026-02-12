@@ -53,31 +53,40 @@ const InfoRow = ({ label, value }: { label: string, value: React.ReactNode }) =>
     </div>
 );
 
-const CardHeader = ({ title, icon, onEdit }: { title: string, icon?: string, onEdit?: () => void }) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--gray-100)', paddingBottom: '0.75rem' }}>
+const CardHeader = ({ title, icon, onEdit, iconColor, iconBg }: { title: string, icon?: string | React.ReactNode, onEdit?: () => void, iconColor?: string, iconBg?: string }) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            {icon && <span style={{ fontSize: '1.25rem', color: 'var(--primary-600)' }}>{icon}</span>}
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 800, color: 'var(--gray-900)', letterSpacing: '-0.01em' }}>{title}</h3>
+            {icon && (
+                <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    background: iconBg || 'var(--primary-50)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.1rem',
+                    color: iconColor || 'var(--primary-600)'
+                }}>
+                    {icon}
+                </div>
+            )}
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1e293b', letterSpacing: '-0.02em', margin: 0 }}>{title}</h3>
         </div>
         {onEdit && (
             <button
                 onClick={onEdit}
                 style={{
-                    padding: '0.4rem 0.75rem',
-                    background: 'var(--primary-50)',
-                    color: 'var(--primary-700)',
+                    padding: '0.4rem 1rem',
+                    background: '#eff6ff',
+                    color: '#2563eb',
                     borderRadius: '8px',
-                    border: '1px solid var(--primary-100)',
+                    border: '1px solid #dbeafe',
                     fontSize: '0.75rem',
                     fontWeight: 700,
                     cursor: 'pointer',
                     transition: 'all 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem'
                 }}
-                onMouseOver={(e) => { e.currentTarget.style.background = 'var(--primary-100)'; }}
-                onMouseOut={(e) => { e.currentTarget.style.background = 'var(--primary-50)'; }}
             >
                 Edit
             </button>
@@ -88,12 +97,11 @@ const CardHeader = ({ title, icon, onEdit }: { title: string, icon?: string, onE
 const Card = ({ children, style = {} }: { children: React.ReactNode, style?: React.CSSProperties }) => (
     <div style={{
         background: 'white',
-        borderRadius: '20px',
-        padding: '1.75rem',
-        border: '1px solid rgba(0,0,0,0.05)',
+        borderRadius: '32px',
+        padding: '2.5rem',
+        border: 'none',
         height: '100%',
-        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
-        transition: 'transform 0.2s ease, boxShadow 0.2s ease',
+        boxShadow: '0 10px 40px -10px rgba(0, 0, 0, 0.1)',
         ...style
     }}>
         {children}
@@ -502,35 +510,36 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr', gap: '1rem', alignItems: 'stretch' }}>
 
                 {/* LEFT: Employee Profile Card */}
-                <Card style={{ padding: '0', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ padding: '1.25rem', flex: 1 }}>
+                <Card style={{ padding: '0', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div style={{ padding: '2.5rem', flex: 1 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
                                 {/* Profile Picture */}
                                 <div style={{ position: 'relative' }}>
                                     <div style={{
-                                        width: '110px', height: '110px',
-                                        borderRadius: '50%',
+                                        width: '140px', height: '140px',
+                                        borderRadius: '40px',
                                         background: 'white',
-                                        border: '4px solid white',
-                                        boxShadow: '0 4px 15px -5px rgba(0,0,0,0.1)',
+                                        border: '6px solid white',
+                                        boxShadow: '0 15px 35px -10px rgba(0,0,0,0.15)',
                                         overflow: 'hidden',
                                         position: 'relative'
                                     }}>
                                         {profilePicture ?
                                             <img src={profilePicture} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            : <div style={{ width: '100%', height: '100%', background: 'var(--primary-50)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', fontWeight: 800, color: 'var(--primary-200)' }}>
+                                            : <div style={{ width: '100%', height: '100%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', fontWeight: 800, color: '#e2e8f0' }}>
                                                 {employee.first_name?.[0]}{employee.last_name?.[0]}
                                             </div>
                                         }
                                     </div>
                                     <label style={{
-                                        position: 'absolute', bottom: '4px', right: '4px',
-                                        background: 'white', border: '1px solid var(--gray-200)',
-                                        borderRadius: '50%', width: '28px', height: '28px',
+                                        position: 'absolute', bottom: '-8px', right: '-8px',
+                                        background: 'white', border: 'none',
+                                        borderRadius: '16px', width: '40px', height: '40px',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-                                        fontSize: '0.8rem'
+                                        cursor: 'pointer', boxShadow: '0 8px 15px rgba(0,0,0,0.1)',
+                                        fontSize: '1rem',
+                                        transition: 'all 0.2s'
                                     }} title="Upload Photo">
                                         📷
                                         <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" style={{ display: 'none' }} />
@@ -538,42 +547,39 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                                 </div>
 
                                 {/* Names & Role */}
-                                <div style={{ paddingTop: '0.25rem' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.15rem' }}>
-                                        <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--gray-900)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                                <div style={{ paddingTop: '0.5rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                                        <h2 style={{ fontSize: '2.25rem', fontWeight: 900, color: '#1e293b', margin: 0, letterSpacing: '-0.04em', lineHeight: 1 }}>
                                             {employee.first_name} {employee.last_name}
                                         </h2>
                                         <span style={{
                                             background: '#10b981', color: 'white',
-                                            padding: '2px 8px', borderRadius: '100px',
-                                            fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
-                                            display: 'flex', alignItems: 'center', gap: '3px',
-                                            letterSpacing: '0.05em'
+                                            padding: '4px 12px', borderRadius: '100px',
+                                            fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase',
+                                            display: 'flex', alignItems: 'center', gap: '4px',
+                                            letterSpacing: '0.05em',
+                                            boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)'
                                         }}>
                                             ✓ Verified
                                         </span>
                                     </div>
-                                    <div style={{ fontSize: '0.95rem', color: 'var(--primary-600)', fontWeight: 700, marginBottom: '0.25rem' }}>
+                                    <div style={{ fontSize: '1.25rem', color: '#2563eb', fontWeight: 700, marginBottom: '0.75rem' }}>
                                         {employee.position}
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--gray-500)', fontSize: '0.8rem', fontWeight: 500 }}>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>🆔 {employee.employee_id}</span>
-                                        <span>•</span>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>📍 {employee.department}</span>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#f1f5f9', padding: '4px 12px', borderRadius: '8px' }}>🆔 {employee.employee_id}</span>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#f1f5f9', padding: '4px 12px', borderRadius: '8px' }}>📍 {employee.department}</span>
                                         {employee.employment_status && (
-                                            <>
-                                                <span>•</span>
-                                                <span style={{ color: 'var(--gray-700)' }}>{employee.employment_status}</span>
-                                            </>
+                                            <span style={{ background: '#ecfdf5', color: '#059669', padding: '4px 12px', borderRadius: '8px', fontWeight: 700 }}>{employee.employment_status}</span>
                                         )}
                                     </div>
 
                                     {/* Quick Contact Stats */}
-                                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
-                                        <div style={{ background: 'var(--gray-50)', padding: '0.4rem 0.75rem', borderRadius: '8px', border: '1px solid var(--gray-100)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem' }}>
-                                            <span>✉️</span> <span style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{employee.email_address || 'No email'}</span>
+                                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+                                        <div style={{ background: 'white', padding: '0.6rem 1rem', borderRadius: '12px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.875rem', color: '#1e293b', fontWeight: 600, boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}>
+                                            <span>✉️</span> <span style={{ maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{employee.email_address || 'No email'}</span>
                                         </div>
-                                        <div style={{ background: 'var(--gray-50)', padding: '0.4rem 0.75rem', borderRadius: '8px', border: '1px solid var(--gray-100)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem' }}>
+                                        <div style={{ background: 'white', padding: '0.6rem 1rem', borderRadius: '12px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.875rem', color: '#1e293b', fontWeight: 600, boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}>
                                             <span>📞</span> {employee.contact_number || 'No contact'}
                                         </div>
                                     </div>
@@ -585,63 +591,49 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                                 <button
                                     onClick={() => setIsEditing(true)}
                                     style={{
-                                        padding: '0.4rem 0.75rem',
+                                        padding: '0.6rem 1.25rem',
                                         background: 'white',
-                                        color: 'var(--gray-700)',
-                                        border: '1px solid var(--gray-200)',
-                                        borderRadius: '6px',
-                                        fontWeight: 600,
-                                        fontSize: '0.75rem',
+                                        color: '#64748b',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '12px',
+                                        fontWeight: 700,
+                                        fontSize: '0.85rem',
                                         cursor: 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '0.4rem',
-                                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                                        gap: '0.5rem',
+                                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
                                         transition: 'all 0.2s'
                                     }}
                                 >
-                                    ✏️ Edit
+                                    ✏️ Edit Profile
                                 </button>
                             )}
                         </div>
 
                         {/* Divider */}
-                        <div style={{ height: '1px', background: 'var(--gray-100)', margin: '1.25rem 0' }}></div>
+                        <div style={{ height: '1px', background: 'linear-gradient(90deg, #f1f5f9, transparent)', margin: '2rem 0' }}></div>
 
                         {/* Bio Grid */}
                         <div style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(4, 1fr)',
-                            gap: '1rem',
+                            gap: '1.5rem',
                         }}>
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
-                                    <span style={{ fontSize: '1rem' }}>🎂</span>
-                                    <span style={{ textTransform: 'uppercase', fontSize: '0.6rem', fontWeight: 800, color: 'var(--gray-400)', letterSpacing: '0.05em' }}>Birth Date</span>
+                            {[
+                                { icon: '🎂', label: 'Birth Date', value: formatDate(employee.date_of_birth) },
+                                { icon: '💍', label: 'Civil Status', value: employee.civil_status || 'Not defined' },
+                                { icon: '🛐', label: 'Religion', value: employee.religion || 'Not specified' },
+                                { icon: '🏢', label: 'Branch Unit', value: employee.branch || 'Head Office' }
+                            ].map((item, i) => (
+                                <div key={i} style={{ background: '#f8fafc', padding: '1rem', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                        <span style={{ fontSize: '1.1rem' }}>{item.icon}</span>
+                                        <span style={{ textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8', letterSpacing: '0.05em' }}>{item.label}</span>
+                                    </div>
+                                    <span style={{ color: '#1e293b', fontWeight: 800, fontSize: '0.95rem', display: 'block' }}>{item.value}</span>
                                 </div>
-                                <span style={{ color: 'var(--gray-700)', fontWeight: 700, fontSize: '0.85rem', display: 'block' }}>{formatDate(employee.date_of_birth)}</span>
-                            </div>
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
-                                    <span style={{ fontSize: '1rem' }}>💍</span>
-                                    <span style={{ textTransform: 'uppercase', fontSize: '0.6rem', fontWeight: 800, color: 'var(--gray-400)', letterSpacing: '0.05em' }}>Civil Status</span>
-                                </div>
-                                <span style={{ color: 'var(--gray-700)', fontWeight: 700, fontSize: '0.85rem', display: 'block' }}>{employee.civil_status || 'Not defined'}</span>
-                            </div>
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
-                                    <span style={{ fontSize: '1rem' }}>🛐</span>
-                                    <span style={{ textTransform: 'uppercase', fontSize: '0.6rem', fontWeight: 800, color: 'var(--gray-400)', letterSpacing: '0.05em' }}>Religion</span>
-                                </div>
-                                <span style={{ color: 'var(--gray-700)', fontWeight: 700, fontSize: '0.85rem', display: 'block' }}>{employee.religion || 'Not specified'}</span>
-                            </div>
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
-                                    <span style={{ fontSize: '1rem' }}>🏢</span>
-                                    <span style={{ textTransform: 'uppercase', fontSize: '0.6rem', fontWeight: 800, color: 'var(--gray-400)', letterSpacing: '0.05em' }}>Branch Unit</span>
-                                </div>
-                                <span style={{ color: 'var(--gray-700)', fontWeight: 700, fontSize: '0.85rem', display: 'block' }}>{employee.branch || 'Head Office'}</span>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </Card>
@@ -762,18 +754,23 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 {/* Address */}
-                <Card style={{ padding: '1rem' }}>
-                    <CardHeader title="Residential Address" icon="📍" onEdit={() => onEdit('address')} />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        <div style={{ background: 'var(--primary-50)', padding: '0.75rem', borderRadius: '10px', borderLeft: '3px solid var(--primary-500)' }}>
-                            <span style={{ display: 'block', fontSize: '0.65rem', fontWeight: 800, color: 'var(--primary-700)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Residence</span>
-                            <span style={{ fontSize: '0.85rem', color: 'var(--gray-700)', fontWeight: 500, lineHeight: 1.4 }}>
+                <Card style={{ padding: '2rem' }}>
+                    <CardHeader
+                        title="Residential Address"
+                        onEdit={() => onEdit('address')}
+                        icon={<span style={{ color: '#ef4444' }}>📍</span>}
+                        iconBg="#fef2f2"
+                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                        <div style={{ background: '#f0f7ff', padding: '1.25rem', borderRadius: '16px', borderLeft: '4px solid #3b82f6' }}>
+                            <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#3b82f6', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Residence</span>
+                            <span style={{ fontSize: '1rem', color: '#1e293b', fontWeight: 600, lineHeight: 1.5 }}>
                                 {employee.address || 'Street/Barangay info not provided'}
                             </span>
                         </div>
                         <div>
-                            <span style={{ display: 'block', fontSize: '0.65rem', fontWeight: 800, color: 'var(--gray-400)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Citizen ID Address</span>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--gray-600)', fontWeight: 500 }}>
+                            <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Citizen ID Address</span>
+                            <span style={{ fontSize: '0.95rem', color: '#64748b', fontWeight: 500 }}>
                                 {employee.citizen_id_address || 'Matches residential address'}
                             </span>
                         </div>
@@ -781,38 +778,29 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                 </Card>
 
                 {/* Emergency Contact */}
-                <Card style={{ padding: '1rem', display: 'flex', flexDirection: 'column' }}>
-                    <CardHeader title="Emergency Contact" icon="🆘" onEdit={() => onEdit('emergency')} />
-                    <div style={{ background: '#fffef3', padding: '1rem', borderRadius: '12px', border: '1px dashed var(--warning-200)', display: 'flex', alignItems: 'center', flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%' }}>
-                            <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'var(--warning-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>
-                                👤
+                <Card style={{ padding: '2rem', display: 'flex', flexDirection: 'column' }}>
+                    <CardHeader
+                        title="Emergency Contact"
+                        onEdit={() => onEdit('emergency')}
+                        icon={<span style={{ color: '#ec4899', fontSize: '0.8rem', fontWeight: 900 }}>SOS</span>}
+                        iconBg="#fdf2f8"
+                    />
+                    <div style={{ background: '#fffbeb', padding: '1.5rem', borderRadius: '20px', border: '1px solid #fef3c7', display: 'flex', alignItems: 'center', flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
+                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0 }}>
+                                <span style={{ filter: 'grayscale(1) opacity(0.7)' }}>👤</span>
                             </div>
-                            <div>
-                                <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--gray-800)' }}>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '1.125rem', fontWeight: 800, color: '#1e293b' }}>
                                     {employee.emergency_contact_name || 'Guardian Not Set'}
                                 </div>
                                 {employee.emergency_contact_number ? (
-                                    <div style={{ color: 'var(--warning-700)', fontWeight: 700, fontSize: '0.85rem', marginTop: '0.15rem' }}>
-                                        📞 {employee.emergency_contact_number}
+                                    <div style={{ color: '#d97706', fontWeight: 700, fontSize: '0.95rem', marginTop: '0.25rem' }}>
+                                        {employee.emergency_contact_number}
                                     </div>
                                 ) : (
-                                    <div style={{ color: 'var(--gray-400)', fontWeight: 500, fontSize: '0.925rem', marginTop: '0.25rem', fontStyle: 'italic' }}>
+                                    <div style={{ color: '#94a3b8', fontWeight: 500, fontSize: '0.95rem', marginTop: '0.25rem', fontStyle: 'italic' }}>
                                         No emergency number provided
-                                    </div>
-                                )}
-                                {(employee.emergency_contact_relationship || employee.emergency_contact_address) && (
-                                    <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed var(--warning-200)', fontSize: '0.8rem', color: 'var(--gray-600)' }}>
-                                        {employee.emergency_contact_relationship && (
-                                            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.2rem' }}>
-                                                <span style={{ fontWeight: 600 }}>Relationship:</span> {employee.emergency_contact_relationship}
-                                            </div>
-                                        )}
-                                        {employee.emergency_contact_address && (
-                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                <span style={{ fontWeight: 600 }}>Address:</span> {employee.emergency_contact_address}
-                                            </div>
-                                        )}
                                     </div>
                                 )}
                             </div>
@@ -821,40 +809,58 @@ export default function PersonalInfoTab({ employee, onEdit, onSave }: PersonalIn
                 </Card>
 
                 {/* Education */}
-                <Card style={{ gridColumn: 'span 2' }}>
-                    <CardHeader title="Educational Background" icon="🎓" onEdit={() => onEdit('education')} />
+                <Card style={{ gridColumn: 'span 2', padding: '2rem' }}>
+                    <CardHeader
+                        title="Educational Background"
+                        onEdit={() => onEdit('education')}
+                        icon={<span style={{ fontSize: '1.2rem' }}>🎓</span>}
+                        iconBg="#f5f3ff"
+                    />
 
                     {(!employee.education || employee.education.length === 0) ? (
-                        <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--gray-50)', borderRadius: '16px', border: '2px dashed var(--gray-200)' }}>
-                            <span style={{ fontSize: '2rem', display: 'block', marginBottom: '1rem' }}>📚</span>
-                            <p style={{ color: 'var(--gray-400)', fontWeight: 600 }}>No educational records found in database.</p>
+                        <div style={{ textAlign: 'center', padding: '4rem', background: '#f8fafc', borderRadius: '24px', border: '2px dashed #e2e8f0' }}>
+                            <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem' }}>📚</span>
+                            <p style={{ color: '#94a3b8', fontWeight: 600, fontSize: '1.1rem' }}>No educational records found.</p>
                         </div>
                     ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
                             {employee.education.map((edu, idx) => (
                                 <div key={idx} style={{
-                                    padding: '1.25rem',
-                                    borderRadius: '16px',
+                                    padding: '1.75rem',
+                                    borderRadius: '24px',
                                     background: 'white',
-                                    border: '1px solid var(--gray-100)',
+                                    border: '1px solid #f1f5f9',
                                     boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
                                     display: 'flex',
-                                    gap: '1rem'
+                                    gap: '1.5rem',
+                                    alignItems: 'flex-start'
                                 }}>
-                                    <div style={{ fontSize: '1.5rem', opacity: 0.5 }}>🏫</div>
-                                    <div>
-                                        <div style={{ fontWeight: 800, color: 'var(--gray-900)', fontSize: '1rem', marginBottom: '0.25rem' }}>
+                                    <div style={{
+                                        width: '48px',
+                                        height: '48px',
+                                        borderRadius: '12px',
+                                        background: '#f8fafc',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '1.5rem',
+                                        border: '1px solid #f1f5f9'
+                                    }}>
+                                        🏫
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 700, color: '#64748b', fontSize: '0.85rem', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                             {edu.level}
                                         </div>
-                                        <div style={{ fontSize: '0.925rem', color: 'var(--primary-700)', fontWeight: 700 }}>
+                                        <div style={{ fontSize: '1.25rem', color: '#2563eb', fontWeight: 800, marginBottom: '0.5rem' }}>
                                             {edu.school_name}
                                         </div>
-                                        <div style={{ fontSize: '0.875rem', color: 'var(--gray-600)', marginTop: '0.4rem', fontWeight: 500 }}>
+                                        <div style={{ fontSize: '1rem', color: '#475569', fontWeight: 500, marginBottom: '1rem' }}>
                                             {edu.degree_course}
                                         </div>
-                                        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem' }}>
-                                            <span style={{ background: 'var(--gray-100)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 800, color: 'var(--gray-500)' }}>GRADUATED: {edu.year_graduated}</span>
-                                            {edu.honors_awards && <span style={{ background: 'var(--success-50)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 800, color: 'var(--success-700)' }}>AWARDS: {edu.honors_awards}</span>}
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                            <span style={{ background: '#f1f5f9', padding: '0.4rem 0.75rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 700, color: '#64748b' }}>GRADUATED: {edu.year_graduated}</span>
+                                            {edu.honors_awards && <span style={{ background: '#ecfdf5', padding: '0.4rem 0.75rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 700, color: '#059669' }}>AWARDS: {edu.honors_awards}</span>}
                                         </div>
                                     </div>
                                 </div>

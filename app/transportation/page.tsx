@@ -466,6 +466,10 @@ export default function TransportationAllowancePage() {
 
             <style jsx global>{`
                 @media print {
+                    @page {
+                        size: portrait;
+                        margin: 10mm;
+                    }
                     body * {
                         visibility: hidden;
                     }

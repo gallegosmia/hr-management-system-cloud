@@ -1,10 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
+import * as XLSX from 'xlsx';
+
+const safeDate = (date: any, formatStr: string) => {
+    try {
+        const d = new Date(date);
+        if (!isValid(d)) return '---';
+        return format(d, formatStr);
+    } catch {
+        return '---';
+    }
+};
 
 interface ReportData {
     attendanceSummary: any[];
@@ -18,7 +29,7 @@ interface ReportData {
         filedValidation?: number;
         details?: Record<string, number>;
     }[];
-    payrollSummary: any;
+
     complianceAudit: any[];
     tenureData: any[];
     governmentRemittance: any;
@@ -50,27 +61,51 @@ export default function ReportsPage() {
         endDate: new Date().toISOString().split('T')[0],
         department: 'All Departments',
         branch: 'All Branches',
+        employeeId: 'All Employees',
         sortBy: 'Name',
         column: 'All Columns',
         filter: 'None'
     });
     const [branches, setBranches] = useState<string[]>([]);
     const [departments, setDepartments] = useState<string[]>([]);
+    const [showPreview, setShowPreview] = useState(false);
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            const parsed = JSON.parse(userData);
+            setUser(parsed);
+            if (parsed.role === 'HR' && parsed.assigned_branch) {
+                setConfig(prev => ({ ...prev, branch: parsed.assigned_branch }));
+            }
+        }
+    }, []);
 
     const reportOptions = [
         { id: 'attendance', title: 'Attendance Summary', action: 'genAttendancePDF' },
         { id: 'latesAbsences', title: 'Lates and Absences', action: 'genLatesAbsencesPDF' },
         { id: 'leave', title: 'Leave Credits & Usage', action: 'genLeavePDF' },
-        { id: 'payroll', title: 'Payroll Expenditure', action: 'genPayrollPDF' },
         { id: 'compliance', title: '201 File Compliance', action: 'genCompliancePDF' },
         { id: 'tenure', title: 'Tenure & Anniversaries', action: 'genTenurePDF' },
         { id: 'remittance', title: 'Government Remittance', action: 'genRemittancePDF' },
         { id: 'headcount', title: 'Headcount & Growth', action: 'genHeadcountPDF' },
     ];
 
+    const [debouncedStartDate, setDebouncedStartDate] = useState(config.startDate);
+    const [debouncedEndDate, setDebouncedEndDate] = useState(config.endDate);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedStartDate(config.startDate);
+            setDebouncedEndDate(config.endDate);
+        }, 1000); // 1 second debounce for smoother typing
+        return () => clearTimeout(timer);
+    }, [config.startDate, config.endDate]);
+
     useEffect(() => {
         fetchReports();
-    }, [config.startDate, config.endDate, config.branch]);
+    }, [debouncedStartDate, debouncedEndDate, config.branch]);
 
     useEffect(() => {
         fetchBranches();
@@ -131,29 +166,97 @@ export default function ReportsPage() {
 
     const filterData = (rows: any[]) => {
         if (!rows) return [];
+        const normalize = (b: string | undefined | null) => (b || '').replace(/\s*branch\s*$/i, '').trim().toUpperCase();
+        const normalizedConfigBranch = normalize(config.branch);
+
         return rows.filter(row => {
             const deptMatch = config.department === 'All Departments' || row.department === config.department;
-            const branchMatch = config.branch === 'All Branches' || row.branch === config.branch;
-            return deptMatch && branchMatch;
+            const branchMatch = config.branch === 'All Branches' || normalize(row.branch) === normalizedConfigBranch;
+            const employeeMatch = config.employeeId === 'All Employees' || String(row.id) === String(config.employeeId) || String(row.employee_id) === String(config.employeeId);
+            return deptMatch && branchMatch && employeeMatch;
         });
     };
 
     const addReportHeader = (doc: jsPDF, title: string) => {
-        doc.setFillColor(30, 41, 59);
-        doc.rect(0, 0, 210, 40, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(22);
-        doc.text(title, 14, 25);
-        doc.setFontSize(10);
-        doc.text(`Period: ${config.startDate} to ${config.endDate}`, 14, 32);
-        doc.text(`Generated on: ${new Date().toLocaleString()}`, 160, 32);
+        // Logo & Title Row
+        doc.setFillColor(34, 197, 94); // Emerald 500
+        doc.roundedRect(14, 12, 12, 12, 2, 2, 'F');
 
-        // Add Branch info to header if selected
-        if (config.branch !== 'All Branches') {
-            doc.text(`Branch: ${config.branch}`, 14, 37);
-        }
+        // Simulating the person icon inside the logo
+        doc.setDrawColor(255, 255, 255);
+        doc.setLineWidth(0.8);
+        doc.circle(20, 16, 1.8); // Head
+        doc.moveTo(17, 21);
+        doc.lineTo(23, 21); // Shoulders line (simplified)
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(30, 41, 59); // Slate 800
+        doc.text('Melann Lending Investor Corporation', 29, 18);
+
+        doc.setFontSize(12);
+        doc.text('HUMAN RESOURCES', 14, 32);
+
+        // Report Title on Right
+        doc.setTextColor(16, 185, 129); // Emerald 600
+        doc.setFontSize(16);
+        doc.text(title.toUpperCase(), 196, 22, { align: 'right' });
+
+        // Divider Line
+        doc.setDrawColor(241, 245, 249); // Slate 100
+        doc.setLineWidth(0.5);
+        doc.line(14, 38, 196, 38);
+
+        // Header Info Grid (2x2)
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184); // Slate 400
+        doc.text('DEPARTMENT', 14, 48);
+        doc.text('DATE RANGE', 105, 48);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(30, 41, 59);
+        doc.text(config.department, 14, 55);
+        doc.text(`${safeDate(config.startDate, 'MMM dd')} - ${safeDate(config.endDate, 'MMM dd, yyyy')}`, 105, 55);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text('GENERATED ON', 14, 65);
+        doc.text('REPORT ID', 105, 65);
+
+        doc.setFontSize(10);
+        doc.setTextColor(30, 41, 59);
+        doc.text(safeDate(new Date(), 'MMMM dd, yyyy'), 14, 72);
+        doc.text(`#MEL-${safeDate(config.startDate, 'yyyyMMdd')}`, 105, 72);
 
         doc.setTextColor(0, 0, 0);
+    };
+
+    const addReportFooter = (doc: jsPDF) => {
+        const pageCount = (doc as any).internal.getNumberOfPages();
+        const pageSize = doc.internal.pageSize;
+        const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+        const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth();
+
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+
+            // Signature Line
+            doc.setDrawColor(203, 213, 225); // Slate 300
+            doc.setLineWidth(0.5);
+            doc.line(14, pageHeight - 30, 80, pageHeight - 30);
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(100, 116, 139); // Slate 500
+            doc.text('HR MANAGER', 14, pageHeight - 24);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(148, 163, 184); // Slate 400
+            doc.text(`Page ${i} of ${pageCount}`, pageWidth - 14, pageHeight - 24, { align: 'right' });
+        }
     };
 
     const handlePrint = () => {
@@ -166,9 +269,9 @@ export default function ReportsPage() {
         const printWindow = window.open('', '', `width=${width},height=${height},left=${left},top=${top}`);
         if (!printWindow) return;
 
-        const tableStyle = "width: 100%; border-collapse: collapse; margin-top: 20px; font-family: Arial, sans-serif; font-size: 12px;";
-        const thStyle = "background-color: #f3f4f6; color: #1f2937; font-weight: bold; padding: 10px; border: 1px solid #e5e7eb; text-align: left;";
-        const tdStyle = "padding: 8px; border: 1px solid #e5e7eb; color: #374151;";
+        const tableStyle = "width: 100%; border-collapse: collapse; margin-top: 10px; font-family: 'Inter', sans-serif;";
+        const thStyle = "background-color: #f0fdf4; color: #064e3b; font-weight: 700; padding: 12px 10px; border-bottom: 2px solid #bbf7d0; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;";
+        const tdStyle = "padding: 10px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 11px;";
 
         let reportTitle = reportOptions.find(o => o.id === config.reportType)?.title || 'Report';
         let tableContent = '';
@@ -181,7 +284,7 @@ export default function ReportsPage() {
                         <td style="${tdStyle}">${row.department}</td>
                         <td style="${tdStyle}; text-align: center; color: ${row.lateCount > 0 ? '#dc2626' : 'inherit'}; font-weight: ${row.lateCount > 0 ? 'bold' : 'normal'}">${row.lateCount}</td>
                         <td style="${tdStyle}; text-align: center;">${row.absentCount}</td>
-                        <td style="${tdStyle}; text-align: right;">${row.isThresholdExceeded ? '<span style="color: #dc2626; font-weight: bold;">⚠️ EXCEEDED</span>' : '<span style="color: #16a34a;">Normal</span>'}</td>
+                        <td style="${tdStyle}; text-align: right;">${row.isThresholdExceeded ? '<span style="color: #dc2626; font-weight: bold;">⚠️ EXCEEDED</span>' : (row.lateCount > 0 ? `<span style="color: #ea580c; font-weight: bold;">LATE: ${row.lateCount}</span>` : '<span style="color: #16a34a; font-weight: bold;">NO LATES</span>')}</td>
                     </tr>
                 `).join('');
 
@@ -204,8 +307,8 @@ export default function ReportsPage() {
                          <td style="${tdStyle}">${row.name}</td>
                          <td style="${tdStyle}">${row.department}</td>
                          <td style="${tdStyle}; text-align: center;">${row.present}</td>
-                         <td style="${tdStyle}; text-align: center; color: ${row.late > 0 ? '#dc2626' : 'inherit'};">${row.late}</td>
-                         <td style="${tdStyle}; text-align: center; color: ${row.absent > 0 ? '#dc2626' : 'inherit'};">${row.absent}</td>
+                         <td style="${tdStyle}; text-align: center; color: ${row.late > 0 ? '#dc2626' : 'inherit'}; font-weight: ${row.late > 0 ? 'bold' : 'normal'}">${row.late}</td>
+                         <td style="${tdStyle}; text-align: center; color: ${row.absent > 0 ? '#dc2626' : 'inherit'}; font-weight: ${row.absent > 0 ? 'bold' : 'normal'}">${row.absent}</td>
                          <td style="${tdStyle}; text-align: center;">${row.onLeave || 0}</td>
                          <td style="${tdStyle}; text-align: right;">${row.tardinessRate}%</td>
                     </tr>
@@ -233,6 +336,7 @@ export default function ReportsPage() {
                          <td style="${tdStyle}">${row.department}</td>
                          <td style="${tdStyle}; text-align: center;">${row.entitlement}</td>
                          <td style="${tdStyle}; text-align: center;">${row.used}</td>
+                         <td style="${tdStyle}; text-align: center;">${(row as any).birthdayLeaveUsed || 0}</td>
                          <td style="${tdStyle}; text-align: center; font-weight: bold;">${row.remaining}</td>
                     </tr>
                 `).join('');
@@ -244,23 +348,12 @@ export default function ReportsPage() {
                         <th style="${thStyle}">Department</th>
                         <th style="${thStyle}; text-align: center;">Entitlement</th>
                         <th style="${thStyle}; text-align: center;">Used</th>
+                        <th style="${thStyle}; text-align: center;">Birthday</th>
                         <th style="${thStyle}; text-align: center;">Balance</th>
                     </tr>
                 </thead>
                 <tbody>${rows}</tbody>
             `;
-        } else if (config.reportType === 'payroll' && data.payrollSummary) {
-            const s = data.payrollSummary;
-            tableContent = `
-                <tbody>
-                    <tr><td style="${tdStyle}">Total Basic Salaries</td><td style="${tdStyle}; text-align: right; font-weight: bold;">PHP ${Number(s.totalBasicRate).toLocaleString()}</td></tr>
-                    <tr><td style="${tdStyle}">Total Allowances</td><td style="${tdStyle}; text-align: right; font-weight: bold;">PHP ${Number(s.totalAllowances).toLocaleString()}</td></tr>
-                    <tr><td style="${tdStyle}">SSS Contributions</td><td style="${tdStyle}; text-align: right; font-weight: bold;">PHP ${Number(s.totalSSS).toLocaleString()}</td></tr>
-                    <tr><td style="${tdStyle}">PhilHealth Contributions</td><td style="${tdStyle}; text-align: right; font-weight: bold;">PHP ${Number(s.totalPhilHealth).toLocaleString()}</td></tr>
-                    <tr><td style="${tdStyle}">Pag-IBIG Contributions</td><td style="${tdStyle}; text-align: right; font-weight: bold;">PHP ${Number(s.totalPagIBIG).toLocaleString()}</td></tr>
-                     <tr style="background: #fdf2f8;"><td style="${tdStyle}; font-weight: bold; font-size: 14px;">TOTAL MONTHLY LIABILITY</td><td style="${tdStyle}; text-align: right; font-weight: bold; font-size: 14px; color: #db2777;">PHP ${(Number(s.totalBasicRate) + Number(s.totalAllowances) + Number(s.totalSSS) + Number(s.totalPhilHealth) + Number(s.totalPagIBIG)).toLocaleString()}</td></tr>
-                </tbody>
-             `;
         } else if (config.reportType === 'remittance' && data.governmentRemittance) {
             const remit = data.governmentRemittance;
             tableContent = `
@@ -347,30 +440,68 @@ export default function ReportsPage() {
         printWindow.document.write(`
             <html>
                 <head>
-                    <title>${reportTitle} - Print</title>
+                    <title>${reportTitle}</title>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+                        body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
+                        @media print {
+                            body { padding: 20px; }
+                            .no-print { display: none; }
+                        }
+                    </style>
                 </head>
-                <body style="font-family: Arial, sans-serif; padding: 40px; color: #111;">
-                    <div style="margin-bottom: 30px; border-bottom: 2px solid #1e3a8a; padding-bottom: 20px;">
-                        <h1 style="color: #1e3a8a; margin: 0; font-size: 24px;">${reportTitle}</h1>
-                        <p style="margin: 5px 0 0; color: #666; font-size: 14px;">
-                            Period: <strong>${config.startDate}</strong> to <strong>${config.endDate}</strong>
-                            <span style="float: right;">Generated: ${new Date().toLocaleString()}</span>
-                        </p>
-                         <p style="margin: 5px 0 0; color: #666; font-size: 14px;">
-                            Branch: <strong>${config.branch}</strong>
-                        </p>
+                <body>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <div style="width: 14px; height: 14px; background: #22c55e; border-radius: 3px;"></div>
+                                <span style="font-weight: 800; font-size: 10px; color: #0f172a; letter-spacing: 0.05em;">Melann Lending Investor Corporation</span>
+                            </div>
+                            <h2 style="font-size: 14px; font-weight: 800; color: #334155; margin: 0; letter-spacing: 0.02em;">HUMAN RESOURCES</h2>
+                        </div>
+                        <h1 style="color: #10b981; margin: 0; font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;">${reportTitle}</h1>
+                    </div>
+                    
+                    <div style="border-top: 1px solid #f1f5f9; padding-top: 20px; margin-bottom: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label style="font-size: 9px; font-weight: 800; color: #94a3b8; display: block; margin-bottom: 2px; text-transform: uppercase;">Department</label>
+                            <span style="font-size: 13px; font-weight: 600; color: #1e293b;">${config.department}</span>
+                        </div>
+                        <div>
+                            <label style="font-size: 9px; font-weight: 800; color: #94a3b8; display: block; margin-bottom: 2px; text-transform: uppercase;">Date Range</label>
+                            <span style="font-size: 13px; font-weight: 600; color: #1e293b;">${safeDate(config.startDate, 'MMM dd')} - ${safeDate(config.endDate, 'MMM dd, yyyy')}</span>
+                        </div>
+                        <div>
+                            <label style="font-size: 9px; font-weight: 800; color: #94a3b8; display: block; margin-bottom: 2px; text-transform: uppercase;">Generated On</label>
+                            <span style="font-size: 13px; font-weight: 600; color: #1e293b;">${safeDate(new Date(), 'MMMM dd, yyyy')}</span>
+                        </div>
+                        <div>
+                            <label style="font-size: 9px; font-weight: 800; color: #94a3b8; display: block; margin-bottom: 2px; text-transform: uppercase;">Report ID</label>
+                             <span style="font-size: 13px; font-weight: 600; color: #1e293b;">#MEL-${safeDate(config.startDate, 'yyyyMMdd')}</span>
+                        </div>
                     </div>
                     
                     <table style="${tableStyle}">
                         ${tableContent}
                     </table>
 
-                    <div style="margin-top: 50px; font-size: 11px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 10px;">
-                        CONFIDENTIAL | HR Management System
+                    <div style="margin-top: 80px; display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div>
+                            <div style="width: 180px; border-bottom: 1px solid #cbd5e1; margin-bottom: 8px;"></div>
+                            <span style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">HR Manager Signature</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 9px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Confidential | Page 1 of 1</span>
+                        </div>
                     </div>
 
                     <script>
-                        window.onload = function() { window.print(); window.close(); }
+                        window.onload = function() { 
+                            setTimeout(() => {
+                                window.print(); 
+                                window.close();
+                            }, 500);
+                        }
                     </script>
                 </body>
             </html>
@@ -385,162 +516,181 @@ export default function ReportsPage() {
         const doc = new jsPDF();
         addReportHeader(doc, 'Attendance Summary');
         const tableData = filterData(data.attendanceSummary)
-            .map(row => [row.name, row.department, row.present, row.late, row.absent, row.onLeave || 0, row.tardinessRate + '%']);
+            .map(row => [row.id || '---', row.name, row.present, row.late, row.absent, row.tardinessRate + '%']);
         autoTable(doc, {
-            head: [['Employee', 'Department', 'Present', 'Late', 'Absent', 'On Leave', 'Tardiness Rate']],
+            head: [['ID', 'NAME', 'PRES.', 'LATE', 'ABS.', 'RATE']],
             body: tableData,
-            startY: 50,
-            headStyles: { fillColor: [79, 70, 229] },
+            startY: 85,
+            theme: 'striped',
+            headStyles: {
+                fillColor: [240, 253, 244],
+                textColor: [15, 23, 42],
+                fontSize: 9,
+                fontStyle: 'bold'
+            },
+            styles: { fontSize: 9, cellPadding: 4 },
             didParseCell: function (data) {
                 if (data.section === 'body') {
-                    // Late (Index 3) and Absent (Index 4)
-                    if ((data.column.index === 3 || data.column.index === 4) && Number(data.cell.raw) > 0) {
-                        data.cell.styles.textColor = [220, 38, 38]; // Red
+                    // Late column color (Index 3)
+                    if (data.column.index === 3 && Number(data.cell.raw) > 0) {
+                        data.cell.styles.textColor = [239, 68, 68]; // Red 500
                         data.cell.styles.fontStyle = 'bold';
+                    }
+                    // ABS column color (Index 4)
+                    if (data.column.index === 4 && Number(data.cell.raw) > 0) {
+                        data.cell.styles.textColor = [239, 68, 68]; // Red 500
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                    // RATE column color (Index 5)
+                    if (data.column.index === 5) {
+                        const rate = parseFloat(data.cell.raw as string);
+                        if (rate > 10) data.cell.styles.textColor = [245, 158, 11]; // Orange
+                        else if (rate > 0) data.cell.styles.textColor = [16, 185, 129]; // Green
+                        else data.cell.styles.textColor = [16, 185, 129]; // Green for 0%
                     }
                 }
             }
         });
+        addReportFooter(doc);
         doc.save('Attendance_Report.pdf');
     };
 
     const genLatesAbsencesPDF = () => {
         if (!data?.latesAbsencesSummary) return;
         const doc = new jsPDF();
-        addReportHeader(doc, 'Monthly Lates & Absences Summary');
+        addReportHeader(doc, 'Lates & Absences Report');
 
-        // Use summary data instead of detailed logs
         const tableData = filterData(data.latesAbsencesSummary || [])
             .map(row => [
+                row.id || '---',
                 row.name,
-                row.department,
                 row.lateCount,
                 row.absentCount,
-                row.isThresholdExceeded ? '⚠️ EXCEEDED' : 'Normal'
+                row.isThresholdExceeded ? 'EXCEEDED' : (row.lateCount > 0 ? `LATE (${row.lateCount})` : 'NO LATES')
             ]);
 
         autoTable(doc, {
-            head: [['Employee Name', 'Department', 'Total Lates', 'Total Absences', 'Threshold Status']],
+            head: [['ID', 'EMPLOYEE NAME', 'LATES', 'ABSENCES', 'STATUS']],
             body: tableData,
-            startY: 50,
-            headStyles: { fillColor: [185, 28, 28] }, // Deep Red
+            startY: 85,
+            theme: 'striped',
+            headStyles: {
+                fillColor: [240, 253, 244],
+                textColor: [15, 23, 42],
+                fontSize: 9,
+                fontStyle: 'bold'
+            },
+            styles: { fontSize: 9, cellPadding: 4 },
             didParseCell: function (data) {
                 if (data.section === 'body') {
-                    // Always bold and red for Late Count (Index 2)
-                    if (data.column.index === 2) {
-                        data.cell.styles.textColor = [185, 28, 28]; // Deep Red
+                    if (data.column.index === 2 && Number(data.cell.raw) > 0) {
+                        data.cell.styles.textColor = [239, 68, 68];
                         data.cell.styles.fontStyle = 'bold';
                     }
-
-                    // Also check if threshold is exceeded for this row
-                    const isExceeded = data.row.cells[4].raw?.toString().includes('EXCEEDED');
-                    if (isExceeded) {
-                        data.cell.styles.textColor = [185, 28, 28]; // Deep Red
+                    if (data.column.index === 3 && Number(data.cell.raw) > 0) {
+                        data.cell.styles.textColor = [239, 68, 68];
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                    if (data.column.index === 4 && data.cell.raw === 'EXCEEDED') {
+                        data.cell.styles.textColor = [239, 68, 68];
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                    if (data.column.index === 4 && String(data.cell.raw).startsWith('LATE')) {
+                        data.cell.styles.textColor = [234, 88, 12]; // Orange 600
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                    if (data.column.index === 4 && data.cell.raw === 'NO LATES') {
+                        data.cell.styles.textColor = [22, 163, 74]; // Green 600
                         data.cell.styles.fontStyle = 'bold';
                     }
                 }
             }
         });
+        addReportFooter(doc);
         doc.save('Lates_Absences_Summary_' + config.startDate + '.pdf');
     };
 
     const genLeavePDF = () => {
         if (!data?.leaveUsage) return;
         const doc = new jsPDF();
-        addReportHeader(doc, 'Leave Credit & Usage Report');
+        addReportHeader(doc, 'Leave Usage Report');
         const tableData = filterData(data.leaveUsage)
-            .map(row => [row.name, row.department, row.entitlement, row.used, row.remaining]);
+            .map(row => [row.id || '---', row.name, row.entitlement, row.used, (row as any).birthdayLeaveUsed || 0, row.remaining]);
         autoTable(doc, {
-            head: [['Employee', 'Department', 'Yearly Credits', 'Days Used', 'Balance']],
+            head: [['ID', 'EMPLOYEE', 'ENTITLEMENT', 'USED', 'BIRTHDAY', 'BALANCE']],
             body: tableData,
-            startY: 50,
-            headStyles: { fillColor: [16, 185, 129] },
-            didParseCell: function (data) {
-                if (data.section === 'body') {
-                    // Check 'Days Used' column (Index 3)
-                    const daysUsed = Number(data.row.cells[3].raw);
-                    if (daysUsed > 0 && (data.column.index === 3 || data.column.index === 4)) {
-                        data.cell.styles.textColor = [220, 38, 38]; // Red
-                        data.cell.styles.fontStyle = 'bold';
-                    }
-                }
-            }
+            startY: 85,
+            theme: 'striped',
+            headStyles: {
+                fillColor: [240, 253, 244],
+                textColor: [15, 23, 42],
+                fontSize: 9,
+                fontStyle: 'bold'
+            },
+            styles: { fontSize: 9, cellPadding: 4 },
         });
+        addReportFooter(doc);
         doc.save('Leave_Credits_Report.pdf');
     };
 
-    const genPayrollPDF = () => {
-        if (!data?.payrollSummary) return;
-        const doc = new jsPDF();
-        addReportHeader(doc, 'Payroll & Benefits Expenditure');
-        const summary = data.payrollSummary;
 
-        // Ensure numeric values
-        const totalBasic = Number(summary.totalBasicRate || 0);
-        const totalAllowances = Number(summary.totalAllowances || 0);
-        const totalSSS = Number(summary.totalSSS || 0);
-        const totalPhilHealth = Number(summary.totalPhilHealth || 0);
-        const totalPagIBIG = Number(summary.totalPagIBIG || 0);
-        const totalLiability = totalBasic + totalAllowances + totalSSS + totalPhilHealth + totalPagIBIG;
-
-        const tableData = [
-            ['Total Basic Salaries', 'PHP ' + totalBasic.toLocaleString()],
-            ['Total Allowances', 'PHP ' + totalAllowances.toLocaleString()],
-            ['SSS Contributions', 'PHP ' + totalSSS.toLocaleString()],
-            ['PhilHealth Contributions', 'PHP ' + totalPhilHealth.toLocaleString()],
-            ['Pag-IBIG Contributions', 'PHP ' + totalPagIBIG.toLocaleString()],
-            ['Total Monthly Liability', 'PHP ' + totalLiability.toLocaleString()]
-        ];
-        autoTable(doc, {
-            head: [['Expense Category', 'Total Amount']],
-            body: tableData,
-            startY: 50,
-            theme: 'grid',
-            headStyles: { fillColor: [245, 158, 11] },
-        });
-        doc.save('Payroll_Expenditure.pdf');
-    };
 
     const genCompliancePDF = () => {
         if (!data?.complianceAudit) return;
         const doc = new jsPDF();
-        addReportHeader(doc, '201 File Compliance Audit');
+        addReportHeader(doc, 'Compliance Audit');
         const tableData = filterData(data.complianceAudit)
-            .map(row => [row.name, row.department, row.status, row.missingFields.join(', ') || 'NONE']);
+            .map(row => [row.id || '---', row.name, row.status, row.missingFields.join(', ') || 'NONE']);
         autoTable(doc, {
-            head: [['Employee', 'Department', 'Status', 'Missing Info']],
+            head: [['ID', 'EMPLOYEE', 'STATUS', 'MISSING INFO']],
             body: tableData,
-            startY: 50,
-            headStyles: { fillColor: [239, 68, 68] },
+            startY: 85,
+            theme: 'striped',
+            headStyles: {
+                fillColor: [240, 253, 244],
+                textColor: [15, 23, 42],
+                fontSize: 9,
+                fontStyle: 'bold'
+            },
+            styles: { fontSize: 9, cellPadding: 4 },
         });
+        addReportFooter(doc);
         doc.save('Compliance_Audit.pdf');
     };
 
     const genTenurePDF = () => {
         if (!data?.tenureData) return;
         const doc = new jsPDF();
-        addReportHeader(doc, 'Employee Tenure & Anniversaries');
+        addReportHeader(doc, 'Tenure Report');
         const tableData = filterData(data.tenureData)
             .map(row => [
+                row.id || '---',
                 row.name,
-                row.department,
-                row.dateHired ? format(new Date(row.dateHired), 'MMMM dd, yyyy') : '-',
+                row.dateHired ? format(new Date(row.dateHired), 'MMM dd, yyyy') : '-',
                 row.tenure,
                 row.daysToAnniversary <= 30 ? 'IN ' + row.daysToAnniversary + ' DAYS!' : row.daysToAnniversary + ' d'
             ]);
         autoTable(doc, {
-            head: [['Employee', 'Department', 'Date Hired', 'Tenure', 'Next Anniversary']],
+            head: [['ID', 'EMPLOYEE', 'DATE HIRED', 'TENURE', 'NEXT ANNIVERSARY']],
             body: tableData,
-            startY: 50,
-            headStyles: { fillColor: [139, 92, 246] },
+            startY: 85,
+            theme: 'striped',
+            headStyles: {
+                fillColor: [240, 253, 244],
+                textColor: [15, 23, 42],
+                fontSize: 9,
+                fontStyle: 'bold'
+            },
+            styles: { fontSize: 9, cellPadding: 4 },
         });
+        addReportFooter(doc);
         doc.save('Tenure_Report.pdf');
     };
 
     const genRemittancePDF = () => {
         if (!data?.governmentRemittance) return;
         const doc = new jsPDF();
-        addReportHeader(doc, 'Government Remittance Checklist');
+        addReportHeader(doc, 'Remittance Report');
         const remit = data.governmentRemittance;
         const tableData = [
             ['SSS Contribution Total', 'PHP ' + Number(remit.sss || 0).toLocaleString()],
@@ -549,26 +699,108 @@ export default function ReportsPage() {
             ['GRAND TOTAL', 'PHP ' + Number(remit.total || 0).toLocaleString()]
         ];
         autoTable(doc, {
-            head: [['Agency', 'Amount to Remit']],
+            head: [['AGENCY', 'AMOUNT TO REMIT']],
             body: tableData,
-            startY: 50,
-            headStyles: { fillColor: [59, 130, 246] },
+            startY: 85,
+            theme: 'striped',
+            headStyles: {
+                fillColor: [240, 253, 244],
+                textColor: [15, 23, 42],
+                fontSize: 9,
+                fontStyle: 'bold'
+            },
+            styles: { fontSize: 9, cellPadding: 4 },
         });
+        addReportFooter(doc);
         doc.save('Remittance_Checklist.pdf');
     };
 
     const genHeadcountPDF = () => {
         if (!data?.headcount) return;
         const doc = new jsPDF();
-        addReportHeader(doc, 'Headcount & Growth Report');
+        addReportHeader(doc, 'Headcount Report');
         const tableData = data.headcount.byDepartment.map(dept => [dept.name, dept.count, Math.round((dept.count / (data.headcount.total || 1)) * 100) + '%']);
         autoTable(doc, {
-            head: [['Department', 'Staff Count', 'Organization %']],
+            head: [['DEPARTMENT', 'STAFF COUNT', 'ORGANIZATION %']],
             body: tableData,
-            startY: 50,
-            headStyles: { fillColor: [107, 114, 128] },
+            startY: 85,
+            theme: 'striped',
+            headStyles: {
+                fillColor: [240, 253, 244],
+                textColor: [15, 23, 42],
+                fontSize: 9,
+                fontStyle: 'bold'
+            },
+            styles: { fontSize: 9, cellPadding: 4 },
         });
+        addReportFooter(doc);
         doc.save('Headcount_Report.pdf');
+    };
+
+    const genExcelExport = () => {
+        if (!data) return;
+        let exportData: any[] = [];
+        let fileName = 'Report';
+
+        switch (config.reportType) {
+            case 'attendance':
+                exportData = filterData(data.attendanceSummary).map(r => ({
+                    'ID': r.id, 'Name': r.name, 'Department': r.department, 'Branch': r.branch,
+                    'Present': r.present, 'Late': r.late, 'Absent': r.absent, 'On Leave': r.onLeave, 'Tardiness Rate': r.tardinessRate + '%'
+                }));
+                fileName = 'Attendance_Report';
+                break;
+            case 'latesAbsences':
+                exportData = filterData(data.latesAbsencesSummary).map(r => ({
+                    'ID': r.id, 'Name': r.name, 'Department': r.department, 'Lates': r.lateCount,
+                    'Absences': r.absentCount, 'Threshold Exceeded': r.isThresholdExceeded ? 'Yes' : 'No'
+                }));
+                fileName = 'Lates_Absences_Report';
+                break;
+            case 'leave':
+                exportData = filterData(data.leaveUsage).map(r => ({
+                    'ID': r.id, 'Name': r.name, 'Department': r.department,
+                    'Entitlement': r.entitlement, 'Used': (r as any).used, 'Birthday Leave Used': (r as any).birthdayLeaveUsed || 0, 'Balance': r.remaining
+                }));
+                fileName = 'Leave_Usage_Report';
+                break;
+
+            case 'compliance':
+                exportData = filterData(data.complianceAudit).map(r => ({
+                    'ID': r.id, 'Name': r.name, 'Department': r.department,
+                    'Status': r.status, 'Missing Info': r.missingFields.join(', ') || 'None'
+                }));
+                fileName = 'Compliance_Audit';
+                break;
+            case 'tenure':
+                exportData = filterData(data.tenureData).map(r => ({
+                    'ID': r.id, 'Name': r.name, 'Department': r.department,
+                    'Date Hired': r.dateHired, 'Tenure': r.tenure, 'Days to Anniversary': r.daysToAnniversary
+                }));
+                fileName = 'Tenure_Report';
+                break;
+            case 'remittance':
+                exportData = [
+                    { 'Agency': 'SSS', 'Amount': data.governmentRemittance.sss },
+                    { 'Agency': 'PhilHealth', 'Amount': data.governmentRemittance.philhealth },
+                    { 'Agency': 'Pag-IBIG', 'Amount': data.governmentRemittance.pagibig },
+                    { 'Agency': 'TOTAL', 'Amount': data.governmentRemittance.total }
+                ];
+                fileName = 'Remittance_Report';
+                break;
+            case 'headcount':
+                exportData = data.headcount.byDepartment.map(d => ({
+                    'Department': d.name, 'Staff Count': d.count,
+                    'Percentage': Math.round((d.count / (data.headcount.total || 1)) * 100) + '%'
+                }));
+                fileName = 'Headcount_Report';
+                break;
+        }
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Report");
+        XLSX.writeFile(wb, `${fileName}_${config.startDate}.xlsx`);
     };
 
     const handleGenerate = () => {
@@ -577,7 +809,7 @@ export default function ReportsPage() {
             case 'attendance': genAttendancePDF(); break;
             case 'latesAbsences': genLatesAbsencesPDF(); break;
             case 'leave': genLeavePDF(); break;
-            case 'payroll': genPayrollPDF(); break;
+
             case 'compliance': genCompliancePDF(); break;
             case 'tenure': genTenurePDF(); break;
             case 'remittance': genRemittancePDF(); break;
@@ -588,214 +820,583 @@ export default function ReportsPage() {
     const inputClasses = "w-full border border-gray-300 rounded-lg py-3 px-4 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer";
     const labelClasses = "absolute -top-2.5 left-3 bg-white px-1 text-[11px] font-semibold text-gray-500 uppercase tracking-wider";
 
+    const ReportField = ({ label, value, onChange, options, children, icon, helpText, disabled }: any) => (
+        <div style={{ marginBottom: '1.25rem' }}>
+            {label && <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: 700, color: '#64748b', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.025em' }}>{label}</label>}
+            <div style={{
+                background: 'white',
+                borderRadius: '16px',
+                padding: '0.5rem 1rem',
+                border: '1px solid #f1f5f9',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                position: 'relative',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                minHeight: '60px'
+            }}>
+                <div style={{ flex: 1 }}>
+                    {children ? children : (
+                        <select
+                            value={value}
+                            onChange={onChange}
+                            style={{
+                                width: '100%',
+                                border: 'none',
+                                outline: 'none',
+                                fontSize: '1rem',
+                                fontWeight: 600,
+                                color: '#1f2937',
+                                padding: 0,
+                                background: 'transparent',
+                                appearance: 'none',
+                                cursor: disabled ? 'not-allowed' : 'pointer'
+                            }}
+                            disabled={disabled}
+                        >
+                            {options.map((opt: any) => (
+                                <option key={typeof opt === 'string' ? opt : opt.id} value={typeof opt === 'string' ? opt : opt.id}>
+                                    {typeof opt === 'string' ? opt : opt.title}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+                </div>
+                {icon && <div style={{ color: '#94a3b8', display: 'flex', alignItems: 'center' }}>{icon}</div>}
+            </div>
+        </div>
+    );
+
+    const DateField = ({ label, value, onChange }: any) => {
+        const inputRef = useRef<HTMLInputElement>(null);
+        const [error, setError] = useState('');
+
+        const handleBlur = (e: any) => {
+            const val = e.target.value;
+            if (!val) {
+                setError('Required');
+            } else if (!isValid(new Date(val))) {
+                setError('Invalid Date');
+            } else {
+                setError('');
+            }
+        };
+
+        return (
+            <div
+                style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    padding: '0.5rem 1rem',
+                    border: `1px solid ${error ? '#ef4444' : '#f1f5f9'}`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                    minHeight: '60px',
+                    flex: 1,
+                    transition: 'all 0.2s',
+                    cursor: 'text'
+                }}
+                onClick={() => inputRef.current?.focus()}
+            >
+                <label style={{
+                    display: 'block',
+                    fontSize: '0.6rem',
+                    fontWeight: 800,
+                    color: error ? '#ef4444' : '#94a3b8',
+                    textTransform: 'uppercase',
+                    marginBottom: '2px',
+                    pointerEvents: 'none'
+                }}>{label}</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <input
+                        ref={inputRef}
+                        type="date"
+                        value={value}
+                        onChange={(e) => {
+                            setError('');
+                            onChange(e);
+                        }}
+                        onBlur={handleBlur}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            border: 'none',
+                            outline: 'none',
+                            fontSize: '1.2rem',
+                            fontWeight: 800,
+                            color: '#1e293b',
+                            background: 'transparent',
+                            width: '100%',
+                            padding: '4px 0',
+                            fontFamily: 'inherit',
+                        }}
+                    />
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            inputRef.current?.showPicker?.();
+                        }}
+                        style={{ color: '#94a3b8', cursor: 'pointer', display: 'flex', gap: '4px', opacity: 0.8 }}
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    </div>
+                </div>
+                {error && <span style={{ position: 'absolute', bottom: '-15px', left: '10px', fontSize: '0.6rem', color: '#ef4444', fontWeight: 700 }}>{error}</span>}
+            </div>
+        );
+    };
+
     return (
         <DashboardLayout>
-            <div className="min-h-[80vh] flex items-center justify-center p-4 bg-gray-50/50">
-                <div className="w-full max-w-2xl bg-white rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-12 relative overflow-hidden">
-                    {/* Decorative Background Element */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full -mr-32 -mt-32 opacity-50"></div>
+            <div style={{ background: '#f8fafc', minHeight: '100vh', paddingBottom: '100px' }}>
+                {/* Header */}
+                <div style={{ background: 'white', padding: '1.25rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid #f1f5f9' }}>
+                    <button onClick={() => window.history.back()} style={{ border: 'none', background: 'transparent', padding: '8px', cursor: 'pointer' }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+                    </button>
+                    <h1 style={{ flex: 1, textAlign: 'center', fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', marginRight: '40px' }}>Report Center</h1>
+                </div>
 
-                    <h1 className="text-3xl font-extrabold text-gray-900 mb-10 relative z-10">Generate Reports</h1>
+                <div style={{ maxWidth: '500px', margin: '0 auto', padding: '1.5rem' }}>
+                    <div style={{ marginBottom: '2rem' }}>
+                        <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>Generate Reports</h2>
+                        <p style={{ color: '#64748b', fontSize: '0.95rem' }}>Select parameters to export attendance data.</p>
+                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
-                        {/* Report Type - Full Width */}
-                        <div className="md:col-span-2 relative">
-                            <label className={labelClasses}>Report Type</label>
-                            <select
-                                value={config.reportType}
-                                onChange={(e) => setConfig({ ...config, reportType: e.target.value })}
-                                className={inputClasses}
-                            >
-                                {reportOptions.map(opt => (
-                                    <option key={opt.id} value={opt.id}>{opt.title}</option>
-                                ))}
-                            </select>
-                        </div>
+                    {/* Form Fields */}
+                    <ReportField
+                        label="Report Type"
+                        value={config.reportType}
+                        onChange={(e: any) => setConfig({ ...config, reportType: e.target.value })}
+                        options={reportOptions}
+                        icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#94a3b8' }}><path d="M22 17.5L18.5 21L15 17.5M2 17.5L5.5 21L9 17.5" /><path d="M22 6.5L18.5 3L15 6.5M2 6.5L5.5 3L9 6.5" /><path d="M2 12h20" /></svg>}
+                    />
 
-                        {/* Starting Date */}
-                        <div className="relative">
-                            <label className={labelClasses}>Starting Date</label>
-                            <input
-                                type="date"
-                                value={config.startDate}
-                                onChange={(e) => setConfig({ ...config, startDate: e.target.value })}
-                                className={inputClasses}
-                            />
-                        </div>
-
-                        {/* End Date */}
-                        <div className="relative">
-                            <label className={labelClasses}>End Date</label>
-                            <input
-                                type="date"
-                                value={config.endDate}
-                                onChange={(e) => setConfig({ ...config, endDate: e.target.value })}
-                                className={inputClasses}
-                            />
-                        </div>
-
-                        {/* Departments */}
-                        <div className="relative">
-                            <label className={labelClasses}>Departments</label>
-                            <select
-                                value={config.department}
-                                onChange={(e) => setConfig({ ...config, department: e.target.value })}
-                                className={inputClasses}
-                            >
-                                <option>All Departments</option>
-                                {Array.isArray(departments) && departments.map(dept => (
-                                    <option key={dept} value={dept}>{dept}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Branch - NEW */}
-                        <div className="relative">
-                            <label className={labelClasses}>Select Branch</label>
-                            <select
-                                value={config.branch}
-                                onChange={(e) => setConfig({ ...config, branch: e.target.value })}
-                                className={inputClasses}
-                            >
-                                <option>All Branches</option>
-                                {Array.isArray(branches) && branches.map(branch => (
-                                    <option key={branch} value={branch}>{branch}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Sort By */}
-                        <div className="relative">
-                            <label className={labelClasses}>Sort By</label>
-                            <select
-                                value={config.sortBy}
-                                onChange={(e) => setConfig({ ...config, sortBy: e.target.value })}
-                                className={inputClasses}
-                            >
-                                <option>Name</option>
-                                <option>Date</option>
-                                <option>Department</option>
-                            </select>
-                        </div>
-
-                        {/* Column Filter */}
-                        <div className="relative">
-                            <label className={labelClasses}>Column Visibility</label>
-                            <select
-                                value={config.column}
-                                onChange={(e) => setConfig({ ...config, column: e.target.value })}
-                                className={inputClasses}
-                            >
-                                <option>All Columns</option>
-                                <option>Basic Info Only</option>
-                                <option>Financial Data Only</option>
-                            </select>
-                        </div>
-
-                        {/* Advanced Number Filter */}
-                        <div className="relative">
-                            <label className={labelClasses}>Metric Filter</label>
-                            <select
-                                value={config.filter}
-                                onChange={(e) => setConfig({ ...config, filter: e.target.value })}
-                                className={inputClasses}
-                            >
-                                <option>No Additional Filters</option>
-                                <option>Tardiness &gt; 10%</option>
-                                <option>Salary &gt; 50,000</option>
-                            </select>
+                    <div style={{ marginBottom: '1.25rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: 700, color: '#64748b', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.025em' }}>Date Range</label>
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <DateField label="Start" value={config.startDate} onChange={(e: any) => setConfig({ ...config, startDate: e.target.value })} />
+                            <DateField label="End" value={config.endDate} onChange={(e: any) => setConfig({ ...config, endDate: e.target.value })} />
                         </div>
                     </div>
-                    <div className="mt-16 flex justify-end">
+
+                    <ReportField
+                        label="Select Branch"
+                        value={config.branch}
+                        onChange={(e: any) => setConfig({ ...config, branch: e.target.value })}
+                        options={user?.role === 'HR' ? branches : ['All Branches', ...branches]}
+                        disabled={user?.role === 'HR'}
+                        icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#94a3b8' }}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>}
+                    />
+
+                    <ReportField
+                        label="Specific Employee"
+                        value={config.employeeId}
+                        onChange={(e: any) => setConfig({ ...config, employeeId: e.target.value })}
+                        options={['All Employees', ...(data?.attendanceSummary || []).map(e => ({ id: e.id, title: e.name }))]}
+                        icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#94a3b8' }}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>}
+                    />
+
+                    <ReportField
+                        label="Departments"
+                        value={config.department}
+                        onChange={(e: any) => setConfig({ ...config, department: e.target.value })}
+                        options={['All Departments', ...departments]}
+                        icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#94a3b8' }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>}
+                    />
+
+                    <ReportField
+                        label="Sort By"
+                        value={config.sortBy}
+                        onChange={(e: any) => setConfig({ ...config, sortBy: e.target.value })}
+                        options={['Employee Name (A-Z)', 'Employee Name (Z-A)', 'Department', 'Staff ID']}
+                        icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#94a3b8' }}><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="14" y2="12"></line><line x1="4" y1="18" x2="10" y2="18"></line></svg>}
+                    />
+
+                    <div style={{ padding: '1rem 0', borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', cursor: 'pointer' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                            <span style={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>Advanced Filters</span>
+                        </div>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
                         <button
                             onClick={handleGenerate}
                             disabled={loading || !data}
-                            className="bg-indigo-600 hover:bg-slate-900 text-white font-bold py-4 px-12 rounded-2xl shadow-xl shadow-indigo-100 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none"
+                            style={{
+                                flex: 1,
+                                minWidth: '140px',
+                                background: '#1e293b',
+                                color: 'white',
+                                border: 'none',
+                                padding: '1rem',
+                                borderRadius: '16px',
+                                fontWeight: 700,
+                                fontSize: '0.9rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '10px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                boxShadow: '0 10px 15px -3px rgba(30, 41, 59, 0.2)',
+                                opacity: (loading || !data) ? 0.6 : 1
+                            }}
                         >
-                            {loading ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            ) : (
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            )}
-                            GENERATE PDF
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                            Export PDF
                         </button>
-
                         <button
                             onClick={handlePrint}
                             disabled={loading || !data}
-                            className="bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 px-12 rounded-2xl shadow-xl shadow-slate-200 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none ml-4"
+                            style={{
+                                flex: 1,
+                                minWidth: '140px',
+                                background: '#10b981',
+                                color: 'white',
+                                border: 'none',
+                                padding: '1rem',
+                                borderRadius: '16px',
+                                fontWeight: 700,
+                                fontSize: '0.9rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '10px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)',
+                                opacity: (loading || !data) ? 0.6 : 1
+                            }}
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                            PRINT REPORT
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
+                            Print
+                        </button>
+                        <button
+                            onClick={() => setShowPreview(true)}
+                            disabled={loading || !data}
+                            style={{
+                                flex: 1,
+                                minWidth: '140px',
+                                background: 'white',
+                                color: '#1e293b',
+                                border: '1px solid #e2e8f0',
+                                padding: '1rem',
+                                borderRadius: '16px',
+                                fontWeight: 700,
+                                fontSize: '0.9rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '10px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                opacity: (loading || !data) ? 0.6 : 1
+                            }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                            Preview Report
+                        </button>
+                        <button
+                            onClick={genExcelExport}
+                            disabled={loading || !data}
+                            style={{
+                                flex: 1,
+                                minWidth: '140px',
+                                background: '#f8fafc',
+                                color: '#16a34a',
+                                border: '1px solid #bbf7d0',
+                                padding: '1rem',
+                                borderRadius: '16px',
+                                fontWeight: 700,
+                                fontSize: '0.9rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '10px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                                opacity: (loading || !data) ? 0.6 : 1
+                            }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            Export Excel
                         </button>
                     </div>
-                </div>
-            </div>
 
-            {/* Report Preview Section */}
-            <div className="mt-12 w-full max-w-6xl mx-auto pb-20">
-                {!loading && data && (
-                    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                        <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <h2 className="text-xl font-bold text-slate-800">
-                                {reportOptions.find(o => o.id === config.reportType)?.title} Preview
-                            </h2>
-                            <span className="text-sm font-medium text-slate-500 bg-white px-4 py-1.5 rounded-full border border-gray-100 shadow-sm">
-                                {config.startDate} to {config.endDate}
-                            </span>
-                        </div>
-
-                        <div className="overflow-x-auto">
-                            {config.reportType === 'latesAbsences' && (
-                                <table className="w-full border-collapse">
-                                    <thead>
-                                        <tr className="bg-red-700 text-left border-b border-gray-100">
-                                            <th className="p-5 text-xs font-bold text-white uppercase tracking-wider">Employee Name</th>
-                                            <th className="p-5 text-xs font-bold text-white uppercase tracking-wider">Department</th>
-                                            <th className="p-5 text-xs font-bold text-white uppercase tracking-wider text-center">Total Lates</th>
-                                            <th className="p-5 text-xs font-bold text-white uppercase tracking-wider text-center">Total Absences</th>
-                                            <th className="p-5 text-xs font-bold text-white uppercase tracking-wider text-right">Threshold Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filterData(data.latesAbsencesSummary || []).length === 0 ? (
-                                            <tr><td colSpan={5} className="p-10 text-center text-slate-400">No data available for the selected period.</td></tr>
-                                        ) : (
-                                            filterData(data.latesAbsencesSummary || []).map((row) => (
-                                                <tr key={row.id} className={`border-b border-gray-50 hover:bg-slate-50/50 transition-colors ${row.isThresholdExceeded ? 'bg-red-50 text-red-700' : 'text-slate-600'}`}>
-                                                    <td className="p-5 whitespace-nowrap font-medium">{row.name}</td>
-                                                    <td className="p-5 whitespace-nowrap">{row.department}</td>
-                                                    <td className="p-5 text-center text-red-600 font-bold">{row.lateCount}</td>
-                                                    <td className="p-5 text-center">{row.absentCount}</td>
-                                                    <td className="p-5 text-right whitespace-nowrap">
-                                                        {row.isThresholdExceeded ? (
-                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
-                                                                ⚠️ EXCEEDED (5L/10A)
-                                                            </span>
-                                                        ) : (
-                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                                                Normal
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            )}
-
-                            {/* Preview implementation for other reports will go here */}
-                            {config.reportType !== 'latesAbsences' && (
-                                <div className="p-20 text-center">
-                                    <div className="text-4xl mb-4">📥</div>
-                                    <h3 className="text-lg font-bold text-slate-800 mb-2">Ready to Export</h3>
-                                    <p className="text-slate-500">Visual preview for this report type is coming soon. Please click the generate button above to download the full PDF.</p>
+                    {/* Preview Modal */}
+                    {showPreview && data && (
+                        <div style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            zIndex: 1000,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(15, 23, 42, 0.95)',
+                            backdropFilter: 'blur(8px)',
+                            padding: '2rem'
+                        }}>
+                            <div style={{
+                                width: '100%',
+                                maxWidth: '900px',
+                                maxHeight: '90vh',
+                                background: 'white',
+                                borderRadius: '24px',
+                                overflow: 'hidden',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                            }}>
+                                {/* Modal Header */}
+                                <div style={{
+                                    padding: '1.5rem 2rem',
+                                    borderBottom: '1px solid #f1f5f9',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    background: '#f8fafc'
+                                }}>
+                                    <div>
+                                        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>Report Preview</h3>
+                                        <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '4px 0 0 0' }}>Review data before exporting to PDF or Printing.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowPreview(false)}
+                                        style={{
+                                            border: 'none',
+                                            background: '#f1f5f9',
+                                            color: '#64748b',
+                                            width: '36px',
+                                            height: '36px',
+                                            borderRadius: '50%',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                    </button>
                                 </div>
-                            )}
+
+                                {/* Modal Content - The Actual Report Preview */}
+                                <div style={{ flex: 1, overflowY: 'auto', padding: '3rem' }}>
+                                    <div style={{ padding: '0', color: '#1e293b', lineHeight: 1.5 }}>
+                                        {/* Header Branding */}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '25px' }}>
+                                            <div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                                    <div style={{ width: '14px', height: '14px', background: '#22c55e', borderRadius: '3px' }}></div>
+                                                    <span style={{ fontWeight: 800, fontSize: '10px', color: '#0f172a', letterSpacing: '0.05em' }}>Melann Lending Investor Corporation</span>
+                                                </div>
+                                                <h2 style={{ fontSize: '14px', fontWeight: 800, color: '#334155', margin: 0, letterSpacing: '0.02em' }}>HUMAN RESOURCES</h2>
+                                            </div>
+                                            <h1 style={{ color: '#10b981', margin: 0, fontSize: '22px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.02em' }}>{reportOptions.find(o => o.id === config.reportType)?.title}</h1>
+                                        </div>
+
+                                        <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '20px', marginBottom: '30px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                            <div>
+                                                <label style={{ fontSize: '9px', fontWeight: 800, color: '#94a3b8', display: 'block', marginBottom: '2px', textTransform: 'uppercase' }}>Department</label>
+                                                <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>{config.department}</span>
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '9px', fontWeight: 800, color: '#94a3b8', display: 'block', marginBottom: '2px', textTransform: 'uppercase' }}>Date Range</label>
+                                                <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>{safeDate(config.startDate, 'MMM dd')} - {safeDate(config.endDate, 'MMM dd, yyyy')}</span>
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '9px', fontWeight: 800, color: '#94a3b8', display: 'block', marginBottom: '2px', textTransform: 'uppercase' }}>Generated On</label>
+                                                <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>{safeDate(new Date(), 'MMMM dd, yyyy')}</span>
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '9px', fontWeight: 800, color: '#94a3b8', display: 'block', marginBottom: '2px', textTransform: 'uppercase' }}>Report ID</label>
+                                                <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>#MEL-{safeDate(config.startDate, 'yyyyMMdd')}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Table Content */}
+                                        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                                            <thead>
+                                                <tr>
+                                                    {config.reportType === 'attendance' && ['Employee', 'Department', 'Pres.', 'Late', 'Abs.', 'Rate'].map((h, i) => <th key={i} style={{ padding: '12px 10px', background: '#f0fdf4', color: '#064e3b', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', textAlign: i === 0 || i === 1 ? 'left' : i === 5 ? 'right' : 'center', borderBottom: '2px solid #bbf7d0' }}>{h}</th>)}
+                                                    {config.reportType === 'latesAbsences' && ['Employee', 'Department', 'Lates', 'Absences', 'Status'].map((h, i) => <th key={i} style={{ padding: '12px 10px', background: '#f0fdf4', color: '#064e3b', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', textAlign: i === 0 || i === 1 ? 'left' : i === 4 ? 'right' : 'center', borderBottom: '2px solid #bbf7d0' }}>{h}</th>)}
+                                                    {config.reportType === 'leave' && ['Employee', 'Department', 'Entitlement', 'Used', 'Birthday', 'Balance'].map((h, i) => <th key={i} style={{ padding: '12px 10px', background: '#f0fdf4', color: '#064e3b', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', textAlign: i === 0 || i === 1 ? 'left' : 'center', borderBottom: '2px solid #bbf7d0' }}>{h}</th>)}
+
+                                                    {config.reportType === 'remittance' && ['Agency', 'Amount to Remit'].map((h, i) => <th key={i} style={{ padding: '12px 10px', background: '#f0fdf4', color: '#064e3b', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', textAlign: i === 0 ? 'left' : 'right', borderBottom: '2px solid #bbf7d0' }}>{h}</th>)}
+                                                    {config.reportType === 'headcount' && ['Department', 'Staff Count', 'Organization %'].map((h, i) => <th key={i} style={{ padding: '12px 10px', background: '#f0fdf4', color: '#064e3b', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', textAlign: i === 0 ? 'left' : i === 1 ? 'center' : 'right', borderBottom: '2px solid #bbf7d0' }}>{h}</th>)}
+                                                    {config.reportType === 'compliance' && ['Employee', 'Department', 'Status', 'Missing Info'].map((h, i) => <th key={i} style={{ padding: '12px 10px', background: '#f0fdf4', color: '#064e3b', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', textAlign: i === 0 || i === 1 ? 'left' : 'center', borderBottom: '2px solid #bbf7d0' }}>{h}</th>)}
+                                                    {config.reportType === 'tenure' && ['Employee', 'Department', 'Date Hired', 'Tenure', 'Anniversary'].map((h, i) => <th key={i} style={{ padding: '12px 10px', background: '#f0fdf4', color: '#064e3b', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', textAlign: i === 0 || i === 1 ? 'left' : 'center', borderBottom: '2px solid #bbf7d0' }}>{h}</th>)}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {config.reportType === 'attendance' && filterData(data.attendanceSummary || []).map((row: any, i: number) => (
+                                                    <tr key={i}>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155' }}>{row.name}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155' }}>{row.department}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155', textAlign: 'center' }}>{row.present}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: row.late > 0 ? '#dc2626' : '#334155', fontWeight: row.late > 0 ? 800 : 400, textAlign: 'center' }}>{row.late}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: row.absent > 0 ? '#dc2626' : '#334155', fontWeight: row.absent > 0 ? 800 : 400, textAlign: 'center' }}>{row.absent}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155', textAlign: 'right' }}>{row.tardinessRate}%</td>
+                                                    </tr>
+                                                ))}
+                                                {config.reportType === 'latesAbsences' && filterData(data.latesAbsencesSummary || []).map((row: any, i: number) => (
+                                                    <tr key={i}>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155' }}>{row.name}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155' }}>{row.department}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: row.lateCount > 0 ? '#dc2626' : '#334155', fontWeight: row.lateCount > 0 ? 800 : 400, textAlign: 'center' }}>{row.lateCount}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155', textAlign: 'center' }}>{row.absentCount}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', textAlign: 'right' }}>
+                                                            {row.isThresholdExceeded ? <span style={{ color: '#dc2626', fontWeight: 800 }}>⚠️ EXCEEDED</span> : (row.lateCount > 0 ? <span style={{ color: '#ea580c', fontWeight: 800 }}>LATE: {row.lateCount}</span> : <span style={{ color: '#16a34a', fontWeight: 800 }}>NO LATES</span>)}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {config.reportType === 'leave' && filterData(data.leaveUsage || []).map((row: any, i: number) => (
+                                                    <tr key={i}>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155' }}>{row.name}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155' }}>{row.department}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155', textAlign: 'center' }}>{row.entitlement}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155', textAlign: 'center' }}>{row.used}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155', textAlign: 'center' }}>{row.birthdayLeaveUsed || 0}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155', textAlign: 'center', fontWeight: 800 }}>{row.remaining}</td>
+                                                    </tr>
+                                                ))}
+
+                                                {config.reportType === 'remittance' && (
+                                                    <>
+                                                        {[
+                                                            { label: 'SSS Contribution Total', value: data.governmentRemittance.sss },
+                                                            { label: 'PhilHealth Contribution Total', value: data.governmentRemittance.philhealth },
+                                                            { label: 'Pag-IBIG Contribution Total', value: data.governmentRemittance.pagibig }
+                                                        ].map((row, i) => (
+                                                            <tr key={i}>
+                                                                <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155' }}>{row.label}</td>
+                                                                <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155', textAlign: 'right', fontWeight: 600 }}>PHP {Number(row.value || 0).toLocaleString()}</td>
+                                                            </tr>
+                                                        ))}
+                                                        <tr style={{ background: '#eff6ff' }}>
+                                                            <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '12px', color: '#1d4ed8', fontWeight: 800 }}>GRAND TOTAL</td>
+                                                            <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '12px', color: '#1d4ed8', textAlign: 'right', fontWeight: 800 }}>PHP {Number(data.governmentRemittance.total || 0).toLocaleString()}</td>
+                                                        </tr>
+                                                    </>
+                                                )}
+                                                {config.reportType === 'headcount' && data.headcount.byDepartment.map((dept, i) => (
+                                                    <tr key={i}>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155' }}>{dept.name}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155', textAlign: 'center' }}>{dept.count}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155', textAlign: 'right' }}>{Math.round((dept.count / (data.headcount.total || 1)) * 100)}%</td>
+                                                    </tr>
+                                                ))}
+                                                {config.reportType === 'compliance' && filterData(data.complianceAudit || []).map((row: any, i: number) => (
+                                                    <tr key={i}>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155' }}>{row.name}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155' }}>{row.department}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155', textAlign: 'center' }}>{row.status}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#dc2626', textAlign: 'right' }}>{row.missingFields.join(', ') || 'NONE'}</td>
+                                                    </tr>
+                                                ))}
+                                                {config.reportType === 'tenure' && filterData(data.tenureData || []).map((row: any, i: number) => (
+                                                    <tr key={i}>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155' }}>{row.name}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155' }}>{row.department}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155', textAlign: 'center' }}>{row.dateHired}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155', textAlign: 'center' }}>{row.tenure}</td>
+                                                        <td style={{ padding: '10px', borderBottom: '1px solid #f1f5f9', fontSize: '11px', color: '#334155', textAlign: 'center' }}>{row.daysToAnniversary}d</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+
+                                        <div style={{ marginTop: '50px', display: 'flex', justifySelf: 'flex-start', alignItems: 'flex-end', gap: '8px' }}>
+                                            <div style={{ width: '150px', borderBottom: '1px solid #cbd5e1', marginBottom: '8px' }}></div>
+                                            <span style={{ fontSize: '8px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>HR Manager Badge Verified</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Modal Footer */}
+                                <div style={{
+                                    padding: '1.5rem 2rem',
+                                    borderTop: '1px solid #f1f5f9',
+                                    display: 'flex',
+                                    justifyContent: 'flex-end',
+                                    gap: '1rem',
+                                    background: '#f8fafc'
+                                }}>
+                                    <button
+                                        onClick={() => setShowPreview(false)}
+                                        style={{
+                                            padding: '0.75rem 1.5rem',
+                                            borderRadius: '12px',
+                                            border: '1px solid #e2e8f0',
+                                            background: 'white',
+                                            color: '#475569',
+                                            fontWeight: 700,
+                                            fontSize: '0.85rem',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Close Preview
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setShowPreview(false);
+                                            handlePrint();
+                                        }}
+                                        style={{
+                                            padding: '0.75rem 1.5rem',
+                                            borderRadius: '12px',
+                                            border: 'none',
+                                            background: '#10b981',
+                                            color: 'white',
+                                            fontWeight: 700,
+                                            fontSize: '0.85rem',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px'
+                                        }}
+                                    >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
+                                        Print Now
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setShowPreview(false);
+                                            handleGenerate();
+                                        }}
+                                        style={{
+                                            padding: '0.75rem 1.5rem',
+                                            borderRadius: '12px',
+                                            border: 'none',
+                                            background: '#1e293b',
+                                            color: 'white',
+                                            fontWeight: 700,
+                                            fontSize: '0.85rem',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px'
+                                        }}
+                                    >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                                        Export PDF
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </DashboardLayout>
     );

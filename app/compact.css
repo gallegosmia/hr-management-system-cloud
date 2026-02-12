@@ -1,0 +1,198 @@
+/* ====================================================
+   COMPACT LAYOUT SYSTEM (Strict Enforcement)
+   Baseline: Desktop (Standard) -> Laptop (Compact) -> Mobile (Responsive)
+   ==================================================== */
+
+/* --- GLOBAL / DESKTOP BASE STYLES (>= 1440px) --- */
+
+.compact-page-wrapper {
+    height: calc(100vh - 32px);
+    /* Standard spacing */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Prevent window scroll, use internal scroll */
+    padding: 0 24px;
+}
+
+.compact-table-container {
+    flex: 1;
+    overflow: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.compact-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+    /* Standard font */
+}
+
+.compact-table th {
+    background: #f9fafb;
+    color: #4b5563;
+    font-weight: 600;
+    padding: 12px 16px;
+    border-bottom: 2px solid #e5e7eb;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.compact-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.compact-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.compact-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: 36px;
+}
+
+/* Base Buttons Colors */
+.compact-btn-primary {
+    background: #3b82f6;
+    color: white;
+    border-color: #2563eb;
+}
+
+.compact-btn-primary:hover {
+    background: #2563eb;
+}
+
+.compact-btn-secondary {
+    background: white;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.compact-btn-secondary:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.compact-btn-danger {
+    background: white;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.compact-btn-danger:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
+
+/* --- LAPTOP OVERRIDES (1366px - 1439px) --- */
+@media screen and (max-width: 1439px) {
+    .compact-page-wrapper {
+        height: calc(100vh - 20px);
+        padding: 0 16px;
+    }
+
+    .compact-table {
+        font-size: 11px !important;
+    }
+
+    .compact-table th {
+        padding: 6px 8px !important;
+        height: 32px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .compact-table td {
+        padding: 4px 8px !important;
+        height: 32px;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .compact-card {
+        border-radius: 12px;
+        padding: 12px !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .compact-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+        height: 28px;
+        gap: 6px;
+        border-radius: 6px;
+    }
+}
+
+/* --- TABLET OVERRIDES (768px - 1365px) --- */
+@media screen and (max-width: 1365px) and (min-width: 768px) {
+    .compact-page-wrapper {
+        padding: 0 12px;
+    }
+}
+
+/* --- MOBILE OVERRIDES (<= 767px) --- */
+@media screen and (max-width: 767px) {
+    .compact-page-wrapper {
+        height: auto;
+        overflow: visible;
+        padding: 0 8px 80px 8px;
+    }
+
+    .compact-table-container {
+        overflow-x: auto;
+        /* Enable scroll for tables on mobile */
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    .compact-table th,
+    .compact-table td {
+        font-size: 12px;
+        /* Slightly larger for touch readability */
+        padding: 8px 12px !important;
+    }
+
+    .compact-btn {
+        height: 40px;
+        /* Touch target */
+        font-size: 13px;
+        width: 100%;
+        /* Full width buttons */
+        margin-bottom: 8px;
+    }
+
+    /* Hide non-essential columns if class 'optional-col' is added (future proofing) */
+    .optional-col {
+        display: none;
+    }
+}

@@ -52,6 +52,8 @@ export default function AttendanceKioskPage() {
     const [status, setStatus] = useState<string>('Loading...');
     const scannerRef = useRef<any>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [cameraActive, setCameraActive] = useState(false);
+    const isInitializing = useRef(false);
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -66,64 +68,112 @@ export default function AttendanceKioskPage() {
 
     useEffect(() => {
         if (!scanResult && user) {
-            initScanner();
-        }
-        return () => {
-            if (scannerRef.current) {
-                try {
-                    scannerRef.current.clear();
-                } catch (e) {
-                    // Ignore cleanup errors
+            // Auto-start attempt on mount/user-ready
+            const timer = setTimeout(() => {
+                if (!cameraActive && !isInitializing.current) {
+                    startCamera();
                 }
-            }
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+
+        // When scanResult exists, stop the camera
+        if (scanResult) {
+            stopCamera();
+        }
+
+        return () => {
+            stopCamera();
         };
     }, [scanResult, user]);
 
-    const initScanner = async () => {
-        const readerElement = document.getElementById("qr-reader");
-        if (!readerElement) {
-            setTimeout(initScanner, 500);
-            return;
+    const stopCamera = async () => {
+        // We use a local variable to avoid race conditions with multiple stop calls
+        const currentScanner = scannerRef.current;
+        if (currentScanner) {
+            scannerRef.current = null; // Clear immediately
+            try {
+                if (currentScanner.isScanning) {
+                    await currentScanner.stop();
+                }
+                setCameraActive(false);
+            } catch (e) {
+                console.error("Failed to stop scanner", e);
+            }
         }
+    };
+
+    const startCamera = async () => {
+        if (isInitializing.current || cameraActive) return;
+
+        const readerElement = document.getElementById("qr-reader");
+        if (!readerElement) return;
+
+        isInitializing.current = true;
+        setError(null);
+        setStatus('Initializing camera...');
 
         try {
-            if (scannerRef.current) {
-                try {
-                    await scannerRef.current.clear();
-                } catch (e) { }
-            }
+            const { Html5Qrcode } = await import('html5-qrcode');
 
-            setStatus('Initializing scanner...');
+            // Explicitly clear the div content before creating a new instance
+            // to avoid any left-over nodes from previous failed attempts
+            readerElement.innerHTML = '';
 
-            const { Html5QrcodeScanner } = await import('html5-qrcode');
+            const html5QrCode = new Html5Qrcode("qr-reader");
+            scannerRef.current = html5QrCode;
 
-            const scanner = new Html5QrcodeScanner(
-                "qr-reader",
-                {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 },
-                    rememberLastUsedCamera: true,
-                    showTorchButtonIfSupported: true
-                },
-                false
-            );
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            };
 
-            scanner.render(
-                async (decodedText: string) => {
-                    await processQRCode(decodedText);
-                    scanner.clear();
-                },
-                (errorMessage: string) => { }
-            );
+            await html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                onScanFailure
+            ).catch(async (envErr) => {
+                console.warn("Environment camera failed, trying default", envErr);
+                return await html5QrCode.start(
+                    { facingMode: "user" },
+                    config,
+                    onScanSuccess,
+                    onScanFailure
+                );
+            });
 
-            scannerRef.current = scanner;
+            setCameraActive(true);
             setStatus('Ready - Scan your QR ID');
+            setError(null);
 
-        } catch (err) {
-            console.error("Scanner init failed:", err);
+        } catch (err: any) {
+            console.error("Scanner failed:", err);
+            let msg = 'Could not access camera.';
+            if (err.name === 'NotAllowedError') msg = 'Camera permission denied.';
+            else if (err.toString().includes('AbortError')) msg = 'Camera timeout. Please try again.';
+            else if (err.toString().includes('NotFound')) msg = 'No camera found.';
+
+            setError(msg);
             setStatus('Scanner unavailable');
-            setError('Could not initialize camera. Try uploading an image instead.');
+            setCameraActive(false);
+        } finally {
+            isInitializing.current = false;
         }
+    };
+
+    const onScanSuccess = async (decodedText: string) => {
+        // Debounce scan
+        if (isLoading) return;
+
+        // Stop camera immediately to prevent double scan and release hardware
+        await stopCamera();
+        await processQRCode(decodedText);
+    };
+
+    const onScanFailure = (error: string) => {
+        // We usually ignore scan failures (no QR in frame)
     };
 
     const processQRCode = async (employeeId: string) => {
@@ -154,9 +204,11 @@ export default function AttendanceKioskPage() {
             } else {
                 setError(data.error || 'Failed to log attendance');
                 setStatus('Error');
+                // Don't re-init here if scanResult is null, the useEffect will handle it when scanResult changes
+                // But since scanResult didn't change (still null), we might need to re-init
                 setTimeout(() => {
                     setError(null);
-                    initScanner();
+                    startCamera();
                 }, 4000);
             }
         } catch (err) {
@@ -164,7 +216,7 @@ export default function AttendanceKioskPage() {
             setStatus('Network Error');
             setTimeout(() => {
                 setError(null);
-                initScanner();
+                startCamera();
             }, 3000);
         } finally {
             setIsLoading(false);
@@ -323,21 +375,73 @@ export default function AttendanceKioskPage() {
                             borderRadius: '12px',
                             marginBottom: '1rem',
                             fontWeight: 600,
-                            fontSize: '0.875rem'
+                            fontSize: '0.875rem',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '0.5rem'
                         }}>
-                            ⚠️ {error}
+                            <span>⚠️ {error}</span>
+                            <button
+                                onClick={() => startCamera()}
+                                style={{
+                                    padding: '0.5rem 1rem',
+                                    background: '#dc2626',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontSize: '0.75rem',
+                                    cursor: 'pointer',
+                                    fontWeight: 700
+                                }}
+                            >
+                                Retry Camera
+                            </button>
                         </div>
                     )}
 
                     {/* Scanner or Result */}
                     {!scanResult ? (
-                        <div>
+                        <div style={{ position: 'relative' }}>
                             <div id="qr-reader" style={{
                                 width: '100%',
                                 borderRadius: '16px',
                                 overflow: 'hidden',
-                                marginBottom: '1rem'
+                                marginBottom: '1rem',
+                                background: '#f3f4f6',
+                                minHeight: '250px'
                             }}></div>
+
+                            {/* Manual Start Overlay - Prevent React from conflicting with qr-reader children */}
+                            {!cameraActive && !isLoading && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: '1rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    zIndex: 5
+                                }}>
+                                    <button
+                                        onClick={startCamera}
+                                        style={{
+                                            padding: '1rem 2rem',
+                                            background: '#064e3b',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '12px',
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                        }}
+                                    >
+                                        Start Scanner
+                                    </button>
+                                </div>
+                            )}
 
                             <div id="qr-file-reader" style={{ display: 'none' }}></div>
 
@@ -538,29 +642,10 @@ export default function AttendanceKioskPage() {
 
             <style jsx global>{`
                 #qr-reader video {
+                    width: 100% !important;
+                    height: 100% !important;
+                    object-fit: cover !important;
                     border-radius: 12px !important;
-                }
-                #qr-reader__scan_region {
-                    background: #f3f4f6 !important;
-                    border-radius: 12px !important;
-                }
-                #qr-reader__dashboard {
-                    padding: 0.5rem !important;
-                }
-                #qr-reader__dashboard button {
-                    background: #064e3b !important;
-                    color: white !important;
-                    border: none !important;
-                    padding: 0.5rem 1rem !important;
-                    border-radius: 8px !important;
-                    cursor: pointer !important;
-                    font-weight: 600 !important;
-                    margin: 0.25rem !important;
-                }
-                #qr-reader__dashboard select {
-                    padding: 0.5rem !important;
-                    border-radius: 8px !important;
-                    border: 1px solid #e5e7eb !important;
                 }
                 #qr-reader img {
                     display: none !important;

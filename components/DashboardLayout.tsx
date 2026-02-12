@@ -225,45 +225,75 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
         <div className="premium-dashboard-container">
             {/* Fully Restored Original Sidebar */}
             {!hideSidebar && (
-                <aside className="main-sidebar hr-pulse-sidebar" style={{ width: '260px', background: '#064e3b', borderRight: '1px solid #065f46', display: 'flex', flexDirection: 'column', padding: '24px 0' }}>
+                <aside className="main-sidebar hr-pulse-sidebar" style={{ width: '260px', background: '#022c22', borderRight: '1px solid #064e3b', display: 'flex', flexDirection: 'column', padding: '24px 16px' }}>
 
                     {/* Branding */}
-                    <div className="sidebar-branding" style={{ padding: '0 24px', marginBottom: '40px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="sidebar-branding" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{
-                            width: '32px', height: '32px',
+                            width: '40px', height: '40px',
                             background: '#10b981',
-                            borderRadius: '8px',
+                            borderRadius: '12px',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: 'white', fontWeight: 700
+                            color: 'white', fontWeight: 700,
+                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
                         }}>
-                            <span style={{ fontSize: '1.2rem' }}>M</span>
+                            <span style={{ fontSize: '1.4rem' }}>M</span>
                         </div>
-                        <span style={{ fontSize: '1rem', fontWeight: 700, color: 'white', fontFamily: "'Inter', sans-serif", lineHeight: 1.2 }}>Melann HR Management System</span>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'white', fontFamily: "'Inter', sans-serif" }}>Melann HR</span>
+                            <span style={{ fontSize: '0.65rem', color: '#6ee7b7', letterSpacing: '1px', textTransform: 'uppercase' }}>Management System</span>
+                        </div>
+                    </div>
+
+                    {/* Sidebar Search */}
+                    <div className="sidebar-search" style={{ marginBottom: '24px', position: 'relative' }}>
+                        <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#34d399', opacity: 0.7 }}>🔍</div>
+                        <input
+                            type="text"
+                            placeholder="Search menu..."
+                            style={{
+                                width: '100%',
+                                background: 'rgba(6, 78, 59, 0.6)',
+                                border: '1px solid rgba(16, 185, 129, 0.2)',
+                                padding: '10px 10px 10px 36px',
+                                borderRadius: '8px',
+                                color: '#ecfdf5',
+                                fontSize: '0.85rem',
+                                outline: 'none'
+                            }}
+                            onFocus={(e) => e.target.style.background = 'rgba(6, 78, 59, 1)'}
+                            onBlur={(e) => e.target.style.background = 'rgba(6, 78, 59, 0.6)'}
+                        />
                     </div>
 
                     {/* Navigation */}
-                    <nav className="sidebar-nav" style={{ flex: 1, padding: '0 12px', overflowY: 'auto' }}>
+                    <nav className="sidebar-nav" style={{ flex: 1, overflowY: 'auto' }}>
                         <ul className="nav-list" style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             {filteredNavigation.map((item, idx) => {
                                 const isActive = pathname === item.href;
                                 return (
-                                    <li key={idx}>
+                                    <li key={idx} style={{ position: 'relative' }}>
+                                        {isActive && (
+                                            <div style={{
+                                                position: 'absolute', left: '-16px', top: '50%', transform: 'translateY(-50%)',
+                                                width: '4px', height: '24px', background: 'white', borderTopRightRadius: '4px', borderBottomRightRadius: '4px'
+                                            }} />
+                                        )}
                                         <Link href={item.href} className={`nav-link ${isActive ? 'active' : ''}`}
                                             style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 padding: '12px 16px',
                                                 borderRadius: '8px',
+                                                fontSize: '0.9rem',
+                                                background: isActive ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
                                                 color: isActive ? 'white' : '#d1fae5',
-                                                background: isActive ? '#059669' : 'transparent',
                                                 fontWeight: isActive ? 600 : 500,
-                                                textDecoration: 'none',
-                                                transition: 'all 0.2s',
-                                                fontFamily: "'Inter', sans-serif",
-                                                fontSize: '0.95rem'
+                                                marginBottom: '2px',
+                                                borderLeft: isActive ? '4px solid transparent' : 'none' // Spacer for layout consistency if needed, but absolute bar is better
                                             }}
                                         >
-                                            <span className="nav-icon" style={{ marginRight: '12px', fontSize: '1.1rem' }}>{item.icon}</span>
+                                            <span className="nav-icon" style={{ marginRight: '12px', fontSize: '1.1rem', opacity: isActive ? 1 : 0.8 }}>{item.icon}</span>
                                             <span className="nav-label">{item.name}</span>
                                         </Link>
                                     </li>
@@ -273,22 +303,41 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     </nav>
 
                     {/* User Profile Footer */}
-                    <div className="sidebar-footer" style={{ padding: '24px', borderTop: '1px solid #065f46', marginTop: 'auto' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
-                            <div style={{
-                                width: '40px', height: '40px',
-                                background: '#34d399', borderRadius: '50%',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '1.2rem'
-                            }}>
-                                👤
+                    <div className="sidebar-footer" style={{ marginTop: 'auto', paddingTop: '20px' }}>
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: '12px',
+                            padding: '12px',
+                            background: '#064e3b',
+                            borderRadius: '12px',
+                            border: '1px solid #065f46'
+                        }}>
+                            <div style={{ position: 'relative' }}>
+                                <div style={{
+                                    width: '36px', height: '36px',
+                                    background: '#f8cfae', borderRadius: '50%', // Skin tone placeholder
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '1rem', overflow: 'hidden'
+                                }}>
+                                    <img src={`https://ui-avatars.com/api/?name=${user?.username}&background=f8cfae&color=78350f`} alt="" style={{ width: '100%', height: '100%' }} />
+                                </div>
+                                <div style={{
+                                    position: 'absolute', bottom: 0, right: 0,
+                                    width: '10px', height: '10px',
+                                    background: '#10b981',
+                                    borderRadius: '50%',
+                                    border: '2px solid #064e3b'
+                                }} />
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.username}</div>
-                                <div style={{ fontSize: '0.75rem', color: '#d1fae5' }}>{user?.role}</div>
+                                <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.username}</div>
+                                <div style={{ fontSize: '0.7rem', color: '#6ee7b7' }}>{user?.role === 'superadmin' ? 'HR Administrator' : user?.role}</div>
                             </div>
-                            <button onClick={handleLogout} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#a7f3d0', padding: '4px' }}>
-                                ⚙️
+                            <button onClick={handleLogout} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '4px', opacity: 0.9, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Logout">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
                             </button>
                         </div>
                     </div>
@@ -457,7 +506,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                 .main-sidebar.original-sidebar {
                     width: 240px;
                     height: 100vh;
-                    background: #1e3a8a; /* Original Deep Blue */
+                    background: #022c22; /* Dark Emerald Green */
                     display: flex;
                     flex-direction: column;
                     z-index: 100;
@@ -532,33 +581,14 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     gap: 30px;
                     flex: 1;
                 }
+                
+                /* Nav Link styles handled inline for Sidebar Redesign Phase 6 */
                 .nav-link {
-                    display: flex;
-                    align-items: center;
-                    gap: 15px;
-                    padding: 12px 16px;
-                    border-radius: 8px;
-                    color: rgba(255, 255, 255, 0.9) !important;
-                    font-size: 0.9rem;
-                    font-weight: 500;
-                    text-decoration: none;
                     transition: all 0.2s;
-                    border: none;
-                    background: transparent;
-                    width: 100%;
-                    cursor: pointer;
                 }
-
                 .nav-link:hover {
+                    background: rgba(255, 255, 255, 0.05) !important;
                     color: white !important;
-                    background: rgba(255, 255, 255, 0.1);
-                }
-
-                .nav-link.active {
-                    background: #3b82f6;
-                    color: white !important;
-                    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-                    font-weight: 600;
                 }
 
                 .header-tabs {

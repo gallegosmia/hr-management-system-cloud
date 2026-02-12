@@ -5,8 +5,8 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
-import EmployeeCard from '@/components/EmployeeCard';
 import Modal from '@/components/Modal';
+import EmployeeCard from '@/components/EmployeeCard';
 
 interface Employee {
     id: number;
@@ -35,14 +35,21 @@ export default function EmployeesPage() {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Filters
     const [searchQuery, setSearchQuery] = useState('');
     const [departmentFilter, setDepartmentFilter] = useState('');
     const [branchFilter, setBranchFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
+    // Pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8; // Adjusted for fixed screen height to fit comfortably
 
     const [departments, setDepartments] = useState<string[]>([]);
     const [branches, setBranches] = useState<string[]>([]);
+    const [currentUser, setCurrentUser] = useState<any>(null);
 
     // Modal State
     const [modalOpen, setModalOpen] = useState(false);
@@ -57,9 +64,14 @@ export default function EmployeesPage() {
         if (userData) {
             try {
                 const user = JSON.parse(userData);
+                setCurrentUser(user);
                 if (user.role === 'Employee') {
                     window.location.href = '/profile';
                     return;
+                }
+                // Force branch filter for HR
+                if (user.role === 'HR' && user.assigned_branch) {
+                    setBranchFilter(user.assigned_branch);
                 }
             } catch (e) {
                 console.error("Auth check failed", e);
@@ -74,6 +86,11 @@ export default function EmployeesPage() {
         filterEmployees();
     }, [employees, searchQuery, departmentFilter, branchFilter, statusFilter]);
 
+    // Reset page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, departmentFilter, branchFilter, statusFilter]);
+
     const fetchEmployees = async () => {
         try {
             const sessionId = localStorage.getItem('sessionId');
@@ -85,7 +102,6 @@ export default function EmployeesPage() {
 
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
-                    // Session invalid or unauthorized, redirect to login
                     localStorage.removeItem('sessionId');
                     localStorage.removeItem('user');
                     window.location.href = '/';
@@ -96,12 +112,10 @@ export default function EmployeesPage() {
 
             const data = await response.json();
 
-            // Ensure data is an array
             if (Array.isArray(data)) {
                 setEmployees(data);
                 setFilteredEmployees(data);
             } else {
-                console.error('Invalid data format received:', data);
                 setEmployees([]);
                 setFilteredEmployees([]);
             }
@@ -192,18 +206,6 @@ export default function EmployeesPage() {
                         emp.department.toLowerCase().includes(query) ||
                         emp.position.toLowerCase().includes(query);
                 });
-
-                // Relevance sorting for local results
-                filtered.sort((a, b) => {
-                    const aFull = `${a.first_name} ${a.last_name}`.toLowerCase();
-                    const bFull = `${b.first_name} ${b.last_name}`.toLowerCase();
-                    const aExact = a.employee_id.toLowerCase() === query || (a.email_address || '').toLowerCase() === query || aFull === query;
-                    const bExact = b.employee_id.toLowerCase() === query || (b.email_address || '').toLowerCase() === query || bFull === query;
-
-                    if (aExact && !bExact) return -1;
-                    if (!aExact && bExact) return 1;
-                    return 0;
-                });
             }
         }
 
@@ -212,7 +214,12 @@ export default function EmployeesPage() {
         }
 
         if (branchFilter) {
-            filtered = filtered.filter(emp => emp.branch === branchFilter);
+            const filterNorm = branchFilter.trim().toUpperCase().replace(' BRANCH', '');
+            filtered = filtered.filter(emp => {
+                if (!emp.branch) return false;
+                const empNorm = emp.branch.trim().toUpperCase().replace(' BRANCH', '');
+                return empNorm === filterNorm;
+            });
         }
 
         if (statusFilter) {
@@ -224,24 +231,17 @@ export default function EmployeesPage() {
 
     const exportToPDF = () => {
         const doc = new jsPDF({ orientation: 'landscape' });
-        const date = new Date().toLocaleDateString('en-PH', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
+        const date = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
 
-        // Add Title
         doc.setFontSize(18);
         doc.setTextColor(44, 62, 80);
         doc.text('Digital 201 File Masterlist', 14, 22);
 
-        // Add Subtitle/Date
         doc.setFontSize(11);
         doc.setTextColor(100);
         doc.text(`Generated on: ${date}`, 14, 30);
         doc.text(`Total Employees: ${filteredEmployees.length}`, 14, 36);
 
-        // Define Table Data
         const tableData = filteredEmployees.map(emp => [
             emp.employee_id,
             `${emp.last_name}, ${emp.first_name}`,
@@ -261,7 +261,6 @@ export default function EmployeesPage() {
             emp.file_completion_status
         ]);
 
-        // Generate Table
         autoTable(doc, {
             startY: 45,
             head: [['ID', 'Name', 'Dept', 'Position', 'Branch', 'Status', 'Hired', 'Birthday', 'Contact', 'Email', 'SSS', 'P.H', 'P.I', 'TIN', 'Civil', '201 Status']],
@@ -273,29 +272,33 @@ export default function EmployeesPage() {
             theme: 'grid'
         });
 
-        // Save PDF
         doc.save(`201_File_Masterlist_${new Date().toISOString().split('T')[0]}.pdf`);
     };
 
-    // --- Stats ---
+    // --- Pagination Logic ---
+    const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+    const paginatedEmployees = filteredEmployees.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
     const activeCount = employees.filter(e => e.employment_status !== 'Resigned' && e.employment_status !== 'Terminated').length;
     const inactiveCount = employees.length - activeCount;
 
     if (loading) {
         return (
             <DashboardLayout>
-                <div style={{ textAlign: 'center', padding: '3rem' }}>
-                    <div style={{
-                        width: '48px',
-                        height: '48px',
-                        border: '4px solid #3b82f6',
-                        borderTopColor: 'transparent',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite',
-                        margin: '0 auto 1rem'
-                    }} />
-                    <p style={{ color: '#6b7280' }}>Loading employees...</p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 64px)', width: '100%' }}>
+                    <div className="loader"></div>
                     <style jsx>{`
+                        .loader {
+                            border: 4px solid #f3f3f3;
+                            border-top: 4px solid #3b82f6;
+                            border-radius: 50%;
+                            width: 40px;
+                            height: 40px;
+                            animation: spin 1s linear infinite;
+                        }
                         @keyframes spin {
                             0% { transform: rotate(0deg); }
                             100% { transform: rotate(360deg); }
@@ -316,265 +319,445 @@ export default function EmployeesPage() {
                 type={modalType}
                 onConfirm={onConfirm}
             />
-            <div style={{ padding: '0 0.5rem' }}>
 
-                {/* Header Section */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div>
-                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: 0, letterSpacing: '-0.5px' }}>Staff Registry</h1>
-                        <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: '4px 0 0 0' }}>Centralized 201 file management and directory services.</p>
-                        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', marginTop: '8px', fontWeight: 600 }}>
-                            <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></span>
-                                Active {activeCount}
-                            </span>
-                            <span style={{ color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#9ca3af' }}></span>
-                                Inactive {inactiveCount}
-                            </span>
+            {/* Main Locked Container */}
+            <div style={{
+                height: 'calc(100vh - 40px)', // Fixed height to fit viewport (adjusting for layout padding)
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                background: '#f8fafc',
+                padding: '16px 24px',
+                fontFamily: "'Inter', sans-serif"
+            }}>
+
+                {/* --- HEADER SECTION (New Design) --- */}
+                <div style={{ flexShrink: 0, marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                            <h1 style={{
+                                fontSize: '24px',
+                                fontWeight: '800',
+                                color: '#111827',
+                                margin: '0 0 4px 0',
+                                letterSpacing: '-0.5px'
+                            }}>
+                                Staff Registry
+                            </h1>
+                            <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                                Centralized 201 file management.
+                            </p>
+                            <div style={{ display: 'flex', gap: '16px', marginTop: '12px', fontSize: '13px', fontWeight: '600' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#059669' }}>
+                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></span>
+                                    Active {activeCount}
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#9ca3af' }}>
+                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#d1d5db' }}></span>
+                                    Inactive {inactiveCount}
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
-                        <button onClick={exportToPDF} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '10px', fontWeight: 600, color: '#4b5563', cursor: 'pointer', fontSize: '0.875rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-                            <span>📄</span> Export
-                        </button>
-                        <Link href="/employees/add" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', background: '#10b981', color: 'white', borderRadius: '10px', fontWeight: 700, textDecoration: 'none', border: 'none', fontSize: '0.875rem', boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)' }}>
-                            <span>+</span> REGISTER NEW EMPLOYEE
-                        </Link>
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <button onClick={exportToPDF} style={{
+                                padding: '8px 16px',
+                                borderRadius: '8px',
+                                background: '#ffffff',
+                                border: '1px solid #e5e7eb',
+                                color: '#374151',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                            }}>
+                                <span>📄</span> Export
+                            </button>
+                            <Link href="/employees/add" style={{
+                                padding: '8px 16px',
+                                borderRadius: '8px',
+                                background: '#3b82f6',
+                                color: '#ffffff',
+                                border: '1px solid #2563eb',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                textDecoration: 'none',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                            }}>
+                                <span>+</span> Add Employee
+                            </Link>
+                        </div>
                     </div>
                 </div>
 
-                {/* Filters Section */}
+                {/* --- FILTERS BAR (New Design) --- */}
                 <div style={{
-                    display: 'flex',
-                    gap: '1rem',
-                    marginBottom: '1.5rem',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
                     background: '#ffffff',
-                    padding: '1rem',
-                    borderRadius: '16px',
-                    border: '1px solid #f1f5f9',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
+                    padding: '10px',
+                    borderRadius: '12px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '16px',
+                    flexShrink: 0
                 }}>
-
                     {/* Search */}
-                    <div style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                        <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}>
+                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
                         <input
                             type="text"
-                            placeholder="Search by name, ID or position..."
+                            placeholder="Search employee name, ID or role..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             style={{
                                 width: '100%',
-                                padding: '0.625rem 1rem 0.625rem 2.5rem',
-                                borderRadius: '10px',
-                                border: '1px solid #e2e8f0',
-                                outline: 'none',
-                                background: '#f8fafc',
-                                fontSize: '0.875rem',
-                                color: '#1e293b',
-                                transition: 'all 0.2s'
+                                padding: '10px 12px 10px 40px',
+                                borderRadius: '8px',
+                                border: 'none',
+                                background: '#f9fafb',
+                                color: '#374151',
+                                fontSize: '14px',
+                                outline: 'none'
                             }}
                         />
-                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.9rem' }}>🔍</span>
                     </div>
 
-                    {/* Filter Buttons */}
-                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    {/* Department Dropdown */}
+                    <div style={{ position: 'relative' }}>
                         <select
-                            value={departments.includes(departmentFilter) ? departmentFilter : ''}
+                            value={departmentFilter}
                             onChange={(e) => setDepartmentFilter(e.target.value)}
-                            style={{ padding: '0.625rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#4b5563', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', outline: 'none', minWidth: '160px' }}
+                            style={{
+                                appearance: 'none',
+                                padding: '10px 32px 10px 16px',
+                                borderRadius: '8px',
+                                border: 'none',
+                                background: '#f9fafb',
+                                color: '#374151',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                                outline: 'none',
+                                minWidth: '140px'
+                            }}
                         >
-                            <option value="">ALL DEPARTMENTS</option>
+                            <option value="">All Depts</option>
                             {departments.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
+                        <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#9ca3af' }}>
+                            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                    </div>
 
+                    {/* Status Dropdown */}
+                    <div style={{ position: 'relative' }}>
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            style={{ padding: '0.625rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#4b5563', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', outline: 'none' }}
+                            style={{
+                                appearance: 'none',
+                                padding: '10px 32px 10px 16px',
+                                borderRadius: '8px',
+                                border: 'none',
+                                background: '#f9fafb',
+                                color: '#374151',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                                outline: 'none',
+                                minWidth: '140px'
+                            }}
                         >
-                            <option value="">ALL STATUS</option>
+                            <option value="">All Status</option>
                             <option value="Regular">Regular</option>
                             <option value="Probationary">Probationary</option>
                             <option value="Contractual">Contractual</option>
                             <option value="Resigned">Resigned</option>
                             <option value="Terminated">Terminated</option>
                         </select>
-
-                        <select
-                            value={branchFilter}
-                            onChange={(e) => setBranchFilter(e.target.value)}
-                            style={{ padding: '0.625rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#4b5563', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', outline: 'none', minWidth: '140px' }}
-                        >
-                            <option value="">ALL BRANCHES</option>
-                            {branches.map(b => <option key={b} value={b}>{b}</option>)}
-                        </select>
-
-                        <button style={{ padding: '0.625rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#ffffff', color: '#4b5563', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span>⚡</span> Filters
-                        </button>
+                        <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#9ca3af' }}>
+                            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
                     </div>
 
-                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {/* View Toggles */}
-                        <div style={{ display: 'flex', gap: '2px', background: '#f1f5f9', padding: '3px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                style={{
-                                    padding: '4px 8px',
-                                    background: viewMode === 'grid' ? '#ffffff' : 'transparent',
-                                    border: 'none',
-                                    borderRadius: '7px',
-                                    cursor: 'pointer',
-                                    boxShadow: viewMode === 'grid' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                                    color: viewMode === 'grid' ? '#10b981' : '#94a3b8',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                                title="Grid View"
-                            >
-                                <span style={{ fontSize: '1.2rem' }}>⊞</span>
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                style={{
-                                    padding: '4px 8px',
-                                    background: viewMode === 'list' ? '#ffffff' : 'transparent',
-                                    border: 'none',
-                                    borderRadius: '7px',
-                                    cursor: 'pointer',
-                                    boxShadow: viewMode === 'list' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                                    color: viewMode === 'list' ? '#10b981' : '#94a3b8',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                                title="List View"
-                            >
-                                <span style={{ fontSize: '1.2rem' }}>≡</span>
-                            </button>
-                        </div>
+                    {/* View Toggle */}
+                    <div style={{ display: 'flex', background: '#f9fafb', padding: '4px', borderRadius: '8px', gap: '4px' }}>
+                        <button
+                            onClick={() => setViewMode('grid')}
+                            style={{
+                                padding: '6px',
+                                border: 'none',
+                                background: viewMode === 'grid' ? '#3b82f6' : 'transparent',
+                                color: viewMode === 'grid' ? 'white' : '#9ca3af',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex'
+                            }}
+                        >
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" /></svg>
+                        </button>
+                        <button
+                            onClick={() => setViewMode('list')}
+                            style={{
+                                padding: '6px',
+                                border: 'none',
+                                background: viewMode === 'list' ? '#3b82f6' : 'transparent',
+                                color: viewMode === 'list' ? 'white' : '#9ca3af',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex'
+                            }}
+                        >
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" /></svg>
+                        </button>
                     </div>
                 </div>
 
-                {/* Content Rendering */}
-                {filteredEmployees.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>
-                        <p>No employees found matching your filters.</p>
-                    </div>
-                ) : viewMode === 'grid' ? (
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                        gap: '1rem',
-                        paddingBottom: '1.5rem'
-                    }}>
-                        {filteredEmployees.map(emp => (
-                            <EmployeeCard key={emp.id} employee={emp} />
-                        ))}
-                    </div>
-                ) : (
-                    <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', marginBottom: '2rem' }}>
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
-                                <thead style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-                                    <tr>
-                                        <th style={{ padding: '1rem', color: '#4b5563', fontWeight: 600, fontSize: '0.875rem' }}>Employee</th>
-                                        <th style={{ padding: '1rem', color: '#4b5563', fontWeight: 600, fontSize: '0.875rem' }}>ID</th>
-                                        <th style={{ padding: '1rem', color: '#4b5563', fontWeight: 600, fontSize: '0.875rem' }}>Position / Dept</th>
-                                        <th style={{ padding: '1rem', color: '#4b5563', fontWeight: 600, fontSize: '0.875rem' }}>Branch</th>
-                                        <th style={{ padding: '1rem', color: '#4b5563', fontWeight: 600, fontSize: '0.875rem' }}>Status</th>
-                                        <th style={{ padding: '1rem', color: '#4b5563', fontWeight: 600, fontSize: '0.875rem' }}>Actions</th>
+                {/* --- CONTENT AREA (Locked/Scrollable) --- */}
+                <div style={{
+                    flex: 1,
+                    overflow: 'hidden',
+                    background: '#ffffff',
+                    borderRadius: '12px',
+                    border: '1px solid #f3f4f6',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+                }}>
+
+                    {/* Scrollable Content */}
+                    <div style={{ flex: 1, overflowY: 'auto' }}>
+
+                        {viewMode === 'grid' ? (
+                            <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
+                                {paginatedEmployees.map(emp => (
+                                    <EmployeeCard key={emp.id} employee={emp} />
+                                ))}
+                                {paginatedEmployees.length === 0 && (
+                                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: '#9ca3af' }}>
+                                        No employees found.
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                <thead style={{ position: 'sticky', top: 0, background: '#ffffff', zIndex: 10 }}>
+                                    <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
+                                        <th style={headerStyle}>EMPLOYEE</th>
+                                        <th style={headerStyle}>EMPLOYEE ID</th>
+                                        <th style={headerStyle}>POSITION / DEPT</th>
+                                        <th style={headerStyle}>BRANCH</th>
+                                        <th style={headerStyle}>STATUS</th>
+                                        <th style={{ ...headerStyle, textAlign: 'center' }}>ACTIONS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredEmployees.map(emp => (
-                                        <tr key={emp.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                                            <td style={{ padding: '1rem' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    {paginatedEmployees.map((emp) => (
+                                        <tr key={emp.id} style={{ borderBottom: '1px solid #f9fafb', transition: 'background 0.2s' }} className="hover-row">
+                                            <td style={cellStyle}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                                     <div style={{
-                                                        width: '32px',
-                                                        height: '32px',
-                                                        borderRadius: '50%',
-                                                        background: '#e5e7eb',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        fontSize: '0.8rem',
-                                                        fontWeight: 600,
-                                                        color: '#4b5563',
-                                                        overflow: 'hidden'
+                                                        width: '42px', height: '42px', borderRadius: '50%',
+                                                        background: '#e0e7ff', color: '#4f46e5',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        fontSize: '14px', fontWeight: 'bold', overflow: 'hidden'
                                                     }}>
                                                         {emp.profile_picture ? (
                                                             <img src={emp.profile_picture} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                         ) : (
-                                                            <>{emp.first_name[0]}{emp.last_name[0]}</>
+                                                            `${emp.first_name[0]}${emp.last_name[0]}`
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <div style={{ fontWeight: 600, color: '#111827' }}>{emp.first_name} {emp.last_name}</div>
-                                                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{emp.email_address}</div>
+                                                        <div style={{ fontSize: '14px', fontWeight: '700', color: '#111827' }}>
+                                                            {emp.first_name} {emp.last_name}
+                                                        </div>
+                                                        <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                                                            {emp.email_address || 'No email provided'}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td style={{ padding: '1rem', fontSize: '0.875rem', color: '#4b5563' }}>{emp.employee_id}</td>
-                                            <td style={{ padding: '1rem' }}>
-                                                <div style={{ fontSize: '0.875rem', color: '#111827', fontWeight: 500 }}>{emp.position}</div>
-                                                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{emp.department}</div>
+                                            <td style={cellStyle}>
+                                                <span style={{ fontSize: '14px', color: '#374151', fontFamily: 'monospace', background: '#f3f4f6', padding: '4px 8px', borderRadius: '6px' }}>
+                                                    {emp.employee_id}
+                                                </span>
                                             </td>
-                                            <td style={{ padding: '1rem', fontSize: '0.875rem', color: '#4b5563' }}>{emp.branch || 'N/A'}</td>
-                                            <td style={{ padding: '1rem' }}>
+                                            <td style={cellStyle}>
+                                                <div>
+                                                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>{emp.position}</div>
+                                                    <div style={{ fontSize: '11px', color: '#9ca3af', letterSpacing: '0.05em', textTransform: 'uppercase', marginTop: '2px' }}>{emp.department}</div>
+                                                </div>
+                                            </td>
+                                            <td style={cellStyle}>
+                                                <span style={{ fontSize: '14px', color: '#374151' }}>{emp.branch || 'Main Office'}</span>
+                                            </td>
+                                            <td style={cellStyle}>
                                                 <span style={{
-                                                    display: 'inline-flex',
-                                                    padding: '0.25rem 0.625rem',
-                                                    borderRadius: '9999px',
-                                                    fontSize: '0.75rem',
-                                                    fontWeight: 600,
-                                                    background: (emp.employment_status === 'Resigned' || emp.employment_status === 'Terminated') ? '#f3f4f6' : '#ecfdf5',
-                                                    color: (emp.employment_status === 'Resigned' || emp.employment_status === 'Terminated') ? '#374151' : '#065f46'
+                                                    padding: '4px 10px',
+                                                    borderRadius: '6px',
+                                                    fontSize: '11px',
+                                                    fontWeight: '700',
+                                                    textTransform: 'uppercase',
+                                                    ...getStatusStyle(emp.employment_status)
                                                 }}>
                                                     {emp.employment_status}
                                                 </span>
                                             </td>
-                                            <td style={{ padding: '1rem' }}>
-                                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                                    <Link href={`/employees/${emp.id}`} style={{ color: '#2563eb', fontWeight: 600, fontSize: '0.875rem', textDecoration: 'none' }}>
-                                                        View detail
+                                            <td style={{ ...cellStyle, textAlign: 'center' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                                    <Link href={`/employees/${emp.id}`} style={{
+                                                        padding: '6px', color: '#3b82f6', borderRadius: '4px',
+                                                        display: 'flex', alignItems: 'center'
+                                                    }} title="View Profile">
+                                                        View
                                                     </Link>
-                                                    <button
-                                                        onClick={() => handleDeleteClick(emp.id, `${emp.first_name} ${emp.last_name}`)}
-                                                        style={{
-                                                            background: 'none',
-                                                            border: 'none',
-                                                            color: '#ef4444',
-                                                            cursor: 'pointer',
-                                                            padding: '4px',
-                                                            fontSize: '1rem',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            borderRadius: '4px'
-                                                        }}
-                                                        title="Delete Employee"
-                                                    >
-                                                        🗑️
-                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
                                     ))}
+                                    {paginatedEmployees.length === 0 && (
+                                        <tr>
+                                            <td colSpan={6} style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>
+                                                No employees found.
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
+                        )}
+                    </div>
+
+                    {/* Pagination Footer (Fixed at bottom of container) */}
+                    <div style={{
+                        padding: '16px 24px',
+                        borderTop: '1px solid #f3f4f6',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: '#ffffff',
+                        flexShrink: 0
+                    }}>
+                        <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                            Showing <span style={{ fontWeight: '600', color: '#111827' }}>{((currentPage - 1) * itemsPerPage) + 1}</span> to <span style={{ fontWeight: '600', color: '#111827' }}>{Math.min(currentPage * itemsPerPage, filteredEmployees.length)}</span> of <span style={{ fontWeight: '600', color: '#111827' }}>{filteredEmployees.length}</span> results
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                            {/* Previous */}
+                            <button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                style={paginationBtnStyle}
+                            >
+                                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                            </button>
+
+                            {/* Page Numbers - Simplified for robustness */}
+                            {[...Array(totalPages)].map((_, i) => {
+                                const p = i + 1;
+                                // Basic logic to show limited pages
+                                if (p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1)) {
+                                    return (
+                                        <button
+                                            key={p}
+                                            onClick={() => setCurrentPage(p)}
+                                            style={{
+                                                ...paginationBtnStyle,
+                                                background: currentPage === p ? '#3b82f6' : '#ffffff',
+                                                color: currentPage === p ? '#ffffff' : '#374151',
+                                                borderColor: currentPage === p ? '#3b82f6' : '#e5e7eb'
+                                            }}
+                                        >
+                                            {p}
+                                        </button>
+                                    );
+                                } else if (p === currentPage - 2 || p === currentPage + 2) {
+                                    return <span key={p} style={{ display: 'flex', alignItems: 'center', color: '#9ca3af', fontSize: '12px' }}>...</span>
+                                }
+                                return null;
+                            })}
+
+                            {/* Next */}
+                            <button
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                                style={paginationBtnStyle}
+                            >
+                                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                            </button>
                         </div>
                     </div>
-                )}
+
+                </div>
+
+                <style jsx>{`
+                    .hover-row:hover {
+                        background-color: #f8fafc !important;
+                    }
+                `}</style>
 
             </div>
         </DashboardLayout>
     );
+}
+
+const headerStyle: React.CSSProperties = {
+    padding: '16px 24px',
+    fontSize: '11px',
+    fontWeight: '700',
+    color: '#9ca3af',
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase'
+};
+
+const cellStyle: React.CSSProperties = {
+    padding: '16px 24px',
+    verticalAlign: 'middle',
+    borderBottom: '1px solid #f9fafb'
+};
+
+const paginationBtnStyle: React.CSSProperties = {
+    width: '32px',
+    height: '32px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '8px',
+    border: '1px solid #e5e7eb',
+    background: '#ffffff',
+    cursor: 'pointer',
+    fontSize: '13px',
+    color: '#374151',
+    fontWeight: '500',
+    transition: 'all 0.2s'
+};
+
+function getStatusStyle(status: string) {
+    switch (status) {
+        case 'Regular':
+            return { background: '#ecfdf5', color: '#059669' }; // Green
+        case 'Probationary':
+            return { background: '#ecfdf5', color: '#059669' }; // Green (as per image)
+        case 'Resigned':
+        case 'Terminated':
+            return { background: '#f3f4f6', color: '#6b7280' }; // Grey
+        case 'Contractual':
+            return { background: '#eff6ff', color: '#3b82f6' }; // Blue
+        default:
+            return { background: '#f3f4f6', color: '#374151' };
+    }
 }

@@ -1,19 +1,43 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getAll } from '@/lib/database';
 import { getDashboardStats, getDetailedReportsData } from '@/lib/data';
+import { validateBranchRequest } from '@/lib/middleware/branch-auth';
+import { isSuperAdmin } from '@/lib/branch-access';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
     try {
+        // Enforce branch authorization
+        const validation = await validateBranchRequest(request);
+        if (!validation.valid) {
+            return NextResponse.json({ error: validation.error }, { status: validation.errorCode || 403 });
+        }
+
+        const { user } = validation;
+
+        if (!user) {
+            return NextResponse.json({ error: 'User context missing' }, { status: 500 });
+        }
+
         const { searchParams } = new URL(request.url);
         const start = searchParams.get('start') || undefined;
         const end = searchParams.get('end') || undefined;
-        const branch = searchParams.get('branch') || undefined;
+        let branch = searchParams.get('branch') || undefined;
+
+        // STRICT BRANCH ENFORCEMENT
+        // If not Super Admin, FORCE the branch to be the user's assigned branch
+        if (!isSuperAdmin(user.role)) {
+            if (!user.assigned_branch) {
+                return NextResponse.json({ error: 'User has no assigned branch' }, { status: 403 });
+            }
+            branch = user.assigned_branch;
+        }
 
         const dateRange = start && end ? { start, end } : undefined;
 
-        const stats = await getDashboardStats();
+        // Pass the enforced branch to data fetchers
+        const stats = await getDashboardStats(branch);
         const detailedReports = await getDetailedReportsData(dateRange, branch);
         const employees = await getAll('employees');
         const leaves = await getAll('leave_requests');

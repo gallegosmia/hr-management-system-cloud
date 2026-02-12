@@ -51,12 +51,22 @@ export async function POST(request: NextRequest) {
         let isNewRecord = false;
 
         if (!attendance) {
+            // Calculate initial status based on time
+            // Rule: 8:01+ = Late, 12:00+ = Half-Day
+            let initialStatus = 'Present';
+            const hhmm = format(new Date(), 'HH:mm');
+            if (hhmm >= '12:00') {
+                initialStatus = 'Half-Day';
+            } else if (hhmm >= '08:01') {
+                initialStatus = 'Late';
+            }
+
             // Create new attendance record for today
             const insertRes = await query(
                 `INSERT INTO attendance (employee_id, date, status, created_at) 
-                 VALUES ($1, $2, 'Present', CURRENT_TIMESTAMP) 
+                 VALUES ($1, $2, $3, CURRENT_TIMESTAMP) 
                  RETURNING *`,
-                [employee.id, today]
+                [employee.id, today, initialStatus]
             );
             attendance = insertRes.rows[0];
             isNewRecord = true;

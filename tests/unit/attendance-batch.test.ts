@@ -4,7 +4,7 @@ import * as database from '@/lib/database';
 // Mock the database query function
 jest.mock('@/lib/database', () => ({
     query: jest.fn(),
-    isPostgres: true,
+    isPostgres: () => true,
     // Include other exports if needed by lib/data
     getAll: jest.fn(),
     getById: jest.fn(),

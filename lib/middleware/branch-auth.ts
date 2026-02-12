@@ -59,7 +59,12 @@ export async function validateBranchRequest(
         };
     }
 
-    const { user, selectedBranch } = session;
+    let { user, selectedBranch } = session;
+
+    // STRICT: If not Super Admin, force selectedBranch to assigned_branch
+    if (!isSuperAdmin(user.role)) {
+        selectedBranch = user.assigned_branch;
+    }
 
     // If a specific branch is required, validate access
     if (requiredBranch) {

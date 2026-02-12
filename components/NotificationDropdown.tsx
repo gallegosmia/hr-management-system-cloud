@@ -2,26 +2,43 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { format, isToday, isYesterday, subDays } from 'date-fns';
 
 interface Notification {
     id: string;
     title: string;
     message: string;
-    type: 'leave' | 'alert' | 'info';
+    type: 'leave' | 'alert' | 'info' | 'system';
     severity: 'high' | 'medium' | 'low';
     url: string;
     timestamp: string;
+    actionLabel?: string;
+    secondaryActionLabel?: string;
+    is_read?: boolean;
+    manually_unread?: boolean;
 }
 
 export default function NotificationDropdown() {
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [readIds, setReadIds] = useState<Set<string>>(new Set());
+    const [manuallyUnreadIds, setManuallyUnreadIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [user, setUser] = useState<any>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Initial load from localStorage
     useEffect(() => {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            try {
+                setUser(JSON.parse(userData));
+            } catch (e) {
+                console.error('Failed to parse user data');
+            }
+        }
+
         const stored = localStorage.getItem('read_notifications');
         if (stored) {
             try {
@@ -30,18 +47,162 @@ export default function NotificationDropdown() {
                 console.error('Failed to parse read notifications');
             }
         }
+
+        const storedUnread = localStorage.getItem('manually_unread_notifications');
+        if (storedUnread) {
+            try {
+                setManuallyUnreadIds(new Set(JSON.parse(storedUnread)));
+            } catch (e) {
+                console.error('Failed to parse manually unread notifications');
+            }
+        }
+
+        // Add storage event listener to sync across tabs
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'read_notifications' && e.newValue) {
+                try {
+                    setReadIds(new Set(JSON.parse(e.newValue)));
+                } catch (err) {
+                    console.error('Failed to parse read notifications from storage event');
+                }
+            }
+            if (e.key === 'manually_unread_notifications' && e.newValue) {
+                try {
+                    setManuallyUnreadIds(new Set(JSON.parse(e.newValue)));
+                } catch (err) {
+                    console.error('Failed to parse manually unread notifications from storage event');
+                }
+            }
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
-    // Persist readIds to localStorage
+    // Persist to localStorage
     useEffect(() => {
         localStorage.setItem('read_notifications', JSON.stringify(Array.from(readIds)));
     }, [readIds]);
+
+    useEffect(() => {
+        localStorage.setItem('manually_unread_notifications', JSON.stringify(Array.from(manuallyUnreadIds)));
+    }, [manuallyUnreadIds]);
+
+    const fetchNotifications = async () => {
+        // Optimization: if closed and we have data, don't spam.
+        // But if empty, we MUST fetch.
+        if (!isOpen && notifications.length > 0) return;
+
+        const sessionId = localStorage.getItem('sessionId');
+        if (!sessionId) return;
+
+        setLoading(true);
+        try {
+            // Use current user from state to get branch
+            const userBranch = user?.username === 'superadmin' ? 'All' : (user?.assigned_branch || 'All');
+
+            // Fetch multiple sources independently to prevent one failure from blocking others
+            const fetchSource = async (url: string) => {
+                try {
+                    const sessionId = localStorage.getItem('sessionId');
+                    const headers: any = {};
+                    if (sessionId) headers['x-session-id'] = sessionId;
+
+                    const res = await fetch(url, { headers });
+                    if (!res.ok) return null;
+                    return await res.json();
+                } catch (e) {
+                    console.error(`Failed to fetch source: ${url}`, e);
+                    return null;
+                }
+            };
+
+            const announcementUrl = `/api/announcements?is_active=true&branch=${encodeURIComponent(userBranch)}${user?.employee_id ? `&employee_id=${user.employee_id}` : ''}`;
+
+            const [alertsData, leavesData, annData] = await Promise.all([
+                fetchSource('/api/alerts'),
+                fetchSource('/api/leave?status=Pending'),
+                fetchSource(announcementUrl)
+            ]);
+
+            const combined: Notification[] = [];
+
+            // Add Pending Leaves
+            if (Array.isArray(leavesData)) {
+                leavesData.forEach((leave: any) => {
+                    combined.push({
+                        id: `leave-${leave.id}`,
+                        title: 'Leave Request Pending',
+                        message: `${leave.employee_name} requested ${leave.leave_type} leave.`,
+                        type: 'leave',
+                        severity: 'medium',
+                        url: '/leave',
+                        timestamp: leave.created_at || new Date().toISOString(),
+                        actionLabel: 'Review Request'
+                    });
+                });
+            }
+
+            // Add Alerts
+            if (alertsData && Array.isArray(alertsData.alerts)) {
+                alertsData.alerts.forEach((alert: any) => {
+                    let type: any = 'alert';
+                    if (alert.type?.includes('INFO')) type = 'info';
+
+                    combined.push({
+                        id: alert.id,
+                        title: alert.type.replace(/_/g, ' ').toUpperCase(),
+                        message: alert.message,
+                        type: type,
+                        severity: alert.severity,
+                        url: alert.type === 'NEW_USER_REGISTRATION' ? '/users' : `/employees/${alert.employee_id}`,
+                        timestamp: alert.created_at || new Date().toISOString()
+                    });
+                });
+            }
+
+            // Add Announcements
+            if (Array.isArray(annData)) {
+                annData.forEach((ann: any) => {
+                    combined.push({
+                        id: `ann-${ann.id}`,
+                        title: ann.title,
+                        message: ann.content,
+                        type: 'system',
+                        severity: ann.priority === 'Urgent' ? 'high' : ann.priority === 'High' ? 'medium' : 'low',
+                        url: '/announcements',
+                        timestamp: ann.created_at,
+                        actionLabel: 'View Announcement'
+                    });
+                });
+            }
+
+            // Sort by timestamp
+            combined.sort((a, b) => {
+                const timeA = new Date(a.timestamp).getTime();
+                const timeB = new Date(b.timestamp).getTime();
+                return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+            });
+
+            setNotifications(combined);
+        } catch (error) {
+            console.error('Failed to fetch notifications:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (isOpen) {
             fetchNotifications();
         }
     }, [isOpen]);
+
+    // Re-fetch when user is loaded or on interval
+    useEffect(() => {
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 60000);
+        return () => clearInterval(interval);
+    }, [user]);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -53,82 +214,85 @@ export default function NotificationDropdown() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const fetchNotifications = async () => {
-        if (!isOpen && notifications.length > 0) return; // Only fetch if open or empty
-        setLoading(true);
-        try {
-            const [alertsRes, leavesRes] = await Promise.all([
-                fetch('/api/alerts'),
-                fetch('/api/leave?status=Pending')
-            ]);
-
-            const alertsData = await alertsRes.json();
-            const leavesData = await leavesRes.json();
-
-            const combined: Notification[] = [];
-
-            // Add Pending Leaves
-            (leavesData || []).forEach((leave: any) => {
-                combined.push({
-                    id: `leave-${leave.id}`,
-                    title: 'New Leave Request',
-                    message: `${leave.employee_name} requested ${leave.leave_type} leave.`,
-                    type: 'leave',
-                    severity: 'medium',
-                    url: '/leave',
-                    timestamp: leave.created_at || new Date().toISOString()
-                });
-            });
-
-            // Add High/Medium Severity Alerts
-            (alertsData.alerts || []).forEach((alert: any) => {
-                combined.push({
-                    id: alert.id,
-                    title: alert.type.replace(/_/g, ' ').toUpperCase(),
-                    message: alert.message,
-                    type: 'alert',
-                    severity: alert.severity,
-                    url: alert.type === 'NEW_USER_REGISTRATION' ? '/users' : `/employees/${alert.employee_id}`,
-                    timestamp: alert.created_at || new Date().toISOString()
-                });
-            });
-
-            // Sort by timestamp
-            combined.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-            setNotifications(combined);
-        } catch (error) {
-            console.error('Failed to fetch notifications:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Auto-fetch every minute
-    useEffect(() => {
-        fetchNotifications();
-        const interval = setInterval(fetchNotifications, 60000);
-        return () => clearInterval(interval);
-    }, []);
-
     const markAsRead = (id: string) => {
         setReadIds(prev => {
             const next = new Set(prev);
             next.add(id);
             return next;
         });
+        setManuallyUnreadIds(prev => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+        });
+    };
+
+    const toggleUnread = (id: string) => {
+        if (manuallyUnreadIds.has(id) || !readIds.has(id)) {
+            // Mark as read
+            markAsRead(id);
+        } else {
+            // Mark as unread
+            setManuallyUnreadIds(prev => {
+                const next = new Set(prev);
+                next.add(id);
+                return next;
+            });
+        }
     };
 
     const markAllAsRead = () => {
         setReadIds(new Set(notifications.map(n => n.id)));
+        setManuallyUnreadIds(new Set());
     };
 
-    const unreadNotifications = notifications.filter(n => !readIds.has(n.id));
-    const unreadCount = unreadNotifications.length;
+    const unreadCount = notifications.filter(n => !readIds.has(n.id)).length;
+
+    const filteredNotifs = notifications.filter(n =>
+        n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        n.message.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const groupNotifications = (notifs: Notification[]) => {
+        const groups: { title: string, items: Notification[] }[] = [
+            { title: 'TODAY', items: [] },
+            { title: 'YESTERDAY', items: [] },
+            { title: 'LAST WEEK', items: [] },
+            { title: 'OLDER', items: [] }
+        ];
+
+        const lastWeekLimit = subDays(new Date(), 7);
+
+        notifs.forEach(n => {
+            const d = new Date(n.timestamp);
+            if (isNaN(d.getTime())) {
+                groups[3].items.push(n); // Invalid dates to Older
+                return;
+            }
+            if (isToday(d)) groups[0].items.push(n);
+            else if (isYesterday(d)) groups[1].items.push(n);
+            else if (d > lastWeekLimit) groups[2].items.push(n);
+            else groups[3].items.push(n);
+        });
+
+        return groups.filter(g => g.items.length > 0);
+    };
+
+    const notificationGroups = groupNotifications(filteredNotifs);
+
+    const getIcon = (notif: Notification) => {
+        switch (notif.type) {
+            case 'leave': return <div className="icon-circle yellow">🏖️</div>;
+            case 'info': return <div className="icon-circle blue">ℹ️</div>;
+            case 'alert': return <div className="icon-circle orange">⚠️</div>;
+            default: return <div className="icon-circle gray">🔔</div>;
+        }
+    };
 
     return (
         <div className="notification-container" ref={dropdownRef}>
             <button className="notif-btn" onClick={() => setIsOpen(!isOpen)} aria-label="Notifications">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bell">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
                     <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
                 </svg>
@@ -136,59 +300,92 @@ export default function NotificationDropdown() {
             </button>
 
             {isOpen && (
-                <div className="notif-dropdown glass-effect">
+                <div className="notif-dropdown redesign">
                     <div className="notif-header">
-                        <div className="notif-header-left">
-                            <h3>Notifications</h3>
-                            <span className="notif-count">{unreadCount} Unread</span>
-                        </div>
-                        {unreadCount > 0 && (
-                            <button className="mark-all-btn" onClick={markAllAsRead}>
-                                Mark all as read
-                            </button>
-                        )}
+                        <button className="back-btn" onClick={() => setIsOpen(false)}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                        </button>
+                        <h3>Notifications</h3>
+                        <button className="mark-read-link" onClick={markAllAsRead}>Mark all as read</button>
                     </div>
 
-                    <div className="notif-list">
+                    <div className="notif-search-bar">
+                        <div className="search-box">
+                            <span className="search-icon">🔍</span>
+                            <input
+                                type="text"
+                                placeholder="Search alerts..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            <button className="filter-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="notif-list scrollable">
                         {loading && notifications.length === 0 ? (
-                            <div className="notif-loading">Loading...</div>
-                        ) : notifications.length > 0 ? (
-                            notifications.map((notif) => {
-                                const isRead = readIds.has(notif.id);
-                                return (
-                                    <Link
-                                        key={notif.id}
-                                        href={notif.url}
-                                        className={`notif-item ${notif.severity} ${isRead ? 'read' : 'unread'}`}
-                                        onClick={() => {
-                                            markAsRead(notif.id);
-                                            setIsOpen(false);
-                                        }}
-                                    >
-                                        <div className="notif-icon">
-                                            {notif.type === 'leave' ? '🏖️' : notif.type === 'alert' ? '⚠️' : 'ℹ️'}
-                                        </div>
-                                        <div className="notif-content">
-                                            <div className="notif-top-row">
-                                                <div className="notif-title">{notif.title}</div>
-                                                {!isRead && <div className="unread-dot"></div>}
+                            <div className="notif-loading">
+                                <div className="spinner-mini"></div>
+                                <p>Checking for updates...</p>
+                            </div>
+                        ) : notificationGroups.length > 0 ? (
+                            notificationGroups.map((group, groupIdx) => (
+                                <div key={groupIdx} className="notif-group">
+                                    <div className="group-title">{group.title}</div>
+                                    <div className="group-items">
+                                        {group.items.map((notif, idx) => (
+                                            <div key={notif.id} className={`notif-item-wrapper ${(readIds.has(notif.id) && !manuallyUnreadIds.has(notif.id)) ? 'read' : 'unread'}`}>
+                                                <div className="timeline-col">
+                                                    {getIcon(notif)}
+                                                    {idx < group.items.length - 1 && <div className="timeline-line"></div>}
+                                                </div>
+                                                <div className="notif-main-content">
+                                                    <div className="notif-top">
+                                                        <span className="notif-title">
+                                                            {notif.title}
+                                                            {(manuallyUnreadIds.has(notif.id) || !readIds.has(notif.id)) && <span className="unread-dot"></span>}
+                                                        </span>
+                                                        <span className="notif-timestamp">
+                                                            {format(new Date(notif.timestamp), 'h:mm a')}
+                                                        </span>
+                                                    </div>
+                                                    <p className="notif-msg">{notif.message}</p>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                                                        <div className="notif-actions">
+                                                            {notif.actionLabel && (
+                                                                <Link href={notif.url} className="action-btn blue" onClick={() => markAsRead(notif.id)}>
+                                                                    {notif.actionLabel}
+                                                                </Link>
+                                                            )}
+                                                            {notif.secondaryActionLabel && (
+                                                                <button className="action-btn gray">{notif.secondaryActionLabel}</button>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            className="mark-unread-btn"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                toggleUnread(notif.id);
+                                                            }}
+                                                            title={manuallyUnreadIds.has(notif.id) || !readIds.has(notif.id) ? "Mark as read" : "Mark as unread"}
+                                                        >
+                                                            {manuallyUnreadIds.has(notif.id) || !readIds.has(notif.id) ? 'Mark Read' : 'Mark Unread'}
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="notif-message">{notif.message}</div>
-                                            <div className="notif-time">{new Date(notif.timestamp).toLocaleDateString()}</div>
-                                        </div>
-                                    </Link>
-                                );
-                            })
+                                        ))}
+                                    </div>
+                                </div>
+                            ))
                         ) : (
-                            <div className="notif-empty">
-                                <span className="empty-icon">✨</span>
-                                <p>All caught up!</p>
+                            <div className="notif-empty-state">
+                                <span>🔍</span>
+                                <p>{searchQuery ? 'No notifications match your search' : 'No notifications yet'}</p>
                             </div>
                         )}
-                    </div>
-
-                    <div className="notif-footer">
-                        <Link href="/dashboard" onClick={() => setIsOpen(false)}>View all activity</Link>
                     </div>
                 </div>
             )}
@@ -209,16 +406,7 @@ export default function NotificationDropdown() {
                     align-items: center;
                     justify-content: center;
                     border-radius: 12px;
-                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                    flex-shrink: 0;
-                }
-                .notif-btn:hover {
-                    background: #e2e8f0;
-                    color: #1e293b;
-                    transform: translateY(-1px);
-                }
-                .notif-btn:active {
-                    transform: translateY(0);
+                    transition: all 0.2s;
                 }
                 .notif-badge {
                     position: absolute;
@@ -228,175 +416,240 @@ export default function NotificationDropdown() {
                     color: white;
                     font-size: 0.65rem;
                     font-weight: bold;
-                    min-width: 18px;
+                    width: 18px;
                     height: 18px;
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 0 4px;
                     border: 2px solid white;
-                    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
                 }
-                .notif-dropdown {
+                .notif-dropdown.redesign {
                     position: absolute;
                     top: calc(100% + 15px);
                     right: 0;
-                    width: 320px;
-                    max-height: 500px;
-                    border-radius: 20px;
-                    z-index: 1000;
-                    overflow: hidden;
+                    width: 380px;
+                    max-height: 600px;
+                    background: white;
+                    border-radius: 24px;
+                    box-shadow: 0 15px 50px rgba(0,0,0,0.15);
                     display: flex;
                     flex-direction: column;
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-                    background: white;
-                    animation: dropdownSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-                    transform-origin: top right;
+                    z-index: 1000;
+                    overflow: hidden;
+                    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                 }
-                @keyframes dropdownSlide {
-                    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
-                    to { opacity: 1; transform: scale(1) translateY(0); }
-                }
-                @media (max-width: 640px) {
-                    .notif-dropdown {
-                        position: fixed;
-                        top: 70px;
-                        left: 20px;
-                        right: 20px;
-                        width: auto;
-                        max-height: calc(100vh - 100px);
-                    }
+                @keyframes slideIn {
+                    from { opacity: 0; transform: translateY(10px) scale(0.95); }
+                    to { opacity: 1; transform: translateY(0) scale(1); }
                 }
                 .notif-header {
-                    padding: 15px 20px;
-                    border-bottom: 1px solid rgba(0,0,0,0.05);
+                    padding: 20px;
                     display: flex;
+                    align-items: center;
                     justify-content: space-between;
-                    align-items: center;
-                    background: rgba(255,255,255,0.8);
+                    border-bottom: 1px solid #f1f5f9;
                 }
-                .notif-header-left {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                }
-                .mark-all-btn {
-                    background: transparent;
+                .back-btn {
+                    background: none;
                     border: none;
-                    color: #3b82f6;
-                    font-size: 0.75rem;
-                    font-weight: 600;
                     cursor: pointer;
-                    padding: 4px 8px;
-                    border-radius: 6px;
-                    transition: background 0.2s;
-                }
-                .mark-all-btn:hover {
-                    background: rgba(59, 130, 246, 0.05);
+                    color: #1e293b;
+                    padding: 0;
                 }
                 .notif-header h3 {
                     margin: 0;
+                    font-size: 1.125rem;
+                    font-weight: 800;
+                    color: #1e293b;
+                    letter-spacing: -0.02em;
+                }
+                .mark-read-link {
+                    background: none;
+                    border: none;
+                    color: #2563eb;
+                    font-size: 0.875rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                }
+                .notif-search-bar {
+                    padding: 10px 20px;
+                    background: white;
+                }
+                .search-box {
+                    background: #f1f5f9;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    padding: 8px 12px;
+                    gap: 10px;
+                }
+                .search-icon { font-size: 0.9rem; color: #94a3b8; }
+                .search-box input {
+                    flex: 1;
+                    background: none;
+                    border: none;
+                    outline: none;
+                    font-size: 0.9rem;
+                    color: #1e293b;
+                }
+                .filter-icon {
+                    background: none;
+                    border: none;
+                    color: #94a3b8;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                }
+                .notif-list.scrollable {
+                    flex: 1;
+                    overflow-y: auto;
+                    padding: 10px 0;
+                }
+                .notif-group {
+                    margin-bottom: 20px;
+                }
+                .group-title {
+                    padding: 10px 20px;
+                    font-size: 0.75rem;
+                    font-weight: 800;
+                    color: #1e293b;
+                    letter-spacing: 0.05em;
+                }
+                .notif-item-wrapper {
+                    display: flex;
+                    padding: 12px 20px;
+                    gap: 15px;
+                    transition: background 0.2s;
+                }
+                .notif-item-wrapper:hover {
+                    background: #f8fafc;
+                }
+                .timeline-col {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    width: 40px;
+                    flex-shrink: 0;
+                }
+                .icon-circle {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1rem;
+                    z-index: 2;
+                }
+                .icon-circle.green { background: #dcfce7; color: #16a34a; }
+                .icon-circle.yellow { background: #fef9c3; color: #ca8a04; }
+                .icon-circle.blue { background: #dbeafe; color: #2563eb; }
+                .icon-circle.orange { background: #ffedd5; color: #ea580c; }
+                .icon-circle.gray { background: #f1f5f9; color: #64748b; }
+
+                .timeline-line {
+                    width: 2px;
+                    flex: 1;
+                    background: #f1f5f9;
+                    margin: 4px 0 -12px 0;
+                }
+                .notif-main-content {
+                    flex: 1;
+                    padding-bottom: 10px;
+                }
+                .notif-top {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: baseline;
+                    margin-bottom: 4px;
+                }
+                .notif-title {
                     font-size: 0.95rem;
                     font-weight: 700;
                     color: #1e293b;
                 }
-                .notif-count {
-                    font-size: 0.7rem;
-                    background: #fee2e2;
-                    color: #ef4444;
-                    padding: 2px 8px;
-                    border-radius: 10px;
+                .notif-timestamp {
+                    font-size: 0.75rem;
                     font-weight: 700;
-                }
-                .notif-list {
-                    overflow-y: auto;
-                    flex: 1;
-                    background: white;
-                }
-                .notif-loading, .notif-empty {
-                    padding: 40px 20px;
-                    text-align: center;
                     color: #94a3b8;
+                }
+                .notif-msg {
                     font-size: 0.875rem;
-                }
-                .empty-icon {
-                    font-size: 2rem;
-                    display: block;
-                    margin-bottom: 10px;
-                }
-                .notif-item {
-                    display: flex;
-                    gap: 12px;
-                    padding: 15px 20px;
-                    border-bottom: 1px solid #f1f5f9;
-                    text-decoration: none;
-                    transition: all 0.2s;
-                    cursor: pointer;
-                    position: relative;
-                }
-                .notif-item.unread {
-                    background: #fdf2f222;
-                }
-                .notif-item.read {
-                    opacity: 0.7;
-                    background: white;
-                }
-                .notif-item:hover {
-                    background: #f8fafc;
-                    opacity: 1;
-                }
-                .notif-item.high {
-                    border-left: 4px solid #ef4444;
-                }
-                .notif-top-row {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 4px;
+                    color: #64748b;
+                    margin: 0;
+                    line-height: 1.5;
                 }
                 .unread-dot {
+                    display: inline-block;
                     width: 8px;
                     height: 8px;
-                    background: #ef4444;
+                    background: #2563eb;
                     border-radius: 50%;
-                    box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+                    margin-left: 8px;
                 }
-                .notif-icon {
-                    font-size: 1.25rem;
-                    padding-top: 2px;
+                .notif-item-wrapper.unread {
+                    background: #f0f7ff;
                 }
-                .notif-content {
-                    flex: 1;
+                .notif-item-wrapper.unread .notif-title {
+                    color: #1e3a8a;
                 }
-                .notif-title {
-                    font-size: 0.8rem;
-                    font-weight: 800;
+                .mark-unread-btn {
+                    font-size: 0.7rem;
+                    color: #64748b;
+                    background: none;
+                    border: 1px solid #e2e8f0;
+                    padding: 4px 8px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    transition: all 0.2s;
+                }
+                .mark-unread-btn:hover {
+                    background: #f8fafc;
+                    color: #1e293b;
+                    border-color: #cbd5e1;
+                }
+                .notif-actions {
+                    display: flex;
+                    gap: 10px;
+                }
+                .action-btn {
+                    padding: 8px 16px;
+                    border-radius: 10px;
+                    font-size: 0.875rem;
+                    font-weight: 700;
+                    text-decoration: none;
+                    border: none;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .action-btn.blue {
+                    background: #2563eb;
+                    color: white;
+                }
+                .action-btn.blue:hover { background: #1d4ed8; }
+                .action-btn.gray {
+                    background: #f1f5f9;
                     color: #1e293b;
                 }
-                .notif-message {
-                    font-size: 0.75rem;
-                    color: #475569;
-                    line-height: 1.4;
-                    margin-bottom: 6px;
-                }
-                .notif-time {
-                    font-size: 0.65rem;
-                    color: #94a3b8;
-                    font-weight: 500;
-                }
-                .notif-footer {
-                    padding: 12px;
+                .action-btn.gray:hover { background: #e2e8f0; }
+
+                .notif-empty-state {
+                    padding: 60px 20px;
                     text-align: center;
-                    background: #f8fafc;
-                    border-top: 1px solid #f1f5f9;
+                    color: #94a3b8;
                 }
-                .notif-footer a {
-                    font-size: 0.8rem;
-                    color: #3b82f6;
-                    font-weight: 600;
-                    text-decoration: none;
-                }
+                .notif-empty-state span { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+
+                .notif-loading { padding: 40px 20px; text-align: center; color: #94a3b8; }
+                .spinner-mini { width: 24px; height: 24px; border: 2px solid #f1f5f9; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 10px; }
+                @keyframes spin { to { transform: rotate(360deg); } }
+
+                /* Custom Scrollbar */
+                .scrollable::-webkit-scrollbar { width: 6px; }
+                .scrollable::-webkit-scrollbar-track { background: transparent; }
+                .scrollable::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
             `}</style>
         </div>
     );

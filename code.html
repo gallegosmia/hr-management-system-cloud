@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>System Backup &amp; Restore</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#4F46E5",
+              "background-light": "#F9FAFB",
+              "background-dark": "#111827",
+              "card-light": "#FFFFFF",
+              "card-dark": "#1F2937",
+            },
+            fontFamily: {
+              display: ["Inter", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "12px",
+            },
+          },
+        },
+      };
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ios-tab-active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #4F46E5;
+            border-radius: 2px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen pb-24">
+<header class="px-6 pt-12 pb-6">
+<div class="flex items-center justify-between mb-2">
+<h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">System Settings</h1>
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 bg-blue-500 flex items-center justify-center text-[10px] text-white font-bold">M</div>
+<div class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold">E</div>
+<div class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 bg-amber-500 flex items-center justify-center text-[10px] text-white font-bold">L</div>
+<div class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] text-slate-600 dark:text-slate-400 font-bold">+8</div>
+</div>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm">Configure system preferences and manage user access.</p>
+</header>
+<nav class="px-6 mb-6 overflow-x-auto no-scrollbar">
+<div class="flex space-x-6 border-b border-slate-200 dark:border-slate-700">
+<button class="pb-3 text-sm font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">General</button>
+<button class="pb-3 text-sm font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">Leave</button>
+<button class="relative pb-3 text-sm font-semibold text-primary dark:text-primary whitespace-nowrap ios-tab-active">Backup &amp; Restore</button>
+</div>
+</nav>
+<main class="px-4 space-y-4">
+<section class="bg-card-light dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="flex items-center space-x-3 mb-3">
+<div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
+<span class="material-icons-round text-primary">cloud_download</span>
+</div>
+<h2 class="text-lg font-bold text-slate-900 dark:text-white">Backup Database</h2>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                Create a backup of your current database (JSON format). You can use this file to restore your data later if needed.
+            </p>
+<button class="w-full flex items-center justify-center space-x-2 py-3.5 px-4 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all active:scale-[0.98]">
+<span class="material-icons-round text-slate-600 dark:text-slate-300 text-xl">download_for_offline</span>
+<span class="font-semibold text-slate-700 dark:text-slate-200">Download Backup</span>
+</button>
+</section>
+<section class="bg-card-light dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="flex items-center space-x-3 mb-3">
+<div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center">
+<span class="material-icons-round text-rose-500">settings_backup_restore</span>
+</div>
+<h2 class="text-lg font-bold text-slate-900 dark:text-white">Restore Database</h2>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+                Upload a previously saved backup file (.json) to restore your system data.
+            </p>
+<div class="mb-6 p-3 bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/30 rounded-lg">
+<div class="flex space-x-2">
+<span class="material-icons-round text-rose-500 text-sm mt-0.5">warning</span>
+<p class="text-xs font-semibold text-rose-600 dark:text-rose-400">
+                        WARNING: This will overwrite your current data!
+                    </p>
+</div>
+</div>
+<div class="mb-6">
+<label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-colors" for="file-upload">
+<div class="flex flex-col items-center justify-center pt-5 pb-6">
+<span class="material-icons-round text-slate-400 mb-2">upload_file</span>
+<p class="text-xs text-slate-500 dark:text-slate-400"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+<p class="text-[10px] text-slate-400 mt-1 uppercase">JSON Format Only</p>
+</div>
+<input accept=".json" class="hidden" id="file-upload" type="file"/>
+</label>
+</div>
+<button class="w-full py-4 px-4 bg-primary text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all">
+                Restore Data
+            </button>
+</section>
+</main>
+<footer class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-6 py-3 pb-8 flex justify-between items-center z-50">
+<button class="flex flex-col items-center space-y-1 text-slate-400 dark:text-slate-500">
+<span class="material-icons-round">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</button>
+<button class="flex flex-col items-center space-y-1 text-slate-400 dark:text-slate-500">
+<span class="material-icons-round">people</span>
+<span class="text-[10px] font-medium">Employees</span>
+</button>
+<button class="flex flex-col items-center space-y-1 text-primary">
+<span class="material-icons-round">settings</span>
+<span class="text-[10px] font-bold">Settings</span>
+</button>
+<button class="flex flex-col items-center space-y-1 text-slate-400 dark:text-slate-500">
+<span class="material-icons-round">account_circle</span>
+<span class="text-[10px] font-medium">Profile</span>
+</button>
+</footer>
+
+</body></html>

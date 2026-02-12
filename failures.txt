@@ -1,0 +1,128 @@
+
+> hr-management-system@1.0.0 test
+> jest payroll-api.test.ts
+
+node.exe : FAIL tests/integra
+tion/payroll-api.test.ts
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (FAIL te  
+  sts/inte...oll-api.test.   
+ ts:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+  Payroll Calculation API 
+Integration with Real Data
+    ?? should filter 
+employees by branch using 
+real mock data (7 ms)
+    ?? should ignore 
+employees not in the 
+selected branch (2 ms)
+
+  ??? Payroll Calculation 
+API Integration with Real 
+Data ??? should filter 
+employees by branch using 
+real mock data
+
+    expect(received).toBe(exp
+ected) // Object.is equality
+
+    Expected: 200
+    Received: 401
+
+    [0m [90m 25 |[39m     
+    [36mconst[39m data 
+[33m=[39m [36mawait[39m r
+esponse[33m.[39mjson()[33m
+;[39m
+     [90m 26 |[39m
+    
+[31m[1m>[22m[39m[90m 27 
+|[39m         expect(respons
+e[33m.[39mstatus)[33m.[39
+mtoBe([35m200[39m)[33m;[3
+9m
+     [90m    |[39m         
+                        
+[31m[1m^[22m[39m
+     [90m 28 |[39m         
+[90m// All 3 in mock are 
+Ormoc Branch[39m
+     [90m 29 |[39m         
+expect(data)[33m.[39mtoHave
+Length([35m3[39m)[33m;[39
+m
+     [90m 30 |[39m         
+expect(data[[35m0[39m][33m
+.[39memployee_name)[33m.[3
+9mtoContain([32m'ARRADAZA'[
+39m)[33m;[39m[0m
+
+      at Object.toBe (tests/i
+ntegration/payroll-api.test.t
+s:27:33)
+
+  ??? Payroll Calculation 
+API Integration with Real 
+Data ??? should ignore 
+employees not in the 
+selected branch
+
+    TypeError: expect(receive
+d).toHaveLength(expected)
+
+    Matcher error: received 
+value must have a length 
+property whose value must be 
+a number
+
+    Received has type:  
+object
+    Received has value: 
+{"error": "Authentication 
+required. Please log in."}
+
+    [0m [90m 46 |[39m     
+    [36mconst[39m data 
+[33m=[39m [36mawait[39m r
+esponse[33m.[39mjson()[33m
+;[39m
+     [90m 47 |[39m
+    
+[31m[1m>[22m[39m[90m 48 
+|[39m         expect(data)[
+33m.[39mtoHaveLength([35m0
+[39m)[33m;[39m
+     [90m    |[39m         
+             
+[31m[1m^[22m[39m
+     [90m 49 |[39m     
+})[33m;[39m
+     [90m 50 |[39m 
+})[33m;[39m
+     [90m 51 |[39m[0m
+
+      at Object.toHaveLength 
+(tests/integration/payroll-ap
+i.test.ts:48:22)
+
+Test Suites: 1 failed, 1 
+total
+Tests:       2 failed, 2 
+total
+Snapshots:   0 total
+Time:        0.339 s, 
+estimated 1 s
+Ran all test suites matching 
+payroll-api.test.ts.

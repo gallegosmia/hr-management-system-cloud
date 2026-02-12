@@ -13,7 +13,7 @@ export interface User {
     id: number;
     username: string;
     email?: string;
-    role: 'HR' | 'Employee' | 'President' | 'Vice President'; // Simplified 3-role system
+    role: 'Super Admin' | 'Admin' | 'HR' | 'Employee' | 'President' | 'Vice President' | 'Manager' | 'Finance';
     employee_id?: number;
     is_active: number;
     assigned_branch?: string; // Branch assignment for access control
@@ -81,6 +81,10 @@ export async function getSession(sessionId: string): Promise<{ user: User; expir
 
 export async function deleteSession(sessionId: string): Promise<void> {
     await query("DELETE FROM sessions WHERE id = $1", [sessionId]);
+}
+
+export async function updateSessionBranch(sessionId: string, branch: string | null): Promise<void> {
+    await query("UPDATE sessions SET selected_branch = $1 WHERE id = $2", [branch, sessionId]);
 }
 
 function generateSessionId(): string {

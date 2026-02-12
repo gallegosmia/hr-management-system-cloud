@@ -68,15 +68,107 @@ export default function SettingsPage() {
                 setLeaveSettings(settingsData.leave_config);
             }
             setUsers(usersData);
-            // Ensure employeesData is an array
             setEmployees(Array.isArray(employeesData) ? employeesData : []);
         } catch (error) {
             console.error('Failed to fetch data:', error);
-            setEmployees([]); // Fallback to empty array
+            setEmployees([]);
         } finally {
             setLoading(false);
         }
     };
+
+    // --- Components ---
+    const TabButton = ({ id, label }: { id: string, label: string }) => (
+        <button
+            onClick={() => setActiveTab(id)}
+            style={{
+                padding: '0.6rem 1.5rem',
+                borderRadius: '9999px',
+                border: 'none',
+                background: activeTab === id ? '#3b82f6' : '#f1f5f9',
+                color: activeTab === id ? 'white' : '#4b5563',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                whiteSpace: 'nowrap'
+            }}
+        >
+            {label}
+        </button>
+    );
+
+    const SettingsField = ({ label, value, onChange, type = 'text', icon, helpText }: any) => (
+        <div style={{ marginBottom: '1.25rem' }}>
+            <div style={{
+                background: 'white',
+                borderRadius: '16px',
+                padding: '0.75rem 1rem',
+                border: '1px solid #e2e8f0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                position: 'relative'
+            }}>
+                <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 600, color: '#3b82f6', marginBottom: '0.1rem' }}>{label}</label>
+                    <input
+                        type={type}
+                        value={value}
+                        onChange={onChange}
+                        style={{
+                            width: '100%',
+                            border: 'none',
+                            outline: 'none',
+                            fontSize: '1rem',
+                            fontWeight: 600,
+                            color: '#1f2937',
+                            padding: 0,
+                            background: 'transparent'
+                        }}
+                    />
+                </div>
+                {icon && <div style={{ color: '#94a3b8' }}>{icon}</div>}
+            </div>
+            {helpText && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem', paddingLeft: '0.5rem', paddingRight: '0.5rem' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>{helpText}</span>
+                </div>
+            )}
+        </div>
+    );
+
+    const ToggleSwitch = ({ label, checked }: { label: string, checked: boolean }) => (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 0' }}>
+            <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#1f2937' }}>{label}</span>
+            <div style={{
+                width: '50px',
+                height: '26px',
+                background: checked ? '#3b82f6' : '#e2e8f0',
+                borderRadius: '13px',
+                position: 'relative',
+                cursor: 'pointer',
+                transition: 'background 0.2s'
+            }}>
+                <div style={{
+                    position: 'absolute',
+                    top: '3px',
+                    left: checked ? '27px' : '3px',
+                    width: '20px',
+                    height: '20px',
+                    background: 'white',
+                    borderRadius: '50%',
+                    transition: 'left 0.2s',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                }}></div>
+            </div>
+        </div>
+    );
 
     const handleSaveLeaveSettings = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -219,235 +311,299 @@ export default function SettingsPage() {
 
     return (
         <DashboardLayout>
-            <div className="card mb-4">
-                <div className="card-body">
-                    <h2 className="mb-2">System Settings</h2>
-                    <p className="text-gray-500">Configure system preferences and manage user access.</p>
+            <div style={{ minHeight: '100vh', background: '#f8fafc', paddingBottom: '5rem' }}>
+                {/* Header */}
+                <div style={{ padding: '2rem 1.5rem 1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>System Settings</h1>
+                            <p style={{ color: '#64748b', fontSize: '0.95rem', marginTop: '0.5rem' }}>Configure system preferences and manage user access.</p>
+                        </div>
+                        <button style={{
+                            width: '44px',
+                            height: '44px',
+                            borderRadius: '50%',
+                            background: 'white',
+                            border: 'none',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            color: '#1e293b'
+                        }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <div className="flex mb-4 border-b border-gray-200">
-                <button
-                    className={`px-4 py-2 font-medium ${activeTab === 'general' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                    onClick={() => setActiveTab('general')}
-                >
-                    General Settings
-                </button>
-                <button
-                    className={`px-4 py-2 font-medium ${activeTab === 'leave' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                    onClick={() => setActiveTab('leave')}
-                >
-                    Leave Configuration
-                </button>
-                <button
-                    className={`px-4 py-2 font-medium ${activeTab === 'backup' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                    onClick={() => setActiveTab('backup')}
-                >
-                    Backup & Restore
-                </button>
-            </div>
+                {/* Navigation Scroll */}
+                <div style={{ overflowX: 'auto', padding: '0.5rem 1.5rem 1.5rem', display: 'flex', gap: '0.75rem', WebkitOverflowScrolling: 'touch' }}>
+                    <TabButton id="general" label="General Settings" />
+                    <TabButton id="leave" label="Leave Configuration" />
+                    <TabButton id="backup" label="Backup & Restore" />
+                </div>
 
-            {activeTab === 'general' && (
-                <div className="card max-w-2xl">
-                    <div className="card-body">
-                        <form onSubmit={handleSaveSettings}>
-                            <div className="form-group mb-4">
-                                <label className="form-label">Company Name</label>
-                                <input
-                                    type="text"
-                                    className="form-input"
+                <div style={{ padding: '0 1.5rem' }}>
+                    {activeTab === 'general' && (
+                        <div style={{ maxWidth: '500px' }}>
+                            <form onSubmit={handleSaveSettings}>
+                                <SettingsField
+                                    label="Company Name"
                                     value={settings.company_name || ''}
-                                    onChange={e => setSettings({ ...settings, company_name: e.target.value })}
+                                    onChange={(e: any) => setSettings({ ...settings, company_name: e.target.value })}
                                 />
-                            </div>
-                            <div className="form-group mb-4">
-                                <label className="form-label">Attendance Cut-off Time</label>
-                                <input
-                                    type="time"
-                                    className="form-input"
+
+                                <SettingsField
+                                    label="Attendance Cut-off Time"
                                     value={settings.attendance_cutoff || ''}
-                                    onChange={e => setSettings({ ...settings, attendance_cutoff: e.target.value })}
+                                    type="time"
+                                    onChange={(e: any) => setSettings({ ...settings, attendance_cutoff: e.target.value })}
+                                    helpText="Employees timing in after this time will be marked as Late."
+                                    icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>}
                                 />
-                                <p className="text-xs text-gray-500 mt-1">Employees timing in after this time will be marked as Late.</p>
-                            </div>
-                            <div className="form-group mb-4">
-                                <label className="form-label">Default User Password</label>
-                                <input
-                                    type="text"
-                                    className="form-input"
+
+                                <SettingsField
+                                    label="Default User Password"
                                     value={settings.default_password || ''}
-                                    onChange={e => setSettings({ ...settings, default_password: e.target.value })}
+                                    onChange={(e: any) => setSettings({ ...settings, default_password: e.target.value })}
+                                    icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>}
                                 />
-                            </div>
-                            <button type="submit" className="btn btn-primary">Save Changes</button>
-                        </form>
-                    </div>
-                </div>
-            )}
 
-
-            {activeTab === 'leave' && (
-                <div className="card max-w-2xl">
-                    <div className="card-body">
-                        <h3 className="text-lg font-medium mb-4">Leave Configuration</h3>
-                        <form onSubmit={handleSaveLeaveSettings}>
-                            <div className="mb-6">
-                                <h4 className="text-sm font-medium text-gray-700 mb-3">Cut-off Rules</h4>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="form-group">
-                                        <label className="form-label">Payroll Cut-off Day</label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            max="31"
-                                            className="form-input"
-                                            value={leaveSettings.payroll_cutoff_day}
-                                            onChange={e => setLeaveSettings({ ...leaveSettings, payroll_cutoff_day: parseInt(e.target.value) })}
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">Day of the month (e.g., 15th)</p>
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Filing Cut-off (Days)</label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            className="form-input"
-                                            value={leaveSettings.filing_cutoff_days}
-                                            onChange={e => setLeaveSettings({ ...leaveSettings, filing_cutoff_days: parseInt(e.target.value) })}
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">Days before payroll cut-off</p>
-                                    </div>
+                                <h2 style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94a3b8', letterSpacing: '0.05em', marginTop: '2.5rem', marginBottom: '1rem' }}>NOTIFICATION PREFERENCES</h2>
+                                <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '0 1rem' }}>
+                                    <ToggleSwitch label="Email Alerts" checked={true} />
+                                    <div style={{ borderTop: '1px solid #f1f5f9' }}></div>
+                                    <ToggleSwitch label="Push Notifications" checked={false} />
                                 </div>
-                            </div>
 
-                            <div className="mb-6">
-                                <h4 className="text-sm font-medium text-gray-700 mb-3">Approval Workflow</h4>
-                                <div className="space-y-3">
-                                    <div className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            id="level1"
-                                            className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                                            checked={leaveSettings.approval_levels.level1_enabled}
-                                            onChange={e => setLeaveSettings({
-                                                ...leaveSettings,
-                                                approval_levels: { ...leaveSettings.approval_levels, level1_enabled: e.target.checked }
-                                            })}
-                                        />
-                                        <label htmlFor="level1" className="ml-2 text-sm text-gray-700">
-                                            Level 1: Immediate Supervisor / Manager
-                                        </label>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            id="level2"
-                                            className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                                            checked={leaveSettings.approval_levels.level2_enabled}
-                                            onChange={e => setLeaveSettings({
-                                                ...leaveSettings,
-                                                approval_levels: { ...leaveSettings.approval_levels, level2_enabled: e.target.checked }
-                                            })}
-                                        />
-                                        <label htmlFor="level2" className="ml-2 text-sm text-gray-700">
-                                            Level 2: HR Department
-                                        </label>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            id="level3"
-                                            className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                                            checked={leaveSettings.approval_levels.level3_enabled}
-                                            onChange={e => setLeaveSettings({
-                                                ...leaveSettings,
-                                                approval_levels: { ...leaveSettings.approval_levels, level3_enabled: e.target.checked }
-                                            })}
-                                        />
-                                        <label htmlFor="level3" className="ml-2 text-sm text-gray-700">
-                                            Level 3: Final Approver (Admin/Management)
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button type="submit" className="btn btn-primary">Save Configuration</button>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {activeTab === 'backup' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="card">
-                        <div className="card-body">
-                            <h3 className="text-lg font-medium mb-2">Backup Database</h3>
-                            <p className="text-gray-500 text-sm mb-6">
-                                Create a backup of your current database (JSON format). You can use this file to restore your data later if needed.
-                            </p>
-                            <button
-                                onClick={() => window.open('/api/system/backup', '_blank')}
-                                className="btn bg-green-600 text-white hover:bg-green-700 w-full flex items-center justify-center gap-2"
-                            >
-                                <span>⬇️</span> Download Backup
-                            </button>
+                                <button type="submit" style={{
+                                    width: '100%',
+                                    marginTop: '3rem',
+                                    padding: '1.25rem',
+                                    borderRadius: '16px',
+                                    background: '#3b82f6',
+                                    color: 'white',
+                                    border: 'none',
+                                    fontSize: '1rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    boxShadow: '0 8px 16px -4px rgba(59, 130, 246, 0.4)',
+                                    marginBottom: '2rem'
+                                }}>
+                                    Save Changes
+                                </button>
+                            </form>
                         </div>
-                    </div>
+                    )}
 
-                    <div className="card">
-                        <div className="card-body">
-                            <h3 className="text-lg font-medium mb-2">Restore Database</h3>
-                            <p className="text-gray-500 text-sm mb-6">
-                                Upload a previously saved backup file (.json) to restore your system data.
-                                <br />
-                                <span className="text-red-500 font-bold">WARNING: This will overwrite your current data!</span>
-                            </p>
 
-                            <input
-                                type="file"
-                                accept=".json"
-                                id="restore-file"
-                                className="block w-full text-sm text-gray-500
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-md file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-blue-50 file:text-blue-700
-                                hover:file:bg-blue-100 mb-4"
-                                onChange={async (e) => {
-                                    if (e.target.files && e.target.files[0]) {
-                                        if (confirm("Are you sure you want to RESTORE the database? This will overwrite all current data and cannot be undone.")) {
-                                            const formData = new FormData();
-                                            formData.append('file', e.target.files[0]);
+                    {activeTab === 'leave' && (
+                        <div className="card max-w-2xl">
+                            <div className="card-body">
+                                <h3 className="text-lg font-medium mb-4">Leave Configuration</h3>
+                                <form onSubmit={handleSaveLeaveSettings}>
+                                    <div className="mb-6">
+                                        <h4 className="text-sm font-medium text-gray-700 mb-3">Cut-off Rules</h4>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="form-group">
+                                                <label className="form-label">Payroll Cut-off Day</label>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    max="31"
+                                                    className="form-input"
+                                                    value={leaveSettings.payroll_cutoff_day}
+                                                    onChange={e => setLeaveSettings({ ...leaveSettings, payroll_cutoff_day: parseInt(e.target.value) })}
+                                                />
+                                                <p className="text-xs text-gray-500 mt-1">Day of the month (e.g., 15th)</p>
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Filing Cut-off (Days)</label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    className="form-input"
+                                                    value={leaveSettings.filing_cutoff_days}
+                                                    onChange={e => setLeaveSettings({ ...leaveSettings, filing_cutoff_days: parseInt(e.target.value) })}
+                                                />
+                                                <p className="text-xs text-gray-500 mt-1">Days before payroll cut-off</p>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                            try {
-                                                const res = await fetch('/api/system/backup', {
-                                                    method: 'POST',
-                                                    body: formData
-                                                });
-                                                const data = await res.json();
-                                                if (res.ok) {
-                                                    alert('Database restored successfully! The page will now reload.');
-                                                    window.location.reload();
-                                                } else {
-                                                    alert('Restore failed: ' + data.error);
+                                    <div className="mb-6">
+                                        <h4 className="text-sm font-medium text-gray-700 mb-3">Approval Workflow</h4>
+                                        <div className="space-y-3">
+                                            <div className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    id="level1"
+                                                    className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                                                    checked={leaveSettings.approval_levels.level1_enabled}
+                                                    onChange={e => setLeaveSettings({
+                                                        ...leaveSettings,
+                                                        approval_levels: { ...leaveSettings.approval_levels, level1_enabled: e.target.checked }
+                                                    })}
+                                                />
+                                                <label htmlFor="level1" className="ml-2 text-sm text-gray-700">
+                                                    Level 1: Immediate Supervisor / Manager
+                                                </label>
+                                            </div>
+                                            <div className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    id="level2"
+                                                    className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                                                    checked={leaveSettings.approval_levels.level2_enabled}
+                                                    onChange={e => setLeaveSettings({
+                                                        ...leaveSettings,
+                                                        approval_levels: { ...leaveSettings.approval_levels, level2_enabled: e.target.checked }
+                                                    })}
+                                                />
+                                                <label htmlFor="level2" className="ml-2 text-sm text-gray-700">
+                                                    Level 2: HR Department
+                                                </label>
+                                            </div>
+                                            <div className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    id="level3"
+                                                    className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                                                    checked={leaveSettings.approval_levels.level3_enabled}
+                                                    onChange={e => setLeaveSettings({
+                                                        ...leaveSettings,
+                                                        approval_levels: { ...leaveSettings.approval_levels, level3_enabled: e.target.checked }
+                                                    })}
+                                                />
+                                                <label htmlFor="level3" className="ml-2 text-sm text-gray-700">
+                                                    Level 3: Final Approver (Admin/Management)
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" className="btn btn-primary">Save Configuration</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'backup' && (
+                        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+
+                                {/* Download Backup */}
+                                <div style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                                        <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>⬇️</div>
+                                        <div>
+                                            <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700, color: '#111827' }}>Download Backup</h3>
+                                            <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: '#6b7280' }}>Export complete database as JSON</p>
+                                        </div>
+                                    </div>
+                                    <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '2rem' }}>
+                                        Securely download a full snapshot of your current system data, including employees, attendance, and settings.
+                                    </p>
+                                    <button
+                                        onClick={() => window.open('/api/system/backup', '_blank')}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem',
+                                            borderRadius: '9999px',
+                                            border: 'none',
+                                            background: '#10b981',
+                                            color: 'white',
+                                            fontWeight: 700,
+                                            fontSize: '0.875rem',
+                                            cursor: 'pointer',
+                                            boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '0.5rem'
+                                        }}
+                                    >
+                                        💾 Download .JSON File
+                                    </button>
+                                </div>
+
+                                {/* Restore Database */}
+                                <div style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                                        <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>🔄</div>
+                                        <div>
+                                            <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700, color: '#111827' }}>Restore Database</h3>
+                                            <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: '#6b7280' }}>Import previously saved snapshot</p>
+                                        </div>
+                                    </div>
+                                    <div style={{ background: '#fff7ed', padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem', border: '1px solid #ffedd5' }}>
+                                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#9a3412', fontWeight: 600 }}>
+                                            ⚠️ Warning: This will completely overwrite your current live data. This process cannot be reversed.
+                                        </p>
+                                    </div>
+
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type="file"
+                                            accept=".json"
+                                            id="restore-file-new"
+                                            style={{ display: 'none' }}
+                                            onChange={async (e) => {
+                                                if (e.target.files && e.target.files[0]) {
+                                                    if (confirm("Are you sure you want to RESTORE the database? This will overwrite all current data.")) {
+                                                        const formData = new FormData();
+                                                        formData.append('file', e.target.files[0]);
+                                                        try {
+                                                            const res = await fetch('/api/system/backup', { method: 'POST', body: formData });
+                                                            if (res.ok) {
+                                                                alert('Database restored successfully!');
+                                                                window.location.reload();
+                                                            } else {
+                                                                const data = await res.json();
+                                                                alert('Restore failed: ' + data.error);
+                                                            }
+                                                        } catch (err) {
+                                                            alert('An error occurred during restoration.');
+                                                        }
+                                                    }
+                                                    e.target.value = '';
                                                 }
-                                            } catch (err) {
-                                                console.error(err);
-                                                alert('An error occurred during restoration.');
-                                            }
-                                            // Reset input
-                                            e.target.value = '';
-                                        } else {
-                                            e.target.value = ''; // Cancelled
-                                        }
-                                    }
-                                }}
-                            />
-                        </div>
-                    </div>
-                </div>
-            )}
+                                            }}
+                                        />
+                                        <label
+                                            htmlFor="restore-file-new"
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.75rem',
+                                                borderRadius: '9999px',
+                                                border: '2px dashed #d1d5db',
+                                                background: '#f9fafb',
+                                                color: '#374151',
+                                                fontWeight: 700,
+                                                fontSize: '0.875rem',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '0.5rem',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            📂 Choose File & Restore
+                                        </label>
+                                    </div>
+                                </div>
 
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+            </div>
         </DashboardLayout>
     );
 }
+

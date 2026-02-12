@@ -1,0 +1,429 @@
+/* 
+ * Global Compact Sizing System for 1366×768 Screens
+ * Apply these CSS variables and classes across all modules
+ * Date: February 9, 2026
+ */
+
+:root {
+    /* Spacing Scale - Compact */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 20px;
+    --spacing-2xl: 24px;
+
+    /* Typography Scale - Compact */
+    --text-xs: 0.65rem;
+    /* 10.4px */
+    --text-sm: 0.7rem;
+    /* 11.2px */
+    --text-base: 0.8rem;
+    /* 12.8px */
+    --text-lg: 0.9rem;
+    /* 14.4px */
+    --text-xl: 1rem;
+    /* 16px */
+    --text-2xl: 1.125rem;
+    /* 18px */
+    --text-3xl: 1.25rem;
+    /* 20px */
+
+    /* Component Heights - Compact */
+    --header-height: 60px;
+    --card-padding: 12px;
+    --card-padding-lg: 16px;
+    --input-height: 32px;
+    --button-height: 32px;
+    --table-row-height: 36px;
+    --metric-card-height: 70px;
+
+    /* Border Radius - Consistent */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+
+    /* Shadows - Subtle */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.08);
+
+    /* Max Content Height (for 768px screen) */
+    --max-content-height: 648px;
+}
+
+/* Global Compact Classes */
+
+/* Card Styles */
+.compact-card {
+    padding: var(--card-padding);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #f1f5f9;
+    box-shadow: var(--shadow-md);
+}
+
+.compact-card-lg {
+    padding: var(--card-padding-lg);
+    border-radius: var(--radius-xl);
+}
+
+/* Section Headers */
+.compact-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.compact-section-header h2 {
+    font-size: var(--text-xl);
+    margin: 0;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.compact-section-header h3 {
+    font-size: var(--text-lg);
+    margin: 0;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+/* Buttons */
+.compact-btn {
+    padding: 6px 12px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    height: var(--button-height);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.compact-btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.compact-btn-secondary {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.compact-btn-sm {
+    padding: 4px 10px;
+    font-size: var(--text-xs);
+    height: 28px;
+}
+
+/* Inputs */
+.compact-input {
+    padding: 6px 10px;
+    font-size: var(--text-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid #e2e8f0;
+    height: var(--input-height);
+    transition: all 0.2s;
+}
+
+.compact-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.compact-select {
+    padding: 6px 10px;
+    font-size: var(--text-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid #e2e8f0;
+    height: var(--input-height);
+    background: white;
+}
+
+/* Tables */
+.compact-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+}
+
+.compact-table thead th {
+    padding: 8px 10px;
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #e2e8f0;
+    text-align: left;
+}
+
+.compact-table tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    height: var(--table-row-height);
+}
+
+.compact-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* Grids */
+.compact-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.compact-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+}
+
+.compact-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+}
+
+/* Metrics Cards */
+.compact-metric-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    padding: 12px 14px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-md);
+    border: 1px solid #f1f5f9;
+    height: var(--metric-card-height);
+}
+
+.compact-metric-label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.compact-metric-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0;
+    line-height: 1;
+}
+
+.compact-metric-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    background: #f8fafc;
+}
+
+/* Badges */
+.compact-badge {
+    padding: 2px 8px;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.compact-badge-success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.compact-badge-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.compact-badge-error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.compact-badge-info {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* Modals */
+.compact-modal-content {
+    padding: var(--spacing-lg);
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.compact-modal-header {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+    color: #1e293b;
+}
+
+.compact-modal-footer {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: flex-end;
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid #f1f5f9;
+}
+
+/* Form Groups */
+.compact-form-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.compact-form-label {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 4px;
+}
+
+.compact-form-hint {
+    font-size: var(--text-xs);
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+/* Page Wrapper */
+.compact-page-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: 0;
+    margin: 0;
+    max-height: var(--max-content-height);
+    overflow: hidden;
+}
+
+.compact-page-wrapper-scroll {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: 0;
+    margin: 0;
+    max-height: var(--max-content-height);
+    overflow-y: auto;
+}
+
+/* Scrollbar Styling */
+.compact-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.compact-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 2px;
+}
+
+.compact-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+}
+
+.compact-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Utility Classes */
+.compact-text-xs {
+    font-size: var(--text-xs);
+}
+
+.compact-text-sm {
+    font-size: var(--text-sm);
+}
+
+.compact-text-base {
+    font-size: var(--text-base);
+}
+
+.compact-text-lg {
+    font-size: var(--text-lg);
+}
+
+.compact-text-xl {
+    font-size: var(--text-xl);
+}
+
+.compact-gap-xs {
+    gap: var(--spacing-xs);
+}
+
+.compact-gap-sm {
+    gap: var(--spacing-sm);
+}
+
+.compact-gap-md {
+    gap: var(--spacing-md);
+}
+
+.compact-gap-lg {
+    gap: var(--spacing-lg);
+}
+
+.compact-p-sm {
+    padding: var(--spacing-sm);
+}
+
+.compact-p-md {
+    padding: var(--spacing-md);
+}
+
+.compact-p-lg {
+    padding: var(--spacing-lg);
+}
+
+.compact-mb-sm {
+    margin-bottom: var(--spacing-sm);
+}
+
+.compact-mb-md {
+    margin-bottom: var(--spacing-md);
+}
+
+.compact-mb-lg {
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1366px) {
+    :root {
+        --spacing-md: 10px;
+        --spacing-lg: 14px;
+        --card-padding: 10px;
+    }
+}
+
+/* Print Styles */
+@media print {
+
+    .compact-page-wrapper,
+    .compact-page-wrapper-scroll {
+        max-height: none;
+        overflow: visible;
+    }
+}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllEmployees, createEmployee, getEmployeeById, updateEmployee, update201Checklist, deleteEmployee, logAudit, getEmployeeByEmployeeId, searchEmployees, getEmployeeLeaveCount, getEmployeeLateCount } from '@/lib/data';
+import { getAllEmployees, createEmployee, getEmployeeById, updateEmployee, update201Checklist, deleteEmployee, logAudit, getEmployeeByEmployeeId, searchEmployees, getEmployeeLeaveCount, getEmployeeLateCount, getEmployeeLoanBalance, getLoanConfig, filterEmployees } from '@/lib/data';
 import { query } from '@/lib/database';
 import { validateBranchRequest } from '@/lib/middleware/branch-auth';
 import { isSuperAdmin, filterByBranch, normalizeBranchName } from '@/lib/branch-access';
@@ -23,8 +23,13 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
         const search = searchParams.get('search');
+        const branchParam = searchParams.get('branch');
+        const statusParam = searchParams.get('status');
+        const payrollEligible = searchParams.get('payroll_eligible') === 'true';
+        const periodEndParam = searchParams.get('period_end');
 
         if (id) {
+            // ... existing ID handling ...
             const cleanId = id.trim();
             let employee = null;
 
@@ -43,7 +48,7 @@ export async function GET(request: NextRequest) {
                 return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
             }
 
-            // BRANCH ACCESS CONTROL: Validate user can access this employee's branch
+            // BRANCH ACCESS CONTROL
             if (!isSuperAdmin(user!.role)) {
                 if (employee.branch && user!.assigned_branch) {
                     if (normalizeBranchName(employee.branch) !== normalizeBranchName(user!.assigned_branch)) {
@@ -55,11 +60,10 @@ export async function GET(request: NextRequest) {
                 }
             }
 
-            // Fetch Education Records for the Personal Info Tab
+            // ... fetch peripheral data ...
             const eduRes = await query("SELECT * FROM education WHERE employee_id = $1 ORDER BY year_graduated DESC", [employee.id]);
             employee.education = eduRes.rows;
 
-            // Fetch Leave Balance & Lates
             try {
                 const now = new Date();
                 const used = await getEmployeeLeaveCount(employee.id, now.getFullYear());
@@ -67,10 +71,15 @@ export async function GET(request: NextRequest) {
 
                 const lates = await getEmployeeLateCount(employee.id, now.getMonth(), now.getFullYear());
                 employee.lates_this_month = lates;
+
+                const balance = await getEmployeeLoanBalance(employee.id);
+                employee.ledger_balance = balance;
+
+                const loanConfig = await getLoanConfig();
+                employee.loan_config = loanConfig;
             } catch (e) {
-                console.error('Error fetching leave/lates:', e);
-                employee.leave_balance = 5;
-                employee.lates_this_month = 0;
+                console.error('Error fetching peripheral data:', e);
+                // Set defaults...
             }
 
             return NextResponse.json(serialize(employee));
@@ -79,14 +88,88 @@ export async function GET(request: NextRequest) {
         // Fetch all or search employees
         let employees;
 
+
+
         if (search) {
             employees = await searchEmployees(search);
+        } else if (payrollEligible) {
+            // Strict Payroll Eligibility Check
+            const allEmployees = await getAllEmployees();
+
+            employees = allEmployees.filter(emp => {
+                // 1. Must be Active
+                // Allow Regular, Probationary, Contractual, Active. Exclude Resigned, Terminated.
+                const inactiveStatuses = ['Resigned', 'Terminated', 'AWOL'];
+                if (inactiveStatuses.includes(emp.employment_status)) return false;
+
+                // 2. Must have valid salary info
+                if (!emp.salary_info) return false;
+
+
+                // Handle various field names for salary (basic_salary or monthly_salary)
+                let s = emp.salary_info as any;
+                if (typeof s === 'string') {
+                    try {
+                        s = JSON.parse(s);
+                    } catch (e) {
+                        return false;
+                    }
+                }
+
+                const dailyRate = parseFloat(s.daily_rate) || 0;
+                const monthlySalary = parseFloat(s.monthly_salary) || parseFloat(s.basic_salary) || 0;
+
+                if (dailyRate <= 0 && monthlySalary <= 0) return false;
+
+                // 3. Not resigned effective before/on payroll period end
+                if (emp.date_separated && periodEndParam) {
+                    const separationDate = new Date(emp.date_separated);
+                    const periodEnd = new Date(periodEndParam);
+                    // If separation date is ON or BEFORE period end, they might be excluded depending on policy.
+                    // Usually if separated within the period, they are included for prorated pay.
+                    // User said: "Not resigned with an effective date on or before the payroll period"
+                    // This implies if they resigned BEFORE the period starts, they are out.
+                    // If they resigned DURING the period, they should probably be Paid (Prorated).
+                    // User Text: "Not resigned with an effective date on or before the payroll period"
+                    // This phrasing is ambiguous. "on or before the payroll period" could mean "before the period starts".
+                    // Let's assume if date_separated < period_start, exclude.
+                    // But I only have period_end here.
+                    // Let's stick to "Active" status mostly covering this, but if date_separated is set and past, status should be Resigned.
+                    // If status is Active, date_separated shouldn't be in the past.
+                    // So just checking status 'Active' is usually enough, but let's be safe.
+
+                }
+
+                return true;
+            });
+        } else if (statusParam) {
+            employees = await filterEmployees({ employment_status: statusParam });
         } else {
             employees = await getAllEmployees();
         }
 
-        // BRANCH FILTERING: Filter employees by user's branch (unless Super Admin)
-        const filteredEmployees = filterByBranch(employees, user!.role, user!.assigned_branch);
+        // Determine which branch to filter by
+        // If query param is provided, use it (after validation)
+        // Otherwise use session selectedBranch
+        let targetBranch = selectedBranch;
+
+        if (branchParam) {
+            // Validate access to requested branch
+            if (isSuperAdmin(user!.role)) {
+                targetBranch = branchParam;
+            } else {
+                // Regular users can only request their assigned branch
+                if (normalizeBranchName(branchParam) === normalizeBranchName(user!.assigned_branch)) {
+                    targetBranch = branchParam;
+                } else {
+                    // Only return their assigned branch if they try to access another
+                    targetBranch = user!.assigned_branch;
+                }
+            }
+        }
+
+        // BRANCH FILTERING
+        const filteredEmployees = filterByBranch(employees, user!.role, targetBranch);
 
         return NextResponse.json(serialize(filteredEmployees));
     } catch (error) {

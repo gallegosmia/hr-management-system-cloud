@@ -41,7 +41,8 @@ export async function GET(request: NextRequest) {
 
         // Calculate Leave Dates
         const leaveDates = new Set<string>();
-        const approvedLeaves = (leaves || []).filter((l: any) => l.employee_id === id && l.status === 'Approved');
+        const approvedLeaves = (leaves || []).filter((l: any) => l.employee_id === id && l.status === 'Approved' && l.leave_type !== 'Birthday Leave');
+        const birthdayLeaves = (leaves || []).filter((l: any) => l.employee_id === id && l.status === 'Approved' && l.leave_type === 'Birthday Leave');
 
         approvedLeaves.forEach((leave: any) => {
             try {
@@ -79,6 +80,7 @@ export async function GET(request: NextRequest) {
             absent: logs.filter((r: any) => r.status === 'Absent').length,
             onLeave: leaveDates.size, // Total unique leave days in period
             paidLeavesUsed: leaveDates.size,
+            birthdayLeavesUsed: birthdayLeaves.length,
             totalPaidLeavesUsed: leaveDates.size,
             present_on_leave: logs.filter((r: any) => r.status === 'On Leave').length,
             remainingPaidLeaves: Math.max(0, 5 - leaveDates.size)

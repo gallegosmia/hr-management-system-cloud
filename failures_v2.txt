@@ -1,0 +1,81 @@
+
+> hr-management-system@1.0.0 test
+> jest payroll-api.test.ts
+
+node.exe : FAIL tests/integra
+tion/payroll-api.test.ts
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (FAIL te  
+  sts/inte...oll-api.test.   
+ ts:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+  Payroll Calculation API 
+Integration with Real Data
+    ?? should filter 
+employees by branch using 
+real mock data (7 ms)
+    ??? should ignore 
+employees not in the 
+selected branch (1 ms)
+
+  ??? Payroll Calculation 
+API Integration with Real 
+Data ??? should filter 
+employees by branch using 
+real mock data
+
+    expect(received).toHaveLe
+ngth(expected)
+
+    Expected length: 3
+    Received length: 0
+    Received array:  []
+
+    [0m [90m 35 |[39m     
+    expect(response[33m.[39
+mstatus)[33m.[39mtoBe([35m
+200[39m)[33m;[39m
+     [90m 36 |[39m         
+[90m// All 3 in mock are 
+Ormoc Branch[39m
+    
+[31m[1m>[22m[39m[90m 37 
+|[39m         expect(data)[
+33m.[39mtoHaveLength([35m3
+[39m)[33m;[39m
+     [90m    |[39m         
+             
+[31m[1m^[22m[39m
+     [90m 38 |[39m         
+expect(data[[35m0[39m][33m
+.[39memployee_name)[33m.[3
+9mtoContain([32m'ARRADAZA'[
+39m)[33m;[39m
+     [90m 39 |[39m     
+})[33m;[39m
+     [90m 40 |[39m[0m
+
+      at Object.toHaveLength 
+(tests/integration/payroll-ap
+i.test.ts:37:22)
+
+Test Suites: 1 failed, 1 
+total
+Tests:       1 failed, 1 
+passed, 2 total
+Snapshots:   0 total
+Time:        0.324 s, 
+estimated 1 s
+Ran all test suites matching 
+payroll-api.test.ts.

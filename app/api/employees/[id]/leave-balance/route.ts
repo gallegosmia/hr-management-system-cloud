@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getEmployeeLeaveCount } from '@/lib/data';
+import { getEmployeeLeaveCount, getEmployeeById } from '@/lib/data';
 
 export async function GET(
     request: NextRequest,
@@ -14,8 +14,9 @@ export async function GET(
             return NextResponse.json({ error: 'Invalid Employee ID' }, { status: 400 });
         }
 
+        const employee = await getEmployeeById(id);
         const count = await getEmployeeLeaveCount(id, year);
-        const limit = 5;
+        const limit = employee?.leave_credits !== undefined ? Number(employee.leave_credits) : 5.0;
         const balance = Math.max(0, limit - count);
 
         return NextResponse.json({ count, limit, balance, year });

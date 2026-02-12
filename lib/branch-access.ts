@@ -185,14 +185,16 @@ export function filterByBranch<T extends Record<string, any>>(
     userBranch: string | undefined | null,
     branchField: string = 'branch'
 ): T[] {
-    // Super Admins see everything
-    if (isSuperAdmin(userRole)) {
+    // Special case for Super Admin (Pres/VP/HR) - if they select 'All', return everything
+    if (isSuperAdmin(userRole) && (!userBranch || userBranch === 'All' || userBranch === 'null')) {
         return items;
     }
 
-    // Filter by user's assigned branch
-    if (!userBranch) {
-        return []; // No branch = no access
+    // Otherwise, filter by the provided branch (which will be the selectedBranch from session)
+    if (!userBranch || userBranch === 'All' || userBranch === 'null') {
+        // Regular users with no branch get nothing (shouldn't happen with auth)
+        if (isSuperAdmin(userRole)) return items;
+        return [];
     }
 
     const normalizedUserBranch = normalizeBranchName(userBranch);

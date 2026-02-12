@@ -57,13 +57,13 @@ function loadDB() {
     settings: [],
     attendance: [],
     leave_requests: [],
-    payroll_runs: [],
-    payslips: [],
     documents: [],
     audit_logs: [],
     sessions: [],
     education: [],
-    admin_approval_queue: []
+    admin_approval_queue: [],
+    announcements: [],
+    emergency_loans: []
   };
 }
 
@@ -138,7 +138,36 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
 
       if (!db[table]) return { rows: [], rowCount: 0 };
 
-      let results = [...db[table]];
+      let results = [];
+      const isJoin = normalizedSql.match(/JOIN\s+([a-z0-9_]+)(?:\s+[a-z0-9_]+)?\s+ON/i);
+
+      if (isJoin) {
+        // Simple JOIN support (attendance + employees)
+        const table1 = tableMatch[1].toLowerCase();
+        const table2 = isJoin[1].toLowerCase();
+
+        const data1 = db[table1] || [];
+        const data2 = db[table2] || [];
+
+        results = data1.map((item1: any) => {
+          // Join on employee_id = id
+          const item2 = data2.find((i: any) =>
+            String(i.id) === String(item1.employee_id) ||
+            String(i.id) === String(item1.id)
+          );
+          if (item2) {
+            return {
+              ...item2, // Employee fields (contains branch)
+              ...item1, // Attendance fields (wins if conflict)
+              employee_name: `${item2.first_name || ''} ${item2.last_name || ''}`.trim(),
+              branch: item2.branch || item1.branch // Ensure branch is preserved
+            };
+          }
+          return item1;
+        });
+      } else {
+        results = [...(db[table] || [])];
+      }
 
       const whereMatch = normalizedSql.match(/WHERE\s+(.+?)(?:ORDER BY|$)/i);
       if (whereMatch) {
@@ -147,9 +176,26 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
           const parts = conditions.split(/\s+AND\s+/i);
           return parts.every(part => {
             let match;
-            if (match = part.match(/([a-z0-9_]+)\s*=\s*\$(\d+)/i)) {
-              const [_, col, paramIdx] = match;
-              return row[col] == params[parseInt(paramIdx) - 1];
+            if (match = part.match(/([a-z0-9_\.]+)\s*(>=|<=|=|>|<)\s*\$(\d+)/i)) {
+              const [_, fullCol, op, paramIdx] = match;
+              const col = fullCol.includes('.') ? fullCol.split('.')[1] : fullCol;
+              const colVal = row[col];
+              let paramVal = params[parseInt(paramIdx) - 1];
+
+              // Smart Date comparison for local simulation
+              if (paramVal instanceof Date && typeof colVal === 'string') {
+                if (colVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                  paramVal = paramVal.toISOString().split('T')[0];
+                } else {
+                  paramVal = paramVal.toISOString();
+                }
+              }
+
+              if (op === '=') return colVal == paramVal;
+              if (op === '>=') return colVal >= paramVal;
+              if (op === '<=') return colVal <= paramVal;
+              if (op === '>') return colVal > paramVal;
+              if (op === '<') return colVal < paramVal;
             }
             if (match = part.match(/([a-z0-9_]+)\s*=\s*'(.*?)'/i)) {
               const [_, col, literal] = match;
@@ -185,9 +231,24 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
       const colsMatch = normalizedSql.match(/\((.+?)\)\s*VALUES/i);
       const columns = colsMatch![1].split(',').map(s => s.trim());
 
+      // Find the VALUES part to extract literals vs params
+      const valuesMatch = normalizedSql.match(/VALUES\s*\((.+?)\)/i);
+      const valParts = valuesMatch![1].split(',').map(s => s.trim());
+
       const newItem: any = {};
       columns.forEach((col, idx) => {
-        newItem[col] = params[idx];
+        const valPart = valParts[idx];
+        if (valPart.startsWith('$')) {
+          const paramIdx = parseInt(valPart.substring(1)) - 1;
+          newItem[col] = params[paramIdx];
+        } else if (valPart.match(/CURRENT_TIMESTAMP/i)) {
+          newItem[col] = new Date().toISOString();
+        } else if (valPart.startsWith("'") && valPart.endsWith("'")) {
+          newItem[col] = valPart.substring(1, valPart.length - 1);
+        } else {
+          // Fallback if it's a number or something else
+          newItem[col] = isNaN(Number(valPart)) ? valPart : Number(valPart);
+        }
       });
 
       if (!newItem.id) {

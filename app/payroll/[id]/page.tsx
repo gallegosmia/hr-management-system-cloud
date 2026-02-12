@@ -1,1394 +1,1817 @@
+/**
+ * Payroll Run Details Page
+ * View and edit payroll run with all payslips
+ * Optimized for 1366×768 screens
+ */
+
 'use client';
 
-import { useEffect, useState, useRef, Suspense } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import DashboardLayout from '@/components/DashboardLayout';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { format } from 'date-fns';
+import DashboardLayout from '@/components/DashboardLayout';
+import { formatCurrency } from '@/lib/payroll-calculations';
+import { downloadExcelExport, downloadRegisterPDF } from '@/lib/payroll-export';
+import PayslipBatchPrint from '@/components/PayslipBatchPrint';
+import PayslipViewModal from '@/components/PayslipViewModal';
 
-function PayrollDetailsContent() {
-    const params = useParams();
+interface PayrollRun {
+    id: number;
+    run_number: string;
+    branch: string;
+    payroll_period_start: string;
+    payroll_period_end: string;
+    cutoff_day: number;
+    status: string;
+    created_by_name: string;
+    approved_by_name?: string;
+    created_at: string;
+    approved_at?: string;
+    workflow_stage?: number;
+    current_reviewer_role?: string;
+    hr_review_status?: string;
+    hr_review_date?: string;
+    operations_review_status?: string;
+    operations_review_date?: string;
+    evp_review_status?: string;
+    evp_review_date?: string;
+    return_remarks?: string;
+}
+
+interface User {
+    id: number;
+    username: string;
+    role: string;
+}
+
+interface Payslip {
+    id: number;
+    employee_id: number;
+    employee_number: string;
+    first_name: string;
+    last_name: string;
+    department: string;
+    position: string;
+    branch: string;
+    monthly_salary: number;
+    daily_rate: number;
+    payroll_days: number;
+    basic_pay: number;
+    regular_allowance: number;
+    special_allowance: number;
+    holiday_pay: number;
+    other_earnings: number;
+    gross_pay: number;
+    // 15th cutoff deductions
+    phic?: number;
+    pagibig?: number;
+    pagibig_loan?: number;
+    company_funds?: number;
+    // 30th cutoff deductions
+    sss?: number;
+    sss_loan?: number;
+    // Both cutoffs
+    company_loan: number;
+    cash_advance: number;
+    other_deductions: number;
+    total_deductions: number;
+    net_pay: number;
+}
+
+export default function PayrollRunDetailsPage({ params }: { params: { id: string } }) {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const payslipId = searchParams.get('payslipId');
-    const [run, setRun] = useState<any>(null);
+    const [payrollRun, setPayrollRun] = useState<PayrollRun | null>(null);
+    const [payslips, setPayslips] = useState<Payslip[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeSlip, setActiveSlip] = useState<any>(null);
-    const [user, setUser] = useState<any>(null);
-    const tableContainerRef = useRef<HTMLDivElement>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [editingCell, setEditingCell] = useState<{ payslipId: number; field: string } | null>(null);
+    const [editValue, setEditValue] = useState('');
+    const [payslipToView, setPayslipToView] = useState<Payslip | null>(null);
+    const [permissions, setPermissions] = useState({
+        canEdit: false,
+        canApprove: false,
+        canLock: false,
+        canDelete: false
+    });
 
-    const scrollTable = (direction: 'left' | 'right') => {
-        if (tableContainerRef.current) {
-            const scrollAmount = 300;
-            tableContainerRef.current.scrollBy({
-                left: direction === 'left' ? -scrollAmount : scrollAmount,
-                behavior: 'smooth'
+    // Pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+    // Approval Logic
+    const [user, setUser] = useState<User | null>(null);
+    const [showReturnModal, setShowReturnModal] = useState(false);
+    const [returnRemarks, setReturnRemarks] = useState('');
+    const [processing, setProcessing] = useState(false);
+    const [showBatchPrint, setShowBatchPrint] = useState(false);
+    const [auditLogs, setAuditLogs] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (payrollRun) {
+            document.title = `Payroll ${payrollRun.run_number} | HR System`;
+        } else {
+            document.title = 'Payroll Details | HR System';
+        }
+    }, [payrollRun]);
+
+    // Fetches audit logs for the current payroll run
+    const fetchAuditLogs = async () => {
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch(`/api/payroll/runs/${params.id}/audit`, {
+                headers: { 'x-session-id': sessionId || '' }
             });
+            if (res.ok) {
+                const data = await res.json();
+                setAuditLogs(data.logs || []);
+            }
+        } catch (err) {
+            console.error('Error fetching audit logs:', err);
         }
     };
 
     useEffect(() => {
-        const userData = localStorage.getItem('user');
-        if (userData) {
-            setUser(JSON.parse(userData));
-        }
-    }, []);
-
-    useEffect(() => {
-        if (params.id) {
-            fetchRunDetails();
-        }
+        fetchPayrollRun();
+        fetchPermissions();
+        fetchAuditLogs();
     }, [params.id]);
 
-    useEffect(() => {
-        if (run && payslipId) {
-            const slip = run.payslips.find((s: any) => s.id.toString() === payslipId);
-            if (slip) {
-                setActiveSlip(slip);
-            }
-        }
-    }, [run, payslipId]);
-
-    const fetchRunDetails = async () => {
+    const fetchPayrollRun = async () => {
         try {
+            setLoading(true);
             const sessionId = localStorage.getItem('sessionId');
-            const response = await fetch(`/api/payroll/${params.id}`, {
+            const response = await fetch(`/api/payroll/runs/${params.id}`, {
                 headers: { 'x-session-id': sessionId || '' }
             });
+            const data = await response.json();
+
             if (response.ok) {
-                const data = await response.json();
-                setRun(data);
+                setPayrollRun(data.payrollRun);
+                const sortedPayslips = (data.payslips || []).sort((a: Payslip, b: Payslip) => {
+                    return a.last_name.localeCompare(b.last_name) || a.first_name.localeCompare(b.first_name);
+                });
+                setPayslips(sortedPayslips);
             } else {
-                alert('Failed to fetch payroll details');
+                alert(`Error: ${data.error}`);
                 router.push('/payroll');
             }
         } catch (error) {
-            console.error('Error fetching payroll details:', error);
+            console.error('Error fetching payroll run:', error);
+            alert('Failed to load payroll run');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleApproval = async (targetStatus: string) => {
-        const action = targetStatus === 'Finalized' ? 'finalize' : 'approve';
-        if (!confirm(`Are you sure you want to ${action} this payroll?`)) return;
+    const fetchPermissions = async () => {
+        try {
+            const response = await fetch('/api/auth/session');
+            const data = await response.json();
+            if (data.user) {
+                setUser(data.user);
+                const canEdit = ['Super Admin', 'Admin', 'HR', 'President', 'Vice President'].includes(data.user.role);
+                const canApprove = ['Super Admin', 'President', 'Vice President'].includes(data.user.role);
+                const canLock = ['Super Admin', 'President', 'Vice President'].includes(data.user.role);
+                const canDelete = data.user.role === 'Super Admin';
 
-        const approvalData: any = { status: targetStatus };
-        if (targetStatus === 'Pending EVP') {
-            approvalData.manager_approved_by = user.id;
-            approvalData.manager_approved_at = new Date().toISOString();
-        } else if (targetStatus === 'Finalized') {
-            approvalData.evp_approved_by = user.id;
-            approvalData.evp_approved_at = new Date().toISOString();
+                setPermissions({ canEdit, canApprove, canLock, canDelete });
+            }
+        } catch (error) {
+            console.error('Error fetching permissions:', error);
+        }
+    };
+
+    const handleCellClick = (payslipId: number, field: string, currentValue: any) => {
+        if (!permissions.canEdit || payrollRun?.status === 'APPROVED' || payrollRun?.status === 'locked') return;
+
+        setEditingCell({ payslipId, field });
+        setEditValue(currentValue?.toString() || '0');
+    };
+
+    const handleCellBlur = async () => {
+        if (!editingCell) return;
+
+        const payslip = payslips.find(p => p.id === editingCell.payslipId);
+        if (!payslip) return;
+
+        const newValue = parseFloat(editValue);
+        if (isNaN(newValue) || newValue < 0) {
+            alert('Please enter a valid number');
+            setEditingCell(null);
+            return;
         }
 
+        // Update payslip
         try {
             const sessionId = localStorage.getItem('sessionId');
-            const response = await fetch(`/api/payroll/${params.id}`, {
+            const updateData: any = {};
+
+            if (editingCell.field === 'payroll_days') {
+                updateData.payrollDays = newValue;
+            } else if (['regular_allowance', 'special_allowance', 'holiday_pay'].includes(editingCell.field)) {
+                updateData.allowances = {
+                    [editingCell.field.replace('_allowance', '').replace('holiday_pay', 'holiday')]: newValue
+                };
+            } else {
+                // Deductions
+                const deductionMap: any = {
+                    phic: 'phic',
+                    pagibig: 'pagibig',
+                    pagibig_loan: 'pagibigLoan',
+                    company_funds: 'companyFunds',
+                    sss: 'sss',
+                    sss_loan: 'sssLoan',
+                    company_loan: 'companyLoan',
+                    cash_advance: 'cashAdvance',
+                    other_deductions: 'other'
+                };
+                updateData.deductions = {
+                    [deductionMap[editingCell.field]]: newValue
+                };
+            }
+
+            const response = await fetch(`/api/payroll/runs/${params.id}/payslips/${editingCell.payslipId}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-session-id': sessionId || ''
                 },
-                body: JSON.stringify(approvalData)
+                body: JSON.stringify(updateData)
             });
+
+            const data = await response.json();
 
             if (response.ok) {
-                fetchRunDetails();
+                // Update local state
+                setPayslips(prev => prev.map(p =>
+                    p.id === editingCell.payslipId ? { ...p, ...data.payslip } : p
+                ));
             } else {
-                alert('Failed to update status');
+                alert(`Error: ${data.error}`);
             }
         } catch (error) {
-            console.error('Approval error:', error);
+            console.error('Error updating payslip:', error);
+            alert('Failed to update payslip');
         }
+
+        setEditingCell(null);
     };
-    const exportPDF = () => {
-        if (!run) return;
-        // Legal Landscape (355.6mm x 215.9mm) - Optimized for All Columns
-        const doc = new jsPDF('l', 'mm', 'legal');
-        const pageWidth = 355.6;
-        const pageHeight = 215.9;
 
-        // --- COMPACT HEADER ---
-        doc.setTextColor(0, 0, 0);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(18);
-        doc.text('Melann Lending Investor Corporation', pageWidth / 2, 15, { align: 'center' });
+    const handleApprove = async () => {
+        const actionText = (payrollRun?.workflow_stage || 0) === 0 ? 'finalize and submit for review' : 'approve';
+        if (!confirm(`Are you sure you want to ${actionText} this payroll run?`)) return;
 
-        doc.setFontSize(13);
-        doc.text('PAYROLL REGISTER / ACKNOWLEDGMENT RECEIPT', pageWidth / 2, 23, { align: 'center' });
-
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(11);
-        doc.text(`Period: ${format(new Date(run.period_start), 'MMMM dd, yyyy')} - ${format(new Date(run.period_end), 'MMMM dd, yyyy')}`, pageWidth / 2, 30, { align: 'center' });
-
-        doc.setLineWidth(0.5);
-        doc.line(10, 35, pageWidth - 10, 35);
-
-        // --- TABLE ---
-        const potentialDeductions = [
-            { id: 'sss', label: 'SSS' },
-            { id: 'philhealth', label: 'PHIC' },
-            { id: 'pagibig', label: 'Pag-ibig' },
-            { id: 'company_cash_fund', label: 'Cash Fund' },
-            { id: 'sss_loan', label: 'SSS Loan' },
-            { id: 'pagibig_loan', label: 'P-ibig Loan' },
-            { id: 'cash_advance', label: 'C.A.' },
-            { id: 'company_loan', label: 'Co. Loan' },
-            { id: 'other_deductions', label: 'Others' }
-        ];
-
-        const activeDeductions = potentialDeductions.filter(pd =>
-            run.payslips.some((s: any) => Number(s.deduction_details?.[pd.id] || 0) > 0)
-        );
-
-        const deductionHeaderCols = activeDeductions.map(d => ({ content: d.label, styles: { halign: 'right' as const } }));
-        deductionHeaderCols.push({ content: 'TOTAL', styles: { halign: 'right' as const } });
-
-        const tableHead: any[] = [
-            [
-                { content: 'No.', rowSpan: 2, styles: { halign: 'center' as const, valign: 'middle' as const } },
-                { content: 'Employee Name', rowSpan: 2, styles: { halign: 'left' as const, valign: 'middle' as const } },
-                { content: 'Rate', rowSpan: 2, styles: { halign: 'right' as const, valign: 'middle' as const } },
-                { content: 'Days', rowSpan: 2, styles: { halign: 'center' as const, valign: 'middle' as const } },
-                { content: 'Reg.Pay', rowSpan: 2, styles: { halign: 'right' as const, valign: 'middle' as const } },
-                { content: 'Holiday', colSpan: 2, styles: { halign: 'center' as const } },
-                { content: 'Allowance', colSpan: 3, styles: { halign: 'center' as const } },
-                { content: 'GROSS', rowSpan: 2, styles: { halign: 'right' as const, valign: 'middle' as const } },
-                { content: 'DEDUCTIONS', colSpan: activeDeductions.length + 1, styles: { halign: 'center' as const } },
-                { content: 'NET PAY', rowSpan: 2, styles: { halign: 'right' as const, valign: 'middle' as const } },
-                { content: 'Signature', rowSpan: 2, styles: { halign: 'center' as const, valign: 'middle' as const } }
-            ],
-            [
-                { content: 'Days', styles: { halign: 'center' as const } },
-                { content: 'Amount', styles: { halign: 'right' as const } },
-                { content: 'Regular', styles: { halign: 'right' as const } },
-                { content: 'Special', styles: { halign: 'right' as const } },
-                { content: 'Total', styles: { halign: 'right' as const } },
-                ...deductionHeaderCols
-            ]
-        ];
-
-        const tableBody = run.payslips.map((slip: any, idx: number) => {
-            const regPay = Number(slip.gross_pay || 0);
-            const holAmt = Number(slip.double_pay_amount || 0);
-            const holDays = Number(slip.double_pay_days || 0);
-            const totalAllow = Number(slip.total_allowances || 0);
-            const regAllow = Math.min(totalAllow, 500);
-            const specAllow = Math.max(0, totalAllow - 500);
-            const totalIncome = regPay + holAmt + totalAllow;
-            const d = slip.deduction_details || {};
-
-            const row: any[] = [
-                idx + 1,
-                slip.employee_name,
-                Number(slip.daily_rate || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                Number(slip.days_present || 0).toFixed(1),
-                regPay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                holDays > 0 ? holDays.toFixed(1) : '',
-                holAmt > 0 ? holAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '',
-                regAllow > 0 ? regAllow.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '',
-                specAllow > 0 ? specAllow.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '',
-                totalAllow > 0 ? totalAllow.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '',
-                totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-            ];
-
-            activeDeductions.forEach(ad => {
-                row.push(Number(d[ad.id] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        try {
+            setProcessing(true);
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch(`/api/payroll/runs/${params.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
+                body: JSON.stringify({ action: 'approve' })
             });
 
-            row.push(Number(slip.total_deductions || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            row.push(Number(slip.net_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            row.push('');
+            const data = await response.json();
 
-            return row;
-        });
-
-        const grandTotals: any[] = [
-            '',
-            { content: 'GRAND TOTALS', styles: { fontStyle: 'bold' as const } },
-            '',
-            '',
-            run.payslips.reduce((sum: number, s: any) => sum + Number(s.gross_pay || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            '',
-            run.payslips.reduce((sum: number, s: any) => sum + Number(s.double_pay_amount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            run.payslips.reduce((sum: number, s: any) => sum + Math.min(Number(s.total_allowances || 0), 500), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            run.payslips.reduce((sum: number, s: any) => sum + Math.max(0, Number(s.total_allowances || 0) - 500), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            run.payslips.reduce((sum: number, s: any) => sum + Number(s.total_allowances || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            run.payslips.reduce((sum: number, s: any) => sum + (Number(s.gross_pay || 0) + Number(s.double_pay_amount || 0) + Number(s.total_allowances || 0)), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        ];
-
-        activeDeductions.forEach(ad => {
-            grandTotals.push(run.payslips.reduce((sum: number, s: any) => sum + Number(s.deduction_details?.[ad.id] || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-        });
-
-        grandTotals.push(run.payslips.reduce((sum: number, s: any) => sum + Number(s.total_deductions || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-        grandTotals.push(run.payslips.reduce((sum: number, s: any) => sum + Number(s.net_pay || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-        grandTotals.push('');
-
-        const columnStyles: any = {
-            0: { halign: 'center' as const, cellWidth: 10 },
-            1: { fontStyle: 'bold' as const, cellWidth: 'auto' },
-            2: { halign: 'right' as const },
-            3: { halign: 'center' as const },
-            4: { halign: 'right' as const },
-            5: { halign: 'center' as const },
-            6: { halign: 'right' as const },
-            7: { halign: 'right' as const },
-            8: { halign: 'right' as const },
-            9: { halign: 'right' as const },
-            10: { halign: 'right', fontStyle: 'bold' as const }
-        };
-
-        let currentIdx = 11;
-        activeDeductions.forEach(() => {
-            columnStyles[currentIdx] = { halign: 'right' as const };
-            currentIdx++;
-        });
-
-        columnStyles[currentIdx] = { halign: 'right' as const, fontStyle: 'bold' as const };
-        columnStyles[currentIdx + 1] = { halign: 'right' as const, fontStyle: 'bold' as const };
-        columnStyles[currentIdx + 2] = { halign: 'center' as const, cellWidth: 35 };
-
-        autoTable(doc, {
-            head: tableHead,
-            body: [...tableBody, grandTotals],
-            startY: 40,
-            margin: { left: 8, right: 8, bottom: 40 },
-            theme: 'grid',
-            tableWidth: 'auto',
-            styles: {
-                fontSize: 7.5, // Reduced for wider fit
-                cellPadding: 1.2,
-                lineWidth: 0.1,
-                lineColor: [0, 0, 0],
-                textColor: [0, 0, 0],
-                font: 'helvetica',
-                valign: 'middle',
-                overflow: 'visible' // Ensure numbers don't wrap
-            },
-            headStyles: {
-                fillColor: [240, 240, 240],
-                textColor: [0, 0, 0],
-                fontStyle: 'bold',
-                lineWidth: 0.1,
-                halign: 'center',
-                fontSize: 7.5
-            },
-            columnStyles: {
-                ...columnStyles,
-                1: { fontStyle: 'bold' as const, cellWidth: 'auto', overflow: 'linebreak' } // Only Name should wrap
-            },
-            didDrawPage: (data: any) => {
-                const isLastPage = data.pageNumber === (doc as any).internal.getNumberOfPages();
-                if (isLastPage) {
-                    const finalY = data.cursor?.y || 150;
-                    doc.setFontSize(11);
-                    // Dynamically position signatures at bottom
-                    const sigY = Math.max(finalY + 20, pageHeight - 35);
-                    const col1 = 30;
-                    const col2 = pageWidth / 2 - 40;
-                    const col3 = pageWidth - 100;
-
-                    doc.setFont('helvetica', 'normal');
-                    doc.text('Prepared By:', col1, sigY);
-                    doc.text('Reviewed By:', col2, sigY);
-                    doc.text('Approved By:', col3, sigY);
-
-                    doc.setLineWidth(0.4);
-                    doc.line(col1, sigY + 8, col1 + 70, sigY + 8);
-                    doc.line(col2, sigY + 8, col2 + 70, sigY + 8);
-                    doc.line(col3, sigY + 8, col3 + 70, sigY + 8);
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('MARILYN RELOBA', col1, sigY + 15);
-                    doc.text('VICTORIO RELOBA JR.', col2, sigY + 15);
-                    doc.text('ANNA LIZA RODRIGUEZ', col3, sigY + 15);
-
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(10);
-                    doc.text('Branch Manager', col1, sigY + 21);
-                    doc.text('Operations Manager', col2, sigY + 21);
-                    doc.text('Executive Vice President', col3, sigY + 21);
-                }
+            if (response.ok) {
+                alert(data.message || 'Action successful!');
+                fetchPayrollRun();
+                fetchAuditLogs(); // Refresh audit logs after action
+            } else {
+                alert(`Error: ${data.error}`);
             }
-        });
-
-        doc.save(`Payroll_Register_Landscape_${format(new Date(run.period_end), 'MMM_dd_yyyy')}.pdf`);
+        } catch (error) {
+            console.error('Error in approval workflow:', error);
+            alert('Failed to process approval');
+        } finally {
+            setProcessing(false);
+        }
     };
 
+    const handleReturn = async () => {
+        if (!returnRemarks.trim()) {
+            alert('Please provide remarks for returning the payroll.');
+            return;
+        }
+
+        try {
+            setProcessing(true);
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch(`/api/payroll/runs/${params.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
+                body: JSON.stringify({
+                    action: 'return',
+                    remarks: returnRemarks
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Payroll returned successfully.');
+                setShowReturnModal(false);
+                setReturnRemarks('');
+                fetchPayrollRun();
+                fetchAuditLogs(); // Refresh audit logs after action
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Error returning payroll:', error);
+            alert('Failed to return payroll');
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const handleLock = async () => {
+        if (!confirm('Are you sure you want to lock this payroll run? This action cannot be undone.')) return;
+
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch(`/api/payroll/runs/${params.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
+                body: JSON.stringify({ action: 'lock' })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Payroll locked successfully!');
+                fetchPayrollRun();
+                fetchAuditLogs(); // Refresh audit logs after action
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Error locking payroll:', error);
+            alert('Failed to lock payroll');
+        }
+    };
+
+    const handlePrintBatch = () => {
+        setShowBatchPrint(true);
+        setTimeout(() => {
+            window.print();
+            setShowBatchPrint(false);
+        }, 500);
+    };
+
+    const handleDelete = async () => {
+        if (!confirm('Are you sure you want to delete this payroll run? This action cannot be undone.')) return;
+
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch(`/api/payroll/runs/${params.id}`, {
+                method: 'DELETE',
+                headers: { 'x-session-id': sessionId || '' }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Payroll run deleted successfully!');
+                router.push('/payroll');
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Error deleting payroll:', error);
+            alert('Failed to delete payroll');
+        }
+    };
+
+    const handleExportPDF = async () => {
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch(`/api/payroll/runs/${params.id}/export`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
+                body: JSON.stringify({ format: 'pdf' })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                downloadRegisterPDF(data.data);
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Error exporting to PDF:', error);
+            alert('Failed to export to PDF');
+        }
+    };
 
     const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'Finalized': return 'badge-success';
-            case 'Pending EVP': return 'badge-info';
-            case 'Pending Manager': return 'badge-warning';
-            default: return 'badge-secondary';
+        const styles: { [key: string]: string } = {
+            draft: 'bg-purple-100 text-purple-700',
+            approved: 'bg-green-100 text-green-700',
+            locked: 'bg-blue-100 text-blue-700'
+        };
+
+        return (
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status] || styles.draft}`}>
+                {status.toUpperCase()}
+            </span>
+        );
+    };
+
+    const formatPeriod = (start: string, end: string) => {
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+        return `${startDate.toLocaleDateString('en-US', options)} - ${endDate.toLocaleDateString('en-US', options)}`;
+    };
+
+    // Filter payslips
+    const filteredPayslips = payslips.filter(p => {
+        const search = searchTerm.toLowerCase();
+        return (
+            (p.last_name || '').toLowerCase().includes(search) ||
+            (p.first_name || '').toLowerCase().includes(search) ||
+            (p.position || '').toLowerCase().includes(search) ||
+            (p.employee_number || '').toLowerCase().includes(search)
+        );
+    });
+
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredPayslips.length / itemsPerPage) || 1;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedPayslips = filteredPayslips.slice(startIndex, startIndex + itemsPerPage);
+
+    const handlePageChange = (page: number) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
         }
+    };
+
+    // Calculate totals for all columns
+    const totalDays = filteredPayslips.reduce((sum, p) => sum + (p.payroll_days || 0), 0);
+    const totalBasicPay = filteredPayslips.reduce((sum, p) => sum + (p.basic_pay || 0), 0);
+    const totalRegAllow = filteredPayslips.reduce((sum, p) => sum + (p.regular_allowance || 0), 0);
+    const totalSpclAllow = filteredPayslips.reduce((sum, p) => sum + (p.special_allowance || 0), 0);
+    // existing totals
+    const totalEmployees = filteredPayslips.length;
+    const totalGrossPay = filteredPayslips.reduce((sum, p) => sum + (p.gross_pay || 0), 0);
+    const totalDeductions = filteredPayslips.reduce((sum, p) => sum + (p.total_deductions || 0), 0);
+    const totalNetPay = filteredPayslips.reduce((sum, p) => sum + (p.net_pay || 0), 0);
+    const totalPercent = 4.2;
+
+    // Get deduction columns based on cutoff
+    const getDeductionColumns = () => {
+        if (!payrollRun) return [];
+
+        const cutoff = payrollRun.cutoff_day;
+
+        if (cutoff === 15) {
+            return [
+                { key: 'phic', label: 'PHIC' },
+                { key: 'pagibig', label: 'PAG-IBIG' },
+                { key: 'pagibig_loan', label: <>PAG-IBIG<br />LN</> },
+                { key: 'company_loan', label: <>CO.<br />LOAN</> },
+                { key: 'cash_advance', label: <>CASH<br />ADV</> },
+                { key: 'company_funds', label: <>CO.<br />FUNDS</> }
+            ];
+        } else {
+            return [
+                { key: 'sss', label: 'SSS' },
+                { key: 'sss_loan', label: 'SSS LN' },
+                { key: 'company_loan', label: 'LOANS' },
+                { key: 'cash_advance', label: 'CASH ADV' },
+                { key: 'other_deductions', label: 'OTHER' }
+            ];
+        }
+    };
+
+    // Helper for deduction totals
+    const getDeductionTotal = (key: string) => {
+        return filteredPayslips.reduce((sum, p) => sum + ((p as any)[key] || 0), 0);
     };
 
     if (loading) {
         return (
             <DashboardLayout>
-                <div style={{ textAlign: 'center', padding: '3rem' }}>
-                    <p>Loading payroll details...</p>
+                <div style={{ padding: '40px', textAlign: 'center' }}>
+                    <p>Loading payroll run...</p>
                 </div>
             </DashboardLayout>
         );
     }
 
-    if (!run) return null;
+    if (!payrollRun) {
+        return (
+            <DashboardLayout>
+                <div style={{ padding: '40px', textAlign: 'center' }}>
+                    <p>Payroll run not found</p>
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     return (
         <DashboardLayout>
-            <div className="card mb-3 no-print">
-                <div className="card-header">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div className="card-title">
-                            <span>📋</span>
-                            Payroll Run Details
-                        </div>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button
-                                onClick={() => exportPDF()}
-                                className="btn btn-primary btn-sm"
-                                style={{ backgroundColor: '#2563eb' }}
-                            >
-                                📥 Export PDF Report
-                            </button>
-                        </div>
+            <div className={`page-wrapper ${showBatchPrint ? 'batch-mode' : ''}`}>
+                {/* Header & Breadcrumbs */}
+                <div className="premium-header">
+                    <div className="breadcrumb-nav">
+                        <Link href="/payroll">Payroll</Link>
+                        <span className="chevron">›</span>
+                        <span className="current">Approval Queue</span>
                     </div>
-                </div>
-                <div className="card-body no-print">
-                    <div className="summary-grid">
-                        <div className="summary-item">
-                            <label>Payroll Period</label>
-                            <div className="value">
-                                {new Date(run.period_start).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })} - {new Date(run.period_end).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
-                            </div>
-                        </div>
-                        <div className="summary-item">
-                            <label>Status</label>
-                            <div className="value">
-                                <span className={`badge ${getStatusBadge(run.status)}`}>
-                                    {run.status}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="summary-item">
-                            <label>Total Disbursement</label>
-                            <div className="value highlight">
-                                ₱{run.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            {/* Print Container (Hidden on screen) */}
-            <div className="payslip-print-container">
-                {run.payslips.map((slip: any) => (
-                    <div key={slip.id} className="payslip-page">
-                        <div className="payslip-header">
-                            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>Melann Lending Investor Corporation</h2>
-                            <p style={{ fontSize: '1rem', fontWeight: 600 }}>PAYSLIP</p>
-                            <p style={{ fontSize: '0.875rem' }}>
-                                Period: {new Date(run.period_start).toLocaleDateString()} - {new Date(run.period_end).toLocaleDateString()}
-                            </p>
+                    <div className="header-main-row">
+                        <div className="title-section-new">
+                            <h1 className="page-title-new">
+                                {payrollRun.run_number}
+                            </h1>
                         </div>
 
-                        <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <div>
-                                    <p style={{ fontSize: '0.75rem', color: '#666' }}>Employee Name</p>
-                                    <p style={{ fontWeight: 700 }}>{slip.employee_name}</p>
-                                </div>
-                                <div>
-                                    <p style={{ fontSize: '0.75rem', color: '#666' }}>Position</p>
-                                    <p style={{ fontWeight: 600 }}>{slip.position}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="payslip-grid">
-                            <div>
-                                <h3 className="payslip-section-title">EARNINGS</h3>
-                                <div className="payslip-row">
-                                    <span>Basic Pay ({slip.days_present} days)</span>
-                                    <span>₱{slip.gross_pay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                                </div>
-                                {slip.double_pay_amount > 0 && (
-                                    <div className="payslip-row">
-                                        <span>Holiday/Double Pay</span>
-                                        <span>₱{slip.double_pay_amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                                    </div>
-                                )}
-                                <div className="payslip-row">
-                                    <span>Allowances</span>
-                                    <span>₱{(slip.total_allowances || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                                </div>
-
-                                <div className="payslip-total" style={{ borderTop: '1px solid #ddd', marginTop: '0.5rem' }}>
-                                    <span>GROSS INCOME</span>
-                                    <span>₱{(
-                                        Number(slip.gross_pay || 0) +
-                                        Number(slip.double_pay_amount || 0) +
-                                        Number(slip.total_allowances || 0) +
-                                        Number(slip.midyear_bonus || 0) +
-                                        Number(slip.thirteenth_month || 0)
-                                    ).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
+                        <div className="header-controls">
+                            <div className={`status-badge-premium ${payrollRun.status.toLowerCase().replace(/ /g, '-')}`}>
+                                <span className="dot"></span>
+                                {payrollRun.status.toUpperCase()}
                             </div>
 
-                            <div>
-                                <h3 className="payslip-section-title">DEDUCTIONS</h3>
-                                {Object.entries(slip.deduction_details || {}).map(([key, val]: [string, any]) => {
-                                    if (key.includes('_balance')) return null;
-                                    const balanceKey = `${key}_balance`;
-                                    const hasBalance = slip.deduction_details[balanceKey] !== undefined;
-
-                                    return (
-                                        <div key={key} className="payslip-row">
-                                            <span>
-                                                <span style={{ textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}</span>
-                                                {hasBalance && key !== 'sss_loan' && key !== 'pagibig_loan' && (
-                                                    <span style={{ fontSize: '0.6rem', color: key === 'company_loan' ? '#dc2626' : '#666', display: 'block', fontStyle: 'italic', marginTop: '1px', fontWeight: key === 'company_loan' ? 700 : 400 }}>
-                                                        Bal: ₱{Number(slip.deduction_details[balanceKey]).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                    </span>
-                                                )}
-                                            </span>
-                                            <span>₱{val.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                                        </div>
-                                    );
-                                })}
-                                <div className="payslip-total" style={{ borderTop: '1px solid #ddd', marginTop: '0.5rem' }}>
-                                    <span>TOTAL DEDUCTIONS</span>
-                                    <span>₱{slip.total_deductions.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="payslip-total" style={{ marginTop: '2rem', fontSize: '1.25rem', padding: '1rem', background: '#f9f9f9' }}>
-                            <span>NET PAY</span>
-                            <span style={{ color: 'var(--primary-700)' }}>₱{slip.net_pay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                        </div>
-
-                        <div className="signature-section" style={{ marginTop: '2.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem' }}>
-                            <div style={{ borderTop: '1.5px solid #333', textAlign: 'center', paddingTop: '4px' }}>
-                                <div style={{ fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase' }}>{slip.employee_name}</div>
-                                <p style={{ fontSize: '0.65rem', marginTop: '2px' }}>Employee Signature</p>
-                            </div>
-                            <div style={{ borderTop: '1.5px solid #333', textAlign: 'center', paddingTop: '4px' }}>
-                                <div style={{ fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase' }}>MARILYN RELOBA</div>
-                                <p style={{ fontSize: '0.65rem', marginTop: '2px' }}>Branch Manager</p>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            <div className="card no-print">
-                <div className="card-header">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, margin: 0 }}>Payslips</h3>
-
-                    </div>
-                </div>
-                <div
-                    ref={tableContainerRef}
-                    className="table-container-responsive"
-                    style={{ scrollBehavior: 'smooth' }}
-                >
-                    {(() => {
-                        const deductionConfigs = [
-                            { key: 'sss', label: 'SSS' },
-                            { key: 'sss_loan', label: 'SSS L.' },
-                            { key: 'philhealth', label: 'P.Health' },
-                            { key: 'pagibig', label: 'PagIBIG' },
-                            { key: 'pagibig_loan', label: 'P.I. L.' },
-                            { key: 'company_loan', label: 'Co.Loan' },
-                            { key: 'company_cash_fund', label: 'Cash Fund' },
-                            { key: 'cash_advance', label: 'Cash Adv' },
-                            { key: 'other_deductions', label: 'Other' },
-                        ];
-
-                        const activeDeductions = deductionConfigs.filter(d =>
-                            run.payslips.some((s: any) => (s.deduction_details?.[d.key] || 0) > 0)
-                        );
-
-                        return (
-                            <table className="table table-condensed">
-                                <thead>
-                                    <tr>
-                                        <th className="employee-col">Employee</th>
-                                        <th className="days-col">Days</th>
-                                        <th className="amount-col">Gross</th>
-                                        <th className="amount-col">Allow.</th>
-                                        {activeDeductions.map(d => (
-                                            <th key={d.key} className="amount-col">{d.label}</th>
-                                        ))}
-                                        <th className="amount-col">Tot. Ded.</th>
-                                        <th className="amount-col">Net Pay</th>
-
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {run.payslips.map((slip: any) => {
-                                        const totalIncome = Number(slip.gross_pay || 0) + Number(slip.double_pay_amount || 0) + Number(slip.total_allowances || 0);
-                                        return (
-                                            <tr key={slip.id}>
-                                                <td className="employee-col">
-                                                    <div
-                                                        onClick={() => setActiveSlip(slip)}
-                                                        style={{ fontWeight: 600, color: 'var(--primary-700)', cursor: 'pointer', textDecoration: 'underline' }}
-                                                    >
-                                                        {slip.employee_name}
-                                                    </div>
-                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                                        {slip.position}
-                                                    </div>
-                                                </td>
-                                                <td className="days-col">
-                                                    <span className="badge badge-info" style={{ fontSize: '0.75rem' }}>
-                                                        {slip.days_present} Days
-                                                    </span>
-                                                </td>
-                                                <td className="amount-col">
-                                                    ₱{Number(slip.gross_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                    {Number(slip.double_pay_amount || 0) > 0 && (
-                                                        <div style={{ fontSize: '0.65rem', color: 'var(--success-600)' }}>
-                                                            +₱{Number(slip.double_pay_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Hol)
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="amount-col">
-                                                    ₱{Number(slip.total_allowances || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                </td>
-                                                {activeDeductions.map(d => (
-                                                    <td key={d.key} className="amount-col">
-                                                        {(slip.deduction_details?.[d.key] || 0) > 0 ? (
-                                                            <div>
-                                                                <div>₱{Number(slip.deduction_details?.[d.key] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                                                                {slip.deduction_details?.[`${d.key}_balance`] !== undefined && d.key !== 'sss_loan' && d.key !== 'pagibig_loan' && (
-                                                                    <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                                                                        Bal: ₱{Number(slip.deduction_details?.[`${d.key}_balance`] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        ) : '-'}
-                                                    </td>
-                                                ))}
-                                                <td className="amount-col">
-                                                    <div style={{ color: 'var(--danger-600)', fontWeight: 600 }}>
-                                                        -₱{Number(slip.total_deductions || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                    </div>
-                                                </td>
-                                                <td className="amount-col highlight-net">
-                                                    ₱{Number(slip.net_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                </td>
-
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                                <tfoot>
-                                    <tr className="table-footer">
-                                        <td colSpan={2} style={{ textAlign: 'right', padding: '1rem', fontWeight: 800 }}>GRAND TOTALS:</td>
-                                        <td className="amount-col footer-val">
-                                            ₱{run.payslips.reduce((sum: number, s: any) => sum + (Number(s.gross_pay || 0) + Number(s.double_pay_amount || 0)), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </td>
-                                        <td className="amount-col footer-val">
-                                            ₱{run.payslips.reduce((sum: number, s: any) => sum + Number(s.total_allowances || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </td>
-                                        {activeDeductions.map(d => (
-                                            <td key={d.key} className="amount-col footer-val">
-                                                ₱{run.payslips.reduce((sum: number, s: any) => sum + Number(s.deduction_details?.[d.key] || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                            </td>
-                                        ))}
-                                        <td className="amount-col footer-val" style={{ color: 'var(--danger-700)' }}>
-                                            -₱{run.payslips.reduce((sum: number, s: any) => sum + Number(s.total_deductions || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </td>
-                                        <td className="amount-col footer-val highlight">
-                                            ₱{Number(run.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        );
-                    })()}
-                </div>
-            </div>
-
-            {/* View Slip Modal Overlay */}
-            {activeSlip && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 1000,
-                    padding: '1rem'
-                }} onClick={() => setActiveSlip(null)} className="no-print">
-                    <div style={{
-                        backgroundColor: '#ffffff',
-                        padding: '2.5rem',
-                        borderRadius: '24px',
-                        maxWidth: '800px',
-                        width: '95%',
-                        position: 'relative',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-                        maxHeight: '90vh',
-                        overflowY: 'auto',
-                        border: '1px solid #d1fae5'
-                    }} onClick={e => e.stopPropagation()}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '1.5rem' }}>
-                            <div>
-                                <h2 style={{ fontSize: '1.75rem', fontWeight: 900, margin: 0, color: '#1e293b', letterSpacing: '-0.02em' }}>Payslip Detail</h2>
-                                <p style={{ margin: '4px 0', color: '#64748b', fontSize: '1rem' }}>{activeSlip.employee_name} • <span style={{ color: '#059669', fontWeight: 600 }}>{activeSlip.position}</span></p>
-                            </div>
-                            <button onClick={() => setActiveSlip(null)} style={{ background: '#f1f5f9', border: 'none', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', fontSize: '1.5rem', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                            <div>
-                                <h3 style={{ fontSize: '0.8rem', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', marginBottom: '1.25rem', letterSpacing: '0.1em' }}>Earnings</h3>
-                                <div className="payslip-row">
-                                    <span>Basic Pay ({activeSlip.days_present} days)</span>
-                                    <span>₱{Number(activeSlip.gross_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                                {Number(activeSlip.double_pay_amount || 0) > 0 && (
-                                    <div className="payslip-row">
-                                        <span>Holiday/Double Pay</span>
-                                        <span>₱{Number(activeSlip.double_pay_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                    </div>
-                                )}
-                                <div className="payslip-row">
-                                    <span>Allowances</span>
-                                    <span>₱{Number(activeSlip.total_allowances || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                                <div className="payslip-total">
-                                    <span>Gross Income</span>
-                                    <span>₱{(Number(activeSlip.gross_pay || 0) + Number(activeSlip.double_pay_amount || 0) + Number(activeSlip.total_allowances || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 style={{ fontSize: '0.8rem', fontWeight: 900, color: '#64748b', textTransform: 'uppercase', marginBottom: '1.25rem', letterSpacing: '0.1em' }}>Deductions</h3>
-                                {Object.entries(activeSlip.deduction_details || {}).map(([key, val]: [string, any]) => {
-                                    if (key.includes('_balance')) return null;
-                                    const balanceKey = `${key}_balance`;
-                                    const bal = activeSlip.deduction_details[balanceKey];
-                                    return (
-                                        <div key={key} className="payslip-row">
-                                            <span>
-                                                <span style={{ textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}</span>
-                                                {bal !== undefined && key !== 'sss_loan' && key !== 'pagibig_loan' && (
-                                                    <div style={{ fontSize: '0.65rem', color: key === 'company_loan' || key === 'cash_advance' ? '#dc2626' : '#94a3b8', fontStyle: 'italic', fontWeight: key === 'company_loan' ? 700 : 400 }}>
-                                                        Bal: ₱{Number(bal || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                    </div>
-                                                )}
-                                            </span>
-                                            <span>₱{Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                        </div>
-                                    );
-                                })}
-                                <div className="payslip-total">
-                                    <span>Total Deductions</span>
-                                    <span>₱{Number(activeSlip.total_deductions || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="payslip-net-box">
-                            <span>Net Pay Amount</span>
-                            <span>
-                                ₱{Number(activeSlip.net_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                        </div>
-
-                        <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
-                            <button
-                                onClick={() => {
-                                    document.body.classList.add('printing-single');
-                                    document.body.classList.remove('printing-payslips', 'printing-register');
-                                    setTimeout(() => {
-                                        window.print();
-                                        document.body.classList.remove('printing-single');
-                                    }, 100);
-                                }}
-                                className="btn btn-primary"
-                                style={{ flex: 1, padding: '0.75rem', fontWeight: 700 }}
-                            >
-                                🖨️ Print This Payslip
-                            </button>
-                            <button
-                                onClick={() => setActiveSlip(null)}
-                                className="btn btn-secondary"
-                                style={{ flex: 1, padding: '0.75rem', fontWeight: 700 }}
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Hidden Single Payslip Print Container */}
-            {activeSlip && (
-                <div className="single-payslip-print-container">
-                    <div className="payslip-page">
-                        <div className="payslip-header" style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                            <h2 style={{ fontSize: '1.5rem', margin: 0, fontWeight: 800 }}>Melann Lending Investor Corporation</h2>
-                            <p style={{ margin: '4px 0', fontSize: '1.125rem', fontWeight: 700 }}>PAYSLIP</p>
-                            <p style={{ fontSize: '0.9rem' }}>
-                                Period: {new Date(run.period_start).toLocaleDateString()} - {new Date(run.period_end).toLocaleDateString()}
-                            </p>
-                        </div>
-
-                        <div style={{ borderTop: '2px solid #333', borderBottom: '1px solid #333', padding: '0.75rem 0', display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                            <div>
-                                <p style={{ fontSize: '0.75rem', color: '#666', margin: 0 }}>Employee Name</p>
-                                <p style={{ fontWeight: 800, margin: 0, textTransform: 'uppercase', fontSize: '1.1rem' }}>{activeSlip.employee_name}</p>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <p style={{ fontSize: '0.75rem', color: '#666', margin: 0 }}>Position</p>
-                                <p style={{ fontWeight: 800, margin: 0, textTransform: 'uppercase' }}>{activeSlip.position}</p>
-                            </div>
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', flex: 1 }}>
-                            <div>
-                                <h3 style={{ fontSize: '0.85rem', fontWeight: 800, margin: '0 0 10px 0', borderBottom: '1.5px solid #333', paddingBottom: '4px' }}>EARNINGS</h3>
-                                <div className="payslip-row">
-                                    <span>Basic Pay ({activeSlip.days_present} days)</span>
-                                    <span>₱{Number(activeSlip.gross_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                                {Number(activeSlip.double_pay_amount || 0) > 0 && (
-                                    <div className="payslip-row">
-                                        <span>Holiday Pay</span>
-                                        <span>₱{Number(activeSlip.double_pay_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                    </div>
-                                )}
-                                <div className="payslip-row">
-                                    <span>Allowances</span>
-                                    <span>₱{Number(activeSlip.total_allowances || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                                <div className="payslip-total">
-                                    <span>GROSS INCOME</span>
-                                    <span>₱{(Number(activeSlip.gross_pay || 0) + Number(activeSlip.double_pay_amount || 0) + Number(activeSlip.total_allowances || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 style={{ fontSize: '0.85rem', fontWeight: 800, margin: '0 0 10px 0', borderBottom: '1.5px solid #333', paddingBottom: '4px' }}>DEDUCTIONS</h3>
-                                {Object.entries(activeSlip.deduction_details || {}).map(([key, val]: [string, any]) => {
-                                    if (key.includes('_balance')) return null;
-                                    const balanceKey = `${key}_balance`;
-                                    const hasBal = activeSlip.deduction_details[balanceKey] !== undefined;
-                                    return (
-                                        <div key={key} className="payslip-row">
-                                            <span>
-                                                <span style={{ textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}</span>
-                                                {hasBal && key !== 'sss_loan' && key !== 'pagibig_loan' && (
-                                                    <span style={{ fontSize: '0.65rem', display: 'block', fontStyle: 'italic' }}>
-                                                        Bal: ₱{Number(activeSlip.deduction_details[balanceKey] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                    </span>
-                                                )}
-                                            </span>
-                                            <span>₱{Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                        </div>
-                                    );
-                                })}
-                                <div className="payslip-total">
-                                    <span>TOTAL DEDUCTIONS</span>
-                                    <span>₱{Number(activeSlip.total_deductions || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style={{ background: '#f5f5f5', padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', border: '1.5px solid #333' }}>
-                            <span style={{ fontWeight: 800, fontSize: '1.1rem' }}>NET PAY</span>
-                            <span style={{ fontWeight: 800, fontSize: '1.5rem' }}>₱{Number(activeSlip.net_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', marginTop: '1.5rem' }}>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ borderTop: '1.5px solid #333', marginTop: '20px', paddingTop: '4px' }}>
-                                    <p style={{ fontWeight: 800, margin: 0, textTransform: 'uppercase', fontSize: '0.8rem' }}>{activeSlip.employee_name}</p>
-                                    <p style={{ fontSize: '0.7rem', margin: 0 }}>Employee Signature</p>
-                                </div>
-                            </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ borderTop: '1.5px solid #333', marginTop: '20px', paddingTop: '4px' }}>
-                                    <p style={{ fontWeight: 800, margin: 0, textTransform: 'uppercase', fontSize: '0.8rem' }}>MARILYN RELOBA</p>
-                                    <p style={{ fontSize: '0.7rem', margin: 0 }}>Branch Manager</p>
+                            <div className="header-user-actions">
+                                <button className="icon-button">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                                    <span className="notification-dot"></span>
+                                </button>
+                                <div className="user-avatar-premium">
+                                    {user?.username?.[0]?.toUpperCase() || 'U'}
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            )}
 
-            {/* Payroll Register Report (Hidden on screen) */}
-            <div className="payroll-register-print-container">
-                <div className="payroll-register-page">
-                    <div style={{ textAlign: 'center', marginBottom: '2rem', borderBottom: '3px solid #333', paddingBottom: '1rem' }}>
-                        <h2 style={{ fontSize: '1.75rem', marginBottom: '0.5rem', fontWeight: 700 }}>Melann Lending Investor Corporation</h2>
-                        <p style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>PAYROLL REGISTER / ACKNOWLEDGMENT RECEIPT</p>
-                        <p style={{ fontSize: '0.9rem', color: '#444' }}>
-                            Period: {format(new Date(run.period_start), 'MMMM dd, yyyy')} - {format(new Date(run.period_end), 'MMMM dd, yyyy')}
-                        </p>
-                    </div>
-
-                    <table style={{
-                        width: '100%',
-                        borderCollapse: 'collapse',
-                        border: '1px solid #333',
-                        fontSize: '0.55rem'
-                    }}>
-                        {(() => {
-                            const deductionConfigs = [
-                                { key: 'sss', label: 'SSS' },
-                                { key: 'sss_loan', label: 'SSS L.' },
-                                { key: 'philhealth', label: 'P.Health' },
-                                { key: 'pagibig', label: 'PagIBIG' },
-                                { key: 'pagibig_loan', label: 'P.I. L.' },
-                                { key: 'company_loan', label: 'Co.Loan' },
-                                { key: 'company_cash_fund', label: 'Cash Fund' },
-                                { key: 'cash_advance', label: 'Cash Adv' },
-                                { key: 'other_deductions', label: 'Other' },
-                            ];
-
-                            const visibleDeductions = deductionConfigs.filter(d =>
-                                run.payslips.some((s: any) => (s.deduction_details?.[d.key] || 0) > 0)
-                            );
+                {/* Redesigned Approval Tracker (Top Timeline) */}
+                <div className="premium-tracker-section">
+                    <div className="tracker-timeline">
+                        {[
+                            { label: 'HR OFFICER', role: 'HR Officer', stage: 1, name: 'Marilyn Reloba', status: payrollRun.hr_review_status, date: payrollRun.hr_review_date },
+                            { label: 'OPERATIONS MANAGER', role: 'Operations Manager', stage: 2, name: 'Victorio Reloba Jr.', status: payrollRun.operations_review_status, date: payrollRun.operations_review_date },
+                            { label: 'EVP', role: 'Executive Vice President', stage: 3, name: 'Anna Liza Rodriguez', status: payrollRun.evp_review_status, date: payrollRun.evp_review_date },
+                            { label: 'FINAL APPROVAL', role: 'Finance Board', stage: 4, name: 'Finance Board', status: payrollRun.status === 'APPROVED' ? 'Approved' : 'Pending' }
+                        ].map((step, i) => {
+                            const isCurrent = payrollRun.workflow_stage === step.stage;
+                            const isPast = (payrollRun.workflow_stage || 0) > step.stage;
+                            const isReturned = step.status === 'Returned';
+                            const isApproved = step.status === 'Approved' || (step.stage === 4 && payrollRun.status === 'APPROVED');
 
                             return (
-                                <>
-                                    <thead>
-                                        <tr style={{ background: '#007bff', color: 'white' }}>
-                                            <th style={{ border: '1px solid #333', padding: '4px 2px', textAlign: 'center', width: '25px' }} rowSpan={2}>No.</th>
-                                            <th style={{ border: '1px solid #333', padding: '4px 2px', textAlign: 'left', minWidth: '120px' }} rowSpan={2}>Employee Name</th>
-                                            <th style={{ border: '1px solid #333', padding: '4px 2px', textAlign: 'right', width: '50px' }} rowSpan={2}>Daily Rate</th>
-                                            <th style={{ border: '1px solid #333', padding: '4px 2px', textAlign: 'center', width: '30px' }} rowSpan={2}>Days</th>
-                                            <th style={{ border: '1px solid #333', padding: '4px 2px', textAlign: 'right', width: '60px' }} rowSpan={2}>Reg. Pay</th>
-                                            <th style={{ border: '1px solid #333', padding: '4px 2px', textAlign: 'right', width: '55px' }} rowSpan={2}>Holiday</th>
-                                            <th style={{ border: '1px solid #333', padding: '4px 2px', textAlign: 'right', width: '55px' }} rowSpan={2}>Allow.</th>
-
-                                            <th style={{ border: '1px solid #333', padding: '4px 2px', textAlign: 'right', width: '65px', background: '#0056b3', fontWeight: 700 }} rowSpan={2}>Gross Income</th>
-                                            {visibleDeductions.length > 0 && (
-                                                <th style={{ border: '1px solid #333', padding: '2px', textAlign: 'center' }} colSpan={visibleDeductions.length}>Deductions</th>
+                                <div key={step.label} className="timeline-step-container">
+                                    {i > 0 && <div className={`timeline-line ${isPast || isCurrent ? 'active' : ''}`}></div>}
+                                    <div className="timeline-step">
+                                        <div className={`step-icon-circle ${isApproved ? 'approved' : isCurrent ? 'current' : ''}`}>
+                                            {isApproved ? (
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                            ) : isCurrent ? (
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                                            ) : (
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                                             )}
-                                            <th style={{ border: '1px solid #333', padding: '4px 2px', textAlign: 'right', width: '60px', background: '#0056b3', fontWeight: 700 }} rowSpan={2}>Tot. Ded.</th>
-                                            <th style={{ border: '1px solid #333', padding: '4px 2px', textAlign: 'right', width: '70px', fontWeight: 800, background: '#004085' }} rowSpan={2}>Net Pay</th>
-                                            <th style={{ border: '1px solid #333', padding: '4px 2px', textAlign: 'center', width: '100px' }} rowSpan={2}>Signature</th>
+                                        </div>
+                                        <div className="step-content-box">
+                                            <div className="step-header-label">{step.label}</div>
+                                            <div className="step-person-name">{step.name}</div>
+                                            <div className={`step-status-text ${isApproved ? 'approved' : isCurrent ? 'current' : ''}`}>
+                                                {isApproved ? `Approved: ${step.date ? new Date(step.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Done'}`
+                                                    : isCurrent ? 'AWAITING ACTION' : 'Pending Previous'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    {payrollRun.return_remarks && (
+                        <div className="return-remarks-banner-new">
+                            <span className="remarks-label">Return Reason:</span> {payrollRun.return_remarks}
+                        </div>
+                    )}
+                </div>
+
+                {/* Main Two-Column Layout */}
+                <div className="redesigned-grid-container">
+                    {/* Left Column: Table & Summary */}
+                    <div className="left-column-content">
+                        {/* Redesigned Summary Cards */}
+                        <div className="premium-summary-grid">
+                            <div className="premium-card">
+                                <div className="card-info">
+                                    <div className="card-title">TOTAL NET PAY</div>
+                                    <div className="card-main-value">{formatCurrency(totalNetPay)}</div>
+                                    <div className="card-trend upward">↗ 2.4% vs last month</div>
+                                </div>
+                            </div>
+                            <div className="premium-card">
+                                <div className="card-info">
+                                    <div className="card-title">GROSS AMOUNT</div>
+                                    <div className="card-main-value">{formatCurrency(totalGrossPay)}</div>
+                                    <div className="card-sub-info">Inclusive of bonuses</div>
+                                </div>
+                            </div>
+                            <div className="premium-card">
+                                <div className="card-info">
+                                    <div className="card-title">DEDUCTIONS</div>
+                                    <div className="card-main-value">{formatCurrency(totalDeductions)}</div>
+                                    <div className="card-sub-info">{((totalDeductions / (totalGrossPay || 1)) * 100).toFixed(1)}% Tax rate avg</div>
+                                </div>
+                            </div>
+                            <div className="premium-card">
+                                <div className="card-info">
+                                    <div className="card-title">HEADCOUNT</div>
+                                    <div className="card-main-value">{totalEmployees}</div>
+                                    <div className="card-sub-info">4 new joiners added</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Table Card */}
+                        <div className="main-card-new">
+                            <div className="card-header-new">
+                                <h2 className="section-title">Employee Payroll Breakdown</h2>
+                                <div className="search-wrapper">
+                                    <svg className="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    <input
+                                        type="text"
+                                        placeholder="Search employee name or ID..."
+                                        className="search-input"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="table-container-new">
+                                <table className="payroll-table">
+                                    <thead>
+                                        <tr>
+                                            <th className="th-employee">EMPLOYEE DETAILS</th>
+                                            <th className="th-center" style={{ width: '40px' }}>DAYS</th>
+                                            <th className="th-right" style={{ width: '80px' }}>BASIC</th>
+                                            <th className="th-right" style={{ width: '60px' }}>REG.<br />ALW.</th>
+                                            <th className="th-right" style={{ width: '60px' }}>SPCL.<br />ALW.</th>
+                                            <th className="th-right text-green-600" style={{ width: '90px' }}>GROSS<br />PAY</th>
+                                            {getDeductionColumns().map(col => (
+                                                <th key={col.key} className="th-right th-deduction" style={{ width: '70px' }}>{col.label}</th>
+                                            ))}
+                                            <th className="th-right text-red-600" style={{ width: '90px' }}>TOTAL<br />DED.</th>
+                                            <th className="th-right text-indigo-600" style={{ width: '95px' }}>NET PAY</th>
+                                            <th className="th-center" style={{ width: '50px' }}>VIEW</th>
                                         </tr>
-                                        {visibleDeductions.length > 0 && (
-                                            <tr style={{ background: '#007bff', color: 'white' }}>
-                                                {visibleDeductions.map(d => (
-                                                    <th key={d.key} style={{ border: '1px solid #333', padding: '2px', minWidth: '35px', fontSize: '0.45rem' }}>{d.label}</th>
-                                                ))}
-                                            </tr>
-                                        )}
                                     </thead>
                                     <tbody>
-                                        {run.payslips.map((slip: any, idx: number) => {
-                                            const totalIncome = Number(slip.gross_pay || 0) + Number(slip.double_pay_amount || 0) + Number(slip.total_allowances || 0);
-                                            const d = slip.deduction_details || {};
-                                            return (
-                                                <tr key={slip.id}>
-                                                    <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>{idx + 1}</td>
-                                                    <td style={{ border: '1px solid #333', padding: '4px' }}>
-                                                        <div style={{ fontWeight: 700, fontSize: '0.65rem' }}>{slip.employee_name}</div>
-                                                        <div style={{ fontSize: '0.5rem', color: '#666' }}>{slip.position}</div>
+                                        {paginatedPayslips.length > 0 ? paginatedPayslips.map((payslip, index) => (
+                                            <tr key={payslip.id}>
+                                                <td className="td-employee">
+                                                    <div className="employee-info">
+                                                        <div className="employee-name">{payslip.last_name}, {payslip.first_name}</div>
+                                                        <div className="employee-meta">
+                                                            ID: {payslip.employee_number}
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                {/* Days */}
+                                                <td
+                                                    className="td-center td-editable"
+                                                    onClick={() => handleCellClick(payslip.id, 'payroll_days', payslip.payroll_days)}
+                                                >
+                                                    {editingCell?.payslipId === payslip.id && editingCell?.field === 'payroll_days' ? (
+                                                        <input
+                                                            type="number"
+                                                            value={editValue}
+                                                            onChange={(e) => setEditValue(e.target.value)}
+                                                            onBlur={handleCellBlur}
+                                                            onKeyDown={(e) => e.key === 'Enter' && handleCellBlur()}
+                                                            autoFocus
+                                                            className="cell-input"
+                                                        />
+                                                    ) : (
+                                                        <span className="font-medium">{payslip.payroll_days.toFixed(2)}</span>
+                                                    )}
+                                                </td>
+
+                                                <td className="td-right">{formatCurrency(payslip.basic_pay).replace('₱', '')}</td>
+
+                                                {/* Allowances */}
+                                                <td
+                                                    className="td-right td-editable"
+                                                    onClick={() => handleCellClick(payslip.id, 'regular_allowance', payslip.regular_allowance)}
+                                                >
+                                                    {editingCell?.payslipId === payslip.id && editingCell?.field === 'regular_allowance' ? (
+                                                        <input
+                                                            type="number"
+                                                            value={editValue}
+                                                            onChange={(e) => setEditValue(e.target.value)}
+                                                            onBlur={handleCellBlur}
+                                                            onKeyDown={(e) => e.key === 'Enter' && handleCellBlur()}
+                                                            autoFocus
+                                                            className="cell-input"
+                                                        />
+                                                    ) : (
+                                                        formatCurrency(payslip.regular_allowance || 0).replace('₱', '')
+                                                    )}
+                                                </td>
+
+                                                <td
+                                                    className="td-right td-editable"
+                                                    onClick={() => handleCellClick(payslip.id, 'special_allowance', payslip.special_allowance)}
+                                                >
+                                                    {editingCell?.payslipId === payslip.id && editingCell?.field === 'special_allowance' ? (
+                                                        <input
+                                                            type="number"
+                                                            value={editValue}
+                                                            onChange={(e) => setEditValue(e.target.value)}
+                                                            onBlur={handleCellBlur}
+                                                            onKeyDown={(e) => e.key === 'Enter' && handleCellBlur()}
+                                                            autoFocus
+                                                            className="cell-input"
+                                                        />
+                                                    ) : (
+                                                        formatCurrency(payslip.special_allowance || 0).replace('₱', '')
+                                                    )}
+                                                </td>
+
+                                                <td className="td-right text-green-600 font-bold">
+                                                    {formatCurrency(payslip.gross_pay).replace('₱', '')}
+                                                </td>
+
+                                                {/* Deductions Dynamic */}
+                                                {getDeductionColumns().map(col => (
+                                                    <td
+                                                        key={col.key}
+                                                        className="td-right td-editable text-gray-500"
+                                                        onClick={() => handleCellClick(payslip.id, col.key, (payslip as any)[col.key])}
+                                                    >
+                                                        {editingCell?.payslipId === payslip.id && editingCell?.field === col.key ? (
+                                                            <input
+                                                                type="number"
+                                                                value={editValue}
+                                                                onChange={(e) => setEditValue(e.target.value)}
+                                                                onBlur={handleCellBlur}
+                                                                onKeyDown={(e) => e.key === 'Enter' && handleCellBlur()}
+                                                                autoFocus
+                                                                className="cell-input"
+                                                            />
+                                                        ) : (
+                                                            formatCurrency((payslip as any)[col.key] || 0).replace('₱', '')
+                                                        )}
                                                     </td>
-                                                    <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'right' }}>₱{Number(slip.daily_rate || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                    <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'center' }}>{Number(slip.days_present || 0).toFixed(1)}</td>
-                                                    <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'right' }}>₱{Number(slip.gross_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                    <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'right' }}>₱{Number(slip.double_pay_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                    <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'right' }}>₱{Number(slip.total_allowances || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                ))}
 
-                                                    <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'right', background: '#f9f9f9', fontWeight: 600 }}>₱{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                <td className="td-right text-red-600 font-bold">
+                                                    {formatCurrency(payslip.total_deductions).replace('₱', '')}
+                                                </td>
 
-                                                    {visibleDeductions.map(vd => (
-                                                        <td key={vd.key} style={{ border: '1px solid #333', padding: '4px', textAlign: 'right' }}>
-                                                            {Number(d?.[vd.key] || 0) > 0 ? (
-                                                                <div>
-                                                                    <div>₱{Number(d?.[vd.key] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                                                                    {d?.[`${vd.key}_balance`] !== undefined && vd.key !== 'sss_loan' && vd.key !== 'pagibig_loan' && (
-                                                                        <div style={{ fontSize: '0.45rem', color: '#666', fontStyle: 'italic' }}>Bal: ₱{Number(d?.[`${vd.key}_balance`] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                                                                    )}
-                                                                </div>
-                                                            ) : '0.00'}
-                                                        </td>
-                                                    ))}
+                                                <td className="td-right text-indigo-600 font-bold">
+                                                    {formatCurrency(payslip.net_pay).replace('₱', '')}
+                                                </td>
 
-                                                    <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'right', color: '#c00', fontWeight: 600 }}>₱{Number(slip.total_deductions || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                    <td style={{ border: '1px solid #333', padding: '4px', textAlign: 'right', fontWeight: 800, background: '#f0f0f0' }}>₱{Number(slip.net_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                    <td style={{ border: '1px solid #333', padding: '4px', verticalAlign: 'bottom', textAlign: 'center', minWidth: '90px' }}>
-                                                        <div style={{ borderBottom: '1px solid #333', width: '100%', marginBottom: '2px', marginTop: '8px' }}></div>
-                                                        <div style={{ fontSize: '0.45rem', fontWeight: 700, textTransform: 'uppercase' }}>{slip.employee_name}</div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
+                                                <td className="td-center">
+                                                    <button
+                                                        className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full hover:bg-indigo-100 font-medium"
+                                                        onClick={() => setPayslipToView(payslip)}
+                                                    >
+                                                        View
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        )) : (
+                                            <tr>
+                                                <td colSpan={15} style={{ padding: '48px 32px', textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>
+                                                    <div style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600' }}>
+                                                        {searchTerm ? 'No matching employees found' : 'No employee records found'}
+                                                    </div>
+                                                    <div style={{ fontSize: '13px', opacity: 0.8 }}>
+                                                        {searchTerm
+                                                            ? `We couldn't find any results for "${searchTerm}"`
+                                                            : 'This payroll run appears to be empty.'}
+                                                    </div>
+                                                    {!searchTerm && payslips.length === 0 && (
+                                                        <button
+                                                            onClick={() => fetchPayrollRun()}
+                                                            style={{ marginTop: '16px', color: '#4f46e5', fontWeight: '500', cursor: 'pointer', background: 'none', border: 'none', textDecoration: 'underline' }}
+                                                        >
+                                                            Tap to Refresh
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        )}
                                     </tbody>
-                                    <tfoot>
-                                        <tr style={{ fontWeight: 700, background: '#e8e8e8' }}>
-                                            <td colSpan={4} style={{ border: '1px solid #333', padding: '4px 2px', textAlign: 'right' }}>TOTALS:</td>
-                                            <td style={{ border: '1px solid #333', padding: '2px', textAlign: 'right' }}>₱{run.payslips.reduce((sum: number, s: any) => sum + Number(s.gross_pay || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                            <td style={{ border: '1px solid #333', padding: '2px', textAlign: 'right' }}>₱{run.payslips.reduce((sum: number, s: any) => sum + Number(s.double_pay_amount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                            <td style={{ border: '1px solid #333', padding: '2px', textAlign: 'right' }}>₱{run.payslips.reduce((sum: number, s: any) => sum + Number(s.total_allowances || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-
-                                            <td style={{ border: '1px solid #333', padding: '2px', textAlign: 'right', background: '#ddd' }}>
-                                                ₱{run.payslips.reduce((sum: number, s: any) => sum + (Number(s.gross_pay || 0) + Number(s.double_pay_amount || 0) + Number(s.total_allowances || 0)), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                            </td>
-
-                                            {visibleDeductions.map(vd => (
-                                                <td key={vd.key} style={{ border: '1px solid #333', padding: '2px', textAlign: 'right' }}>
-                                                    ₱{run.payslips.reduce((sum: number, s: any) => sum + (Number(s.deduction_details?.[vd.key] || 0)), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    <tfoot className="table-summary-row">
+                                        <tr>
+                                            <td className="td-employee font-bold">TOTAL SUMMARY ({totalEmployees} EMP)</td>
+                                            <td className="td-center font-bold">{totalDays.toFixed(2)}</td>
+                                            <td className="td-right font-bold">{formatCurrency(totalBasicPay).replace('₱', '')}</td>
+                                            <td className="td-right font-bold">{formatCurrency(totalRegAllow).replace('₱', '')}</td>
+                                            <td className="td-right font-bold">{formatCurrency(totalSpclAllow).replace('₱', '')}</td>
+                                            <td className="td-right font-bold text-green-600">{formatCurrency(totalGrossPay).replace('₱', '')}</td>
+                                            {getDeductionColumns().map(col => (
+                                                <td key={col.key} className="td-right font-bold text-gray-600">
+                                                    {formatCurrency(getDeductionTotal(col.key)).replace('₱', '')}
                                                 </td>
                                             ))}
-
-                                            <td style={{ border: '1px solid #333', padding: '2px', textAlign: 'right', color: '#c00' }}>₱{run.payslips.reduce((sum: number, s: any) => sum + Number(s.total_deductions || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                            <td style={{ border: '1px solid #333', padding: '2px', textAlign: 'right', fontSize: '0.65rem', background: '#ccc' }}>₱{run.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                            <td style={{ border: '1px solid #333' }}></td>
+                                            <td className="td-right font-bold text-red-600">{formatCurrency(totalDeductions).replace('₱', '')}</td>
+                                            <td className="td-right font-bold text-indigo-600">{formatCurrency(totalNetPay).replace('₱', '')}</td>
+                                            <td></td>
                                         </tr>
                                     </tfoot>
-                                </>
-                            );
-                        })()}
-                    </table>
+                                </table>
+                            </div>
 
-                    <div style={{ marginTop: '4rem', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '2rem' }}>
-                        <div>
-                            <p style={{ fontSize: '0.8rem', marginBottom: '2.5rem', fontWeight: 600 }}>Prepared By:</p>
-                            <div style={{ fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase' }}>MARILYN RELOBA</div>
-                            <div style={{ borderBottom: '1.5px solid #333', width: '200px', marginBottom: '0.25rem' }}></div>
-                            <p style={{ fontSize: '0.75rem', fontWeight: 600 }}>Branch Manager</p>
-                        </div>
-                        <div>
-                            <p style={{ fontSize: '0.8rem', marginBottom: '2.5rem', fontWeight: 600 }}>Reviewed By:</p>
-                            <div style={{ fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase' }}>VICTORIO RELOBA JR.</div>
-                            <div style={{ borderBottom: '1.5px solid #333', width: '200px', marginBottom: '0.25rem' }}></div>
-                            <p style={{ fontSize: '0.75rem', fontWeight: 600 }}>Operations Manager</p>
-                        </div>
-                        <div>
-                            <p style={{ fontSize: '0.8rem', marginBottom: '2.5rem', fontWeight: 600 }}>Approved By:</p>
-                            <div style={{ fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase' }}>ANNA LIZA RODRIGUEZ</div>
-                            <div style={{ borderBottom: '1.5px solid #333', width: '200px', marginBottom: '0.25rem' }}></div>
-                            <p style={{ fontSize: '0.75rem', fontWeight: 600 }}>Executive Vice President</p>
+                            <div className="table-footer-new">
+                                <div className="footer-info">
+                                    Showing <span className="font-medium">{filteredPayslips.length > 0 ? startIndex + 1 : 0}</span> to <span className="font-medium">{Math.min(startIndex + itemsPerPage, filteredPayslips.length)}</span> of <span className="font-medium">{filteredPayslips.length}</span> employees
+                                </div>
+                                <div className="pagination-controls-new">
+                                    <button
+                                        className="page-btn-square"
+                                        disabled={currentPage === 1}
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                    </button>
+                                    {[...Array(totalPages)].map((_, i) => (
+                                        <button
+                                            key={i}
+                                            className={`page-num-square ${currentPage === i + 1 ? 'active' : ''}`}
+                                            onClick={() => handlePageChange(i + 1)}
+                                        >
+                                            {i + 1}
+                                        </button>
+                                    ))}
+                                    <button
+                                        className="page-btn-square"
+                                        disabled={currentPage === totalPages}
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {/* All Payslips Print Container */}
-            <div className="payslip-print-container">
-                {run.payslips.map((slip: any) => (
-                    <div key={slip.id} className="payslip-page">
-                        <div className="payslip-header" style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                            <h2 style={{ fontSize: '1.5rem', margin: 0, fontWeight: 800 }}>Melann Lending Investor Corporation</h2>
-                            <p style={{ margin: '4px 0', fontSize: '1.125rem', fontWeight: 700 }}>PAYSLIP</p>
-                            <p style={{ fontSize: '0.9rem' }}>
-                                Period: {new Date(run.period_start).toLocaleDateString()} - {new Date(run.period_end).toLocaleDateString()}
-                            </p>
-                        </div>
+                    {/* Right Column: Sidebar Actions & Audit */}
+                    <div className="right-sidebar-new">
+                        {/* Approval Action Panel */}
+                        <div className="sidebar-card-new">
+                            <h3 className="sidebar-title">Actions Panel</h3>
 
-                        <div style={{ borderTop: '2px solid #333', borderBottom: '1px solid #333', padding: '0.75rem 0', display: 'flex', justifyContent: 'space-between', marginBottom: '1.2rem' }}>
-                            <div>
-                                <p style={{ fontSize: '0.75rem', color: '#666', margin: 0 }}>Employee Name</p>
-                                <p style={{ fontWeight: 800, margin: 0, textTransform: 'uppercase', fontSize: '1.1rem' }}>{slip.employee_name}</p>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <p style={{ fontSize: '0.75rem', color: '#666', margin: 0 }}>Position</p>
-                                <p style={{ fontWeight: 800, margin: 0, textTransform: 'uppercase' }}>{slip.position}</p>
-                            </div>
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', flex: 1 }}>
-                            <div>
-                                <h3 style={{ fontSize: '0.85rem', fontWeight: 800, margin: '0 0 8px 0', borderBottom: '1.5px solid #333', paddingBottom: '3px' }}>EARNINGS</h3>
-                                <div className="payslip-row">
-                                    <span>Basic Pay ({slip.days_present} days)</span>
-                                    <span>₱{Number(slip.gross_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                                {Number(slip.double_pay_amount || 0) > 0 && (
-                                    <div className="payslip-row">
-                                        <span>Holiday Pay</span>
-                                        <span>₱{Number(slip.double_pay_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                    </div>
+                            <div className="action-buttons-stack">
+                                {/* Workflow Approval / Finalize */}
+                                {(payrollRun.status === 'DRAFT' || payrollRun.status === 'RETURNED TO PREPARER') && permissions.canEdit && (
+                                    <button onClick={handleApprove} className="primary-action-btn" disabled={processing}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                        FINALIZE & SUBMIT
+                                    </button>
                                 )}
-                                <div className="payslip-row">
-                                    <span>Allowances</span>
-                                    <span>₱{Number(slip.total_allowances || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                                <div className="payslip-total">
-                                    <span>GROSS INCOME</span>
-                                    <span>₱{(Number(slip.gross_pay || 0) + Number(slip.double_pay_amount || 0) + Number(slip.total_allowances || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                            </div>
 
-                            <div>
-                                <h3 style={{ fontSize: '0.85rem', fontWeight: 800, margin: '0 0 8px 0', borderBottom: '1.5px solid #333', paddingBottom: '3px' }}>DEDUCTIONS</h3>
-                                {Object.entries(slip.deduction_details || {}).map(([key, val]: [string, any]) => {
-                                    if (key.includes('_balance')) return null;
-                                    const balanceKey = `${key}_balance`;
-                                    const hasBal = slip.deduction_details[balanceKey] !== undefined;
-                                    return (
-                                        <div key={key} className="payslip-row">
-                                            <span>
-                                                <span style={{ textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}</span>
-                                                {hasBal && key !== 'sss_loan' && key !== 'pagibig_loan' && (
-                                                    <span style={{ fontSize: '0.65rem', display: 'block', fontStyle: 'italic' }}>
-                                                        Bal: ₱{Number(slip.deduction_details?.[balanceKey] || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                    </span>
-                                                )}
-                                            </span>
-                                            <span>₱{Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                {/* Reviewer Action Buttons */}
+                                {payrollRun.status !== 'APPROVED' && payrollRun.status !== 'locked' && (
+                                    (payrollRun.workflow_stage === 1 && (user?.role === 'HR' || user?.role === 'Super Admin')) ||
+                                    (payrollRun.workflow_stage === 2 && (user?.role === 'Admin' || user?.role === 'Super Admin')) ||
+                                    (payrollRun.workflow_stage === 3 && (['President', 'Vice President'].includes(user?.role || '') || user?.role === 'Super Admin'))
+                                ) && (
+                                        <>
+                                            <button onClick={handleApprove} className="approve-btn" disabled={processing}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                APPROVE PAYROLL
+                                            </button>
+                                            <button onClick={() => setShowReturnModal(true)} className="return-btn" disabled={processing}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                                RETURN FOR CORRECTION
+                                            </button>
+                                        </>
+                                    )}
+
+                                {payrollRun.status === 'APPROVED' && permissions.canLock && (
+                                    <button onClick={handleLock} className="primary-action-btn black" disabled={processing}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                        LOCK & ARCHIVE
+                                    </button>
+                                )}
+
+                                <div className="divider-h"></div>
+
+                                <button onClick={handlePrintBatch} className="secondary-action-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                    PRINT REGISTER
+                                </button>
+                                <button onClick={handleExportPDF} className="secondary-action-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    DOWNLOAD SUMMARY
+                                </button>
+
+                                {payrollRun.status !== 'locked' && permissions.canDelete && (
+                                    <button onClick={handleDelete} className="danger-action-link">
+                                        Delete this payroll run
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Audit Trail Panel */}
+                        <div className="sidebar-card-new mt-24">
+                            <h3 className="sidebar-title">Audit Trail</h3>
+                            <div className="audit-list">
+                                {auditLogs.length > 0 ? auditLogs.map((log, idx) => (
+                                    <div key={idx} className="audit-item">
+                                        <div className="audit-dot"></div>
+                                        <div className="audit-content">
+                                            <div className="audit-action">{log.action.replace(/_/g, ' ')}</div>
+                                            <div className="audit-user">by {log.username}</div>
+                                            <div className="audit-time">{new Date(log.performed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(log.performed_at).toLocaleDateString()}</div>
                                         </div>
-                                    );
-                                })}
-                                <div className="payslip-total">
-                                    <span>TOTAL DEDUCTIONS</span>
-                                    <span>₱{Number(slip.total_deductions || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style={{ background: '#f5f5f5', padding: '0.6rem 0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', border: '1.5px solid #333' }}>
-                            <span style={{ fontWeight: 800, fontSize: '1rem' }}>NET PAY</span>
-                            <span style={{ fontWeight: 800, fontSize: '1.35rem' }}>₱{Number(slip.net_pay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', marginTop: '1rem' }}>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ borderTop: '1.5px solid #333', marginTop: '15px', paddingTop: '3px' }}>
-                                    <p style={{ fontWeight: 800, margin: 0, textTransform: 'uppercase', fontSize: '0.75rem' }}>{slip.employee_name}</p>
-                                    <p style={{ fontSize: '0.65rem', margin: 0 }}>Employee Signature</p>
-                                </div>
-                            </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ borderTop: '1.5px solid #333', marginTop: '15px', paddingTop: '3px' }}>
-                                    <p style={{ fontWeight: 800, margin: 0, textTransform: 'uppercase', fontSize: '0.75rem' }}>MARILYN RELOBA</p>
-                                    <p style={{ fontSize: '0.65rem', margin: 0 }}>Branch Manager</p>
-                                </div>
+                                    </div>
+                                )) : (
+                                    <div className="empty-audit">No audit logs found</div>
+                                )}
                             </div>
                         </div>
                     </div>
-                ))}
+                </div>
+
+                {/* Batch Print Component */}
+                {showBatchPrint && payrollRun && (
+                    <div className="print-only-batch">
+                        <PayslipBatchPrint payslips={payslips.map(p => ({
+                            ...p,
+                            run_number: payrollRun.run_number,
+                            payroll_period_start: payrollRun.payroll_period_start,
+                            payroll_period_end: payrollRun.payroll_period_end,
+                            cutoff_day: payrollRun.cutoff_day,
+                            payroll_status: payrollRun.status
+                        }))} />
+                    </div>
+                )}
+
+                {/* Single Payslip View Modal */}
+                {payslipToView && (
+                    <PayslipViewModal
+                        payslip={payslipToView}
+                        payrollRun={payrollRun}
+                        onClose={() => setPayslipToView(null)}
+                    />
+                )}
+
+                {/* Return Remarks Modal */}
+                {showReturnModal && (
+                    <div className="modal-overlay">
+                        <div className="return-modal">
+                            <h3>Return Payroll</h3>
+                            <p>Please provide a reason for returning this payroll for correction.</p>
+                            <textarea
+                                value={returnRemarks}
+                                onChange={(e) => setReturnRemarks(e.target.value)}
+                                placeholder="Enter remarks here..."
+                                className="remarks-textarea"
+                                rows={4}
+                            />
+                            <div className="modal-actions">
+                                <button onClick={() => setShowReturnModal(false)} className="btn-cancel">Cancel</button>
+                                <button onClick={handleReturn} className="btn-confirm-return" disabled={processing}>
+                                    {processing ? 'Processing...' : 'Return Payroll'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                @media screen {
-                    /* Global Page Styling Override for this page - Light Theme */
-                    .dashboard-content { 
-                        background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%);
-                        color: #1e293b;
-                    }
-
-                    .payslip-print-container, .payroll-register-print-container, .single-payslip-print-container {
-                        display: none;
-                    }
-
-                    /* Summary Section */
-                    .summary-grid {
-                        display: grid;
-                        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                        gap: 1.5rem;
-                        margin-bottom: 2rem;
-                    }
-                    .summary-item {
-                        padding: 1.5rem;
-                        background: #ffffff;
-                        border-radius: 20px;
-                        border: 1px solid #d1fae5; /* Soft Emerald border */
-                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-                        transition: transform 0.2s ease, box-shadow 0.2s ease;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                    }
-                    .summary-item:hover {
-                        transform: translateY(-3px);
-                        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-                    }
-                    .summary-item label {
-                        display: flex;
-                        align-items: center;
-                        gap: 0.5rem;
-                        font-size: 0.72rem;
-                        font-weight: 800;
-                        color: #059669; /* Emerald 600 for labels */
-                        text-transform: uppercase;
-                        letter-spacing: 0.1em;
-                        margin-bottom: 0.5rem;
-                    }
-                    .summary-item .value {
-                        font-size: 1.25rem;
-                        font-weight: 800;
-                        color: #1e293b;
-                        font-family: 'Inter', sans-serif;
-                    }
-                    .summary-item .value.highlight {
-                        color: #059669; /* Emerald 600 */
-                        font-size: 2rem;
-                        line-height: 1.1;
-                        font-weight: 900;
-                        letter-spacing: -0.02em;
-                    }
-
-                    /* Main Card Styling */
-                    .card {
-                        background: #ffffff !important;
-                        border: 1px solid #d1fae5;
-                        border-radius: 28px;
-                        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-                        overflow: hidden;
-                        margin-bottom: 2rem;
-                    }
-                    .card-header {
-                        background: #f0fdf4; /* Light green tint */
-                        border-bottom: 1px solid #d1fae5;
-                        padding: 1.75rem 2.25rem;
-                    }
-                    .card-title {
-                        font-size: 1.6rem;
-                        font-weight: 800;
-                        color: #1e293b;
-                        letter-spacing: -0.03em;
-                        display: flex;
-                        align-items: center;
-                        gap: 1rem;
-                    }
-                    
-                    /* Buttons */
-                    .btn-primary {
-                        background: #059669;
-                        border: 1px solid #047857;
-                        border-radius: 14px;
-                        font-weight: 700;
-                        letter-spacing: 1px;
-                        text-transform: uppercase;
-                        font-size: 0.75rem;
-                        padding: 0.75rem 1.5rem;
-                        transition: all 0.2s;
-                        color: #ffffff;
-                    }
-                    .btn-primary:hover {
-                        background: #047857;
-                        transform: translateY(-1px);
-                    }
-
-                    /* Badges */
-                    .badge {
-                        padding: 0.5rem 1rem;
-                        border-radius: 99px;
-                        font-weight: 700;
-                        font-size: 0.8rem;
-                        letter-spacing: 0.02em;
-                    }
-                    .badge-success {
-                        background-color: #dcfce7;
-                        color: #166534;
-                        border: 1px solid #bbf7d0;
-                    }
-                    .badge-warning {
-                        background-color: #fef9c3;
-                        color: #854d0e;
-                        border: 1px solid #fef08a;
-                    }
-                    .badge-info {
-                        background-color: #e0f2fe;
-                        color: #075985;
-                        border: 1px solid #bae6fd;
-                    }
-
-                    /* Table Styling */
-                    .table-container-responsive {
-                        overflow-x: auto;
-                        width: 100%;
-                        border-radius: 20px;
-                        border: 1px solid #e2e8f0;
-                        background: #ffffff;
-                    }
-                    .table-condensed {
-                        width: 100%;
-                        border-collapse: separate;
-                        border-spacing: 0;
-                    }
-                    .table-condensed th {
-                        background: #f0fdf4; /* Emerald tint */
-                        padding: 1.25rem 1rem;
-                        font-size: 0.65rem;
-                        font-weight: 800;
-                        color: #047857; /* Darker emerald */
-                        text-transform: uppercase;
-                        letter-spacing: 0.12em;
-                        border-bottom: 1px solid #d1fae5;
-                        white-space: nowrap;
-                    }
-                    .table-condensed td {
-                        padding: 1.25rem 1rem;
-                        vertical-align: middle;
-                        font-size: 0.85rem;
-                        border-bottom: 1px solid #f1f5f9;
-                        white-space: nowrap;
-                        color: #334155;
-                        font-weight: 500;
-                    }
-                    .table-condensed tbody tr:hover td {
-                        background-color: #f8fafc !important;
-                    }
-                    
-                    /* Highlights */
-                    .highlight-net {
-                        color: #059669;
-                        font-weight: 900 !important;
-                        background-color: #f0fdf4 !important;
-                    }
-
-                    /* Footer */
-                    .table-footer td {
-                        background: #f8fafc !important;
-                        border-top: 2px solid #d1fae5;
-                        color: #065f46;
-                        font-weight: 700;
-                        padding: 1.5rem 1rem;
-                    }
-                    .table-footer .highlight {
-                        background: #f0fdf4 !important;
-                        color: #15803d;
-                        font-weight: 900;
-                        border-top: 2px solid #059669;
-                    }
-
-                    /* Modal styles */
-                    .payslip-row {
-                        display: flex;
-                        justify-content: space-between;
-                        padding: 0.85rem 0;
-                        border-bottom: 1px solid #f1f5f9;
-                    }
-                    .payslip-row span:first-child {
-                        color: #64748b;
-                    }
-                    .payslip-row span:last-child {
-                        font-weight: 600;
-                        color: #1e293b;
-                    }
-                    .payslip-total {
-                        display: flex;
-                        justify-content: space-between;
-                        padding: 1.25rem 0;
-                        margin-top: 0.5rem;
-                        font-weight: 800;
-                        border-top: 2px solid #e2e8f0;
-                        color: #1e293b;
-                    }
-                    .payslip-net-box {
-                        background: #f0fdf4;
-                        margin-top: 1.5rem;
-                        padding: 1.25rem;
-                        border-radius: 16px;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        border: 1px solid #bbf7d0;
-                    }
-                    .payslip-net-box span:first-child {
-                        font-weight: 800;
-                        color: #166534;
-                        text-transform: uppercase;
-                        font-size: 0.85rem;
-                    }
-                    .payslip-net-box span:last-child {
-                        font-weight: 900;
-                        color: #15803d;
-                        font-size: 1.75rem;
-                    }
+            <style jsx global>{`
+                .approval-tracker {
+                    background: white;
+                    padding: 20px;
+                    border-radius: 12px;
+                    margin-bottom: 24px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                }
+                .tracker-steps {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 10px;
+                }
+                .tracker-step-container {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .tracker-step {
+                    flex: 1;
+                    padding: 12px;
+                    border-radius: 8px;
+                    text-align: center;
+                    position: relative;
+                    min-height: 60px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                }
+                .step-label {
+                    font-size: 11px;
+                    font-weight: 700;
+                    letter-spacing: 0.05em;
+                }
+                .step-status {
+                    font-size: 10px;
+                    margin-top: 4px;
+                    color: #6b7280;
+                }
+                .step-current-tag {
+                    position: absolute;
+                    top: -8px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #4f46e5;
+                    color: white;
+                    font-size: 8px;
+                    font-weight: 800;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                }
+                .tracker-line {
+                    height: 2px;
+                    flex: 0 0 20px;
+                }
+                .return-remarks-banner {
+                    margin-top: 16px;
+                    padding: 12px 16px;
+                    background: #fff1f2;
+                    border-left: 4px solid #ef4444;
+                    color: #991b1b;
+                    font-size: 13px;
+                    border-radius: 4px;
                 }
 
+                /* Modal Styles */
+                .modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0,0,0,0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 1000;
+                }
+                .return-modal {
+                    background: white;
+                    padding: 24px;
+                    border-radius: 12px;
+                    width: 400px;
+                    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+                }
+                .return-modal h3 { margin: 0 0 12px; font-size: 18px; }
+                .remarks-textarea {
+                    width: 100%;
+                    margin: 16px 0;
+                    padding: 12px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    resize: none;
+                }
+                .modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
+                .btn-cancel { background: #f3f4f6; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+                .btn-confirm-return { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
                 @media print {
-                    .no-print, .sidebar, .topbar {
-                        display: none !important;
-                    }
-                    @page { margin: 0.5cm; }
-                    
-                    /* Force hide all by default with high specificity */
-                    body .payslip-print-container, 
-                    body .payroll-register-print-container, 
-                    body .single-payslip-print-container {
+                    /* Always hide layout elements: Sidebar and Top Header */
+                    aside.main-sidebar,
+                    header.premium-header {
                         display: none !important;
                     }
 
-                    /* Conditional display based on body class */
-                    body.printing-register @page { size: legal landscape; }
-                    body.printing-register .payroll-register-print-container {
+                    /* Layout Resets for Print */
+                    .premium-dashboard-container {
                         display: block !important;
+                        height: auto !important;
+                        overflow: visible !important;
+                    }
+                    .main-viewport {
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        overflow: visible !important;
+                    }
+                    .scroll-content {
+                        overflow: visible !important;
                     }
 
-                    body.printing-payslips @page { size: legal portrait; }
-                    body.printing-payslips .payslip-print-container {
+                    /* Batch Mode Specifics */
+                    .batch-mode .page-header, 
+                    .batch-mode .summary-grid, 
+                    .batch-mode .main-card {
+                        display: none !important;
+                    }
+                    .print-only-batch {
                         display: block !important;
-                    }
-
-                    body.printing-single @page { size: legal portrait; }
-                    body.printing-single .single-payslip-print-container {
-                        display: block !important;
-                    }
-
-                    .payslip-page {
-                        height: 32.5%;
-                        border-bottom: 1px dashed #000;
-                        padding: 0.5cm;
-                        page-break-inside: avoid;
-                        display: flex;
-                        flex-direction: column;
-                        background: white !important;
-                    }
-                    body.printing-single .payslip-page {
-                        height: auto;
-                        border-bottom: none;
-                    }
-                    .payslip-row {
-                        display: flex;
-                        justify-content: space-between;
-                        padding: 4px 0;
-                        border-bottom: 1px solid #eee;
-                        font-size: 0.8rem;
-                    }
-                    .payslip-total {
-                        display: flex;
-                        justify-content: space-between;
-                        padding: 6px 0;
-                        font-weight: 800;
-                        border-top: 1.5px solid #333;
+                        width: 100%;
                     }
                 }
-            `}} />
-        </DashboardLayout>
-    );
-}
 
-export default function PayrollDetailsPage() {
-    return (
-        <Suspense fallback={
-            <DashboardLayout>
-                <div style={{ textAlign: 'center', padding: '3rem' }}>
-                    <p>Loading payroll details...</p>
-                </div>
-            </DashboardLayout>
-        }>
-            <PayrollDetailsContent />
-        </Suspense>
+                .page-wrapper {
+                    padding: 24px;
+                    background-color: #f3f4f6;
+                    min-height: 100vh;
+                    font-family: 'Inter', sans-serif;
+                }
+                
+                /* Header Styles */
+                .page-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 24px;
+                    background: white;
+                    padding: 16px 24px;
+                    border-radius: 8px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                }
+                .header-left {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                }
+                .back-link {
+                    color: #6b7280;
+                    padding: 8px;
+                    border-radius: 50%;
+                }
+                .back-link:hover {
+                    background-color: #f3f4f6;
+                }
+                .page-title {
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: #111827;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+                .meta-info {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 13px;
+                    color: #6b7280;
+                    margin-top: 4px;
+                }
+                .meta-dot { color: #d1d5db; }
+                
+                .header-actions {
+                    display: flex;
+                    gap: 12px;
+                }
+                .action-btn-primary {
+                    background: #4f46e5;
+                    color: white;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    font-weight: 500;
+                    font-size: 14px;
+                    border: none;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: all 0.2s;
+                }
+                .action-btn-primary:hover { opacity: 0.9; }
+                .action-btn-secondary {
+                    background: white;
+                    color: #374151;
+                    border: 1px solid #d1d5db;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    font-weight: 500;
+                    font-size: 14px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .action-btn-secondary:hover { background: #f9fafb; }
+                .action-btn-danger {
+                    background: #fee2e2;
+                    color: #ef4444;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    border: 1px solid #fecaca;
+                    cursor: pointer;
+                }
+                .action-btn-danger:hover { background: #fef2f2; }
+
+                /* Summary Cards */
+                .summary-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 24px;
+                    margin-bottom: 24px;
+                }
+                .summary-card {
+                    background: white;
+                    border-radius: 12px;
+                    padding: 20px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    gap: 16px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                }
+                .card-icon-wrapper {
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+                .card-content { flex: 1; }
+                .card-label { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em; }
+                .card-value { font-size: 24px; font-weight: 700; line-height: 1.2; margin-bottom: 4px; }
+                .card-subtext { font-size: 12px; font-weight: 500; }
+                .card-link { font-size: 12px; color: #4f46e5; text-decoration: underline; }
+                .text-dark { color: #111827; }
+
+                /* Main Table Card */
+                .main-card {
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                    height: calc(100vh - 300px); /* Fill remaining space */
+                }
+                .card-header {
+                    padding: 16px 24px;
+                    border-bottom: 1px solid #e5e7eb;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .section-title { font-size: 16px; font-weight: 600; color: #111827; margin: 0; }
+                .search-wrapper {
+                    position: relative;
+                    width: 300px;
+                }
+                .search-icon {
+                    position: absolute;
+                    left: 12px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: #9ca3af;
+                }
+                .search-input {
+                    width: 100%;
+                    padding: 8px 12px 8px 36px;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    outline: none;
+                }
+                .search-input:focus { border-color: #4f46e5; }
+
+                /* Table Styles */
+                .table-container {
+                    overflow-x: auto;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 8px;
+                    margin-top: 16px;
+                    width: 100%; /* ensure full width use */
+                }
+                .batch-view-container {
+                    padding: 24px;
+                    background: white;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                    margin-top: 24px;
+                    overflow-x: auto;
+                }
+                .payroll-table {
+                    width: 100%;
+                    border-collapse: separate;
+                    border-spacing: 0;
+                    font-size: 13px;
+                }
+                .payroll-table thead th {
+                    background: #f9fafb;
+                    color: #4b5563;
+                    font-weight: 600;
+                    font-size: 10px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    padding: 12px 16px;
+                    border-bottom: 2px solid #f3f4f6;
+                    position: sticky;
+                    top: 0;
+                    z-index: 10;
+                    text-align: inherit; /* Ensure alignment from specific classes */
+                }
+                .payroll-table tbody tr {
+                    transition: background 0.1s;
+                }
+                .payroll-table tbody tr:hover {
+                    background-color: #f8fafc;
+                }
+                .payroll-table td {
+                    padding: 12px 16px;
+                    border-bottom: 1px solid #f3f4f6;
+                    vertical-align: middle;
+                }
+                .th-center, .td-center { text-align: center; }
+                .th-right, .td-right { text-align: right; }
+                .th-employee, .td-employee { text-align: left; }
+                
+                .employee-info {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1px;
+                }
+                .employee-name {
+                    font-weight: 600;
+                    color: #111827;
+                }
+                .employee-meta {
+                    font-size: 11px;
+                    color: #9ca3af;
+                }
+                
+                .td-editable { 
+                    cursor: pointer; 
+                }
+                .td-editable:hover { 
+                    background-color: #eff6ff;
+                    box-shadow: inset 0 0 0 1px #3b82f6;
+                }
+                .cell-input {
+                    width: 100%;
+                    padding: 4px 8px;
+                    border: 2px solid #3b82f6;
+                    border-radius: 4px;
+                    font-size: 13px;
+                    outline: none;
+                    text-align: inherit;
+                }
+                
+                .table-summary-row td {
+                    background: #f9fafb;
+                    border-top: 2px solid #e5e7eb;
+                    border-bottom: none;
+                    font-size: 12px;
+                    padding: 16px;
+                }
+                
+                .text-green-600 { color: #059669; }
+                .text-red-600 { color: #dc2626; }
+                .text-indigo-600 { color: #4f46e5; }
+                .font-bold { font-weight: 700; }
+
+                /* Scrollbar */
+                .table-container::-webkit-scrollbar { width: 6px; height: 6px; }
+                .table-container::-webkit-scrollbar-track { background: transparent; }
+                .table-container::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+                .table-container::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+                .premium-header {
+                    margin-bottom: 32px;
+                }
+                .breadcrumb-nav {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 13px;
+                    color: #6b7280;
+                    margin-bottom: 12px;
+                }
+                .breadcrumb-nav a {
+                    text-decoration: none;
+                    color: #6b7280;
+                }
+                .breadcrumb-nav a:hover { color: #4f46e5; }
+                .chevron { font-size: 16px; margin: 0 4px; color: #d1d5db; }
+                .current { color: #111827; font-weight: 500; }
+                
+                .header-main-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .page-title-new {
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #111827;
+                    letter-spacing: -0.01em;
+                }
+                .header-controls {
+                    display: flex;
+                    align-items: center;
+                    gap: 20px;
+                }
+                .status-badge-premium {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 6px 16px;
+                    border-radius: 9999px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    background: #f0f9ff;
+                    color: #0369a1;
+                    border: 1px solid #bae6fd;
+                }
+                .status-badge-premium.approved { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+                .status-badge-premium.draft { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
+                .status-badge-premium.locked { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
+                .status-badge-premium .dot {
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 50%;
+                    background: currentColor;
+                }
+                
+                .header-user-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                }
+                .icon-button {
+                    position: relative;
+                    background: none;
+                    border: none;
+                    color: #6b7280;
+                    cursor: pointer;
+                    padding: 4px;
+                }
+                .notification-dot {
+                    position: absolute;
+                    top: 2px;
+                    right: 2px;
+                    width: 8px;
+                    height: 8px;
+                    background: #f43f5e;
+                    border: 2px solid white;
+                    border-radius: 50%;
+                }
+                .user-avatar-premium {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    background: #fde68a;
+                    color: #92400e;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 600;
+                    font-size: 14px;
+                }
+                .premium-tracker-section {
+                    background: white;
+                    padding: 32px;
+                    border-radius: 12px;
+                    margin-bottom: 24px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                }
+                .tracker-timeline {
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                }
+                .timeline-step-container {
+                    flex: 1;
+                    display: flex;
+                    align-items: flex-start;
+                }
+                .timeline-line {
+                    height: 2px;
+                    background: #e5e7eb;
+                    flex: 1;
+                    margin-top: 24px;
+                    margin-right: -12px;
+                    margin-left: -12px;
+                }
+                .timeline-line.active { background: #10b981; }
+                
+                .timeline-step {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    text-align: center;
+                    z-index: 1;
+                    width: 140px;
+                }
+                .step-icon-circle {
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 50%;
+                    background: white;
+                    border: 2px solid #e5e7eb;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #9ca3af;
+                    margin-bottom: 12px;
+                    transition: all 0.3s;
+                }
+                .step-icon-circle.approved {
+                    background: #10b981;
+                    border-color: #10b981;
+                    color: white;
+                }
+                .step-icon-circle.current {
+                    background: #3b82f6;
+                    border-color: #3b82f6;
+                    color: white;
+                    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+                }
+                
+                .step-content-box {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                }
+                .step-header-label {
+                    font-size: 10px;
+                    font-weight: 700;
+                    color: #3b82f6;
+                    letter-spacing: 0.05em;
+                }
+                .step-person-name {
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #111827;
+                }
+                .step-status-text {
+                    font-size: 11px;
+                    color: #9ca3af;
+                }
+                .step-status-text.approved { color: #10b981; font-weight: 500; }
+                .step-status-text.current { color: #3b82f6; font-weight: 500; }
+                
+                .return-remarks-banner-new {
+                    margin-top: 20px;
+                    padding: 12px 16px;
+                    background: #fff1f2;
+                    border-radius: 8px;
+                    color: #991b1b;
+                    font-size: 13px;
+                    border-left: 4px solid #ef4444;
+                }
+                .remarks-label { font-weight: 700; }
+
+                /* Summary Cards Redesign */
+                .premium-summary-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 24px;
+                    margin-bottom: 32px;
+                }
+                .premium-card {
+                    background: white;
+                    padding: 24px;
+                    border-radius: 12px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                    border: 1px solid #f3f4f6;
+                }
+                .card-title {
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #6b7280;
+                    letter-spacing: 0.05em;
+                    margin-bottom: 8px;
+                }
+                .card-main-value {
+                    font-size: 28px;
+                    font-weight: 700;
+                    color: #111827;
+                    margin-bottom: 8px;
+                    letter-spacing: -0.02em;
+                }
+                .card-trend {
+                    font-size: 12px;
+                    font-weight: 500;
+                }
+                .card-trend.upward { color: #10b981; }
+                .card-sub-info {
+                    font-size: 12px;
+                    color: #9ca3af;
+                }
+                /* Two-Column Layout */
+                .redesigned-grid-container {
+                    display: grid;
+                    grid-template-columns: 1fr 320px;
+                    gap: 32px;
+                    align-items: flex-start;
+                }
+                .left-column-content {
+                    min-width: 0; /* Important for flex/grid items to shrink */
+                }
+                
+                .main-card-new {
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .card-header-new {
+                    padding: 24px;
+                    border-bottom: 1px solid #f3f4f6;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .table-container-new {
+                    overflow-x: auto;
+                    padding: 0 24px;
+                }
+                .table-footer-new {
+                    padding: 20px 24px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-top: 1px solid #f3f4f6;
+                }
+                .pagination-controls-new {
+                    display: flex;
+                    gap: 8px;
+                }
+
+                /* Sidebar Styles */
+                .right-sidebar-new {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 24px;
+                }
+                .sidebar-card-new {
+                    background: white;
+                    padding: 24px;
+                    border-radius: 12px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                    border: 1px solid #f3f4f6;
+                }
+                .sidebar-title {
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: #111827;
+                    margin-bottom: 20px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+                .action-buttons-stack {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                }
+                .primary-action-btn {
+                    width: 100%;
+                    padding: 12px;
+                    background: #3b82f6;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    font-size: 13px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    transition: all 0.2s;
+                    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+                }
+                .primary-action-btn:hover { background: #2563eb; transform: translateY(-1px); }
+                .primary-action-btn.black { background: #111827; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+                
+                .approve-btn {
+                    width: 100%;
+                    padding: 12px;
+                    background: #10b981;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    font-size: 13px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                }
+                .approve-btn:hover { background: #059669; }
+                
+                .return-btn {
+                    width: 100%;
+                    padding: 12px;
+                    background: #fff1f2;
+                    color: #e11d48;
+                    border: 1px solid #fecaca;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    font-size: 13px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                }
+                .return-btn:hover { background: #ffe4e6; }
+                
+                .secondary-action-btn {
+                    width: 100%;
+                    padding: 10px;
+                    background: white;
+                    color: #374151;
+                    border: 1px solid #d1d5db;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    font-size: 13px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                }
+                .secondary-action-btn:hover { background: #f9fafb; border-color: #9ca3af; }
+                
+                .divider-h { height: 1px; background: #f3f4f6; margin: 8px 0; }
+                
+                .danger-action-link {
+                    background: none;
+                    border: none;
+                    color: #9ca3af;
+                    font-size: 12px;
+                    text-decoration: underline;
+                    cursor: pointer;
+                    margin-top: 12px;
+                    text-align: center;
+                }
+                .danger-action-link:hover { color: #f43f5e; }
+
+                /* Audit Trail List */
+                .audit-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                }
+                .audit-item {
+                    display: flex;
+                    gap: 12px;
+                    position: relative;
+                }
+                .audit-dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: #3b82f6;
+                    margin-top: 4px;
+                    flex-shrink: 0;
+                    z-index: 1;
+                }
+                .audit-content {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                }
+                .audit-action {
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #111827;
+                    text-transform: capitalize;
+                }
+                .audit-user {
+                    font-size: 12px;
+                    color: #6b7280;
+                }
+                .audit-time {
+                    font-size: 10px;
+                    color: #9ca3af;
+                }
+                .empty-audit { font-size: 12px; color: #9ca3af; font-style: italic; text-align: center; padding: 20px 0; }
+                .mt-24 { margin-top: 24px; }
+            `}</style>
+        </DashboardLayout>
     );
 }

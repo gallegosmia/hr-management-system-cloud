@@ -481,6 +481,10 @@ export default function BonusesPage() {
 
             <style jsx global>{`
                 @media print {
+                    @page {
+                        size: portrait;
+                        margin: 10mm;
+                    }
                     body * {
                         visibility: hidden;
                     }

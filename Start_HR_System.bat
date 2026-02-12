@@ -5,7 +5,7 @@ echo   MELANN HR MANAGEMENT SYSTEM - OFFLINE LAUNCHER
 echo ====================================================
 echo.
 echo 1. Starting the HR System engine...
-echo 2. Opening your browser to http://localhost:3000...
+echo 2. Opening your browser to http://localhost:3001...
 echo.
 echo IMPORTANT: Keep this window open while using the system.
 echo You can minimize it, but do not close it.
@@ -13,7 +13,7 @@ echo.
 echo ====================================================
 
 :: Open the browser automatically
-start "" "http://localhost:3000"
+start "" "http://localhost:3001"
 
 :: Start the server
 npm run dev

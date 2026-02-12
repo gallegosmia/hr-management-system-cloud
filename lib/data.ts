@@ -1,4 +1,5 @@
 import { getAll, getById, insert, update, query, remove, resetTableSequence, isPostgres } from './database';
+import { normalizeBranchName } from './branch-access';
 
 export interface SalaryInfo {
     basic_salary: number;
@@ -65,7 +66,7 @@ export interface Employee {
     government_docs_complete: number;
     employment_records_complete: number;
     attendance_records_complete: number;
-    payroll_records_complete: number;
+
     disciplinary_records: number;
     training_records: number;
     separation_records: number;
@@ -74,6 +75,8 @@ export interface Employee {
     remarks?: string;
     training_details?: string;
     disciplinary_details?: string;
+    leave_credits?: number;
+    loan_balance?: number;
 }
 
 export interface Education {
@@ -121,46 +124,77 @@ export interface EmployeeFormData {
     government_docs_complete?: number;
     employment_records_complete?: number;
     attendance_records_complete?: number;
-    payroll_records_complete?: number;
     disciplinary_records?: number;
     training_records?: number;
     separation_records?: number;
     training_details?: string;
     disciplinary_details?: string;
+    loan_balance?: number;
 }
 
-export interface PayrollRun {
+export interface EmergencyLoan {
     id: number;
-    period_start: string;
-    period_end: string;
-    total_amount: number;
-    status: 'Draft' | 'Pending Manager' | 'Pending EVP' | 'Finalized';
-    created_at: string;
-    created_by: number;
-    manager_approved_by?: number;
-    manager_approved_at?: string;
-    evp_approved_by?: number;
-    evp_approved_at?: string;
-}
-
-export interface Payslip {
-    id: number;
-    payroll_run_id: number;
     employee_id: number;
-    gross_pay: number;
-    net_pay: number;
-    total_deductions: number;
-    total_allowances: number;
-    days_present: number;
-    double_pay_days: number;
-    double_pay_amount: number;
-    deduction_details: any;
-    allowance_details: any;
-    generated_at: string;
+    requested_amount: number;
+    approved_amount?: number;
+    reason: string;
+    category: string;
+    status: string; // Draft, Submitted, Under Review, Approved, Disapproved, Released, Closed
+    filing_date: string;
+    disapproval_reason?: string;
+    current_approval_level: number;
+    approvals: any;
+    attachments: any;
+    deduction_amount?: number;
+    total_released_amount?: number;
+
+    // Enhanced Release Tracking
+    release_type?: 'FULL' | 'STAGGERED';
+    released_amount?: number;
+    remaining_balance?: number;
+    tracker_status?: string;
+    first_release_amount?: number;
+    second_release_amount?: number;
+    last_release_amount?: number;
+
+    metadata: any;
+    created_at: string;
+    updated_at: string;
+    employee_name?: string;
+    position?: string;
+    branch?: string;
+    department?: string;
+    salary_info?: any;
+}
+
+export interface AuditLog {
+    id: number;
+    user_id: number;
+    action: string;
+    details: any;
+    ip_address?: string;
+    created_at: string;
+}
+
+export interface Announcement {
+    id: number;
+    title: string;
+    content: string;
+    author_id: number;
+    category: 'Announcement' | 'Memo' | 'Policy';
+    priority: 'Low' | 'Normal' | 'High' | 'Urgent';
+    target_branch: string;
+    target_department: string;
+    target_employee_id?: number | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    author_name?: string;
+    target_employee_name?: string;
 }
 
 export interface LeaveSettings {
-    payroll_cutoff_day: number;
+
     filing_cutoff_days: number;
     approval_levels: {
         level1_enabled: boolean;
@@ -174,7 +208,7 @@ export async function getLeaveSettings(): Promise<LeaveSettings> {
     if (res.rows.length > 0) return res.rows[0].value;
 
     return {
-        payroll_cutoff_day: 15,
+
         filing_cutoff_days: 3,
         approval_levels: {
             level1_enabled: true,
@@ -200,7 +234,7 @@ export function calculateCompletionStatus(employee: Employee): string {
         employee.government_docs_complete,
         employee.employment_records_complete,
         employee.attendance_records_complete,
-        employee.payroll_records_complete
+
     ];
 
     const completedCount = requiredFields.filter(field => field === 1).length;
@@ -258,7 +292,7 @@ export async function createEmployee(data: EmployeeFormData, userId: number): Pr
         government_docs_complete: data.government_docs_complete ?? 0,
         employment_records_complete: data.employment_records_complete ?? 0,
         attendance_records_complete: data.attendance_records_complete ?? 0,
-        payroll_records_complete: data.payroll_records_complete ?? 0,
+
         disciplinary_records: data.disciplinary_records ?? 0,
         training_records: data.training_records ?? 0,
         separation_records: data.separation_records ?? 0,
@@ -300,7 +334,6 @@ export async function archiveEmployee(id: number): Promise<void> {
 
 export async function deleteEmployee(id: number): Promise<void> {
     // Delete related records without ON DELETE CASCADE
-    await query(`DELETE FROM payslips WHERE employee_id = $1`, [id]);
 
     // Now delete the employee
     await remove('employees', id);
@@ -393,8 +426,14 @@ export async function filterEmployees(filters: {
     return res.rows;
 }
 
-export async function getDashboardStats() {
-    const employees = await getAll('employees');
+export async function getDashboardStats(branch?: string) {
+    let employees = await getAll('employees');
+
+    if (branch && branch !== 'All') {
+        const normalizedBranch = normalizeBranchName(branch);
+        employees = employees.filter((emp: any) => normalizeBranchName(emp.branch) === normalizedBranch);
+    }
+
     const activeEmployees = employees.filter((emp: any) => emp.employment_status !== 'Resigned');
 
     const completeFiles = employees.filter((emp: any) => emp.file_completion_status === 'Complete').length;
@@ -413,7 +452,13 @@ export async function getDashboardStats() {
     });
     const byStatus = Array.from(statusMap.entries()).map(([employment_status, count]) => ({ employment_status, count }));
 
-    const leavesRes = await query("SELECT COUNT(*) FROM leave_requests WHERE status LIKE 'Pending%'");
+    let leaveSql = "SELECT COUNT(*) FROM leave_requests l JOIN employees e ON l.employee_id = e.id WHERE l.status LIKE 'Pending%'";
+    const leaveParams = [];
+    if (branch && branch !== 'All') {
+        leaveSql += " AND e.branch = $1";
+        leaveParams.push(branch);
+    }
+    const leavesRes = await query(leaveSql, leaveParams);
     const pendingLeaves = parseInt(leavesRes.rows[0].count);
 
     const pendingUsersRes = await query("SELECT COUNT(*) FROM users WHERE is_active = 0");
@@ -422,7 +467,13 @@ export async function getDashboardStats() {
     // Get Today's Attendance Stats
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
-    const attendanceRes = await query("SELECT status FROM attendance WHERE date = $1", [todayStr]);
+    let attendanceSql = "SELECT a.status FROM attendance a JOIN employees e ON a.employee_id = e.id WHERE a.date = $1";
+    const attendanceParams = [todayStr];
+    if (branch && branch !== 'All') {
+        attendanceSql += " AND e.branch = $2";
+        attendanceParams.push(branch);
+    }
+    const attendanceRes = await query(attendanceSql, attendanceParams);
     const todayRecords = attendanceRes.rows;
 
     const todayPresents = todayRecords.filter((r: any) =>
@@ -532,14 +583,6 @@ export interface DetailedReportsData {
         remaining: number;
         details: Record<string, number>;
     }[];
-    payrollSummary: {
-        totalBasicRate: number;
-        totalAllowances: number;
-        totalSSS: number;
-        totalPhilHealth: number;
-        totalPagIBIG: number;
-        employeeCount: number;
-    };
     complianceAudit: {
         id: number;
         name: string;
@@ -595,8 +638,9 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
     const employees = await getAll('employees');
     let activeEmployees = employees.filter((emp: any) => emp.employment_status !== 'Resigned');
 
-    if (branch && branch !== 'All Branches') {
-        activeEmployees = activeEmployees.filter((emp: any) => emp.branch === branch);
+    if (branch && branch !== 'All Branches' && branch !== 'All') {
+        const normalizedBranch = normalizeBranchName(branch);
+        activeEmployees = activeEmployees.filter((emp: any) => normalizeBranchName(emp.branch) === normalizedBranch);
     }
 
     const now = new Date();
@@ -612,12 +656,12 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
     // 1. Attendance
     const attendanceSummary = activeEmployees.map((emp: any) => {
         const empAttendance = attendance.filter((a: any) => a.employee_id === emp.id);
-        const present = empAttendance.filter((a: any) => a.status === 'Present').length;
-        const late = empAttendance.filter((a: any) => a.status === 'Late').length;
-        const absent = empAttendance.filter((a: any) => a.status === 'Absent').length;
+        const present = empAttendance.filter((a: any) => a.status?.toLowerCase() === 'present').length;
+        const late = empAttendance.filter((a: any) => a.status?.toLowerCase() === 'late').length;
+        const absent = empAttendance.filter((a: any) => a.status?.toLowerCase() === 'absent').length;
 
         // Calculate onLeave from attendance OR approved leave requests
-        const attendanceOnLeave = empAttendance.filter((a: any) => a.status === 'On Leave').length;
+        const attendanceOnLeave = empAttendance.filter((a: any) => a.status?.toLowerCase() === 'on leave').length;
 
         // Also check leave requests falling in this period
         const empLeaves = leaves.filter((l: any) => l.employee_id === emp.id);
@@ -655,16 +699,22 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
     // 2. Leave - Computation based primarily on Attendance 'On Leave' status
     const currentYearStart = new Date(now.getFullYear(), 0, 1);
     const yearlyLeaveRes = await query(
-        "SELECT employee_id, COUNT(*) as count FROM attendance WHERE status = 'On Leave' AND date >= $1 GROUP BY employee_id",
+        "SELECT employee_id, COUNT(*) as count FROM attendance WHERE (LOWER(status) = 'on leave' OR LOWER(status) = 'sick leave' OR LOWER(status) = 'vacation leave' OR LOWER(status) = 'emergency leave') AND date >= $1 GROUP BY employee_id",
         [currentYearStart]
     );
     const yearlyAttendanceLeaveMap = new Map(yearlyLeaveRes.rows.map((r: any) => [Number(r.employee_id), parseInt(r.count)]));
+    const yearlyBirthdayRes = await query(
+        "SELECT employee_id, COUNT(*) as count FROM attendance WHERE LOWER(status) = 'birthday leave' AND date >= $1 GROUP BY employee_id",
+        [currentYearStart]
+    );
+    const yearlyAttendanceBirthdayMap = new Map(yearlyBirthdayRes.rows.map((r: any) => [Number(r.employee_id), parseInt(r.count)]));
 
     const leaveUsage = activeEmployees.map((emp: any) => {
         const empLeavesFiled = leaves.filter((l: any) => l.employee_id === emp.id);
 
         // Attendance records are the primary truth for usage
         const used = yearlyAttendanceLeaveMap.get(emp.id) || 0;
+        const attendanceBirthdayUsed = yearlyAttendanceBirthdayMap.get(emp.id) || 0;
 
         // Validation: We can compare filed vs logs if needed, but 'used' is attendance-based
         const filedCount = empLeavesFiled.reduce((acc: number, curr: any) => acc + Number(curr.days_count), 0);
@@ -674,15 +724,20 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
             return acc;
         }, {});
 
+        // Specific count for Birthday Leave - preferring attendance if available
+        const birthdayLeaveCount = Math.max(byType['Birthday Leave'] || 0, attendanceBirthdayUsed);
+
+        const entitlement = Number(emp.leave_credits) || 5;
         return {
             id: emp.id,
             name: `${emp.first_name} ${emp.last_name}`,
             department: emp.department,
             branch: emp.branch,
-            entitlement: 5, // Yearly entitlement
-            used,           // Counts 'On Leave' in attendance for the current year
-            remaining: 5 - used,
+            entitlement,
+            used,           // Counts 'On Leave', 'Sick Leave', etc. in attendance for the current year
+            remaining: entitlement - used,
             details: byType,
+            birthdayLeaveUsed: birthdayLeaveCount,
             filedValidation: filedCount // Retained for background validation
         };
     });
@@ -808,14 +863,14 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
                     late_minutes: lateMinutes
                 };
             })
-            .filter(log => log.status === 'Late' || log.status === 'Absent' || log.late_minutes > 0);
+            .filter(log => log.status?.toLowerCase() === 'late' || log.status?.toLowerCase() === 'absent' || log.late_minutes > 0);
     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     // 9. Lates and Absences Summary (Threshold: 5 lates or 10 absences)
     const latesAbsencesSummary = activeEmployees.map((emp: any) => {
         const empAttendance = attendance.filter((a: any) => a.employee_id === emp.id);
-        const lateCount = empAttendance.filter(a => a.status === 'Late').length;
-        const absentCount = empAttendance.filter(a => a.status === 'Absent').length;
+        const lateCount = empAttendance.filter(a => a.status?.toLowerCase() === 'late').length;
+        const absentCount = empAttendance.filter(a => a.status?.toLowerCase() === 'absent').length;
 
         return {
             id: emp.id,
@@ -831,7 +886,7 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
     return {
         attendanceSummary,
         leaveUsage,
-        payrollSummary,
+
         complianceAudit,
         tenureData,
         governmentRemittance,
@@ -914,13 +969,16 @@ export interface Attendance {
 }
 
 export async function getAttendanceByDate(date: string): Promise<Attendance[]> {
-    const res = await query("SELECT * FROM attendance WHERE date = $1", [date]);
+    const res = await query(
+        "SELECT a.*, e.branch, e.first_name || ' ' || e.last_name as employee_name FROM attendance a JOIN employees e ON a.employee_id = e.id WHERE a.date = $1",
+        [date]
+    );
     return res.rows;
 }
 
 export async function getEmployeeAttendance(employeeId: number, startDate: string, endDate: string): Promise<Attendance[]> {
     const res = await query(
-        "SELECT * FROM attendance WHERE employee_id = $1 AND date >= $2 AND date <= $3",
+        "SELECT a.*, e.branch, e.first_name || ' ' || e.last_name as employee_name FROM attendance a JOIN employees e ON a.employee_id = e.id WHERE a.employee_id = $1 AND a.date >= $2 AND a.date <= $3",
         [employeeId, startDate, endDate]
     );
     return res.rows;
@@ -964,10 +1022,13 @@ export async function recordAttendance(data: {
     if (isLeave) {
         // If we are changing to leave or creating a new leave record
         if (!existingRecord || !existingRecord.status.toLowerCase().includes('leave')) {
-            const year = new Date(data.date).getFullYear();
-            const used = await getEmployeeLeaveCount(data.employee_id, year);
-            if (used >= 5) {
-                throw new Error(`Leave limit exceeded for this year (Max 5 days). Current used: ${used}`);
+            // EXEMPT Birthday Leave from the 5-day limit
+            if (data.status !== 'Birthday Leave') {
+                const year = new Date(data.date).getFullYear();
+                const used = await getEmployeeLeaveCount(data.employee_id, year);
+                if (used >= 5) {
+                    throw new Error(`Leave limit exceeded for this year (Max 5 days). Current used: ${used}`);
+                }
             }
         }
     }
@@ -994,9 +1055,42 @@ export async function batchRecordAttendance(records: {
 }[]): Promise<void> {
     if (records.length === 0) return;
 
-    // Use loop to ensure recordAttendance logic (like leave limit check) is run for each
-    for (const record of records) {
-        await recordAttendance(record);
+    if (isPostgres()) {
+        // Optimization: Single batch query for Postgres
+        const values: any[] = [];
+        const placeholders: string[] = [];
+
+        records.forEach((record, index) => {
+            const i = index * 6;
+            placeholders.push(`($${i + 1}, $${i + 2}, $${i + 3}, $${i + 4}, $${i + 5}, $${i + 6})`);
+            values.push(
+                record.employee_id,
+                record.date,
+                record.time_in || null,
+                record.time_out || null,
+                record.status,
+                record.remarks || null
+            );
+        });
+
+        const sql = `
+            INSERT INTO attendance (employee_id, date, time_in, time_out, status, remarks)
+            VALUES ${placeholders.join(', ')}
+            ON CONFLICT (employee_id, date) 
+            DO UPDATE SET 
+                time_in = EXCLUDED.time_in,
+                time_out = EXCLUDED.time_out,
+                status = EXCLUDED.status,
+                remarks = EXCLUDED.remarks,
+                updated_at = CURRENT_TIMESTAMP
+        `;
+
+        await query(sql, values);
+    } else {
+        // Use loop for other DBs or fallback
+        for (const record of records) {
+            await recordAttendance(record);
+        }
     }
 }
 
@@ -1084,43 +1178,6 @@ export async function advanceApprovalLevel(id: number, nextLevel: number): Promi
     });
 }
 
-export async function getAllPayrollRuns(): Promise<PayrollRun[]> {
-    return await getAll('payroll_runs');
-}
-
-export async function getPayrollRunById(id: number): Promise<PayrollRun | undefined> {
-    return await getById('payroll_runs', id);
-}
-
-export async function createPayrollRun(data: Omit<PayrollRun, 'id' | 'created_at'>): Promise<number> {
-    return await insert('payroll_runs', data);
-}
-
-export async function getPayslipsByRunId(runId: number): Promise<Payslip[]> {
-    const res = await query("SELECT * FROM payslips WHERE payroll_run_id = $1", [runId]);
-    return res.rows.map(row => ({
-        ...row,
-        deduction_details: typeof row.deduction_details === 'string' ? JSON.parse(row.deduction_details) : row.deduction_details,
-        allowance_details: typeof row.allowance_details === 'string' ? JSON.parse(row.allowance_details) : row.allowance_details
-    }));
-}
-
-export async function getEmployeePayslips(employeeId: number): Promise<any[]> {
-    const sql = `
-        SELECT p.*, pr.period_start, pr.period_end, pr.status as run_status
-        FROM payslips p
-        JOIN payroll_runs pr ON p.payroll_run_id = pr.id
-        WHERE p.employee_id = $1
-        ORDER BY pr.period_end DESC
-    `;
-    const res = await query(sql, [employeeId]);
-    return res.rows.map(row => ({
-        ...row,
-        deduction_details: typeof row.deduction_details === 'string' ? JSON.parse(row.deduction_details) : row.deduction_details,
-        allowance_details: typeof row.allowance_details === 'string' ? JSON.parse(row.allowance_details) : row.allowance_details
-    }));
-}
-
 export async function getEmployeeLeaveCount(employeeId: number, year: number): Promise<number> {
     const res = await query("SELECT * FROM attendance WHERE employee_id = $1", [employeeId]);
     return res.rows.filter((row: any) => {
@@ -1130,7 +1187,8 @@ export async function getEmployeeLeaveCount(employeeId: number, year: number): P
 
         // Status check (case-insensitive)
         const s = (row.status || '').toLowerCase();
-        return s === 'on leave';
+        // Count all standard leaves (including legacy 'on leave'), but EXCLUDE birthday leave
+        return (s === 'on leave' || s === 'vacation leave' || s === 'sick leave' || s === 'emergency leave') && s !== 'birthday leave';
     }).length;
 }
 
@@ -1144,55 +1202,6 @@ export async function getEmployeeLateCount(employeeId: number, month: number, ye
         const s = (row.status || '').toLowerCase();
         return s === 'late';
     }).length;
-}
-
-export async function createPayslip(data: Omit<Payslip, 'id' | 'generated_at'>): Promise<number> {
-    return await insert('payslips', {
-        ...data,
-        // Don't manually stringify for Postgres JSONB or Local JSON
-        deduction_details: data.deduction_details,
-        allowance_details: data.allowance_details
-    });
-}
-
-export async function batchCreatePayslips(items: Omit<Payslip, 'id' | 'generated_at'>[]): Promise<void> {
-    if (items.length === 0) return;
-
-    if (isPostgres()) {
-        const values: any[] = [];
-        let placeholderIndex = 1;
-        const valueStrings: string[] = [];
-
-        for (const item of items) {
-            valueStrings.push(`($${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++}, $${placeholderIndex++})`);
-            values.push(
-                item.payroll_run_id,
-                item.employee_id,
-                item.gross_pay,
-                item.net_pay,
-                item.total_deductions,
-                item.total_allowances,
-                item.days_present,
-                item.double_pay_days,
-                item.double_pay_amount,
-                item.deduction_details,
-                item.allowance_details
-            );
-        }
-
-        const sql = `
-            INSERT INTO payslips (
-                payroll_run_id, employee_id, gross_pay, net_pay, 
-                total_deductions, total_allowances, days_present, 
-                double_pay_days, double_pay_amount, deduction_details, allowance_details
-            ) VALUES ${valueStrings.join(', ')}
-        `;
-        await query(sql, values);
-    } else {
-        for (const item of items) {
-            await createPayslip(item);
-        }
-    }
 }
 
 export async function batchUpdateEmployees(updates: { id: number, data: Partial<EmployeeFormData> }[]): Promise<void> {
@@ -1227,11 +1236,245 @@ export async function logAudit(data: {
     });
 }
 
-export async function updatePayrollRun(id: number, data: Partial<PayrollRun>): Promise<void> {
-    await update('payroll_runs', id, data);
+// Emergency Loan Functions
+export async function getEmergencyLoans(filters: { employee_id?: number, status?: string } = {}): Promise<EmergencyLoan[]> {
+    const activePool = isPostgres();
+    if (activePool) {
+        let sql = "SELECT l.*, (e.first_name || ' ' || e.last_name) as employee_name, e.branch FROM emergency_loans l JOIN employees e ON l.employee_id = e.id WHERE 1=1";
+        const params = [];
+
+        if (filters.employee_id) {
+            params.push(filters.employee_id);
+            sql += ` AND l.employee_id = $${params.length}`;
+        }
+        if (filters.status) {
+            params.push(filters.status);
+            sql += ` AND l.status = $${params.length}`;
+        }
+
+        sql += " ORDER BY l.created_at DESC";
+        const res = await query(sql, params);
+        return res.rows as EmergencyLoan[];
+    } else {
+        // Local JSON Fallback
+        const loans = await getAll('emergency_loans');
+        const employees = await getAll('employees');
+        let filtered = loans.map(loan => {
+            const emp = employees.find(e => e.id == loan.employee_id);
+            return {
+                ...loan,
+                employee_name: emp ? `${emp.first_name} ${emp.last_name}` : 'Unknown',
+                branch: emp ? emp.branch : 'Unknown'
+            };
+        });
+
+        if (filters.employee_id) filtered = filtered.filter(l => l.employee_id === filters.employee_id);
+        if (filters.status) filtered = filtered.filter(l => l.status === filters.status);
+
+        return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
 }
 
-export async function deletePayrollRun(id: number): Promise<void> {
-    await remove('payroll_runs', id);
+export async function getEmergencyLoanById(id: number): Promise<EmergencyLoan | null> {
+    const activePool = isPostgres();
+    if (activePool) {
+        const res = await query(
+            "SELECT l.*, (e.first_name || ' ' || e.last_name) as employee_name, e.position, e.branch, e.department, e.salary_info FROM emergency_loans l JOIN employees e ON l.employee_id = e.id WHERE l.id = $1",
+            [id]
+        );
+        return (res.rows[0] as EmergencyLoan) || null;
+    } else {
+        const loan = await getById('emergency_loans', id);
+        if (!loan) return null;
+        const emp = await getById('employees', loan.employee_id);
+        return {
+            ...loan,
+            employee_name: emp ? `${emp.first_name} ${emp.last_name}` : 'Unknown',
+            position: emp?.position,
+            branch: emp?.branch,
+            department: emp?.department,
+            salary_info: emp?.salary_info
+        };
+    }
 }
 
+export async function createEmergencyLoan(data: any): Promise<number> {
+    return await insert('emergency_loans', data);
+}
+
+export async function updateEmergencyLoan(id: number, data: any): Promise<void> {
+    await update('emergency_loans', id, data);
+}
+
+export async function getLoanConfig() {
+    const res = await query("SELECT value FROM settings WHERE key = 'loan_config'");
+    if (res.rows.length > 0) {
+        // Handle both object and stringified JSON
+        const val = res.rows[0].value;
+        return typeof val === 'string' ? JSON.parse(val) : val;
+    }
+    return { max_total_company_loan: 30000 };
+}
+
+export async function getEmployeeLoanBalance(employeeId: number): Promise<number> {
+    if (isPostgres()) {
+        const res = await query(
+            "SELECT SUM(balance) as total FROM employee_loans WHERE employee_id = $1 AND status IN ('Active', 'Ongoing', 'Approved') AND balance > 0",
+            [employeeId]
+        );
+        return Number(res.rows[0]?.total || 0);
+    } else {
+        // Local JSON Fallback
+        const loans = await getAll('employee_loans');
+        return loans
+            .filter(l => l.employee_id === employeeId && ['Active', 'Ongoing', 'Approved'].includes(l.status) && Number(l.balance) > 0)
+            .reduce((sum, l) => sum + Number(l.balance || 0), 0);
+    }
+}
+
+export async function addLoanToLedger(data: {
+    employee_id: number;
+    loan_type: string;
+    principal: number;
+    balance: number;
+    status: string;
+}) {
+    return await insert('employee_loans', {
+        ...data,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    });
+}
+
+export function computeLoanEligibility(category: string, currentBalance: number = 0, globalMax: number = 30000) {
+    const categoryLimits: Record<string, number> = {
+        'Medical – Employee': 10000,
+        'Medical – Spouse/Children': 20000,
+        'Medical – Parents/In-laws': 20000,
+        'House Repair': 30000,
+        'Vehicle Repair': 30000,
+        'Bereavement': 25000,
+        'Education': 25000,
+        'Other Emergency': 15000
+    };
+
+    const catLimit = categoryLimits[category] || 10000;
+    // Hard ceiling is the globalMax
+    const maxAllowable = globalMax;
+    const remaining = Math.max(0, globalMax - currentBalance);
+
+    // We also consider the category limit for the SPECIFIC request, but the available limit is governed by the global 30k.
+    const requestLimit = Math.min(catLimit, remaining);
+
+    return { maxAllowable, currentBalance, remaining, requestLimit };
+}
+
+export function getLoanDeduction(amount: number) {
+    if (amount <= 10000) return 500;
+    if (amount <= 15000) return 600;
+    if (amount <= 20000) return 800;
+    if (amount <= 25000) return 900;
+    return 1000;
+}
+
+
+export async function getAnnouncements(filters: { is_active?: boolean, branch?: string, department?: string, employee_id?: number } = {}): Promise<Announcement[]> {
+    const activePool = isPostgres();
+    if (activePool) {
+        let sql = `
+            SELECT a.*, u.username as author_name, e.first_name || ' ' || e.last_name as target_employee_name 
+            FROM announcements a 
+            LEFT JOIN users u ON a.author_id = u.id 
+            LEFT JOIN employees e ON a.target_employee_id = e.id
+            WHERE 1=1
+        `;
+        const params = [];
+
+        if (filters.is_active !== undefined) {
+            params.push(filters.is_active);
+            sql += ` AND a.is_active = $${params.length}`;
+        }
+
+        if (filters.employee_id) {
+            // For a specific employee: show public ones (target_employee_id is null) AND private ones for them
+            params.push(filters.employee_id);
+            sql += ` AND (a.target_employee_id IS NULL OR a.target_employee_id = $${params.length})`;
+
+            // Still respect branch/dept filters if they are public
+            if (filters.branch && filters.branch !== 'All') {
+                params.push(filters.branch);
+                sql += ` AND (a.target_employee_id IS NOT NULL OR a.target_branch = $${params.length} OR a.target_branch = 'All')`;
+            }
+        } else {
+            // If no employee_id filter (likely a manager view), show all
+            if (filters.branch && filters.branch !== 'All') {
+                params.push(filters.branch);
+                sql += ` AND (a.target_branch = $${params.length} OR a.target_branch = 'All')`;
+            }
+        }
+
+        if (filters.department && filters.department !== 'All') {
+            params.push(filters.department);
+            sql += ` AND (a.target_department = $${params.length} OR a.target_department = 'All')`;
+        }
+
+        sql += " ORDER BY a.created_at DESC";
+        const res = await query(sql, params);
+        return res.rows as Announcement[];
+    } else {
+        const announcements = await getAll('announcements');
+        const users = await getAll('users');
+        const employees = await getAll('employees');
+        let filtered = announcements.map(a => {
+            const user = users.find(u => u.id == a.author_id);
+            const targetEmp = a.target_employee_id ? employees.find(e => e.id == a.target_employee_id) : null;
+            return {
+                ...a,
+                author_name: user ? user.username : 'Unknown',
+                target_employee_name: targetEmp ? `${targetEmp.first_name} ${targetEmp.last_name}` : undefined
+            };
+        });
+
+        if (filters.is_active !== undefined) filtered = filtered.filter(a => a.is_active === filters.is_active);
+
+        if (filters.employee_id) {
+            filtered = filtered.filter(a => !a.target_employee_id || a.target_employee_id == filters.employee_id);
+            // Re-apply branch filter for public ones
+            if (filters.branch && filters.branch !== 'All') {
+                const normalizedFilterBranch = normalizeBranchName(filters.branch);
+                filtered = filtered.filter(a => a.target_employee_id || normalizeBranchName(a.target_branch) === normalizedFilterBranch || a.target_branch === 'All');
+            }
+        } else {
+            if (filters.branch && filters.branch !== 'All') {
+                const normalizedFilterBranch = normalizeBranchName(filters.branch);
+                filtered = filtered.filter(a => normalizeBranchName(a.target_branch) === normalizedFilterBranch || a.target_branch === 'All');
+            }
+        }
+
+        if (filters.department && filters.department !== 'All') {
+            filtered = filtered.filter(a => a.target_department === filters.department || a.target_department === 'All');
+        }
+
+        return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+}
+
+export async function createAnnouncement(data: Partial<Announcement>): Promise<number> {
+    return await insert('announcements', {
+        ...data,
+        is_active: data.is_active ?? true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    });
+}
+
+export async function updateAnnouncement(id: number, data: Partial<Announcement>): Promise<void> {
+    await update('announcements', id, {
+        ...data,
+        updated_at: new Date().toISOString()
+    });
+}
+
+export async function deleteAnnouncement(id: number): Promise<void> {
+    await remove('announcements', id);
+}

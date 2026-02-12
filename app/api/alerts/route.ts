@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAll, query } from '@/lib/database';
 import { differenceInDays } from 'date-fns';
+import { getRequestSession } from '@/lib/middleware/branch-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -110,12 +111,14 @@ export async function GET(request: NextRequest) {
                         type: 'probation_ending',
                         severity: 'medium',
                         message: `Probationary period ending in ${daysUntilEnd} days`,
-                        created_at: new Date().toISOString()
+                        created_at: probationEndDate.toISOString()
                     });
                 }
             }
             // Alert: Probation ending soon (within 30 days) for 'Probationary' status
             if (emp.employment_status === 'Probationary' && daysSinceHire > 150 && daysSinceHire < 180) {
+                const probationEndDate = new Date(emp.date_hired);
+                probationEndDate.setMonth(probationEndDate.getMonth() + 6);
                 alerts.push({
                     id: `probation-${emp.id}`,
                     employee_id: emp.id,
@@ -123,7 +126,7 @@ export async function GET(request: NextRequest) {
                     type: 'probation_ending',
                     severity: 'medium',
                     message: 'Probationary period ending soon',
-                    created_at: new Date().toISOString()
+                    created_at: probationEndDate.toISOString()
                 });
             }
         });
@@ -131,8 +134,9 @@ export async function GET(request: NextRequest) {
         // Check for Excessive Lates (5+ in current month)
         const now = new Date();
         const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+        const monthIndex = now.getMonth();
+        const month = String(monthIndex + 1).padStart(2, '0');
+        const lastDay = new Date(year, monthIndex + 1, 0).getDate();
 
         const startOfMonth = `${year}-${month}-01`;
         const endOfMonth = `${year}-${month}-${lastDay}`;
@@ -144,8 +148,6 @@ export async function GET(request: NextRequest) {
             if (typeof a.date === 'string') {
                 recordDate = a.date.split('T')[0];
             } else if (a.date instanceof Date) {
-                // Ensure we get the date part without timezone shift if possible, 
-                // but usually toISOString is safest for standard Date objects in DB
                 recordDate = a.date.toISOString().split('T')[0];
             }
 
@@ -168,17 +170,59 @@ export async function GET(request: NextRequest) {
                 const emp = employees.find((e: any) => e.id === employeeId);
                 if (emp) {
                     alerts.unshift({
-                        id: `lates-${emp.id}-${now.getMonth()}`,
+                        id: `lates-${emp.id}-${monthIndex}`,
                         employee_id: emp.id,
                         employee_name: `${emp.first_name} ${emp.last_name}`,
                         type: 'excessive_lates',
                         severity: 'high',
                         message: `Employee has ${count} lates this month. Candidate for warning.`,
-                        created_at: new Date().toISOString()
+                        created_at: startOfMonth // Use stable start of month
                     });
                 }
             }
         });
+
+        // Add Payroll Approval Alerts
+        try {
+            const session = await getRequestSession(request);
+            if (session && session.user) {
+                const userRole = session.user.role;
+                const payrollsRes = await query(`
+                    SELECT * FROM payroll_runs 
+                    WHERE status IN ('FOR HR REVIEW', 'FOR OPERATIONS REVIEW', 'FOR EVP APPROVAL', 'RETURNED TO HR', 'RETURNED TO PREPARER')
+                `);
+
+                (payrollsRes.rows || []).forEach((run: any) => {
+                    let showForUser = false;
+                    let alertMsg = '';
+
+                    if (run.workflow_stage === 1 && (userRole === 'HR' || userRole === 'Super Admin')) {
+                        showForUser = true;
+                        alertMsg = `Payroll ${run.run_number} is pending HR Review.`;
+                    } else if (run.workflow_stage === 2 && (userRole === 'Admin' || userRole === 'Super Admin')) {
+                        showForUser = true;
+                        alertMsg = `Payroll ${run.run_number} is pending Operations Review.`;
+                    } else if (run.workflow_stage === 3 && (['President', 'Vice President'].includes(userRole) || userRole === 'Super Admin')) {
+                        showForUser = true;
+                        alertMsg = `Payroll ${run.run_number} is pending EVP Final Approval.`;
+                    }
+
+                    if (showForUser) {
+                        alerts.unshift({
+                            id: `payroll-${run.id}`,
+                            employee_id: 0,
+                            employee_name: 'Payroll System',
+                            type: 'PAYROLL_APPROVAL' as any,
+                            severity: 'high',
+                            message: alertMsg,
+                            created_at: run.updated_at || run.created_at
+                        } as any);
+                    }
+                });
+            }
+        } catch (err) {
+            console.error('Failed to fetch payroll alerts:', err);
+        }
 
         // Filter by severity if requested
         const filteredAlerts = severity

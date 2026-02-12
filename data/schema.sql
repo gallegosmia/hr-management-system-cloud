@@ -229,3 +229,17 @@ CREATE TABLE IF NOT EXISTS sessions (
 -- Note: You should hash the password using bcrypt before inserting in production
 -- This is just for schema reference
 -- INSERT INTO users (username, password, role) VALUES ('admin', '$2a$10$w8.B0uWCHf8n9XfX8U.6be8qE0V9A9U8Y/I6p0q/k6p0q/k6p0q', 'Admin');
+-- 11. Announcements table
+CREATE TABLE IF NOT EXISTS announcements (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    author_id INTEGER REFERENCES users(id),
+    category VARCHAR(50) DEFAULT 'Announcement', -- Announcement, Memo, Policy
+    priority VARCHAR(50) DEFAULT 'Normal', -- Low, Normal, High, Urgent
+    target_branch VARCHAR(100) DEFAULT 'All',
+    target_department VARCHAR(100) DEFAULT 'All',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

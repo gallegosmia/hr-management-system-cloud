@@ -1,0 +1,542 @@
+/**
+ * Compensation & Benefits Tab
+ * Displays and allows editing of employee salary information
+ * Automatically syncs with payroll system
+ */
+
+'use client';
+
+import { useState, useEffect } from 'react';
+
+interface CompensationTabProps {
+    employeeId: number;
+    employee: any;
+    onUpdate: () => void;
+}
+
+export default function CompensationTab({ employeeId, employee, onUpdate }: CompensationTabProps) {
+    const [editing, setEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
+
+    // Initialize salary info with proper defaults and legacy data handling
+    const initializeSalaryInfo = () => {
+        const info = employee?.salary_info || {};
+
+        // If we have monthly_salary but no daily_rate, calculate it
+        if (info.monthly_salary && !info.daily_rate) {
+            info.daily_rate = info.monthly_salary / 30;
+        }
+
+        // Handle legacy pagibig_loan (migrate to separate fields if needed)
+        let pagibig_loan_15th = info.deductions?.pagibig_loan_15th || 0;
+        let pagibig_loan_30th = info.deductions?.pagibig_loan_30th || 0;
+
+        // If old pagibig_loan exists but new fields don't, migrate it
+        if (info.deductions?.pagibig_loan && !pagibig_loan_15th && !pagibig_loan_30th) {
+            pagibig_loan_15th = info.deductions.pagibig_loan;
+            pagibig_loan_30th = info.deductions.pagibig_loan;
+        }
+
+        return {
+            daily_rate: info.daily_rate || 0,
+            monthly_salary: info.monthly_salary || 0,
+            allowances: {
+                regular: info.allowances?.regular || 0,
+                special: info.allowances?.special || 0
+            },
+            deductions: {
+                phic: info.deductions?.phic || 0,
+                pagibig: info.deductions?.pagibig || 0,
+                pagibig_loan_15th: pagibig_loan_15th,
+                pagibig_loan_30th: pagibig_loan_30th,
+                company_funds: info.deductions?.company_funds || 0,
+                sss: info.deductions?.sss || 0,
+                sss_loan: info.deductions?.sss_loan || 0,
+                company_loan: info.deductions?.company_loan || 0,
+                company_loan_balance: info.deductions?.company_loan_balance || 0,
+                cash_advance: info.deductions?.cash_advance || 0,
+                other_deductions: info.deductions?.other_deductions || 0
+            }
+        };
+    };
+
+    const [salaryInfo, setSalaryInfo] = useState(initializeSalaryInfo());
+
+    useEffect(() => {
+        if (employee?.salary_info) {
+            setSalaryInfo(initializeSalaryInfo());
+        }
+    }, [employee]);
+
+    const handleSave = async () => {
+        // Validation
+        if (!salaryInfo.daily_rate || salaryInfo.daily_rate <= 0) {
+            alert('Daily Rate is required and must be greater than zero.');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+
+            // Ensure monthly_salary is calculated before saving
+            const dataToSave = {
+                ...salaryInfo,
+                monthly_salary: calculateMonthlySalary()
+            };
+
+            const response = await fetch(`/api/employees`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
+                body: JSON.stringify({
+                    id: employeeId,
+                    salary_info: dataToSave
+                })
+            });
+
+            if (response.ok) {
+                alert('Compensation & Benefits updated successfully!');
+                setEditing(false);
+                onUpdate();
+            } else {
+                const data = await response.json();
+                alert(`Error: ${data.error || 'Failed to update'}`);
+            }
+        } catch (error) {
+            console.error('Error updating compensation:', error);
+            alert('Failed to update compensation & benefits');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const formatCurrency = (amount: number) => {
+        // Ensure we have a valid number, default to 0 for null/undefined/NaN
+        const validAmount = (amount !== null && amount !== undefined && !isNaN(amount)) ? amount : 0;
+
+        return new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP',
+            minimumFractionDigits: 2
+        }).format(validAmount);
+    };
+
+    const calculateMonthlySalary = () => {
+        const dailyRate = salaryInfo.daily_rate || 0;
+        return dailyRate * 30;
+    };
+
+    const calculateGrossPayPerCutoff = () => {
+        const dailyRate = salaryInfo.daily_rate || 0;
+        const basicPay = dailyRate * 15; // Default 15 days
+        const totalAllowances = (salaryInfo.allowances?.regular || 0) + (salaryInfo.allowances?.special || 0);
+        return basicPay + totalAllowances;
+    };
+
+    const calculate15thDeductions = () => {
+        const deductions = salaryInfo.deductions || {};
+        const phic = (deductions.phic !== null && deductions.phic !== undefined && !isNaN(deductions.phic)) ? deductions.phic : 0;
+        const pagibig = (deductions.pagibig !== null && deductions.pagibig !== undefined && !isNaN(deductions.pagibig)) ? deductions.pagibig : 0;
+        const pagibig_loan_15th = (deductions.pagibig_loan_15th !== null && deductions.pagibig_loan_15th !== undefined && !isNaN(deductions.pagibig_loan_15th)) ? deductions.pagibig_loan_15th : 0;
+        const company_funds = (deductions.company_funds !== null && deductions.company_funds !== undefined && !isNaN(deductions.company_funds)) ? deductions.company_funds : 0;
+        const company_loan = (deductions.company_loan !== null && deductions.company_loan !== undefined && !isNaN(deductions.company_loan)) ? deductions.company_loan : 0;
+        const cash_advance = (deductions.cash_advance !== null && deductions.cash_advance !== undefined && !isNaN(deductions.cash_advance)) ? deductions.cash_advance : 0;
+        const other_deductions = (deductions.other_deductions !== null && deductions.other_deductions !== undefined && !isNaN(deductions.other_deductions)) ? deductions.other_deductions : 0;
+
+        return phic + pagibig + pagibig_loan_15th + company_funds + company_loan + cash_advance + other_deductions;
+    };
+
+    const calculate30thDeductions = () => {
+        const deductions = salaryInfo.deductions || {};
+        const sss = (deductions.sss !== null && deductions.sss !== undefined && !isNaN(deductions.sss)) ? deductions.sss : 0;
+        const sss_loan = (deductions.sss_loan !== null && deductions.sss_loan !== undefined && !isNaN(deductions.sss_loan)) ? deductions.sss_loan : 0;
+        const pagibig_loan_30th = (deductions.pagibig_loan_30th !== null && deductions.pagibig_loan_30th !== undefined && !isNaN(deductions.pagibig_loan_30th)) ? deductions.pagibig_loan_30th : 0;
+        const company_loan = (deductions.company_loan !== null && deductions.company_loan !== undefined && !isNaN(deductions.company_loan)) ? deductions.company_loan : 0;
+        const cash_advance = (deductions.cash_advance !== null && deductions.cash_advance !== undefined && !isNaN(deductions.cash_advance)) ? deductions.cash_advance : 0;
+        const other_deductions = (deductions.other_deductions !== null && deductions.other_deductions !== undefined && !isNaN(deductions.other_deductions)) ? deductions.other_deductions : 0;
+
+        return sss + sss_loan + pagibig_loan_30th + company_loan + cash_advance + other_deductions;
+    };
+
+    const calculateNetPay15th = () => {
+        return calculateGrossPayPerCutoff() - calculate15thDeductions();
+    };
+
+    const calculateNetPay30th = () => {
+        return calculateGrossPayPerCutoff() - calculate30thDeductions();
+    };
+
+    return (
+        <div style={{ padding: '20px' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div>
+                    <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '4px' }}>
+                        Compensation & Benefits
+                    </h2>
+                    <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                        Salary information automatically syncs with payroll system
+                    </p>
+                </div>
+                {!editing ? (
+                    <button
+                        onClick={() => setEditing(true)}
+                        style={{
+                            padding: '8px 16px',
+                            background: '#10b981',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: 500
+                        }}
+                    >
+                        ✏️ Edit
+                    </button>
+                ) : (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                            onClick={() => {
+                                setEditing(false);
+                                setSalaryInfo(employee?.salary_info || salaryInfo);
+                            }}
+                            style={{
+                                padding: '8px 16px',
+                                background: '#e5e7eb',
+                                color: '#374151',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                fontWeight: 500
+                            }}
+                            disabled={saving}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            style={{
+                                padding: '8px 16px',
+                                background: '#10b981',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                fontWeight: 500
+                            }}
+                            disabled={saving}
+                        >
+                            {saving ? 'Saving...' : '💾 Save Changes'}
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                {/* Left Column - Basic Salary & Allowances */}
+                <div>
+                    {/* Basic Salary */}
+                    <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '20px', marginBottom: '16px' }}>
+                        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#111827' }}>
+                            💰 Basic Salary
+                        </h3>
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
+                                Daily Rate (PHP) <span style={{ color: '#ef4444' }}>*</span>
+                            </label>
+                            {editing ? (
+                                <>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={salaryInfo.daily_rate || 0}
+                                        onChange={(e) => setSalaryInfo({
+                                            ...salaryInfo,
+                                            daily_rate: parseFloat(e.target.value) || 0
+                                        })}
+                                        style={{
+                                            width: '100%',
+                                            padding: '8px 12px',
+                                            border: '2px solid #10b981',
+                                            borderRadius: '6px',
+                                            fontSize: '14px',
+                                            fontWeight: 600
+                                        }}
+                                        placeholder="Enter daily rate"
+                                    />
+                                    <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
+                                        Required field - Monthly salary will be auto-calculated
+                                    </div>
+                                </>
+                            ) : (
+                                <div style={{ fontSize: '18px', fontWeight: 600, color: '#10b981' }}>
+                                    {formatCurrency(salaryInfo.daily_rate || 0)}
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ padding: '12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px' }}>
+                            <div style={{ fontSize: '12px', color: '#15803d', marginBottom: '4px', fontWeight: 500 }}>
+                                Monthly Salary (Auto-computed)
+                            </div>
+                            <div style={{ fontSize: '20px', fontWeight: 700, color: '#15803d' }}>
+                                {formatCurrency(calculateMonthlySalary())}
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#16a34a', marginTop: '4px' }}>
+                                Daily Rate × 30 days
+                            </div>
+                            <div style={{ fontSize: '10px', color: '#4ade80', marginTop: '6px', fontStyle: 'italic' }}>
+                                💡 Monthly salary is automatically computed based on a 30-day month
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Allowances */}
+                    <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '20px' }}>
+                        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#111827' }}>
+                            🎁 Allowances
+                        </h3>
+
+                        <div style={{ marginBottom: '12px' }}>
+                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
+                                Regular Allowance
+                            </label>
+                            {editing ? (
+                                <input
+                                    type="number"
+                                    value={salaryInfo.allowances?.regular || 0}
+                                    onChange={(e) => setSalaryInfo({
+                                        ...salaryInfo,
+                                        allowances: {
+                                            ...salaryInfo.allowances,
+                                            regular: parseFloat(e.target.value) || 0
+                                        }
+                                    })}
+                                    style={{
+                                        width: '100%',
+                                        padding: '8px 12px',
+                                        border: '1px solid #d1d5db',
+                                        borderRadius: '6px',
+                                        fontSize: '14px'
+                                    }}
+                                />
+                            ) : (
+                                <div style={{ fontSize: '15px', fontWeight: 500 }}>
+                                    {formatCurrency(salaryInfo.allowances?.regular || 0)}
+                                </div>
+                            )}
+                        </div>
+
+                        <div>
+                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
+                                Special Allowance
+                            </label>
+                            {editing ? (
+                                <input
+                                    type="number"
+                                    value={salaryInfo.allowances?.special || 0}
+                                    onChange={(e) => setSalaryInfo({
+                                        ...salaryInfo,
+                                        allowances: {
+                                            ...salaryInfo.allowances,
+                                            special: parseFloat(e.target.value) || 0
+                                        }
+                                    })}
+                                    style={{
+                                        width: '100%',
+                                        padding: '8px 12px',
+                                        border: '1px solid #d1d5db',
+                                        borderRadius: '6px',
+                                        fontSize: '14px'
+                                    }}
+                                />
+                            ) : (
+                                <div style={{ fontSize: '15px', fontWeight: 500 }}>
+                                    {formatCurrency(salaryInfo.allowances?.special || 0)}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column - Deductions */}
+                <div>
+                    {/* 15th Cutoff Deductions */}
+                    <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '20px', marginBottom: '16px' }}>
+                        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#111827' }}>
+                            📅 15th Cutoff Deductions
+                        </h3>
+
+                        {[
+                            { key: 'phic', label: 'PhilHealth (PHIC)' },
+                            { key: 'pagibig', label: 'Pag-IBIG' },
+                            { key: 'pagibig_loan_15th', label: 'Pag-IBIG Loan' },
+                            { key: 'company_funds', label: 'Company Funds' }
+                        ].map(({ key, label }) => (
+                            <div key={key} style={{ marginBottom: '12px' }}>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
+                                    {label}
+                                </label>
+                                {editing ? (
+                                    <input
+                                        type="number"
+                                        value={(salaryInfo.deductions as any)?.[key] || 0}
+                                        onChange={(e) => setSalaryInfo({
+                                            ...salaryInfo,
+                                            deductions: {
+                                                ...salaryInfo.deductions,
+                                                [key]: parseFloat(e.target.value) || 0
+                                            }
+                                        })}
+                                        style={{
+                                            width: '100%',
+                                            padding: '8px 12px',
+                                            border: '1px solid #d1d5db',
+                                            borderRadius: '6px',
+                                            fontSize: '14px'
+                                        }}
+                                    />
+                                ) : (
+                                    <div style={{ fontSize: '15px', fontWeight: 500, color: '#ef4444' }}>
+                                        {formatCurrency((salaryInfo.deductions as any)?.[key] || 0)}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* 30th Cutoff Deductions */}
+                    <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '20px' }}>
+                        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#111827' }}>
+                            📅 30th Cutoff Deductions
+                        </h3>
+
+                        {[
+                            { key: 'sss', label: 'SSS' },
+                            { key: 'sss_loan', label: 'SSS Loan' },
+                            { key: 'pagibig_loan_30th', label: 'Pag-IBIG Loan' }
+                        ].map(({ key, label }) => (
+                            <div key={key} style={{ marginBottom: '12px' }}>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
+                                    {label}
+                                </label>
+                                {editing ? (
+                                    <input
+                                        type="number"
+                                        value={(salaryInfo.deductions as any)?.[key] || 0}
+                                        onChange={(e) => setSalaryInfo({
+                                            ...salaryInfo,
+                                            deductions: {
+                                                ...salaryInfo.deductions,
+                                                [key]: parseFloat(e.target.value) || 0
+                                            }
+                                        })}
+                                        style={{
+                                            width: '100%',
+                                            padding: '8px 12px',
+                                            border: '1px solid #d1d5db',
+                                            borderRadius: '6px',
+                                            fontSize: '14px'
+                                        }}
+                                    />
+                                ) : (
+                                    <div style={{ fontSize: '15px', fontWeight: 500, color: '#ef4444' }}>
+                                        {formatCurrency((salaryInfo.deductions as any)?.[key] || 0)}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Common Deductions */}
+                    <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '20px', marginTop: '16px' }}>
+                        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#111827' }}>
+                            📋 Common Deductions (Both Cutoffs)
+                        </h3>
+
+                        {[
+                            { key: 'company_loan', label: 'Company Loan (Deduction)' },
+                            { key: 'company_loan_balance', label: 'Company Loan Balance' },
+                            { key: 'cash_advance', label: 'Cash Advance' },
+                            { key: 'other_deductions', label: 'Other Deductions' }
+                        ].map(({ key, label }) => (
+                            <div key={key} style={{ marginBottom: '12px' }}>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
+                                    {label}
+                                </label>
+                                {editing ? (
+                                    <input
+                                        type="number"
+                                        value={(salaryInfo.deductions as any)?.[key] || 0}
+                                        onChange={(e) => setSalaryInfo({
+                                            ...salaryInfo,
+                                            deductions: {
+                                                ...salaryInfo.deductions,
+                                                [key]: parseFloat(e.target.value) || 0
+                                            }
+                                        })}
+                                        style={{
+                                            width: '100%',
+                                            padding: '8px 12px',
+                                            border: '1px solid #d1d5db',
+                                            borderRadius: '6px',
+                                            fontSize: '14px'
+                                        }}
+                                    />
+                                ) : (
+                                    <div style={{ fontSize: '15px', fontWeight: 500, color: '#ef4444' }}>
+                                        {formatCurrency((salaryInfo.deductions as any)?.[key] || 0)}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Summary Cards */}
+            <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                <div style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', borderRadius: '12px', padding: '20px', color: 'white' }}>
+                    <div style={{ fontSize: '13px', opacity: 0.9, marginBottom: '8px' }}>15th Cutoff - Estimated Net Pay</div>
+                    <div style={{ fontSize: '28px', fontWeight: 700 }}>{formatCurrency(calculateNetPay15th())}</div>
+                    <div style={{ fontSize: '12px', opacity: 0.8, marginTop: '8px' }}>
+                        Gross: {formatCurrency(calculateGrossPayPerCutoff())} - Deductions: {formatCurrency(calculate15thDeductions())}
+                    </div>
+                </div>
+
+                <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', borderRadius: '12px', padding: '20px', color: 'white' }}>
+                    <div style={{ fontSize: '13px', opacity: 0.9, marginBottom: '8px' }}>30th Cutoff - Estimated Net Pay</div>
+                    <div style={{ fontSize: '28px', fontWeight: 700 }}>{formatCurrency(calculateNetPay30th())}</div>
+                    <div style={{ fontSize: '12px', opacity: 0.8, marginTop: '8px' }}>
+                        Gross: {formatCurrency(calculateGrossPayPerCutoff())} - Deductions: {formatCurrency(calculate30thDeductions())}
+                    </div>
+                </div>
+            </div>
+
+            {/* Info Note */}
+            <div style={{ marginTop: '20px', padding: '16px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'start', gap: '12px' }}>
+                    <span style={{ fontSize: '20px' }}>ℹ️</span>
+                    <div>
+                        <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e40af', marginBottom: '4px' }}>
+                            Payroll Integration
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#1e40af', lineHeight: '1.5' }}>
+                            This information automatically syncs with the payroll system. When creating payroll runs,
+                            the system will use these values to calculate employee compensation. Net pay estimates assume
+                            15 payroll days per cutoff (default).
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
