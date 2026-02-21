@@ -40,6 +40,11 @@ export default function CreatePayrollPage() {
         selectedEmployees: [] as number[]
     });
 
+    // UI States
+    const [finalReviewChecked, setFinalReviewChecked] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [createdRun, setCreatedRun] = useState<{ id: number, run_number: string } | null>(null);
+
     useEffect(() => {
         fetchPermissions();
     }, []);
@@ -95,6 +100,8 @@ export default function CreatePayrollPage() {
     };
 
     const fetchEmployees = async () => {
+        setLoading(true);
+        setError(null);
         try {
             const sessionId = localStorage.getItem('sessionId');
             const response = await fetch(`/api/employees?branch=${formData.branch}&payroll_eligible=true&period_end=${formData.periodEnd}`, {
@@ -102,7 +109,9 @@ export default function CreatePayrollPage() {
                     'x-session-id': sessionId || ''
                 }
             });
+
             const data = await response.json();
+
             if (response.ok) {
                 // API returns array directly
                 const empList = Array.isArray(data) ? data : [];
@@ -110,12 +119,16 @@ export default function CreatePayrollPage() {
 
                 if (empList.length === 0) {
                     setError('No active employees found for the selected branch and payroll period.');
-                } else {
-                    setError(null);
                 }
+            } else {
+                setError(data.error || `Error ${response.status}: Failed to fetch employees.`);
+                setEmployees([]);
             }
         } catch (error) {
             console.error('Error fetching employees:', error);
+            setError('Failed to connect to employee record service.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -171,7 +184,9 @@ export default function CreatePayrollPage() {
         setLoading(true);
         try {
             const sessionId = localStorage.getItem('sessionId');
-            const response = await fetch('/api/payroll/runs', {
+
+            // Create Draft Payroll
+            const createResponse = await fetch('/api/payroll/runs', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -186,17 +201,22 @@ export default function CreatePayrollPage() {
                 })
             });
 
-            const data = await response.json();
+            const createData = await createResponse.json();
 
-            if (response.ok) {
-                alert(`Payroll run created successfully! ${data.payslipsCreated} payslips generated.`);
-                router.push(`/payroll/${data.payrollRun.id}`);
-            } else {
-                alert(`Error: ${data.error}`);
+            if (!createResponse.ok) {
+                throw new Error(createData.error || 'Failed to create payroll');
             }
-        } catch (error) {
+
+            const runId = createData.payrollRun.id;
+            const runNumber = createData.payrollRun.run_number;
+
+            // Success! Show Modal (payroll stays as DRAFT)
+            setCreatedRun({ id: runId, run_number: runNumber });
+            setShowSuccessModal(true);
+
+        } catch (error: any) {
             console.error('Error creating payroll:', error);
-            alert('Failed to create payroll run');
+            alert(`Failed to create payroll: ${error.message}`);
         } finally {
             setLoading(false);
         }
@@ -300,378 +320,465 @@ export default function CreatePayrollPage() {
                     <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#111827', margin: 0 }}>Create New Payroll</h1>
                 </div>
 
-                {/* Stepper */}
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '40px', padding: '0 40px' }}>
-                    {[
-                        { num: 1, label: 'Details' },
-                        { num: 2, label: 'Employees' },
-                        { num: 3, label: 'Review' }
-                    ].map((s, idx, arr) => (
-                        <div key={s.num} style={{ display: 'flex', alignItems: 'center', flex: idx !== arr.length - 1 ? 1 : 0 }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 2 }}>
-                                <div style={{
-                                    width: '32px', height: '32px', borderRadius: '50%',
-                                    background: step >= s.num ? '#10b981' : '#fff',
-                                    border: step >= s.num ? 'none' : '1px solid #e5e7eb',
-                                    color: step >= s.num ? '#fff' : '#6b7280',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontWeight: '600', fontSize: '14px', marginBottom: '4px'
-                                }}>
-                                    {step > s.num ? '✓' : s.num}
-                                </div>
-                                <span style={{
-                                    fontSize: '12px',
-                                    color: step >= s.num ? '#10b981' : '#9ca3af',
-                                    fontWeight: step >= s.num ? '600' : '400'
-                                }}>{s.label}</span>
-                            </div>
-                            {idx !== arr.length - 1 && (
-                                <div style={{
-                                    height: '2px',
-                                    background: step > s.num ? '#10b981' : '#e5e7eb',
-                                    flex: 1, margin: '0 10px',
-                                    transform: 'translateY(-10px)'
-                                }} />
+                {/* Step 1: Branch & Period */}
+                {step === 1 && (
+                    <div style={{ background: 'white', padding: '32px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
+                        <div style={{ marginBottom: '24px' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#374151' }}>
+                                Select Branch
+                            </label>
+                            <select
+                                value={formData.branch}
+                                onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
+                                style={{
+                                    width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db',
+                                    background: accessibleBranches.length === 1 ? '#f3f4f6' : 'white'
+                                }}
+                                disabled={accessibleBranches.length === 1}
+                            >
+                                <option value="" disabled>Select a branch...</option>
+                                {accessibleBranches.map(branch => (
+                                    <option key={branch} value={branch}>{branch}</option>
+                                ))}
+                            </select>
+                            {accessibleBranches.length > 1 && (
+                                <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>Only Super Admins can select different branches.</p>
                             )}
                         </div>
-                    ))}
-                </div>
 
-                <div className="compact-card" style={{ padding: '32px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #f3f4f6', background: 'white' }}>
-
-                    {/* STEP 1: Details */}
-                    {step === 1 && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                            {/* Branch Selection */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                             <div>
-                                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>
-                                    Branch Selection
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#374151' }}>
+                                    Period Start
                                 </label>
-                                <div style={{ position: 'relative' }}>
-                                    <select
-                                        value={formData.branch}
-                                        onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
-                                        className="compact-input"
-                                        style={{
-                                            width: '100%', padding: '12px 16px', fontSize: '14px',
-                                            background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px',
-                                            appearance: 'none', cursor: 'pointer'
-                                        }}
-                                    >
-                                        <option value="" disabled>Select Branch</option>
-                                        {accessibleBranches.map(b => (
-                                            <option key={b} value={b}>{b}</option>
-                                        ))}
-                                    </select>
-                                    <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#6b7280' }}>
-                                        ▼
-                                    </div>
-                                </div>
+                                <input
+                                    type="date"
+                                    value={formData.periodStart}
+                                    onChange={(e) => setFormData({ ...formData, periodStart: e.target.value })}
+                                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db' }}
+                                />
                             </div>
-
-                            {/* Cutoff Period */}
                             <div>
-                                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>
-                                    Cutoff Period
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#374151' }}>
+                                    Period End
                                 </label>
-                                <div style={{ display: 'flex', gap: '16px' }}>
-                                    <div style={{ flex: 1 }}>
-                                        <label style={{ display: 'block', fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>Start Date</label>
-                                        <input
-                                            type="date"
-                                            value={formData.periodStart}
-                                            onChange={(e) => setFormData({ ...formData, periodStart: e.target.value })}
-                                            className="compact-input"
-                                            style={{
-                                                width: '100%', padding: '12px 16px', fontSize: '14px',
-                                                background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#374151'
-                                            }}
-                                        />
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        <label style={{ display: 'block', fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>End Date</label>
-                                        <input
-                                            type="date"
-                                            value={formData.periodEnd}
-                                            onChange={(e) => setFormData({ ...formData, periodEnd: e.target.value })}
-                                            className="compact-input"
-                                            style={{
-                                                width: '100%', padding: '12px 16px', fontSize: '14px',
-                                                background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#374151'
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Info Banner */}
-                            <div style={{
-                                background: '#ecfdf5', borderRadius: '8px', padding: '16px',
-                                display: 'flex', gap: '12px', alignItems: 'flex-start'
-                            }}>
-                                <div style={{
-                                    background: '#10b981', color: 'white', borderRadius: '50%', width: '20px', height: '20px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold',
-                                    marginTop: '2px', flexShrink: 0
-                                }}>
-                                    i
-                                </div>
-                                <p style={{ margin: 0, fontSize: '13px', color: '#064e3b', lineHeight: '1.5' }}>
-                                    Setting the cutoff period will automatically filter all attendance and log records for the selected dates.
-                                </p>
+                                <input
+                                    type="date"
+                                    value={formData.periodEnd}
+                                    onChange={(e) => setFormData({ ...formData, periodEnd: e.target.value })}
+                                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db' }}
+                                />
                             </div>
                         </div>
-                    )}
+                    </div>
+                )}
 
-                    {/* Step 2: Employee Selection */}
-                    {step === 2 && (
-                        <div>
-                            <h2 style={{ fontSize: '20px', fontWeight: 600, margin: '0 0 16px', color: '#111827' }}>
-                                Select Employees
-                            </h2>
-                            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px' }}>
-                                Choose which employees to include in this payroll run
-                            </p>
+                {/* Step 2: Select Employees */}
+                {step === 2 && (
+                    <div style={{ background: 'white', padding: '32px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
+                        <div style={{ marginBottom: '24px' }}>
+                            <label style={{ display: 'block', marginBottom: '12px', fontSize: '16px', fontWeight: '700', color: '#111827' }}>
+                                Who should be included in this payroll run?
+                            </label>
 
-                            {error && (
-                                <div style={{
-                                    padding: '12px 16px',
-                                    background: '#fee2e2',
-                                    border: '1px solid #fca5a5',
-                                    borderRadius: '8px',
-                                    color: '#b91c1c',
-                                    fontSize: '14px',
-                                    marginBottom: '20px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '10px'
-                                }}>
-                                    <span style={{ fontSize: '18px' }}>⚠️</span>
-                                    {error}
-                                </div>
-                            )}
-
-                            <div style={{ marginBottom: '24px' }}>
-                                <label style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', cursor: 'pointer' }}>
+                            <div style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                                     <input
                                         type="radio"
-                                        name="employeeSelection"
-                                        value="all"
                                         checked={formData.employeeSelection === 'all'}
-                                        onChange={(e) => setFormData({ ...formData, employeeSelection: 'all' })}
-                                        style={{ marginRight: '10px', width: '16px', height: '16px', accentColor: '#10b981' }}
+                                        onChange={() => setFormData({ ...formData, employeeSelection: 'all' })}
+                                        style={{ accentColor: '#2563eb', width: '18px', height: '18px' }}
                                     />
-                                    <span style={{ fontSize: '14px', color: '#374151' }}>All active employees ({employees.length})</span>
+                                    <span style={{ fontSize: '14px', color: '#374151' }}>All Eligible Employees ({employees.length})</span>
                                 </label>
-
-                                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                                     <input
                                         type="radio"
-                                        name="employeeSelection"
-                                        value="specific"
                                         checked={formData.employeeSelection === 'specific'}
-                                        onChange={(e) => setFormData({ ...formData, employeeSelection: 'specific' })}
-                                        style={{ marginRight: '10px', width: '16px', height: '16px', accentColor: '#10b981' }}
+                                        onChange={() => setFormData({ ...formData, employeeSelection: 'specific' })}
+                                        style={{ accentColor: '#2563eb', width: '18px', height: '18px' }}
                                     />
-                                    <span style={{ fontSize: '14px', color: '#374151' }}>Specific employees</span>
+                                    <span style={{ fontSize: '14px', color: '#374151' }}>Select Specific Employees</span>
                                 </label>
                             </div>
 
                             {formData.employeeSelection === 'specific' && (
-                                <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '8px' }}>
-                                    {employees.map(emp => (
-                                        <label
-                                            key={emp.id}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                padding: '10px',
-                                                borderBottom: '1px solid #f3f4f6',
-                                                cursor: 'pointer'
-                                            }}
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.selectedEmployees.includes(emp.id)}
-                                                onChange={() => toggleEmployee(emp.id)}
-                                                style={{ marginRight: '12px', width: '16px', height: '16px', accentColor: '#10b981' }}
-                                            />
-                                            <div>
-                                                <div style={{ fontSize: '14px', fontWeight: 500, color: '#111827' }}>
-                                                    {emp.last_name}, {emp.first_name}
-                                                </div>
-                                                <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                                                    {emp.position} • {emp.department}
-                                                </div>
-                                            </div>
-                                        </label>
-                                    ))}
-                                    {employees.length === 0 && (
-                                        <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>
-                                            No employees found for this branch.
-                                        </div>
-                                    )}
+                                <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <thead style={{ background: '#f9fafb', position: 'sticky', top: 0 }}>
+                                            <tr>
+                                                <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb', width: '40px' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formData.selectedEmployees.length === employees.length}
+                                                        onChange={(e) => setFormData({ ...formData, selectedEmployees: e.target.checked ? employees.map(emp => emp.id) : [] })}
+                                                    />
+                                                </th>
+                                                <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#6b7280', borderBottom: '1px solid #e5e7eb' }}>EMPLOYEE</th>
+                                                <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#6b7280', borderBottom: '1px solid #e5e7eb' }}>POSITION</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {employees.map(employee => (
+                                                <tr key={employee.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                                                    <td style={{ padding: '12px' }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={formData.selectedEmployees.includes(employee.id)}
+                                                            onChange={() => toggleEmployee(employee.id)}
+                                                            style={{ width: '16px', height: '16px', accentColor: '#2563eb' }}
+                                                        />
+                                                    </td>
+                                                    <td style={{ padding: '12px', fontSize: '14px', color: '#111827', fontWeight: '500' }}>
+                                                        {employee.first_name} {employee.last_name}
+                                                    </td>
+                                                    <td style={{ padding: '12px', fontSize: '13px', color: '#6b7280' }}>
+                                                        {employee.position}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             )}
                         </div>
-                    )}
+                    </div>
+                )}
 
-                    {/* Step 3: Review & Confirm */}
-                    {step === 3 && (
-                        <div>
-                            <h2 style={{ fontSize: '20px', fontWeight: 600, margin: '0 0 8px', color: '#111827' }}>
-                                Review & Confirm
-                            </h2>
-                            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 32px' }}>
-                                Please review the payroll details before final processing.
-                            </p>
+                {/* Step 3: Review & Confirm (Redesigned) */}
+                {step === 3 && (
+                    <div>
+                        {/* Pro Header / Stepper (Visual Only to match design) */}
+                        <div style={{ marginBottom: '40px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+                                {/* Line */}
+                                <div style={{ position: 'absolute', top: '50%', left: '0', right: '0', height: '2px', background: '#e2e8f0', zIndex: 1, transform: 'translateY(-50%)' }}></div>
+                                <div style={{ position: 'absolute', top: '50%', left: '0', right: '0', height: '2px', background: '#3b82f6', zIndex: 1, transform: 'translateY(-50%)', width: '100%' }}></div>
 
-                            <div style={{
-                                display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px',
-                                borderBottom: '1px solid #f3f4f6', paddingBottom: '32px', marginBottom: '32px'
-                            }}>
-                                <div>
-                                    <div style={{ fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: 600 }}>Branch</div>
-                                    <div style={{ fontSize: '16px', fontWeight: 600, color: '#111827' }}>{formData.branch || 'None Selected'} Branch</div>
-                                </div>
-                                <div>
-                                    <div style={{ fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: 600 }}>Payroll Period</div>
-                                    <div style={{ fontSize: '16px', fontWeight: 600, color: '#111827' }}>
-                                        {formData.periodStart ? new Date(formData.periodStart).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '-'}
-                                        {' — '}
-                                        {formData.periodEnd ? new Date(formData.periodEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}
+                                {/* Steps */}
+                                {['Review', 'Adjustments', 'Preview', 'Finalize'].map((label, i) => (
+                                    <div key={label} style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'white', padding: '0 10px' }}>
+                                        <div style={{
+                                            width: '32px', height: '32px', borderRadius: '50%',
+                                            background: '#2563eb', color: 'white',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontSize: '14px', fontWeight: '600', marginBottom: '8px',
+                                            boxShadow: '0 0 0 4px #dbeafe'
+                                        }}>
+                                            {i === 3 ? '4' : '✓'}
+                                        </div>
+                                        <span style={{ fontSize: '12px', fontWeight: '600', color: i === 3 ? '#2563eb' : '#64748b' }}>{label}</span>
                                     </div>
-                                </div>
-                                <div>
-                                    <div style={{ fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: 600 }}>Employee Count</div>
-                                    <div style={{ fontSize: '16px', fontWeight: 600, color: '#111827' }}>
-                                        {estimates.count} Active Employees
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style={{ marginBottom: '32px' }}>
-                                <h3 style={{ fontSize: '12px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>
-                                    Financial Summary Estimation
-                                </h3>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                                    {/* Gross Pay Card */}
-                                    <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                                            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#dcfce7', color: '#166534', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="12" y1="12" x2="12" y2="12" /></svg>
-                                            </div>
-                                            <div style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>Total Gross Pay</div>
-                                        </div>
-                                        <div style={{ fontSize: '24px', fontWeight: 700, color: '#10b981' }}>
-                                            {formatCurrency(estimates.totalGross)}
-                                        </div>
-                                    </div>
-
-                                    {/* Deductions Card */}
-                                    <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                                            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#fee2e2', color: '#991b1b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg>
-                                            </div>
-                                            <div style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>Total Deductions</div>
-                                        </div>
-                                        <div style={{ fontSize: '24px', fontWeight: 700, color: '#ef4444' }}>
-                                            {formatCurrency(estimates.totalDeductions)}
-                                        </div>
-                                    </div>
-
-                                    {/* Net Pay Card */}
-                                    <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                                            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#e0e7ff', color: '#4338ca', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
-                                            </div>
-                                            <div style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>Total Net Pay</div>
-                                        </div>
-                                        <div style={{ fontSize: '24px', fontWeight: 700, color: '#6366f1' }}>
-                                            {formatCurrency(estimates.totalNet)}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style={{
-                                background: '#ecfdf5', borderRadius: '8px', padding: '16px',
-                                display: 'flex', gap: '12px', alignItems: 'flex-start'
-                            }}>
-                                <div style={{
-                                    background: '#10b981', color: 'white', borderRadius: '50%', width: '20px', height: '20px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold',
-                                    marginTop: '2px', flexShrink: 0
-                                }}>
-                                    i
-                                </div>
-                                <p style={{ margin: 0, fontSize: '13px', color: '#064e3b', lineHeight: '1.5' }}>
-                                    Finalizing this run will generate individual payslips and lock records for the period of <strong>{formData.periodStart ? new Date(formData.periodStart).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '-'} to {formData.periodEnd ? new Date(formData.periodEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}</strong>. Ensure all adjustments are accounted for.
-                                </p>
+                                ))}
                             </div>
                         </div>
-                    )}
-                </div>
 
-                {/* Navigation Buttons */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px' }}>
-                    <button
-                        onClick={() => router.push('/payroll')}
-                        className="compact-btn"
-                        style={{
-                            background: 'white', border: '1px solid #d1d5db', color: '#374151',
-                            padding: '10px 20px', borderRadius: '8px', fontWeight: 500, fontSize: '14px', cursor: 'pointer'
-                        }}
-                        disabled={loading}
-                    >
-                        Cancel
-                    </button>
+                        <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '24px' }}>
+                            {/* Main Content */}
+                            <div>
+                                {/* Summary Cards */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                                    {/* Total Payroll */}
+                                    <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                            <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>TOTAL PAYROLL</span>
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="12" y1="12" x2="12" y2="12" /></svg>
+                                        </div>
+                                        <div style={{ fontSize: '28px', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>{formatCurrency(estimates.totalGross)}</div>
+                                        <div style={{ fontSize: '12px', color: '#94a3b8' }}> Includes gross wages & benefits</div>
+                                    </div>
 
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        {step > 1 && (
-                            <button
-                                onClick={handleBack}
-                                className="compact-btn"
-                                style={{
-                                    background: 'white', border: '1px solid #d1d5db', color: '#374151',
-                                    padding: '10px 20px', borderRadius: '8px', fontWeight: 500, fontSize: '14px', cursor: 'pointer'
-                                }}
-                                disabled={loading}
-                            >
-                                ← Back
-                            </button>
-                        )}
+                                    {/* Total Taxes */}
+                                    <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                            <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>TOTAL TAXES & DEDUCTIONS</span>
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><path d="M3 21h18M5 21V7l8-4 8 4v14" /></svg>
+                                        </div>
+                                        <div style={{ fontSize: '28px', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>{formatCurrency(estimates.totalDeductions)}</div>
+                                        <div style={{ fontSize: '12px', color: '#94a3b8' }}> EE contribution withholdings</div>
+                                    </div>
 
-                        {step < 3 ? (
-                            <button
-                                onClick={handleNext}
-                                className="compact-btn"
-                                style={{
-                                    background: '#10b981', border: 'none', color: 'white',
-                                    padding: '10px 24px', borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', gap: '8px'
-                                }}
-                            >
-                                Next →
-                            </button>
-                        ) : (
-                            <button
-                                onClick={handleSubmit}
-                                className="compact-btn"
-                                style={{
-                                    background: '#10b981', border: 'none', color: 'white',
-                                    padding: '10px 24px', borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer',
-                                    minWidth: '200px'
-                                }}
-                                disabled={loading}
-                            >
-                                {loading ? 'Creating...' : 'Finalize & Generate Payroll →'}
-                            </button>
-                        )}
+                                    {/* Net Disbursement */}
+                                    <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                            <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>NET DISBURSEMENT</span>
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" /><path d="M12 18V6" /></svg>
+                                        </div>
+                                        <div style={{ fontSize: '28px', fontWeight: '700', color: '#2563eb', marginBottom: '4px' }}>{formatCurrency(estimates.totalNet)}</div>
+                                        <div style={{ fontSize: '12px', color: '#94a3b8' }}> Scheduled for Payment</div>
+                                    </div>
+                                </div>
+
+                                {/* Employee Breakdown */}
+                                <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                                    <div style={{ padding: '20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h3 style={{ fontSize: '16px', fontWeight: '700', margin: 0, color: '#0f172a' }}>Employee Breakdown</h3>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="21" y1="10" x2="3" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="21" y1="18" x2="3" y2="18" /></svg></button>
+                                            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg></button>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                                            <thead>
+                                                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                                    <th style={{ textAlign: 'left', padding: '12px 20px', color: '#64748b', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase' }}>Employee</th>
+                                                    <th style={{ textAlign: 'right', padding: '12px 20px', color: '#64748b', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase' }}>Basic Pay</th>
+                                                    <th style={{ textAlign: 'right', padding: '12px 20px', color: '#64748b', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase' }}>Allowances</th>
+                                                    <th style={{ textAlign: 'right', padding: '12px 20px', color: '#64748b', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase' }}>Gross Pay</th>
+                                                    <th style={{ textAlign: 'right', padding: '12px 20px', color: '#64748b', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase' }}>Deductions</th>
+                                                    <th style={{ textAlign: 'right', padding: '12px 20px', color: '#64748b', fontWeight: '600', fontSize: '11px', textTransform: 'uppercase' }}>Net Pay</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {(formData.employeeSelection === 'all' ? employees : employees.filter(e => formData.selectedEmployees.includes(e.id))).map(emp => {
+                                                    // Inline Calc for display (simplified)
+                                                    let sInfo = emp.salary_info;
+                                                    if (typeof sInfo === 'string') try { sInfo = JSON.parse(sInfo) } catch (e) { sInfo = {} };
+                                                    const monthly = parseFloat(sInfo?.monthly_salary || sInfo?.basic_salary || 0);
+
+                                                    const payrollDays = formData.cutoffDay === 15 ? 15 : (new Date(formData.periodEnd).getDate() > 15 ? (new Date(formData.periodEnd).getDate() - 15) : 15);
+                                                    const dailyRate = monthly / 30; // Estimate
+                                                    const basic = dailyRate * payrollDays;
+                                                    const allowances = parseFloat(sInfo?.allowances?.regular || 0) + parseFloat(sInfo?.allowances?.special || 0);
+                                                    const gross = basic + allowances;
+
+                                                    // Re-use compute logic for consistency if possible, but for now simple calc
+                                                    // To be accurate we should call computePayslip properly
+                                                    const computation = computePayslip({
+                                                        payrollDays: payrollDays,
+                                                        monthlySalary: monthly,
+                                                        allowances: sInfo?.allowances,
+                                                        deductions: sInfo?.deductions
+                                                    }, formData.cutoffDay as 15 | 30 | 31);
+
+                                                    return (
+                                                        <tr key={emp.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                                            <td style={{ padding: '12px 20px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                                                        <span style={{ fontSize: '12px', fontWeight: '600', color: '#64748b' }}>{emp.first_name[0]}{emp.last_name[0]}</span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div style={{ fontWeight: '600', color: '#334155' }}>{emp.first_name} {emp.last_name}</div>
+                                                                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>{emp.position}</div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td style={{ textAlign: 'right', padding: '12px 20px', color: '#64748b' }}>{formatCurrency(computation.basicPay)}</td>
+                                                            <td style={{ textAlign: 'right', padding: '12px 20px', color: '#64748b' }}>{formatCurrency(allowances)}</td>
+                                                            <td style={{ textAlign: 'right', padding: '12px 20px', color: '#334155' }}>{formatCurrency(computation.grossPay)}</td>
+                                                            <td style={{ textAlign: 'right', padding: '12px 20px', color: '#ef4444' }}>{formatCurrency(computation.totalDeductions)}</td>
+                                                            <td style={{ textAlign: 'right', padding: '12px 20px', fontWeight: '700', color: '#0f172a' }}>{formatCurrency(computation.netPay)}</td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div style={{ padding: '12px 20px', textAlign: 'center', borderTop: '1px solid #e2e8f0' }}>
+                                        <span style={{ fontSize: '13px', color: '#2563eb', fontWeight: '600', cursor: 'pointer' }}>View All Employees</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Sidebar */}
+                            <div>
+                                <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+                                    <h3 style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 4px', color: '#0f172a' }}>Employer Liabilities</h3>
+                                    <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 20px' }}>Total Company-side Costs (Est)</p>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                                            <span style={{ color: '#64748b' }}>ER SSS Contrib</span>
+                                            <span style={{ color: '#334155', fontWeight: '500' }}>{formatCurrency(estimates.totalDeductions * 1.5)}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                                            <span style={{ color: '#64748b' }}>ER PhilHealth</span>
+                                            <span style={{ color: '#334155', fontWeight: '500' }}>{formatCurrency(estimates.totalDeductions * 0.5)}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                                            <span style={{ color: '#64748b' }}>ER Pag-IBIG</span>
+                                            <span style={{ color: '#334155', fontWeight: '500' }}>{formatCurrency(estimates.count * 100)}</span>
+                                        </div>
+                                        <div style={{ borderTop: '1px dashed #e2e8f0', margin: '4px 0' }}></div>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '2px solid #f1f5f9' }}>
+                                        <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>Total ER Cost</span>
+                                        <span style={{ fontSize: '16px', fontWeight: '700', color: '#2563eb' }}>{formatCurrency((estimates.totalDeductions * 2) + (estimates.count * 100))}</span>
+                                    </div>
+                                </div>
+
+                                <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px' }}>
+                                    <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                                        <div style={{ width: '40px', height: '40px', background: '#f1f5f9', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '2px' }}>PAY DATE</div>
+                                            <div style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a' }}>{new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '16px' }}>
+                                        <div style={{ width: '40px', height: '40px', background: '#f1f5f9', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M12 2v20" /><path d="M2 12h20" /><path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10 10 10 0 0 1-10-10 10 10 0 0 1 10-10z" /></svg>
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '2px' }}>PAY PERIOD</div>
+                                            <div style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a' }}>
+                                                {formData.periodStart ? new Date(formData.periodStart).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '-'} - {formData.periodEnd ? new Date(formData.periodEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '-'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Final Action Area */}
+                        <div style={{ marginTop: '24px', background: '#eff6ff', border: '1px solid #dbeafe', borderRadius: '12px', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <input
+                                    type="checkbox"
+                                    id="finalReview"
+                                    style={{ width: '20px', height: '20px', accentColor: '#2563eb', cursor: 'pointer' }}
+                                    checked={finalReviewChecked}
+                                    onChange={(e) => setFinalReviewChecked(e.target.checked)}
+                                />
+                                <label htmlFor="finalReview" style={{ cursor: 'pointer' }}>
+                                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>Final Review Complete</div>
+                                    <div style={{ fontSize: '13px', color: '#64748b' }}>I have reviewed the payroll summary above and confirm that all hours, adjustments, and tax calculations are accurate.</div>
+                                </label>
+                            </div>
+                            <div>
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={!finalReviewChecked || loading}
+                                    style={{
+                                        background: !finalReviewChecked || loading ? '#94a3b8' : '#2563eb',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        padding: '12px 32px',
+                                        fontSize: '15px',
+                                        fontWeight: '600',
+                                        cursor: !finalReviewChecked || loading ? 'not-allowed' : 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        boxShadow: !finalReviewChecked || loading ? 'none' : '0 4px 6px -1px rgba(37, 99, 235, 0.2)'
+                                    }}
+                                >
+                                    {loading ? 'Processing...' : 'Submit Payroll'}
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                )}
+
+                {/* Navigation Buttons (Hidden for Step 3 as it has its own) */}
+                {step !== 3 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px' }}>
+                        <button
+                            onClick={() => router.push('/payroll')}
+                            className="compact-btn"
+                            style={{
+                                background: 'white', border: '1px solid #d1d5db', color: '#374151',
+                                padding: '10px 20px', borderRadius: '8px', fontWeight: 500, fontSize: '14px', cursor: 'pointer'
+                            }}
+                            disabled={loading}
+                        >
+                            Cancel
+                        </button>
+
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            {step > 1 && (
+                                <button
+                                    onClick={handleBack}
+                                    className="compact-btn"
+                                    style={{
+                                        background: 'white', border: '1px solid #d1d5db', color: '#374151',
+                                        padding: '10px 20px', borderRadius: '8px', fontWeight: 500, fontSize: '14px', cursor: 'pointer'
+                                    }}
+                                    disabled={loading}
+                                >
+                                    ← Back
+                                </button>
+                            )}
+
+                            {step < 3 && (
+                                <button
+                                    onClick={handleNext}
+                                    className="compact-btn"
+                                    style={{
+                                        background: '#10b981', border: 'none', color: 'white',
+                                        padding: '10px 24px', borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', gap: '8px'
+                                    }}
+                                >
+                                    Next →
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
+                {/* Success Modal */}
+                {showSuccessModal && createdRun && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 50,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                        <div style={{
+                            background: 'white', borderRadius: '16px', padding: '32px',
+                            width: '100%', maxWidth: '480px', textAlign: 'center',
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                        }}>
+                            <div style={{
+                                width: '64px', height: '64px', background: '#ecfdf5', borderRadius: '50%',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px'
+                            }}>
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+
+                            <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#111827', margin: '0 0 12px' }}>
+                                Payroll Created!
+                            </h2>
+
+                            <p style={{ fontSize: '15px', color: '#6b7280', margin: '0 0 8px', lineHeight: '1.5' }}>
+                                Payroll Run <strong>{createdRun.run_number}</strong> has been successfully created as <strong>DRAFT</strong>.
+                            </p>
+
+                            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 32px', padding: '12px', background: '#f3f4f6', borderRadius: '8px' }}>
+                                Review the payroll details and click <strong>"Finalize Payroll"</strong> when ready to submit for approval.
+                            </p>
+
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button
+                                    onClick={() => router.push('/payroll')}
+                                    style={{
+                                        flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db',
+                                        background: 'white', color: '#374151', fontWeight: '600', cursor: 'pointer'
+                                    }}
+                                >
+                                    Back to List
+                                </button>
+                                <button
+                                    onClick={() => router.push(`/payroll/${createdRun.id}`)}
+                                    style={{
+                                        flex: 1, padding: '12px', borderRadius: '8px', border: 'none',
+                                        background: '#2563eb', color: 'white', fontWeight: '600', cursor: 'pointer'
+                                    }}
+                                >
+                                    View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </DashboardLayout>
     );

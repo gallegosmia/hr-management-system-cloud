@@ -15,20 +15,20 @@ interface Notification {
     actionLabel?: string;
     secondaryActionLabel?: string;
     is_read?: boolean;
-    manually_unread?: boolean;
+    reference_id?: string;
 }
 
 export default function NotificationDropdown() {
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [readIds, setReadIds] = useState<Set<string>>(new Set());
-    const [manuallyUnreadIds, setManuallyUnreadIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [user, setUser] = useState<any>(null);
+    // Track unread count separately to ensure it matches DB
+    const [unreadCount, setUnreadCount] = useState(0);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Initial load from localStorage
+    // Initial load user
     useEffect(() => {
         const userData = localStorage.getItem('user');
         if (userData) {
@@ -38,54 +38,7 @@ export default function NotificationDropdown() {
                 console.error('Failed to parse user data');
             }
         }
-
-        const stored = localStorage.getItem('read_notifications');
-        if (stored) {
-            try {
-                setReadIds(new Set(JSON.parse(stored)));
-            } catch (e) {
-                console.error('Failed to parse read notifications');
-            }
-        }
-
-        const storedUnread = localStorage.getItem('manually_unread_notifications');
-        if (storedUnread) {
-            try {
-                setManuallyUnreadIds(new Set(JSON.parse(storedUnread)));
-            } catch (e) {
-                console.error('Failed to parse manually unread notifications');
-            }
-        }
-
-        // Add storage event listener to sync across tabs
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'read_notifications' && e.newValue) {
-                try {
-                    setReadIds(new Set(JSON.parse(e.newValue)));
-                } catch (err) {
-                    console.error('Failed to parse read notifications from storage event');
-                }
-            }
-            if (e.key === 'manually_unread_notifications' && e.newValue) {
-                try {
-                    setManuallyUnreadIds(new Set(JSON.parse(e.newValue)));
-                } catch (err) {
-                    console.error('Failed to parse manually unread notifications from storage event');
-                }
-            }
-        };
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
-
-    // Persist to localStorage
-    useEffect(() => {
-        localStorage.setItem('read_notifications', JSON.stringify(Array.from(readIds)));
-    }, [readIds]);
-
-    useEffect(() => {
-        localStorage.setItem('manually_unread_notifications', JSON.stringify(Array.from(manuallyUnreadIds)));
-    }, [manuallyUnreadIds]);
 
     const fetchNotifications = async () => {
         // Optimization: if closed and we have data, don't spam.
@@ -100,7 +53,7 @@ export default function NotificationDropdown() {
             // Use current user from state to get branch
             const userBranch = user?.username === 'superadmin' ? 'All' : (user?.assigned_branch || 'All');
 
-            // Fetch multiple sources independently to prevent one failure from blocking others
+            // Fetch multiple sources independently
             const fetchSource = async (url: string) => {
                 try {
                     const sessionId = localStorage.getItem('sessionId');
@@ -118,61 +71,101 @@ export default function NotificationDropdown() {
 
             const announcementUrl = `/api/announcements?is_active=true&branch=${encodeURIComponent(userBranch)}${user?.employee_id ? `&employee_id=${user.employee_id}` : ''}`;
 
-            const [alertsData, leavesData, annData] = await Promise.all([
+            const [alertsData, leavesData, annData, notifData] = await Promise.all([
                 fetchSource('/api/alerts'),
                 fetchSource('/api/leave?status=Pending'),
-                fetchSource(announcementUrl)
+                fetchSource(announcementUrl),
+                fetchSource('/api/notifications?limit=50')
             ]);
 
             const combined: Notification[] = [];
+            const readReferenceIds = new Set<string>();
 
-            // Add Pending Leaves
+            // 1. Process DB Notifications first
+            if (notifData && Array.isArray(notifData.notifications)) {
+                // setUnreadCount(notifData.unreadCount || 0); // We'll calculate total unread after merging
+
+                notifData.notifications.forEach((n: any) => {
+                    const notifItem: Notification = {
+                        id: n.id.toString(), // DB ID
+                        title: n.title,
+                        message: n.message,
+                        type: n.type || 'system',
+                        severity: n.severity || 'medium',
+                        url: n.link || '#',
+                        timestamp: n.created_at,
+                        is_read: n.is_read,
+                        reference_id: n.reference_id
+                    };
+                    combined.push(notifItem);
+
+                    if (n.reference_id) {
+                        readReferenceIds.add(n.reference_id);
+                    }
+                });
+            }
+
+            // 2. Add Pending Leaves (Dynamic)
             if (Array.isArray(leavesData)) {
                 leavesData.forEach((leave: any) => {
-                    combined.push({
-                        id: `leave-${leave.id}`,
-                        title: 'Leave Request Pending',
-                        message: `${leave.employee_name} requested ${leave.leave_type} leave.`,
-                        type: 'leave',
-                        severity: 'medium',
-                        url: '/leave',
-                        timestamp: leave.created_at || new Date().toISOString(),
-                        actionLabel: 'Review Request'
-                    });
+                    const refId = `leave-${leave.id}`;
+                    // Only add if not already in DB notifications (persisted)
+                    if (!readReferenceIds.has(refId)) {
+                        combined.push({
+                            id: refId,
+                            title: 'Leave Request Pending',
+                            message: `${leave.employee_name} requested ${leave.leave_type} leave.`,
+                            type: 'leave',
+                            severity: 'medium',
+                            url: '/leave',
+                            timestamp: leave.created_at || new Date().toISOString(),
+                            actionLabel: 'Review Request',
+                            is_read: false
+                        });
+                    }
                 });
             }
 
-            // Add Alerts
+            // 3. Add Alerts (Dynamic)
             if (alertsData && Array.isArray(alertsData.alerts)) {
                 alertsData.alerts.forEach((alert: any) => {
-                    let type: any = 'alert';
-                    if (alert.type?.includes('INFO')) type = 'info';
+                    const refId = alert.id;
+                    // Only add if not already in DB notifications
+                    if (!readReferenceIds.has(refId)) {
+                        let type: any = 'alert';
+                        if (alert.type?.includes('INFO')) type = 'info';
 
-                    combined.push({
-                        id: alert.id,
-                        title: alert.type.replace(/_/g, ' ').toUpperCase(),
-                        message: alert.message,
-                        type: type,
-                        severity: alert.severity,
-                        url: alert.type === 'NEW_USER_REGISTRATION' ? '/users' : `/employees/${alert.employee_id}`,
-                        timestamp: alert.created_at || new Date().toISOString()
-                    });
+                        combined.push({
+                            id: refId,
+                            title: alert.type.replace(/_/g, ' ').toUpperCase(),
+                            message: alert.message,
+                            type: type,
+                            severity: alert.severity,
+                            url: alert.type === 'NEW_USER_REGISTRATION' ? '/users' : `/employees/${alert.employee_id}`,
+                            timestamp: alert.created_at || new Date().toISOString(),
+                            is_read: false
+                        });
+                    }
                 });
             }
 
-            // Add Announcements
+            // 4. Add Announcements (Dynamic)
             if (Array.isArray(annData)) {
                 annData.forEach((ann: any) => {
-                    combined.push({
-                        id: `ann-${ann.id}`,
-                        title: ann.title,
-                        message: ann.content,
-                        type: 'system',
-                        severity: ann.priority === 'Urgent' ? 'high' : ann.priority === 'High' ? 'medium' : 'low',
-                        url: '/announcements',
-                        timestamp: ann.created_at,
-                        actionLabel: 'View Announcement'
-                    });
+                    const refId = `ann-${ann.id}`;
+                    if (!readReferenceIds.has(refId)) {
+                        combined.push({
+                            id: refId,
+                            title: ann.title,
+                            message: ann.content,
+                            type: 'system',
+                            severity: ann.priority === 'Urgent' ? 'high' : ann.priority === 'High' ? 'medium' : 'low',
+                            url: '/announcements',
+                            timestamp: ann.created_at,
+                            actionLabel: 'View Announcement',
+                            is_read: false
+                        });
+                    }
                 });
             }
 
@@ -183,7 +176,13 @@ export default function NotificationDropdown() {
                 return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
             });
 
+            // Update local state
             setNotifications(combined);
+
+            // Recalculate unread count
+            const totalUnread = combined.filter(n => !n.is_read).length;
+            setUnreadCount(totalUnread);
+
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
         } finally {
@@ -214,39 +213,96 @@ export default function NotificationDropdown() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const markAsRead = (id: string) => {
-        setReadIds(prev => {
-            const next = new Set(prev);
-            next.add(id);
-            return next;
-        });
-        setManuallyUnreadIds(prev => {
-            const next = new Set(prev);
-            next.delete(id);
-            return next;
-        });
-    };
+    const markAsRead = async (id: string, notif: Notification) => {
+        // Optimistic update
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+        setUnreadCount(prev => Math.max(0, prev - 1));
 
-    const toggleUnread = (id: string) => {
-        if (manuallyUnreadIds.has(id) || !readIds.has(id)) {
-            // Mark as read
-            markAsRead(id);
-        } else {
-            // Mark as unread
-            setManuallyUnreadIds(prev => {
-                const next = new Set(prev);
-                next.add(id);
-                return next;
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+
+            // Allow passing extra data for dynamic alerts to be persisted
+            const body = {
+                is_read: true,
+                title: notif.title,
+                message: notif.message,
+                type: notif.type,
+                severity: notif.severity,
+                link: notif.url
+            };
+
+            // If it's a dynamic alert (string ID), we send the ID as param
+            // Our backend will handle "upsert" for dynamic string IDs
+            await fetch(`/api/notifications/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'x-session-id': sessionId || '',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
             });
+
+            // Refresh to ensure everything is consistent
+            // fetchNotifications(); 
+        } catch (error) {
+            console.error('Failed to mark as read:', error);
+            // Revert on error
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: false } : n));
+            setUnreadCount(prev => prev + 1);
         }
     };
 
-    const markAllAsRead = () => {
-        setReadIds(new Set(notifications.map(n => n.id)));
-        setManuallyUnreadIds(new Set());
+    const toggleUnread = async (id: string, notif: Notification) => {
+        const newStatus = !notif.is_read;
+
+        // Optimistic update
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: newStatus } : n));
+        setUnreadCount(prev => newStatus ? prev - 1 : prev + 1);
+
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+
+            const body = {
+                is_read: newStatus,
+                title: notif.title,
+                message: notif.message,
+                type: notif.type,
+                severity: notif.severity,
+                link: notif.url
+            };
+
+            await fetch(`/api/notifications/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'x-session-id': sessionId || '',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+        } catch (error) {
+            console.error('Failed to toggle read status:', error);
+            // Revert
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: !newStatus } : n));
+            setUnreadCount(prev => !newStatus ? prev - 1 : prev + 1);
+        }
     };
 
-    const unreadCount = notifications.filter(n => !readIds.has(n.id)).length;
+    const markAllAsRead = async () => {
+        // Optimistic update
+        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        setUnreadCount(0);
+
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+            await fetch('/api/notifications/mark-all-read', {
+                method: 'POST',
+                headers: { 'x-session-id': sessionId || '' }
+            });
+        } catch (error) {
+            console.error('Failed to mark all as read:', error);
+            fetchNotifications(); // Revert by fetching
+        }
+    };
 
     const filteredNotifs = notifications.filter(n =>
         n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -336,7 +392,7 @@ export default function NotificationDropdown() {
                                     <div className="group-title">{group.title}</div>
                                     <div className="group-items">
                                         {group.items.map((notif, idx) => (
-                                            <div key={notif.id} className={`notif-item-wrapper ${(readIds.has(notif.id) && !manuallyUnreadIds.has(notif.id)) ? 'read' : 'unread'}`}>
+                                            <div key={notif.id} className={`notif-item-wrapper ${notif.is_read ? 'read' : 'unread'}`}>
                                                 <div className="timeline-col">
                                                     {getIcon(notif)}
                                                     {idx < group.items.length - 1 && <div className="timeline-line"></div>}
@@ -345,7 +401,7 @@ export default function NotificationDropdown() {
                                                     <div className="notif-top">
                                                         <span className="notif-title">
                                                             {notif.title}
-                                                            {(manuallyUnreadIds.has(notif.id) || !readIds.has(notif.id)) && <span className="unread-dot"></span>}
+                                                            {!notif.is_read && <span className="unread-dot"></span>}
                                                         </span>
                                                         <span className="notif-timestamp">
                                                             {format(new Date(notif.timestamp), 'h:mm a')}
@@ -355,7 +411,7 @@ export default function NotificationDropdown() {
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
                                                         <div className="notif-actions">
                                                             {notif.actionLabel && (
-                                                                <Link href={notif.url} className="action-btn blue" onClick={() => markAsRead(notif.id)}>
+                                                                <Link href={notif.url} className="action-btn blue" onClick={() => markAsRead(notif.id, notif)}>
                                                                     {notif.actionLabel}
                                                                 </Link>
                                                             )}
@@ -367,11 +423,11 @@ export default function NotificationDropdown() {
                                                             className="mark-unread-btn"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                toggleUnread(notif.id);
+                                                                toggleUnread(notif.id, notif);
                                                             }}
-                                                            title={manuallyUnreadIds.has(notif.id) || !readIds.has(notif.id) ? "Mark as read" : "Mark as unread"}
+                                                            title={notif.is_read ? "Mark as unread" : "Mark as read"}
                                                         >
-                                                            {manuallyUnreadIds.has(notif.id) || !readIds.has(notif.id) ? 'Mark Read' : 'Mark Unread'}
+                                                            {notif.is_read ? 'Mark Unread' : 'Mark Read'}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -568,6 +624,7 @@ export default function NotificationDropdown() {
                     font-size: 0.95rem;
                     font-weight: 700;
                     color: #1e293b;
+                    letter-spacing: 0.05em;
                 }
                 .notif-timestamp {
                     font-size: 0.75rem;

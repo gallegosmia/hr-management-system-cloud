@@ -66,7 +66,11 @@ export async function PATCH(
 
         // Update payroll days if provided
         if (payrollDays !== undefined) {
-            const validation = validatePayrollDays(payrollDays);
+            const validation = validatePayrollDays(
+                payrollDays,
+                new Date(payrollRun.payroll_period_start),
+                new Date(payrollRun.payroll_period_end)
+            );
             if (!validation.valid) {
                 return NextResponse.json({ error: validation.error }, { status: 400 });
             }
@@ -162,6 +166,22 @@ export async function PATCH(
             computed.totalDeductions,
             computed.netPay,
             payslipId
+        ]);
+
+        // Log action
+        await query(`
+            INSERT INTO payroll_audit_log (payroll_run_id, action, performed_by, details, performed_at)
+            VALUES ($1, $2, $3, $4, $5)
+        `, [
+            payrollRunId,
+            'PAYSLIP_UPDATED',
+            user.id,
+            JSON.stringify({
+                payslip_id: payslipId,
+                employee_id: currentPayslip.employee_id,
+                changes: updates
+            }),
+            new Date().toISOString()
         ]);
 
         return NextResponse.json({

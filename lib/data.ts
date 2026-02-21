@@ -263,6 +263,17 @@ export async function getEmployeeByEmployeeId(employeeId: string): Promise<Emplo
     return res.rows[0] as Employee | undefined;
 }
 
+export async function getEmployeePayslips(employeeId: number): Promise<any[]> {
+    const res = await query(`
+        SELECT pi.*, pr.run_number, pr.payroll_period_start, pr.payroll_period_end, pr.created_at as run_date, pr.status as run_status
+        FROM payroll_items pi
+        JOIN payroll_runs pr ON pi.payroll_run_id = pr.id
+        WHERE pi.employee_id = $1
+        ORDER BY pr.payroll_period_end DESC
+    `, [employeeId]);
+    return res.rows;
+}
+
 export async function getNextEmployeeId(year?: string): Promise<string> {
     const targetYear = year || new Date().getFullYear().toString();
     const res = await query("SELECT employee_id FROM employees WHERE employee_id LIKE $1", [`${targetYear}-%`]);

@@ -175,7 +175,7 @@ export async function GET(request: NextRequest) {
                         employee_name: `${emp.first_name} ${emp.last_name}`,
                         type: 'excessive_lates',
                         severity: 'high',
-                        message: `Employee has ${count} lates this month. Candidate for warning.`,
+                        message: `${emp.first_name} ${emp.last_name} has ${count} lates this month. Candidate for warning.`,
                         created_at: startOfMonth // Use stable start of month
                     });
                 }

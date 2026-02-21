@@ -1,6 +1,6 @@
 /**
  * Payroll List Page
- * Displays all payroll runs with filtering and compact sizing
+ * Displays all payroll runs in a comprehensive table view
  * Optimized for 1366×768 screens
  */
 
@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
-import { formatCurrency, formatAmount } from '@/lib/payroll-calculations';
+import { formatCurrency } from '@/lib/payroll-calculations';
 
 interface PayrollRun {
     id: number;
@@ -21,8 +21,8 @@ interface PayrollRun {
     cutoff_day: number;
     status: string;
     employee_count: number;
+    total_gross_pay: number;
     total_net_pay: number;
-    created_by_name: string;
     created_at: string;
 }
 
@@ -30,20 +30,61 @@ export default function PayrollListPage() {
     const router = useRouter();
     const [payrollRuns, setPayrollRuns] = useState<PayrollRun[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Filters
     const [filters, setFilters] = useState({
         branch: 'All',
         status: 'all',
+        period: '12months', // 12months, 30days, custom
         search: ''
     });
+
     const [permissions, setPermissions] = useState({
         canCreate: false,
         accessibleBranches: [] as string[]
     });
 
     useEffect(() => {
-        fetchPayrollRuns();
         fetchPermissions();
-    }, [filters.branch, filters.status]);
+    }, []);
+
+    useEffect(() => {
+        fetchPayrollRuns();
+    }, [filters.branch, filters.status, filters.period]);
+
+    const fetchPermissions = async () => {
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch('/api/auth/me', {
+                headers: { 'x-session-id': sessionId || '' }
+            });
+            const data = await response.json();
+            if (data.user) {
+                const canCreate = ['Super Admin', 'Admin', 'HR', 'President', 'Vice President'].includes(data.user.role);
+                const assignedBranch = data.user.assigned_branch ? data.user.assigned_branch.replace(/\s+Branch$/i, '').trim() : '';
+
+                const accessibleBranches = ['Super Admin', 'Admin', 'President', 'Vice President', 'Finance', 'Operations Manager'].includes(data.user.role)
+                    ? ['All', 'Ormoc', 'Naval']
+                    : [assignedBranch];
+
+                setPermissions({ canCreate, accessibleBranches });
+
+                if (!['Super Admin', 'Admin', 'President', 'Vice President', 'Finance', 'Operations Manager'].includes(data.user.role)) {
+                    setFilters(prev => ({ ...prev, branch: assignedBranch }));
+                }
+
+                if (data.user.role === 'Operations Manager') {
+                    setFilters(prev => ({ ...prev, status: 'Under Review - Operations Manager' }));
+                }
+
+                if (data.user.role === 'Vice President' || data.user.role === 'President') {
+                    setFilters(prev => ({ ...prev, status: 'Under Review - Vice President' }));
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching permissions:', error);
+        }
+    };
 
     const fetchPayrollRuns = async () => {
         try {
@@ -52,7 +93,15 @@ export default function PayrollListPage() {
             if (filters.branch !== 'All') params.append('branch', filters.branch);
             if (filters.status !== 'all') params.append('status', filters.status);
 
-            const response = await fetch(`/api/payroll/runs?${params}`);
+            // Period filtering would happen here or backend. For now we fetch all and filter client side if needed or assume backend handles 'limit'
+            // Added period param just in case backend supports it, otherwise we filter below
+
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch(`/api/payroll/runs?${params}`, {
+                headers: {
+                    'x-session-id': sessionId || ''
+                }
+            });
             const data = await response.json();
 
             if (response.ok) {
@@ -62,295 +111,330 @@ export default function PayrollListPage() {
             }
         } catch (error) {
             console.error('Error fetching payroll runs:', error);
+            setPayrollRuns([]);
         } finally {
             setLoading(false);
         }
     };
 
-    const fetchPermissions = async () => {
+    const handleDeletePayroll = async (payrollId: number) => {
         try {
             const sessionId = localStorage.getItem('sessionId');
-            const response = await fetch('/api/auth/me', {
+            const response = await fetch(`/api/payroll/runs/${payrollId}`, {
+                method: 'DELETE',
                 headers: {
                     'x-session-id': sessionId || ''
                 }
             });
-            const data = await response.json();
-            if (data.user) {
-                // Get permissions from user role
-                const canCreate = ['Super Admin', 'Admin', 'HR', 'President', 'Vice President'].includes(data.user.role);
-                const accessibleBranches = ['Super Admin', 'Admin', 'President', 'Vice President', 'Finance'].includes(data.user.role)
-                    ? ['All', 'Ormoc', 'Naval']
-                    : [data.user.assigned_branch];
 
-                setPermissions({ canCreate, accessibleBranches });
-
-                // Set default branch filter if not Super Admin
-                if (!['Super Admin', 'Admin', 'President', 'Vice President', 'Finance'].includes(data.user.role)) {
-                    setFilters(prev => ({ ...prev, branch: data.user.assigned_branch }));
-                }
+            if (response.ok) {
+                alert('Payroll deleted successfully');
+                fetchPayrollRuns(); // Refresh the list
+            } else {
+                const data = await response.json();
+                alert(`Failed to delete payroll: ${data.error || 'Unknown error'}`);
             }
         } catch (error) {
-            console.error('Error fetching permissions:', error);
+            console.error('Error deleting payroll:', error);
+            alert('Failed to delete payroll');
         }
     };
 
-    const formatPeriod = (start: string, end: string) => {
-        const startDate = new Date(start);
-        const endDate = new Date(end);
-        const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
-        return `${startDate.toLocaleDateString('en-US', options)} - ${endDate.toLocaleDateString('en-US', options)}`;
-    };
-
+    // Filter Logic
     const filteredRuns = payrollRuns.filter(run => {
+        // Search
         if (filters.search) {
             const search = filters.search.toLowerCase();
-            return (
-                run.run_number.toLowerCase().includes(search) ||
-                run.branch.toLowerCase().includes(search)
-            );
+            const runNum = run.run_number ? run.run_number.toLowerCase() : '';
+            const branch = run.branch ? run.branch.toLowerCase() : '';
+
+            if (!runNum.includes(search) && !branch.includes(search)) {
+                return false;
+            }
         }
         return true;
     });
 
-    // Helper to get status color
-    const getStatusColor = (status: string) => {
-        switch (status.toLowerCase()) {
-            case 'completed': return { bg: '#d1fae5', text: '#065f46' };
-            case 'approved': return { bg: '#dcfce7', text: '#166534' };
-            case 'pending': return { bg: '#fef3c7', text: '#92400e' };
-            case 'draft': return { bg: '#f3f4f6', text: '#374151' };
-            case 'locked': return { bg: '#dbeafe', text: '#1e40af' };
-            default: return { bg: '#f3f4f6', text: '#374151' };
-        }
+    // Styles & Helpers
+    const getStatusStyle = (status: string) => {
+        const s = status ? status.toLowerCase() : 'pending';
+        // STRICT STATUS COLOR CODING per requirements
+        if (s === 'released') return { bg: '#dcfce7', text: '#166534', dot: '#22c55e' }; // Green
+        if (s === 'for release') return { bg: '#dbeafe', text: '#1e40af', dot: '#3b82f6' }; // Blue
+        if (s.includes('vice president')) return { bg: '#fef9c3', text: '#854d0e', dot: '#eab308' }; // Yellow (VP)
+        if (s.includes('operations')) return { bg: '#ffedd5', text: '#9a3412', dot: '#f97316' }; // Orange (Ops)
+        if (s.includes('draft')) return { bg: '#f3f4f6', text: '#4b5563', dot: '#9ca3af' }; // Gray
+        if (s.includes('returned')) return { bg: '#fee2e2', text: '#991b1b', dot: '#ef4444' }; // Red
+        return { bg: '#f3f4f6', text: '#4b5563', dot: '#9ca3af' }; // Default
     };
 
-    const getActionText = (status: string) => {
-        switch (status.toLowerCase()) {
-            case 'draft': return { text: 'Resume ✏️', color: '#374151' };
-            case 'pending': return { text: 'Process Now ⚡', color: '#10b981' };
-            case 'approved':
-            case 'completed':
-            case 'locked': return { text: 'View Details >', color: '#10b981' };
-            default: return { text: 'View Details >', color: '#10b981' };
-        }
+    const formatDate = (dateStr: string) => {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
     return (
         <DashboardLayout>
-            <div style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '40px' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '40px' }}>
 
                 {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', paddingTop: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', paddingTop: '10px' }}>
                     <div>
-                        <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827', margin: 0, letterSpacing: '-0.5px' }}>
-                            Payroll Management
-                        </h1>
-                        <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>
-                            Manage payroll runs and payslips
-                        </p>
-                    </div>
-                    {permissions.canCreate && (
-                        <Link href="/payroll/create">
-                            <button style={{
-                                background: '#10b981', color: 'white', border: 'none',
-                                padding: '10px 20px', borderRadius: '8px', fontWeight: '600',
-                                fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-                                boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.2)'
-                            }}>
-                                <span>+</span> Create
-                            </button>
-                        </Link>
-                    )}
-                </div>
-
-                {/* Search Bar */}
-                <div style={{ marginBottom: '16px' }}>
-                    <div style={{ position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: '18px' }}>
-                            🔍
-                        </span>
-                        <input
-                            type="text"
-                            placeholder="Search run number or branch..."
-                            value={filters.search}
-                            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                            style={{
-                                width: '100%', padding: '14px 14px 14px 48px', fontSize: '15px',
-                                borderRadius: '12px', border: '1px solid #e5e7eb',
-                                background: 'white', outline: 'none',
-                                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                            }}
-                        />
+                        <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#111827', margin: 0 }}>Payroll History</h1>
+                        <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>Manage and review all past payroll cycles.</p>
                     </div>
                 </div>
 
-                {/* Filters */}
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '32px' }}>
-                    <div style={{ position: 'relative', minWidth: '200px' }}>
-                        <select
-                            value={filters.branch}
-                            onChange={(e) => setFilters({ ...filters, branch: e.target.value })}
-                            style={{
-                                width: '100%', padding: '10px 16px', fontSize: '14px',
-                                borderRadius: '8px', border: '1px solid #e5e7eb',
-                                background: 'white', appearance: 'none', cursor: 'pointer',
-                                color: '#374151'
-                            }}
-                        >
-                            {permissions.accessibleBranches.map(branch => (
-                                <option key={branch} value={branch}>
-                                    {branch === 'All' ? 'All Branches' : branch}
-                                </option>
-                            ))}
-                        </select>
-                        <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#6b7280', fontSize: '12px' }}>
-                            ▼
+                {/* Filters Card */}
+                <div style={{
+                    background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '20px', marginBottom: '24px',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr 1fr', gap: '20px', alignItems: 'end' }}>
+
+                        {/* Date Range/Period */}
+                        <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', marginBottom: '8px' }}>
+                                Date Range
+                            </label>
+                            <div style={{ position: 'relative' }}>
+                                <select
+                                    value={filters.period}
+                                    onChange={(e) => setFilters({ ...filters, period: e.target.value })}
+                                    style={{
+                                        width: '100%', padding: '10px 12px 10px 36px', fontSize: '14px', borderRadius: '8px', border: '1px solid #e5e7eb', appearance: 'none', color: '#374151'
+                                    }}
+                                >
+                                    <option value="12months">Last 12 Months</option>
+                                    <option value="30days">Last 30 Days</option>
+                                    <option value="all">All Time</option>
+                                </select>
+                                <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}>📅</div>
+                                <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', pointerEvents: 'none', fontSize: '10px' }}>▼</div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div style={{ position: 'relative', minWidth: '200px' }}>
-                        <select
-                            value={filters.status}
-                            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                            style={{
-                                width: '100%', padding: '10px 16px', fontSize: '14px',
-                                borderRadius: '8px', border: '1px solid #e5e7eb',
-                                background: 'white', appearance: 'none', cursor: 'pointer',
-                                color: '#374151'
-                            }}
-                        >
-                            <option value="all">All Statuses</option>
-                            <option value="draft">Draft</option>
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="completed">Completed</option>
-                        </select>
-                        <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#6b7280', fontSize: '12px' }}>
-                            ▼
+                        {/* Status */}
+                        <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', marginBottom: '8px' }}>
+                                Status
+                            </label>
+                            <div style={{ position: 'relative' }}>
+                                <select
+                                    value={filters.status}
+                                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                                    style={{
+                                        width: '100%', padding: '10px 12px', fontSize: '14px', borderRadius: '8px', border: '1px solid #e5e7eb', appearance: 'none', color: '#374151'
+                                    }}
+                                >
+                                    <option value="all">All Statuses</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="all">All Statuses</option>
+                                    <option value="Draft">Draft</option>
+                                    <option value="Under Review - Operations Manager">For Ops Review</option>
+                                    <option value="Under Review - Vice President">For VP Approval</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="For Release">For Release</option>
+                                    <option value="Released">Released</option>
+                                    <option value="Returned to HR">Returned to HR</option>
+                                </select>
+                                <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', pointerEvents: 'none', fontSize: '10px' }}>▼</div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* Payroll Run Cards List */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    {loading ? (
-                        <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
-                            Loading payroll runs...
+                        {/* Search */}
+                        <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', marginBottom: '8px' }}>
+                                Search Pay Period
+                            </label>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="text"
+                                    placeholder="Search by ID, Branch..."
+                                    value={filters.search}
+                                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                                    style={{
+                                        width: '100%', padding: '10px 12px 10px 36px', fontSize: '14px', borderRadius: '8px', border: '1px solid #e5e7eb', outline: 'none'
+                                    }}
+                                />
+                                <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}>🔍</div>
+                            </div>
                         </div>
-                    ) : filteredRuns.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '60px', background: '#f9fafb', borderRadius: '16px', border: '1px dashed #d1d5db' }}>
-                            <p style={{ color: '#6b7280', margin: 0 }}>No payroll runs found matching your filters.</p>
-                        </div>
-                    ) : (
-                        filteredRuns.map((run) => {
-                            const statusStyle = getStatusColor(run.status);
-                            const action = getActionText(run.status);
 
-                            return (
-                                <div key={run.id} style={{
-                                    background: 'white', borderRadius: '16px', padding: '24px',
-                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
-                                    border: '1px solid #f3f4f6'
-                                }}>
-                                    {/* Top Row: Run # and Status */}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-                                        <div>
-                                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
-                                                RUN NUMBER
-                                            </div>
-                                            <div style={{ fontSize: '18px', fontWeight: '700', color: '#111827' }}>
-                                                {run.run_number}
-                                            </div>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <span style={{
-                                                padding: '6px 16px', borderRadius: '20px',
-                                                fontSize: '13px', fontWeight: '600',
-                                                backgroundColor: statusStyle.bg, color: statusStyle.text
-                                            }}>
-                                                {run.status.charAt(0).toUpperCase() + run.status.slice(1)}
-                                            </span>
-                                            <button style={{ background: 'none', border: 'none', fontSize: '18px', color: '#9ca3af', cursor: 'pointer' }}>
-                                                ⋮
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Middle Row: Details Grid */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.5fr 1.5fr', gap: '20px', marginBottom: '24px' }}>
-                                        {/* Branch */}
-                                        <div>
-                                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
-                                                BRANCH
-                                            </div>
-                                            <div style={{ fontSize: '15px', color: '#111827', fontWeight: '500' }}>
-                                                {run.branch}
-                                            </div>
-                                        </div>
-
-                                        {/* Employees */}
-                                        <div>
-                                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
-                                                EMPLOYEES
-                                            </div>
-                                            <div style={{ fontSize: '15px', color: '#111827', fontWeight: '500' }}>
-                                                {run.employee_count} Staff
-                                            </div>
-                                        </div>
-
-                                        {/* Period */}
-                                        <div>
-                                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
-                                                PERIOD
-                                            </div>
-                                            <div style={{ fontSize: '15px', color: '#111827', fontWeight: '500' }}>
-                                                {formatPeriod(run.payroll_period_start, run.payroll_period_end)}
-                                            </div>
-                                        </div>
-
-                                        {/* Total Net Pay */}
-                                        <div>
-                                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
-                                                TOTAL NET PAY
-                                            </div>
-                                            <div style={{ fontSize: '16px', color: '#111827', fontWeight: '700' }}>
-                                                {run.status === 'draft' ? (
-                                                    <span style={{ color: '#9ca3af', fontWeight: 'normal', fontSize: '14px' }}>Calculated on run</span>
-                                                ) : (
-                                                    formatCurrency(run.total_net_pay || 0)
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Bottom Row: Cutoff and Action */}
-                                    <div style={{
-                                        borderTop: '1px solid #f3f4f6', paddingTop: '16px', marginTop: '16px',
-                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                        {/* Action Box */}
+                        <div style={{ textAlign: 'right' }}>
+                            {permissions.canCreate && (
+                                <Link href="/payroll/create">
+                                    <button style={{
+                                        background: '#2563eb', color: 'white', border: 'none',
+                                        padding: '10px 20px', borderRadius: '8px', fontWeight: '600',
+                                        fontSize: '14px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                        boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)', width: '100%', justifyContent: 'center'
                                     }}>
-                                        <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                                            <span style={{ color: '#9ca3af' }}>Cutoff:</span> {new Date(run.payroll_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                        </div>
+                                        <span>+</span> Run New Payroll
+                                    </button>
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+                </div>
 
-                                        <Link href={`/payroll/${run.id}`} style={{ textDecoration: 'none' }}>
-                                            <button style={{
-                                                background: 'none', border: 'none',
-                                                color: action.color,
-                                                fontWeight: '600', fontSize: '14px',
-                                                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
-                                            }}>
-                                                {action.text}
-                                            </button>
-                                        </Link>
-                                    </div>
-                                </div>
-                            );
-                        })
-                    )}
+                {/* Table */}
+                <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                                <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: '11px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Pay Period</th>
+                                <th style={{ textAlign: 'right', padding: '16px 24px', fontSize: '11px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Total Net Pay</th>
+                                <th style={{ textAlign: 'center', padding: '16px 24px', fontSize: '11px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Employees</th>
+                                <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: '11px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Status</th>
+                                <th style={{ textAlign: 'center', padding: '16px 24px', fontSize: '11px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>Loading payroll history...</td>
+                                </tr>
+                            ) : filteredRuns.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>No payroll runs found.</td>
+                                </tr>
+                            ) : (
+                                filteredRuns.map((run) => {
+                                    const style = getStatusStyle(run.status);
 
-                    <div style={{ textAlign: 'center', color: '#cbd5e1', marginTop: '30px', fontSize: '14px', paddingBottom: '20px' }}>
-                        End of payroll history
+                                    // Map backend status to display status per requirements
+                                    let displayStatus = run.status;
+                                    const s = run.status ? run.status.toLowerCase() : '';
+
+                                    // STRICT STATUS DISPLAY NAMES
+                                    if (s === 'draft') displayStatus = 'Draft';
+                                    else if (s === 'under review - operations manager') displayStatus = 'For Operations Manager Approval';
+                                    else if (s === 'under review - vice president') displayStatus = 'For Executive Vice President Approval';
+                                    else if (s === 'for release') displayStatus = 'FOR RELEASE';
+                                    else if (s === 'released') displayStatus = 'RELEASED';
+                                    else displayStatus = run.status; // Fallback
+
+                                    return (
+                                        <tr key={run.id} style={{ borderBottom: '1px solid #f3f4f6', transition: 'background 0.2s' }} className="hover:bg-gray-50">
+                                            <td style={{ padding: '16px 24px' }}>
+                                                <div style={{ fontWeight: '600', color: '#111827', fontSize: '14px' }}>
+                                                    {formatDate(run.payroll_period_start)} - {formatDate(run.payroll_period_end)}
+                                                </div>
+                                                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                                                    {run.branch}
+                                                    {run.run_number ? ` • ${run.run_number}` : ''}
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '16px 24px', textAlign: 'right', fontWeight: '600', color: '#2563eb', fontSize: '14px' }}>
+                                                {formatCurrency(run.total_net_pay || 0)}
+                                            </td>
+                                            <td style={{ padding: '16px 24px', textAlign: 'center', color: '#4b5563', fontSize: '14px' }}>
+                                                {run.employee_count}
+                                            </td>
+                                            <td style={{ padding: '16px 24px' }}>
+                                                <div style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                    padding: '4px 12px', borderRadius: '9999px',
+                                                    background: style.bg, color: style.text, fontSize: '12px', fontWeight: '600'
+                                                }}>
+                                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: style.dot }}></div>
+                                                    {displayStatus}
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
+                                                    <Link href={`/payroll/${run.id}`} style={{ textDecoration: 'none' }}>
+                                                        {/* STRICT ACTION BUTTON LOGIC */}
+                                                        {s === 'draft' || s.includes('returned') ? (
+                                                            <button style={{
+                                                                background: '#4f46e5', border: 'none', cursor: 'pointer',
+                                                                color: 'white', fontSize: '13px', fontWeight: '600',
+                                                                padding: '6px 12px', borderRadius: '6px'
+                                                            }}>
+                                                                Edit
+                                                            </button>
+                                                        ) : s.includes('review') || s.includes('operations') || s.includes('vice president') ? (
+                                                            <button style={{
+                                                                background: '#6366f1', border: 'none', cursor: 'pointer',
+                                                                color: 'white', fontSize: '13px', fontWeight: '600',
+                                                                padding: '6px 12px', borderRadius: '6px'
+                                                            }}>
+                                                                View
+                                                            </button>
+                                                        ) : s === 'for release' ? (
+                                                            <button style={{
+                                                                background: '#3b82f6', border: 'none', cursor: 'pointer',
+                                                                color: 'white', fontSize: '13px', fontWeight: '600',
+                                                                padding: '6px 12px', borderRadius: '6px'
+                                                            }}>
+                                                                Download
+                                                            </button>
+                                                        ) : s === 'released' ? (
+                                                            <button style={{
+                                                                background: '#22c55e', border: 'none', cursor: 'pointer',
+                                                                color: 'white', fontSize: '13px', fontWeight: '600',
+                                                                padding: '6px 12px', borderRadius: '6px'
+                                                            }}>
+                                                                Download
+                                                            </button>
+                                                        ) : (
+                                                            <button style={{
+                                                                background: 'none', border: 'none', cursor: 'pointer',
+                                                                color: '#9ca3af', fontSize: '20px', fontWeight: 'bold',
+                                                                display: 'inline-block', lineHeight: 1
+                                                            }}>
+                                                                •••
+                                                            </button>
+                                                        )}
+                                                    </Link>
+
+                                                    {/* Delete button - only for DRAFT payrolls */}
+                                                    {s === 'draft' && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                if (confirm(`Are you sure you want to delete payroll ${run.run_number}? This action cannot be undone.`)) {
+                                                                    handleDeletePayroll(run.id);
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                background: '#ef4444',
+                                                                border: 'none',
+                                                                cursor: 'pointer',
+                                                                color: 'white',
+                                                                fontSize: '13px',
+                                                                fontWeight: '600',
+                                                                padding: '6px 12px',
+                                                                borderRadius: '6px'
+                                                            }}
+                                                            title="Delete payroll"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+
+                    {/* Pagination (Visual Only for now) */}
+                    <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                            Showing {filteredRuns.length > 0 ? 1 : 0}-{filteredRuns.length} of {filteredRuns.length} results
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button disabled style={{ padding: '8px 12px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '6px', color: '#d1d5db', cursor: 'not-allowed' }}>Previous</button>
+                            <button style={{ padding: '8px 16px', background: '#2563eb', border: 'none', borderRadius: '6px', color: 'white' }}>1</button>
+                            <button disabled style={{ padding: '8px 12px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '6px', color: '#d1d5db', cursor: 'not-allowed' }}>Next</button>
+                        </div>
                     </div>
                 </div>
             </div>

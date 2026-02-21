@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
         // Ensure proper filename encoding for header
         const safeFilename = filename.replace(/"/g, '');
 
-        return new NextResponse(finalBuffer, {
+        return new NextResponse(finalBuffer as any, {
             status: 200,
             headers: {
                 'Content-Type': contentType,

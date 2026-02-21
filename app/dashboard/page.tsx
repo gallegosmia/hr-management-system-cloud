@@ -4,13 +4,17 @@ import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import CriticalAttendance from '@/components/CriticalAttendance';
 
 export default function DashboardPage() {
     const router = useRouter();
     const [stats, setStats] = useState<any>(null);
     const [leaves, setLeaves] = useState<any[]>([]);
-    const [onboarding, setOnboarding] = useState<any[]>([]);
+    const [employees, setEmployees] = useState<any[]>([]);
+    const [attendance, setAttendance] = useState<any[]>([]);
     const [announcements, setAnnouncements] = useState<any[]>([]);
+    const [pendingReviews, setPendingReviews] = useState<any[]>([]);
+    const [onboarding, setOnboarding] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
 
@@ -30,13 +34,15 @@ export default function DashboardPage() {
             const userParsed = userData ? JSON.parse(userData) : null;
             const userBranch = userParsed?.username === 'superadmin' ? 'All' : (userParsed?.assigned_branch || 'All');
 
-            const headers = { 'x-session-id': sessionId || '' };
+            const headers: any = { 'x-session-id': sessionId || '' };
 
-            const [statsRes, leavesRes, empRes, annRes] = await Promise.all([
+            const [statsRes, leavesRes, empRes, annRes, alertsRes, attRes] = await Promise.all([
                 fetch('/api/dashboard/stats', { headers }),
-                fetch('/api/leave?status=Approved', { headers }),
+                fetch('/api/leave?status=Approved', { headers }), // We need approved leaves for the tracker
                 fetch('/api/employees', { headers }),
-                fetch(`/api/announcements?is_active=true&branch=${encodeURIComponent(userBranch)}`, { headers })
+                fetch(`/api/announcements?is_active=true&branch=${encodeURIComponent(userBranch)}`, { headers }),
+                fetch('/api/alerts', { headers }),
+                fetch('/api/attendance', { headers })
             ]);
 
             if (statsRes.status === 401) {
@@ -48,13 +54,21 @@ export default function DashboardPage() {
             const leavesData = await leavesRes.json();
             const empData = await empRes.json();
             const annData = await annRes.json();
-            const employees = Array.isArray(empData) ? empData : [];
+            const alertsData = await alertsRes.json();
+            const attData = await attRes.json();
 
             setStats(statsData);
             setLeaves(Array.isArray(leavesData) ? leavesData : []);
+            setEmployees(Array.isArray(empData) ? empData : []);
+            setAttendance(Array.isArray(attData) ? attData : []);
             setAnnouncements(Array.isArray(annData) ? annData : []);
 
-            const recentlyHired = employees
+            if (alertsData && Array.isArray(alertsData.alerts)) {
+                const payrollAlerts = alertsData.alerts.filter((a: any) => a.type === 'PAYROLL_APPROVAL');
+                setPendingReviews(payrollAlerts);
+            }
+
+            const recentlyHired = (Array.isArray(empData) ? empData : [])
                 .sort((a: any, b: any) => new Date(b.date_hired).getTime() - new Date(a.date_hired).getTime())
                 .slice(0, 4);
             setOnboarding(recentlyHired);
@@ -65,12 +79,6 @@ export default function DashboardPage() {
             setLoading(false);
         }
     };
-
-    const days = Array.from({ length: 14 }, (_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() + i);
-        return d;
-    });
 
     if (loading) {
         return (
@@ -131,67 +139,49 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
+                    {/* Pending Reviews Alert */}
+                    {pendingReviews.length > 0 && (
+                        <div className="pending-reviews-section" style={{ marginBottom: '12px' }}>
+                            <div className="card review-card" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: '1px solid #bfdbfe' }}>
+                                <div className="review-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                                    <div style={{ background: '#3b82f6', color: 'white', padding: '8px', borderRadius: '8px' }}>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
+                                    </div>
+                                    <div>
+                                        <h3 style={{ margin: 0, color: '#1e3a8a', fontSize: '1rem' }}>Pending Adjustments / Approvals</h3>
+                                        <p style={{ margin: 0, color: '#1d4ed8', fontSize: '0.85rem' }}>You have {pendingReviews.length} payroll run{pendingReviews.length > 1 ? 's' : ''} awaiting your review.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => router.push('/payroll')}
+                                        style={{ marginLeft: 'auto', background: '#2563eb', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
+                                    >
+                                        Review Now
+                                    </button>
+                                </div>
+                                <div className="review-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {pendingReviews.map(alert => (
+                                        <div key={alert.id} style={{ background: 'white', padding: '10px 15px', borderRadius: '8px', fontSize: '0.9rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.03)' }}>
+                                            <span style={{ fontWeight: 600, color: '#334155' }}>{alert.message}</span>
+                                            <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{new Date(alert.created_at).toLocaleDateString()}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="main-grid">
 
-                        {/* Left Column: Timeline + Hires */}
+                        {/* Left Column: Tracker + Hires */}
                         <div className="left-column">
-                            {/* Timeline - Takes more space */}
-                            <div className="card timeline-card">
-                                <div className="card-header">
-                                    <h3>Planned Absences</h3>
-                                    <Link href="/leave" className="view-link">View All</Link>
-                                </div>
-                                <div className="timeline-wrapper">
-                                    <div className="timeline-container">
-                                        <div className="timeline-dates">
-                                            <div className="spacer"></div>
-                                            {days.map((d, i) => (
-                                                <div key={i} className={`date-col ${i === 0 ? 'today' : ''}`}>
-                                                    <span className="day-name">{d.toLocaleDateString('en-US', { weekday: 'narrow' })}</span>
-                                                    <span className="day-num">{d.getDate()}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div className="timeline-body">
-                                            {leaves.length > 0 ? (
-                                                Array.from(new Set(leaves.map(l => l.employee_id))).slice(0, 8).map(empId => {
-                                                    const empLeaves = leaves.filter(l => l.employee_id === empId);
-                                                    const empName = empLeaves[0].employee_name;
-                                                    return (
-                                                        <div key={empId} className="timeline-row">
-                                                            <div className="employee-info">
-                                                                <div className="avatar" style={{ background: `hsl(${empId * 40 % 360}, 70%, 85%)` }}>
-                                                                    {empName.charAt(0)}
-                                                                </div>
-                                                                <span className="name">{empName.split(' ')[0]}</span>
-                                                            </div>
-                                                            <div className="timeline-track">
-                                                                {days.map((d, i) => {
-                                                                    const dayTime = d.setHours(0, 0, 0, 0);
-                                                                    const activeLeave = empLeaves.find(l => {
-                                                                        const start = new Date(l.start_date).setHours(0, 0, 0, 0);
-                                                                        const end = new Date(l.end_date).setHours(0, 0, 0, 0);
-                                                                        return dayTime >= start && dayTime <= end;
-                                                                    });
-
-                                                                    if (activeLeave) {
-                                                                        const isStart = new Date(activeLeave.start_date).setHours(0, 0, 0, 0) === dayTime;
-                                                                        const isEnd = new Date(activeLeave.end_date).setHours(0, 0, 0, 0) === dayTime;
-                                                                        const typeClass = activeLeave.leave_type.toLowerCase().includes('sick') ? 'sick' : 'vacation';
-                                                                        return <div key={i} className={`timeline-cell active ${typeClass} ${isStart ? 'start' : ''} ${isEnd ? 'end' : ''}`} title={activeLeave.leave_type}></div>;
-                                                                    }
-                                                                    return <div key={i} className="timeline-cell"></div>;
-                                                                })}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })
-                                            ) : (
-                                                <div className="no-data">No upcoming leaves scheduled.</div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
+                            {/* Critical Attendance Limits */}
+                            <div className="card tracker-card">
+                                <CriticalAttendance
+                                    employees={employees}
+                                    attendance={attendance}
+                                    leaves={leaves}
+                                    className="critical-attendance-wrapper"
+                                />
                             </div>
 
                             {/* Recent Hires - Compact list */}
@@ -402,94 +392,18 @@ export default function DashboardPage() {
                     text-decoration: none;
                 }
 
-                /* Timeline */
-                .timeline-card {
+                /* Tracker Card */
+                .tracker-card {
                     flex: 3;
                     min-height: 0;
                     overflow: hidden;
+                    padding: 0; /* Remove padding to let component handle it */
+                    background: transparent; /* Component has its own logic/bg */
+                    box-shadow: none; /* Component handles it */
                 }
-                .timeline-wrapper {
-                    flex: 1;
-                    overflow: hidden;
-                    display: flex;
-                    flex-direction: column;
+                .critical-attendance-wrapper {
+                    height: 100%;
                 }
-                .timeline-container {
-                    overflow-x: auto;
-                    overflow-y: auto;
-                    flex: 1;
-                }
-                .timeline-dates {
-                    display: flex;
-                    margin-bottom: 6px;
-                    position: sticky;
-                    top: 0;
-                    background: white;
-                    z-index: 10;
-                    padding-bottom: 4px;
-                    border-bottom: 1px solid #f1f5f9;
-                }
-                .spacer { width: 120px; flex-shrink: 0; }
-                .date-col {
-                    flex: 1;
-                    min-width: 32px;
-                    text-align: center;
-                    padding: 2px;
-                }
-                .date-col.today { background: #eff6ff; border-radius: 4px; }
-                .day-name { font-size: 0.6rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; display: block; }
-                .day-num { font-size: 0.75rem; color: #334155; font-weight: 700; }
-
-                .timeline-body {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 6px;
-                }
-                .timeline-row {
-                    display: flex;
-                    align-items: center;
-                }
-                .employee-info {
-                    width: 120px;
-                    flex-shrink: 0;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-                .avatar {
-                    width: 26px;
-                    height: 26px;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-weight: 700;
-                    font-size: 0.7rem;
-                    color: #334155;
-                }
-                .employee-info .name {
-                    font-size: 0.75rem;
-                    font-weight: 500;
-                    color: #334155;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-                .timeline-track {
-                    flex: 1;
-                    display: flex;
-                    gap: 3px;
-                }
-                .timeline-cell {
-                    flex: 1;
-                    height: 24px;
-                    background: #f8fafc;
-                    border-radius: 4px;
-                    min-width: 32px;
-                }
-                .timeline-cell.sick { background: #fca5a5; }
-                .timeline-cell.vacation { background: #93c5fd; }
-                .timeline-cell.active { border: 1px solid rgba(0,0,0,0.05); }
 
                 /* Hires */
                 .recent-hires-card {

@@ -63,7 +63,8 @@ function loadDB() {
     education: [],
     admin_approval_queue: [],
     announcements: [],
-    emergency_loans: []
+    emergency_loans: [],
+    notifications: []
   };
 }
 
@@ -132,36 +133,99 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
     }
 
     if (normalizedSql.match(/^SELECT/i)) {
-      const tableMatch = normalizedSql.match(/FROM\s+([a-z0-9_]+)/i);
-      if (!tableMatch) throw new Error('Table not found in query');
-      const table = tableMatch[1].toLowerCase();
+      // Improved main table detection: find the FROM that is not inside a subquery
+      // This is a naive heuristic but works for our standard queries
+      // We look for the 'FROM' that appears AFTER the outermost SELECT list
+      let mainFromMatch = normalizedSql.match(/\s+FROM\s+([a-z0-9_]+)/i);
 
-      if (!db[table]) return { rows: [], rowCount: 0 };
+      // If there are subqueries in SELECT list, the first FROM might be wrong
+      // We try to find the one following a top-level SELECT pattern
+      const selectParts = normalizedSql.split(/\s+FROM\s+/i);
+      let table = '';
+      if (selectParts.length > 2) {
+        // Potential subqueries. Try to find the one after the balance point of parentheses
+        let parenLevel = 0;
+        let pos = 0;
+        const fromKeyword = ' FROM ';
+        const lowerSql = normalizedSql.toUpperCase();
+
+        while ((pos = lowerSql.indexOf(fromKeyword, pos)) !== -1) {
+          // Check paren level at this position
+          const beforeFrom = normalizedSql.substring(0, pos);
+          const opens = (beforeFrom.match(/\(/g) || []).length;
+          const closes = (beforeFrom.match(/\)/g) || []).length;
+          if (opens === closes) {
+            // Found a FROM at top level!
+            const afterFrom = normalizedSql.substring(pos + fromKeyword.length).trim();
+            const tMatch = afterFrom.match(/^([a-z0-9_]+)/i);
+            if (tMatch) {
+              table = tMatch[1].toLowerCase();
+              break;
+            }
+          }
+          pos += fromKeyword.length;
+        }
+      }
+
+      if (!table && mainFromMatch) {
+        table = mainFromMatch[1].toLowerCase();
+      }
+
+      if (!table || !db[table]) {
+        return { rows: [], rowCount: 0 };
+      }
 
       let results = [];
-      const isJoin = normalizedSql.match(/JOIN\s+([a-z0-9_]+)(?:\s+[a-z0-9_]+)?\s+ON/i);
+      // Also improve JOIN detection to skip joins inside subqueries
+      let isJoin: RegExpMatchArray | null = null;
+      let pos = 0;
+      const joinKeyword = ' JOIN ';
+      const lowerSql = normalizedSql.toUpperCase();
+      while ((pos = lowerSql.indexOf(joinKeyword, pos)) !== -1) {
+        const beforeJoin = normalizedSql.substring(0, pos);
+        const opens = (beforeJoin.match(/\(/g) || []).length;
+        const closes = (beforeJoin.match(/\)/g) || []).length;
+        if (opens === closes) {
+          isJoin = normalizedSql.substring(pos).match(/JOIN\s+([a-z0-9_]+)(?:\s+[a-z0-9_]+)?\s+ON/i);
+          if (isJoin) break;
+        }
+        pos += joinKeyword.length;
+      }
 
       if (isJoin) {
         // Simple JOIN support (attendance + employees)
-        const table1 = tableMatch[1].toLowerCase();
+        const table1 = table;
         const table2 = isJoin[1].toLowerCase();
 
         const data1 = db[table1] || [];
         const data2 = db[table2] || [];
 
         results = data1.map((item1: any) => {
-          // Join on employee_id = id
-          const item2 = data2.find((i: any) =>
-            String(i.id) === String(item1.employee_id) ||
-            String(i.id) === String(item1.id)
-          );
+          // Smart join: Find match in table2
+          // Prioritize specific foreign keys over generic 'id'
+          const item2 = data2.find((i: any) => {
+            if (table2 === 'employees' && item1.employee_id) {
+              return String(i.id) === String(item1.employee_id);
+            }
+            if (table1 === 'employees' && i.employee_id) {
+              return String(i.employee_id) === String(item1.id);
+            }
+            // Fallback to simple ID match only if tables are obviously related
+            return String(i.id) === String(item1.id);
+          });
+
           if (item2) {
-            return {
-              ...item2, // Employee fields (contains branch)
-              ...item1, // Attendance fields (wins if conflict)
-              employee_name: `${item2.first_name || ''} ${item2.last_name || ''}`.trim(),
-              branch: item2.branch || item1.branch // Ensure branch is preserved
-            };
+            // Create a merged object but BE CAREFUL with 'id'
+            // The ID of the primary table (table1) should usually prevail for the row identity
+            const merged = { ...item2, ...item1 };
+
+            // Special handling for employee names and branches
+            if (table2 === 'employees' || table1 === 'employees') {
+              const emp = table2 === 'employees' ? item2 : item1;
+              (merged as any).employee_name = `${emp.first_name || ''} ${emp.last_name || ''}`.trim();
+              (merged as any).branch = emp.branch || (merged as any).branch;
+            }
+            return merged;
           }
           return item1;
         });
@@ -182,20 +246,13 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
               const colVal = row[col];
               let paramVal = params[parseInt(paramIdx) - 1];
 
-              // Smart Date comparison for local simulation
-              if (paramVal instanceof Date && typeof colVal === 'string') {
-                if (colVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                  paramVal = paramVal.toISOString().split('T')[0];
-                } else {
-                  paramVal = paramVal.toISOString();
-                }
-              }
+              const matchResult = (op === '=') ? (colVal == paramVal) :
+                (op === '>=') ? (colVal >= paramVal) :
+                  (op === '<=') ? (colVal <= paramVal) :
+                    (op === '>') ? (colVal > paramVal) :
+                      (op === '<') ? (colVal < paramVal) : true;
 
-              if (op === '=') return colVal == paramVal;
-              if (op === '>=') return colVal >= paramVal;
-              if (op === '<=') return colVal <= paramVal;
-              if (op === '>') return colVal > paramVal;
-              if (op === '<') return colVal < paramVal;
+              return matchResult;
             }
             if (match = part.match(/([a-z0-9_]+)\s*=\s*'(.*?)'/i)) {
               const [_, col, literal] = match;
@@ -211,10 +268,6 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
             return true;
           });
         });
-      }
-
-      if (normalizedSql.match(/SELECT\s+COUNT\(\*\)/i)) {
-        return { rows: [{ count: results.length }], rowCount: 1 };
       }
 
       return {

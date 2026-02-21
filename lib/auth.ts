@@ -13,7 +13,7 @@ export interface User {
     id: number;
     username: string;
     email?: string;
-    role: 'Super Admin' | 'Admin' | 'HR' | 'Employee' | 'President' | 'Vice President' | 'Manager' | 'Finance';
+    role: 'Super Admin' | 'Admin' | 'HR' | 'Employee' | 'President' | 'Vice President' | 'Manager' | 'Finance' | 'Operations Manager';
     employee_id?: number;
     is_active: number;
     assigned_branch?: string; // Branch assignment for access control
@@ -99,6 +99,7 @@ export function hasPermission(role: string, action: string): boolean {
         President: ['create', 'read', 'update', 'delete', 'approve', 'export', 'manage_users'],
         'Vice President': ['create', 'read', 'update', 'delete', 'approve', 'export', 'manage_users'],
         HR: ['create', 'read', 'update', 'delete', 'approve', 'export'],
+        'Operations Manager': ['create', 'read', 'update', 'delete', 'approve', 'export'],
         Manager: ['read', 'approve', 'export'],
         Employee: ['read']
     };

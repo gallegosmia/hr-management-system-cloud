@@ -13,7 +13,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { formatCurrency } from '@/lib/payroll-calculations';
 import { downloadExcelExport, downloadRegisterPDF } from '@/lib/payroll-export';
 import PayslipBatchPrint from '@/components/PayslipBatchPrint';
-import PayslipViewModal from '@/components/PayslipViewModal';
+import PayslipDetailModal from '@/components/payroll/PayslipDetailModal';
 
 interface PayrollRun {
     id: number;
@@ -99,11 +99,14 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
     const itemsPerPage = 5;
     // Approval Logic
     const [user, setUser] = useState<User | null>(null);
+    // State for Modals
+    const [showFinalizeModal, setShowFinalizeModal] = useState(false);
     const [showReturnModal, setShowReturnModal] = useState(false);
     const [returnRemarks, setReturnRemarks] = useState('');
     const [processing, setProcessing] = useState(false);
     const [showBatchPrint, setShowBatchPrint] = useState(false);
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
+    const [syncing, setSyncing] = useState(false);
 
     useEffect(() => {
         if (payrollRun) {
@@ -164,16 +167,23 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
 
     const fetchPermissions = async () => {
         try {
-            const response = await fetch('/api/auth/session');
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch('/api/auth/me', {
+                headers: { 'x-session-id': sessionId || '' }
+            });
             const data = await response.json();
+            console.log('🔍 User data:', data.user);
+            console.log('🔍 Payroll status:', payrollRun?.status);
+
             if (data.user) {
                 setUser(data.user);
-                const canEdit = ['Super Admin', 'Admin', 'HR', 'President', 'Vice President'].includes(data.user.role);
-                const canApprove = ['Super Admin', 'President', 'Vice President'].includes(data.user.role);
-                const canLock = ['Super Admin', 'President', 'Vice President'].includes(data.user.role);
+                const canEdit = ['Super Admin', 'Admin', 'HR', 'President', 'Vice President', 'Operations Manager'].includes(data.user.role);
+                const canApprove = ['Super Admin', 'President', 'Vice President', 'Operations Manager'].includes(data.user.role);
+                const canLock = ['Super Admin', 'President', 'Vice President', 'Operations Manager'].includes(data.user.role);
                 const canDelete = data.user.role === 'Super Admin';
 
                 setPermissions({ canEdit, canApprove, canLock, canDelete });
+                console.log('✅ Permissions set:', { canEdit, role: data.user.role });
             }
         } catch (error) {
             console.error('Error fetching permissions:', error);
@@ -329,6 +339,68 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
         }
     };
 
+    // Finalize (HR)
+    const handleFinalize = async () => {
+        if (!confirm('Are you sure you want to FINALIZE this payroll for review?')) return;
+
+        try {
+            setProcessing(true);
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch(`/api/payroll/runs/${params.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
+                body: JSON.stringify({ action: 'finalize' })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Payroll Finalized and Submitted for Review!');
+                router.push('/payroll');
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Error finalizing payroll:', error);
+            alert('Failed to finalize payroll');
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const handleFinalApprove = async () => {
+        if (!confirm('Are you sure you want to provide FINAL APPROVAL and LOCK this payroll?')) return;
+
+        try {
+            setProcessing(true);
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch(`/api/payroll/runs/${params.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
+                body: JSON.stringify({ action: 'final_approve' })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                alert('Payroll Finalized and Locked!');
+                fetchPayrollRun();
+                fetchAuditLogs();
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Error in final approval:', error);
+            alert('Failed to process final approval');
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     const handleLock = async () => {
         if (!confirm('Are you sure you want to lock this payroll run? This action cannot be undone.')) return;
 
@@ -366,6 +438,33 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
         }, 500);
     };
 
+    const handleConfirmFinalize = async () => {
+        if (!payrollRun) return;
+        setProcessing(true);
+        try {
+            const res = await fetch(`/api/payroll/runs/${payrollRun.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'x-session-id': localStorage.getItem('sessionId') || '' },
+                body: JSON.stringify({ action: 'finalize' })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                // Success - Refresh data instead of redirecting
+                setShowFinalizeModal(false);
+                await fetchPayrollRun(); // Refresh run details
+                await fetchAuditLogs(); // Refresh logs
+                // alert('Payroll finalized successfully!'); 
+            } else {
+                alert(data.error || 'Failed to finalize payroll');
+            }
+        } catch (error) {
+            console.error('Error finalizing:', error);
+            alert('An error occurred');
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     const handleDelete = async () => {
         if (!confirm('Are you sure you want to delete this payroll run? This action cannot be undone.')) return;
 
@@ -387,6 +486,33 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
         } catch (error) {
             console.error('Error deleting payroll:', error);
             alert('Failed to delete payroll');
+        }
+    };
+
+    const handleSyncAttendance = async () => {
+        if (!confirm('Sync days worked from attendance records? This will update all employee days based on their actual attendance within the payroll period.')) return;
+
+        try {
+            setSyncing(true);
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch(`/api/payroll/runs/${params.id}/sync-attendance`, {
+                method: 'POST',
+                headers: { 'x-session-id': sessionId || '' }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert(`✅ ${data.message}`);
+                await fetchPayrollRun(); // Refresh to show updated days
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Error syncing attendance:', error);
+            alert('Failed to sync attendance data');
+        } finally {
+            setSyncing(false);
         }
     };
 
@@ -529,7 +655,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                     <div className="breadcrumb-nav">
                         <Link href="/payroll">Payroll</Link>
                         <span className="chevron">›</span>
-                        <span className="current">Approval Queue</span>
+                        <span className="current">Run {payrollRun.run_number}</span>
                     </div>
 
                     <div className="header-main-row">
@@ -540,6 +666,11 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                         </div>
 
                         <div className="header-controls">
+                            <Link href="/payroll" className="return-masterlist-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+                                Return Masterlist
+                            </Link>
+
                             <div className={`status-badge-premium ${payrollRun.status.toLowerCase().replace(/ /g, '-')}`}>
                                 <span className="dot"></span>
                                 {payrollRun.status.toUpperCase()}
@@ -548,7 +679,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                             <div className="header-user-actions">
                                 <button className="icon-button">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                                    <span className="notification-dot"></span>
+
                                 </button>
                                 <div className="user-avatar-premium">
                                     {user?.username?.[0]?.toUpperCase() || 'U'}
@@ -558,52 +689,191 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                     </div>
                 </div>
 
-                {/* Redesigned Approval Tracker (Top Timeline) */}
-                <div className="premium-tracker-section">
-                    <div className="tracker-timeline">
-                        {[
-                            { label: 'HR OFFICER', role: 'HR Officer', stage: 1, name: 'Marilyn Reloba', status: payrollRun.hr_review_status, date: payrollRun.hr_review_date },
-                            { label: 'OPERATIONS MANAGER', role: 'Operations Manager', stage: 2, name: 'Victorio Reloba Jr.', status: payrollRun.operations_review_status, date: payrollRun.operations_review_date },
-                            { label: 'EVP', role: 'Executive Vice President', stage: 3, name: 'Anna Liza Rodriguez', status: payrollRun.evp_review_status, date: payrollRun.evp_review_date },
-                            { label: 'FINAL APPROVAL', role: 'Finance Board', stage: 4, name: 'Finance Board', status: payrollRun.status === 'APPROVED' ? 'Approved' : 'Pending' }
-                        ].map((step, i) => {
-                            const isCurrent = payrollRun.workflow_stage === step.stage;
-                            const isPast = (payrollRun.workflow_stage || 0) > step.stage;
-                            const isReturned = step.status === 'Returned';
-                            const isApproved = step.status === 'Approved' || (step.stage === 4 && payrollRun.status === 'APPROVED');
+                {/* New Approval Tracker Panel (Vertical Stepper) */}
+                <div className="approval-tracker-container">
+                    <div className="tracker-header-row">
+                        <div>
+                            <h3 className="tracker-title">APPROVAL TRACKER</h3>
+                            <p className="tracker-subtitle">Track the progress of your payroll approval workflow</p>
+                        </div>
+                        <button
+                            className="moon-icon-btn"
+                            onClick={() => alert('Dark Mode Logic Placeholder')}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#64748b' }}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></svg>
+                        </button>
+                    </div>
 
-                            return (
-                                <div key={step.label} className="timeline-step-container">
-                                    {i > 0 && <div className={`timeline-line ${isPast || isCurrent ? 'active' : ''}`}></div>}
-                                    <div className="timeline-step">
-                                        <div className={`step-icon-circle ${isApproved ? 'approved' : isCurrent ? 'current' : ''}`}>
-                                            {isApproved ? (
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                            ) : isCurrent ? (
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-                                            ) : (
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                                            )}
+                    <div className="stepper-container">
+                        {/* HR Finalization Step */}
+                        <div className="step-item">
+                            <div className="step-left">
+                                <div className={`step-icon ${(payrollRun.workflow_stage || 0) >= 2 ? 'completed' : 'pending'}`}>
+                                    {(payrollRun.workflow_stage || 0) >= 2 ? (
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                                    ) : (
+                                        <div className="dot-pending"></div>
+                                    )}
+                                </div>
+                                <div className="step-line"></div>
+                            </div>
+                            <div className="step-content">
+                                <div className="step-main">
+                                    <div className="step-header">
+                                        <span className="step-name">HR Finalization</span>
+                                        <span className={`status-badge ${(payrollRun.workflow_stage || 0) >= 2 ? 'completed' : 'pending'}`}>
+                                            {(payrollRun.workflow_stage || 0) >= 2 ? 'Completed' : 'Pending'}
+                                        </span>
+                                    </div>
+                                    <div className="step-details-grid">
+                                        <div className="detail-group">
+                                            <div className="user-icon-small">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                            </div>
+                                            <div className="detail-text">
+                                                <label>APPROVER</label>
+                                                <span>{auditLogs.find(l => l.action === 'FINALIZED_BY_HR' || l.action === 'SUBMITTED_FOR_REVIEW')?.username || 'Pending'}</span>
+                                            </div>
                                         </div>
-                                        <div className="step-content-box">
-                                            <div className="step-header-label">{step.label}</div>
-                                            <div className="step-person-name">{step.name}</div>
-                                            <div className={`step-status-text ${isApproved ? 'approved' : isCurrent ? 'current' : ''}`}>
-                                                {isApproved ? `Approved: ${step.date ? new Date(step.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Done'}`
-                                                    : isCurrent ? 'AWAITING ACTION' : 'Pending Previous'}
+                                        <div className="detail-group">
+                                            <div className="detail-text">
+                                                <label>DATE</label>
+                                                <span>{auditLogs.find(l => l.action === 'FINALIZED_BY_HR' || l.action === 'SUBMITTED_FOR_REVIEW')?.performed_at ? new Date(auditLogs.find(l => l.action === 'FINALIZED_BY_HR' || l.action === 'SUBMITTED_FOR_REVIEW')?.performed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="detail-group">
+                                            <div className="detail-text">
+                                                <label>TIME</label>
+                                                <span>{auditLogs.find(l => l.action === 'FINALIZED_BY_HR' || l.action === 'SUBMITTED_FOR_REVIEW')?.performed_at ? new Date(auditLogs.find(l => l.action === 'FINALIZED_BY_HR' || l.action === 'SUBMITTED_FOR_REVIEW')?.performed_at).toLocaleTimeString() : '-'}</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            );
-                        })}
-                    </div>
-                    {payrollRun.return_remarks && (
-                        <div className="return-remarks-banner-new">
-                            <span className="remarks-label">Return Reason:</span> {payrollRun.return_remarks}
+                            </div>
                         </div>
-                    )}
+
+                        {/* Operations Manager Step */}
+                        <div className="step-item">
+                            <div className="step-left">
+                                <div className={`step-icon ${(payrollRun.workflow_stage || 0) >= 3 ? 'completed' :
+                                    (payrollRun.workflow_stage || 0) === 2 && !payrollRun.status.includes('Returned') ? 'active-blue' : 'upcoming'
+                                    }`}>
+                                    {(payrollRun.workflow_stage || 0) >= 3 ? (
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                                    ) : (payrollRun.workflow_stage || 0) === 2 && !payrollRun.status.includes('Returned') ? (
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
+                                    ) : (
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                    )}
+                                </div>
+                                <div className="step-line"></div>
+                            </div>
+                            <div className="step-content">
+                                <div className={`step-main card-style ${(payrollRun.workflow_stage || 0) === 2 && !payrollRun.status.includes('Returned') ? 'active-card' : ''}`}>
+                                    <div className="step-header">
+                                        <span className="step-name">Operations Manager</span>
+                                        <span className={`status-badge ${(payrollRun.workflow_stage || 0) >= 3 ? 'completed' :
+                                            payrollRun.status.includes('Returned') ? 'returned' :
+                                                (payrollRun.workflow_stage || 0) === 2 ? 'in-review' : 'pending'
+                                            }`}>
+                                            {(payrollRun.workflow_stage || 0) >= 3 ? 'Approved' :
+                                                payrollRun.status.includes('Returned') ? 'Returned' :
+                                                    (payrollRun.workflow_stage || 0) === 2 ? 'In Review' : 'Pending'}
+                                        </span>
+                                    </div>
+                                    <div className="step-details-grid">
+                                        <div className="detail-group">
+                                            <div className="user-icon-small">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                            </div>
+                                            <div className="detail-text">
+                                                <label>APPROVER</label>
+                                                <span>{auditLogs.find(l => l.action === 'OPERATIONS_APPROVED')?.username || 'Victorio Reloba Jr.'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="detail-group">
+                                            <div className="detail-text">
+                                                <label>DATE</label>
+                                                <span>{auditLogs.find(l => l.action === 'OPERATIONS_APPROVED')?.performed_at ? new Date(auditLogs.find(l => l.action === 'OPERATIONS_APPROVED')?.performed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : <span className="italic text-gray-400">Pending...</span>}</span>
+                                            </div>
+                                        </div>
+                                        <div className="detail-group">
+                                            <div className="detail-text">
+                                                <label>TIME</label>
+                                                <span>{auditLogs.find(l => l.action === 'OPERATIONS_APPROVED')?.performed_at ? new Date(auditLogs.find(l => l.action === 'OPERATIONS_APPROVED')?.performed_at).toLocaleTimeString() : <span className="italic text-gray-400">--:--</span>}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Vice President Step */}
+                        <div className="step-item">
+                            <div className="step-left">
+                                <div className={`step-icon ${payrollRun.status === 'APPROVED' ? 'completed' :
+                                    (payrollRun.workflow_stage || 0) === 3 ? 'active-blue' : 'upcoming'
+                                    }`}>
+                                    {payrollRun.status === 'APPROVED' ? (
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                                    ) : (
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="step-content">
+                                <div className={`step-main ${(payrollRun.workflow_stage || 0) === 3 ? 'active-card' : ''}`}>
+                                    <div className="step-header">
+                                        <span className="step-name">Vice President</span>
+                                        <span className={`status-badge ${payrollRun.status === 'APPROVED' ? 'completed' :
+                                            (payrollRun.workflow_stage || 0) === 3 ? 'in-review' : 'pending'
+                                            }`}>
+                                            {payrollRun.status === 'APPROVED' ? 'Approved' :
+                                                (payrollRun.workflow_stage || 0) === 3 ? 'In Review' : 'Upcoming'}
+                                        </span>
+                                    </div>
+                                    <div className="step-details-grid">
+                                        <div className="detail-group">
+                                            <div className="user-icon-small">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                            </div>
+                                            <div className="detail-text">
+                                                <label>APPROVER</label>
+                                                <span>{auditLogs.find(l => l.action === 'EVP_APPROVED')?.username || 'Anna Liza Rodriguez'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="detail-group">
+                                            <div className="detail-text">
+                                                <label>DATE</label>
+                                                <span>{auditLogs.find(l => l.action === 'EVP_APPROVED')?.performed_at ? new Date(auditLogs.find(l => l.action === 'EVP_APPROVED')?.performed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="detail-group">
+                                            <div className="detail-text">
+                                                <label>TIME</label>
+                                                <span>{auditLogs.find(l => l.action === 'EVP_APPROVED')?.performed_at ? new Date(auditLogs.find(l => l.action === 'EVP_APPROVED')?.performed_at).toLocaleTimeString() : '-'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="tracker-footer">
+                        <button className="view-details-link" onClick={() => document.querySelector('.main-card-new')?.scrollIntoView({ behavior: 'smooth' })}>View Details</button>
+                        <button className="nudge-btn" onClick={() => alert("Notification sent to the current approver.")}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+                            Nudge Approver
+                        </button>
+                    </div>
                 </div>
+                {payrollRun.return_remarks && (
+                    <div className="return-remarks-banner-new">
+                        <span className="remarks-label">Return Reason:</span> {payrollRun.return_remarks}
+                    </div>
+                )}
 
                 {/* Main Two-Column Layout */}
                 <div className="redesigned-grid-container">
@@ -703,7 +973,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                                             className="cell-input"
                                                         />
                                                     ) : (
-                                                        <span className="font-medium">{payslip.payroll_days.toFixed(2)}</span>
+                                                        <span className="font-medium">{(payslip.payroll_days || 0).toFixed(2)}</span>
                                                     )}
                                                 </td>
 
@@ -877,44 +1147,82 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
 
                             <div className="action-buttons-stack">
                                 {/* Workflow Approval / Finalize */}
-                                {(payrollRun.status === 'DRAFT' || payrollRun.status === 'RETURNED TO PREPARER') && permissions.canEdit && (
-                                    <button onClick={handleApprove} className="primary-action-btn" disabled={processing}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                        FINALIZE & SUBMIT
-                                    </button>
+                                {!payrollRun.status.includes('Approved') && !payrollRun.status.includes('locked') && (
+                                    <>
+                                        {/* HR Finalize Button */}
+                                        {/* HR Finalize Button Removed (Moved to bottom) */}
+
+                                        {/* Operations Manager Approve/Return */}
+                                        {payrollRun.status === 'Under Review - Operations Manager' &&
+                                            (user?.role === 'Admin' || user?.role === 'Operations Manager' || user?.role === 'Super Admin') && (
+                                                <>
+                                                    <button onClick={handleApprove} className="approve-btn" disabled={processing}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                        APPROVE PAYROLL
+                                                    </button>
+                                                    <button onClick={() => setShowReturnModal(true)} className="return-btn" disabled={processing}>
+                                                        Return to HR
+                                                    </button>
+                                                </>
+                                            )}
+
+                                        {/* VP Final Approve/Return */}
+                                        {payrollRun.status === 'Under Review - Vice President' &&
+                                            (user?.role === 'President' || user?.role === 'Vice President' || user?.role === 'Super Admin') && (
+                                                <>
+                                                    <button onClick={handleFinalApprove} className="approve-btn" disabled={processing}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                        FINAL APPROVE
+                                                    </button>
+                                                    <button onClick={() => setShowReturnModal(true)} className="return-btn" disabled={processing}>
+                                                        Return to Operations Manager
+                                                    </button>
+                                                </>
+                                            )}
+                                    </>
                                 )}
 
-                                {/* Reviewer Action Buttons */}
-                                {payrollRun.status !== 'APPROVED' && payrollRun.status !== 'locked' && (
-                                    (payrollRun.workflow_stage === 1 && (user?.role === 'HR' || user?.role === 'Super Admin')) ||
-                                    (payrollRun.workflow_stage === 2 && (user?.role === 'Admin' || user?.role === 'Super Admin')) ||
-                                    (payrollRun.workflow_stage === 3 && (['President', 'Vice President'].includes(user?.role || '') || user?.role === 'Super Admin'))
-                                ) && (
-                                        <>
-                                            <button onClick={handleApprove} className="approve-btn" disabled={processing}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                                APPROVE PAYROLL
-                                            </button>
-                                            <button onClick={() => setShowReturnModal(true)} className="return-btn" disabled={processing}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                                                RETURN FOR CORRECTION
-                                            </button>
-                                        </>
-                                    )}
-
-                                {payrollRun.status === 'APPROVED' && permissions.canLock && (
-                                    <button onClick={handleLock} className="primary-action-btn black" disabled={processing}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                                        LOCK & ARCHIVE
-                                    </button>
+                                {['DRAFT', 'RETURNED TO PREPARER', 'RETURNED TO HR'].includes(payrollRun.status?.toUpperCase()) && (user?.role === 'HR' || user?.role === 'Super Admin') && (
+                                    <>
+                                        <button
+                                            onClick={() => setShowFinalizeModal(true)}
+                                            className="action-btn-primary"
+                                            style={{
+                                                width: '100%',
+                                                justifyContent: 'center',
+                                                background: '#16a34a', // Green
+                                                borderColor: '#16a34a',
+                                                marginBottom: '16px'
+                                            }}
+                                            disabled={processing}
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                            Finalize Payroll
+                                        </button>
+                                        <div className="divider-h"></div>
+                                    </>
                                 )}
 
-                                <div className="divider-h"></div>
+                                {/* Sync from Attendance Button */}
+                                {['DRAFT', 'RETURNED TO PREPARER', 'RETURNED TO HR'].includes(payrollRun.status?.toUpperCase()) && (user?.role === 'HR' || user?.role === 'Super Admin') && (
+                                    <>
+                                        <button
+                                            onClick={handleSyncAttendance}
+                                            className="secondary-action-btn"
+                                            style={{
+                                                width: '100%',
+                                                justifyContent: 'center',
+                                                marginBottom: '12px'
+                                            }}
+                                            disabled={syncing}
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                                            {syncing ? 'Syncing...' : 'Sync from Attendance'}
+                                        </button>
+                                        <div className="divider-h"></div>
+                                    </>
+                                )}
 
-                                <button onClick={handlePrintBatch} className="secondary-action-btn">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                                    PRINT REGISTER
-                                </button>
                                 <button onClick={handleExportPDF} className="secondary-action-btn">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                                     DOWNLOAD SUMMARY
@@ -963,12 +1271,14 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                     </div>
                 )}
 
-                {/* Single Payslip View Modal */}
+                {/* Payslip Detail Modal */}
                 {payslipToView && (
-                    <PayslipViewModal
-                        payslip={payslipToView}
-                        payrollRun={payrollRun}
+                    <PayslipDetailModal
+                        isOpen={!!payslipToView}
                         onClose={() => setPayslipToView(null)}
+                        payslip={payslipToView}
+                        employee={payslipToView} // Payslip object contains employee details
+                        run={payrollRun}
                     />
                 )}
 
@@ -1252,7 +1562,73 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                 .card-label { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em; }
                 .card-value { font-size: 24px; font-weight: 700; line-height: 1.2; margin-bottom: 4px; }
                 .card-subtext { font-size: 12px; font-weight: 500; }
-                .card-link { font-size: 12px; color: #4f46e5; text-decoration: underline; }
+                /* Return Masterlist Btn */
+                .return-masterlist-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 8px 16px;
+                    background: white;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    color: #374151;
+                    font-size: 13px;
+                    font-weight: 500;
+                    text-decoration: none;
+                    transition: all 0.2s;
+                }
+                .return-masterlist-btn:hover {
+                    background: #f9fafb;
+                    border-color: #9ca3af;
+                }
+
+                /* Tracker Panel */
+                .approval-tracker-panel {
+                    background: white;
+                    padding: 24px;
+                    border-radius: 12px;
+                    margin-bottom: 24px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                }
+                .panel-title {
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: #111827;
+                    margin: 0 0 16px 0;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+                .tracker-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 13px;
+                }
+                .tracker-table th {
+                    text-align: left;
+                    font-weight: 600;
+                    color: #6b7280;
+                    padding: 8px 12px;
+                    border-bottom: 2px solid #f3f4f6;
+                    font-size: 11px;
+                    text-transform: uppercase;
+                }
+                .tracker-table td {
+                    padding: 12px;
+                    border-bottom: 1px solid #f9fafb;
+                    color: #374151;
+                }
+                .status-pill {
+                    display: inline-block;
+                    padding: 2px 8px;
+                    border-radius: 9999px;
+                    font-size: 11px;
+                    font-weight: 600;
+                }
+                .status-pill.completed { background: #dcfce7; color: #166534; }
+                .status-pill.approved { background: #dcfce7; color: #166534; }
+                .status-pill.returned { background: #fee2e2; color: #991b1b; }
+                .status-pill.pending { background: #f3f4f6; color: #6b7280; }
+
                 .text-dark { color: #111827; }
 
                 /* Main Table Card */
@@ -1463,7 +1839,12 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                     color: #6b7280;
                     cursor: pointer;
                     padding: 4px;
+                    transition: color 0.2s;
                 }
+                .icon-button:hover { color: #111827; }
+                .icon-button:active { transform: scale(0.95); }
+                .icon-button:hover { color: #111827; }
+                .icon-button:active { transform: scale(0.95); }
                 .notification-dot {
                     position: absolute;
                     top: 2px;
@@ -1811,7 +2192,242 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                 }
                 .empty-audit { font-size: 12px; color: #9ca3af; font-style: italic; text-align: center; padding: 20px 0; }
                 .mt-24 { margin-top: 24px; }
+
+                /* New Vertical Stepper Styles (Refined) */
+                .approval-tracker-container {
+                    background: white;
+                    border-radius: 12px;
+                    padding: 32px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Softer shadow */
+                    margin-bottom: 32px;
+                }
+                .tracker-header-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    margin-bottom: 32px;
+                    border-bottom: 1px solid #f3f4f6;
+                    padding-bottom: 24px;
+                }
+                .tracker-title {
+                    font-size: 11px;
+                    font-weight: 700;
+                    color: #64748b;
+                    letter-spacing: 0.1em;
+                    margin-bottom: 8px;
+                    text-transform: uppercase;
+                }
+                .tracker-subtitle {
+                    font-size: 14px;
+                    color: #94a3b8;
+                    margin: 0;
+                }
+                
+                .stepper-container {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0;
+                    position: relative;
+                }
+                .step-item {
+                    display: flex;
+                    gap: 24px;
+                    position: relative;
+                }
+                .step-left {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    width: 40px;
+                    flex-shrink: 0;
+                }
+                .step-icon {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 2;
+                    background: white;
+                    transition: all 0.2s;
+                }
+                .step-icon.completed {
+                    background: #d1fae5;
+                    color: #059669;
+                }
+                .step-icon.active-blue {
+                    background: #3b82f6;
+                    color: white;
+                    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.15); /* Soft blue halo */
+                }
+                .step-icon.upcoming {
+                    background: #f3f4f6;
+                    color: #9ca3af;
+                }
+                .dot-pending {
+                    width: 10px;
+                    height: 10px;
+                    background: #e5e7eb;
+                    border-radius: 50%;
+                }
+                .step-line {
+                    width: 2px;
+                    background: #e5e7eb;
+                    flex: 1;
+                    min-height: 48px;
+                    margin: 4px 0;
+                }
+                .step-item:last-child .step-line {
+                    display: none;
+                }
+                
+                .step-content {
+                    flex: 1;
+                    padding-bottom: 40px;
+                }
+                .step-main {
+                    padding: 8px 16px; 
+                    border-radius: 8px;
+                    transition: all 0.2s;
+                    background: transparent;
+                }
+                .step-main.active-card {
+                    background: #f0f9ff;
+                    border: 1px solid #bae6fd;
+                    padding: 16px;
+                }
+                
+                .step-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    margin-bottom: 12px;
+                }
+                .step-name {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #111827;
+                }
+                .status-badge {
+                    font-size: 11px;
+                    font-weight: 500;
+                    padding: 4px 10px;
+                    border-radius: 9999px; /* Pill shape */
+                }
+                .status-badge.completed { background: #d1fae5; color: #065f46; }
+                .status-badge.in-review { background: #2563eb; color: white; }
+                .status-badge.pending { background: #f3f4f6; color: #6b7280; }
+                .status-badge.returned { background: #fee2e2; color: #991b1b; }
+                
+                .step-details-grid {
+                    display: grid;
+                    grid-template-columns: 240px 140px 140px;
+                    gap: 16px;
+                }
+                .detail-group {
+                    display: flex;
+                    gap: 12px;
+                    align-items: center;
+                }
+                .user-icon-small {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    background: #e5e7eb;
+                    color: #6b7280;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .detail-text {
+                    display: flex;
+                    flex-direction: column;
+                }
+                .detail-text label {
+                    font-size: 10px;
+                    font-weight: 700;
+                    color: #9ca3af;
+                    letter-spacing: 0.05em;
+                    margin-bottom: 2px;
+                    text-transform: uppercase;
+                }
+                .detail-text span {
+                    font-size: 13px;
+                    font-weight: 500;
+                    color: #1f2937;
+                }
+                
+                .tracker-footer {
+                    display: flex;
+                    justify-content: flex-end;
+                    align-items: center;
+                    gap: 24px;
+                    margin-top: 16px;
+                    padding-top: 24px;
+                    border-top: 1px solid #f3f4f6;
+                }
+                .view-details-link {
+                    background: none;
+                    border: none;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #4b5563;
+                    cursor: pointer;
+                }
+                .nudge-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    background: #2563eb;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 10px 20px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                }
+                .nudge-btn:hover { background: #1d4ed8; }
             `}</style>
-        </DashboardLayout>
+            {/* Finalize Confirmation Modal */}
+            {showFinalizeModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50
+                }}>
+                    <div style={{ background: 'white', padding: '24px', borderRadius: '12px', width: '400px', maxWidth: '90%' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px', color: '#111827' }}>Confirm Payroll Finalization</h3>
+                        <p style={{ fontSize: '14px', color: '#4b5563', marginBottom: '24px', lineHeight: '1.5' }}>
+                            Once finalized, this payroll will be submitted to the <strong>Operations Manager</strong> for review and cannot be edited unless returned.
+                            <br /><br />
+                            Are you sure you want to proceed?
+                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                            <button
+                                onClick={() => setShowFinalizeModal(false)}
+                                style={{
+                                    padding: '8px 16px', borderRadius: '6px', border: '1px solid #d1d5db',
+                                    background: 'white', color: '#374151', fontWeight: '600', cursor: 'pointer'
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmFinalize}
+                                style={{
+                                    padding: '8px 16px', borderRadius: '6px', border: 'none',
+                                    background: '#16a34a', color: 'white', fontWeight: '600', cursor: 'pointer'
+                                }}
+                                disabled={processing}
+                            >
+                                {processing ? 'Finalizing...' : 'Confirm Finalize'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </DashboardLayout >
     );
 }

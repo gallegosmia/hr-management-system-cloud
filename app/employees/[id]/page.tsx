@@ -167,7 +167,7 @@ export default function EmployeeProfileDashboard() {
                         <div className="bg-white rounded-[20px] shadow-sm p-8 flex flex-col items-center text-center">
 
                             {/* Avatar */}
-                            <div className="relative mb-5 group cursor-pointer" onClick={() => { setEditSection('personal'); setEditModalOpen(true); }}>
+                            <div className="relative mb-5 group cursor-pointer" onClick={() => { setEditSection('basic'); setEditModalOpen(true); }}>
                                 <div className="w-40 h-40 rounded-2xl border-[6px] border-[#E0E7FF] shadow-inner overflow-hidden flex items-center justify-center bg-[#F1F5F9]">
                                     {employee.profile_picture ? (
                                         <img src={employee.profile_picture} alt="Profile" className="w-full h-full object-cover" />
@@ -192,7 +192,14 @@ export default function EmployeeProfileDashboard() {
                             </div>
 
                             {/* Details List */}
-                            <div className="w-full border-t border-gray-100 pt-6 space-y-4">
+                            <div className="w-full border-t border-gray-100 pt-6 space-y-4 relative group/work">
+                                <button
+                                    onClick={() => { setEditSection('work'); setEditModalOpen(true); }}
+                                    className="absolute top-6 right-0 text-slate-300 hover:text-blue-600 opacity-0 group-hover/work:opacity-100 transition-opacity p-1"
+                                    title="Edit Job Details"
+                                >
+                                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>
+                                </button>
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-400 font-medium">Position</span>
                                     <span className="font-bold text-slate-700 truncate max-w-[140px]" title={employee.position}>{employee.position}</span>
@@ -236,6 +243,16 @@ export default function EmployeeProfileDashboard() {
                     {/* --- RIGHT COLUMN: CONTENT AREA --- */}
                     <main className="lg:col-span-8 w-full space-y-6">
 
+                        {/* Back Button */}
+                        <div className="flex justify-start">
+                            <Link href="/employees" className="flex items-center gap-2 text-slate-500 hover:text-[#1D4ED8] transition-colors group">
+                                <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-50 transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 group-hover:text-[#1D4ED8]"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+                                </div>
+                                <span className="text-sm font-bold">Return to Masterlist</span>
+                            </Link>
+                        </div>
+
                         {/* HEADER: Tabs + Actions */}
                         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                             {/* Tabs */}
@@ -271,7 +288,7 @@ export default function EmployeeProfileDashboard() {
                                 <div className="h-8 w-px bg-slate-200 hidden md:block"></div>
                                 <div className="flex items-center gap-2">
                                     <button
-                                        onClick={() => { setEditSection('personal'); setEditModalOpen(true); }}
+                                        onClick={() => { setEditSection('basic'); setEditModalOpen(true); }}
                                         className="w-10 h-10 bg-[#1D4ED8] rounded-lg border border-blue-700 shadow-md shadow-blue-500/30 flex items-center justify-center text-white hover:bg-blue-600 transition-colors"
                                     >
                                         <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>
@@ -291,12 +308,26 @@ export default function EmployeeProfileDashboard() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                                     {/* 1. Current Info Card */}
-                                    <div className="bg-white rounded-[20px] p-8 shadow-sm">
-                                        <div className="flex items-center gap-3 mb-8">
-                                            <div className="w-10 h-10 rounded-lg bg-[#EFF6FF] text-[#1D4ED8] flex items-center justify-center">
-                                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" /></svg>
+                                    <div className="bg-white rounded-[20px] p-8 shadow-sm group">
+                                        <div className="flex items-center justify-between mb-8">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-lg bg-[#EFF6FF] text-[#1D4ED8] flex items-center justify-center">
+                                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" /></svg>
+                                                </div>
+                                                <h3 className="text-lg font-bold text-[#0F172A]">Current Info</h3>
                                             </div>
-                                            <h3 className="text-lg font-bold text-[#0F172A]">Current Info</h3>
+                                            {/* Edit Sections Dropdown / Buttons */}
+                                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => { setEditSection('contact'); setEditModalOpen(true); }} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="Edit Contact Info">
+                                                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                                </button>
+                                                <button onClick={() => { setEditSection('address'); setEditModalOpen(true); }} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="Edit Address">
+                                                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                                                </button>
+                                                <button onClick={() => { setEditSection('emergency'); setEditModalOpen(true); }} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="Edit Emergency Contact">
+                                                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-y-8 gap-x-4">
@@ -308,14 +339,26 @@ export default function EmployeeProfileDashboard() {
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Mobile Phone</p>
                                                 <p className="text-sm font-semibold text-slate-800">{employee.contact_number || '-'}</p>
                                             </div>
-                                            <div className="col-span-2 bg-[#EFF6FF] p-5 rounded-xl border border-[#DBEAFE]">
+                                            <div className="col-span-2 bg-[#EFF6FF] p-5 rounded-xl border border-[#DBEAFE] relative group/emergency">
+                                                <button
+                                                    onClick={() => { setEditSection('emergency'); setEditModalOpen(true); }}
+                                                    className="absolute top-4 right-4 text-blue-300 hover:text-blue-600 opacity-0 group-hover/emergency:opacity-100 transition-opacity"
+                                                >
+                                                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>
+                                                </button>
                                                 <p className="text-[10px] font-bold text-[#1D4ED8] uppercase tracking-wide mb-2 flex items-center gap-1">
                                                     ! Emergency Contact
                                                 </p>
                                                 <p className="text-sm font-bold text-[#0F172A]">{employee.emergency_contact_name || 'Not set'} <span className="font-normal text-slate-500">({employee.emergency_contact_relationship || 'Contact'})</span></p>
                                                 <p className="text-xs text-slate-500 mt-1 font-medium">{employee.emergency_contact_number}</p>
                                             </div>
-                                            <div className="col-span-2">
+                                            <div className="col-span-2 relative group/address">
+                                                <button
+                                                    onClick={() => { setEditSection('address'); setEditModalOpen(true); }}
+                                                    className="absolute top-0 right-0 text-slate-300 hover:text-blue-600 opacity-0 group-hover/address:opacity-100 transition-opacity"
+                                                >
+                                                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>
+                                                </button>
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Current Address</p>
                                                 <p className="text-sm font-semibold text-slate-800 line-clamp-2" title={employee.address}>{employee.address || '-'}</p>
                                             </div>

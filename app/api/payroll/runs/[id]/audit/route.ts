@@ -13,7 +13,7 @@ export async function GET(
         const payrollRunId = params.id;
 
         const result = await query(`
-            SELECT pal.*, u.username as user_name, u.role as user_role
+            SELECT pal.*, u.username as username, u.role as user_role
             FROM payroll_audit_log pal
             LEFT JOIN users u ON pal.performed_by = u.id
             WHERE pal.payroll_run_id = $1

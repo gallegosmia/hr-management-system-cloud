@@ -41,7 +41,7 @@ export default function EmployeesPage() {
     const [departmentFilter, setDepartmentFilter] = useState('');
     const [branchFilter, setBranchFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
-    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);

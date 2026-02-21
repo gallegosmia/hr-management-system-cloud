@@ -383,8 +383,8 @@ export async function POST(request: NextRequest) {
 
         // Log action
         await query(`
-            INSERT INTO payroll_audit_log (payroll_run_id, action, performed_by, details)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO payroll_audit_log (payroll_run_id, action, performed_by, details, performed_at)
+            VALUES ($1, $2, $3, $4, $5)
         `, [
             payrollRun.id,
             'CREATED',
@@ -393,7 +393,8 @@ export async function POST(request: NextRequest) {
                 run_number: runNumber,
                 branch,
                 employee_count: employees.length
-            })
+            }),
+            new Date().toISOString()
         ]);
 
         return NextResponse.json({

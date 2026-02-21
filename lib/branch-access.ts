@@ -32,7 +32,7 @@ export function normalizeBranchName(branch: string | undefined | null): string {
  * Super Admins have access to ALL branches and ALL data
  */
 export function isSuperAdmin(role: string): boolean {
-    return role === 'President' || role === 'Vice President';
+    return role === 'President' || role === 'Vice President' || role === 'Super Admin' || role === 'Operations Manager';
 }
 
 /**

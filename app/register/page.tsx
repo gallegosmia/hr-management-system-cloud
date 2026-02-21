@@ -172,8 +172,8 @@ export default function RegisterPage() {
                                     value={role}
                                     onChange={(e) => {
                                         setRole(e.target.value);
-                                        // Clear branch if switching to/from Super Admin
-                                        if (e.target.value === 'President' || e.target.value === 'Vice President') {
+                                        // Clear branch if switching to/from Super Admin roles
+                                        if (['President', 'Vice President', 'Operations Manager'].includes(e.target.value)) {
                                             setAssignedBranch('');
                                         }
                                     }}
@@ -181,12 +181,13 @@ export default function RegisterPage() {
                                 >
                                     <option value="Employee">Employee</option>
                                     <option value="HR">HR Officer</option>
+                                    <option value="Operations Manager">Operations Manager</option>
                                     <option value="President">President (Super Admin)</option>
                                     <option value="Vice President">Vice President (Super Admin)</option>
                                 </select>
                                 <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.5rem' }}>
                                     {role === 'HR' && '⚠️ HR role requires Super Admin approval'}
-                                    {(role === 'President' || role === 'Vice President') && '⚠️ Super Admin roles require security review'}
+                                    {['President', 'Vice President', 'Operations Manager'].includes(role) && '⚠️ Management roles require security review'}
                                     {role === 'Employee' && 'ℹ️ Employee role has limited system access'}
                                 </p>
                             </div>
@@ -213,8 +214,8 @@ export default function RegisterPage() {
                                 </div>
                             )}
 
-                            {/* Show message for Super Admin */}
-                            {(role === 'President' || role === 'Vice President') && (
+                            {/* Show message for Super Admin / Operations Manager */}
+                            {['President', 'Vice President', 'Operations Manager'].includes(role) && (
                                 <div style={{
                                     padding: '1rem',
                                     background: '#fef3c7',
@@ -224,8 +225,12 @@ export default function RegisterPage() {
                                     color: '#92400e',
                                     border: '1px solid #fde68a'
                                 }}>
-                                    <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>👑 Super Admin Access</p>
-                                    <p style={{ margin: 0 }}>Super Admins have access to ALL branches and ALL modules. This role requires security review and manual approval.</p>
+                                    <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>👑 Management Access</p>
+                                    <p style={{ margin: 0 }}>
+                                        {role === 'Operations Manager'
+                                            ? 'The Operations Manager has access to ALL branches and ALL modules EXCEPT user management. This role requires manual approval.'
+                                            : 'Super Admins have access to ALL branches and ALL modules. This role requires security review and manual approval.'}
+                                    </p>
                                 </div>
                             )}
 

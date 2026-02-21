@@ -144,6 +144,21 @@ export default function EditEmployeeModal({ isOpen, onClose, onSave, employee, s
                                 <option value="Separated">Separated</option>
                             </select>
                         </FormGroup>
+                        <FormGroup label="Religion">
+                            <input name="religion" value={formData.religion || ''} onChange={handleChange} />
+                        </FormGroup>
+                        <FormGroup label="Date Hired">
+                            <input type="date" name="date_hired" value={formData.date_hired ? new Date(formData.date_hired).toISOString().split('T')[0] : ''} onChange={handleChange} />
+                        </FormGroup>
+                        <FormGroup label="Employment Status">
+                            <select name="employment_status" value={formData.employment_status || ''} onChange={handleChange}>
+                                <option value="Regular">Regular</option>
+                                <option value="Probationary">Probationary</option>
+                                <option value="Contractual">Contractual</option>
+                                <option value="Resigned">Resigned</option>
+                                <option value="Terminated">Terminated</option>
+                            </select>
+                        </FormGroup>
                     </>
                 );
             case 'contact':

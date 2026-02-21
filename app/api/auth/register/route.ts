@@ -14,10 +14,10 @@ export async function POST(request: NextRequest) {
         }
 
         // Validate role (Simplified 3-role system)
-        const validRoles = ['Employee', 'HR', 'President', 'Vice President'];
+        const validRoles = ['Employee', 'HR', 'President', 'Vice President', 'Operations Manager'];
         if (!validRoles.includes(role)) {
             return NextResponse.json(
-                { error: 'Invalid role selected. Valid roles: Employee, HR, President, Vice President' },
+                { error: 'Invalid role selected. Valid roles: Employee, HR, President, Vice President, Operations Manager' },
                 { status: 400 }
             );
         }

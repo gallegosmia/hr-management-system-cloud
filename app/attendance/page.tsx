@@ -1033,7 +1033,7 @@ export default function AttendancePage() {
                                 {latesCount !== null && (
                                     <div style={{ marginTop: '0.25rem', fontSize: '0.8rem', color: latesCount >= 5 ? '#dc2626' : '#d97706', fontWeight: 600 }}>
                                         Lates This Month: {latesCount}
-                                        {latesCount >= 5 && <span style={{ marginLeft: '0.5rem', background: '#fee2e2', color: '#dc2626', padding: '0.1rem 0.3rem', borderRadius: '4px', fontSize: '0.7rem' }}>âš ï¸ Warning: Excessive</span>}
+                                        {latesCount >= 5 && <span style={{ marginLeft: '0.5rem', background: '#fee2e2', color: '#dc2626', padding: '0.1rem 0.3rem', borderRadius: '4px', fontSize: '0.7rem' }}>⚠ WARNING: Excessive</span>}
                                     </div>
                                 )}
                             </div>

@@ -190,19 +190,19 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
     }
 
     const navigation = [
-        { name: 'Dashboard', href: '/dashboard', icon: '📊', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager'] },
-        { name: 'My Profile', href: '/profile', icon: '👤', roles: ['Employee', 'HR', 'President', 'Vice President', 'Admin', 'Manager'] },
+        { name: 'Dashboard', href: '/dashboard', icon: '📊', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
+        { name: 'My Profile', href: '/profile', icon: '👤', roles: ['Employee', 'HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'TRACKER', href: '/tracker', icon: '🛰️', roles: ['Employee'] },
-        { name: '201 Files', href: '/employees', icon: '📋', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager'] },
-        { name: 'Attendance', href: '/attendance', icon: '⏰', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager'] },
-        { name: 'Leave Requests', href: '/leave', icon: '🏖️', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager'] },
-        { name: 'Emergency Loans', href: '/loans', icon: '💰', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager'] },
-        { name: 'Employee Bonuses', href: '/bonuses', icon: '🎁', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager'] },
-        { name: 'Payroll', href: '/payroll', icon: '💰', roles: ['HR', 'President', 'Vice President', 'Admin', 'Finance'] },
-        { name: 'Transportation Allowance', href: '/transportation', icon: '🚗', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager'] },
-        { name: 'Reports', href: '/reports', icon: '📈', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager'] },
-        { name: 'Memos & Announcements', href: '/announcements', icon: '📢', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager'] },
-        { name: 'Kiosk Scanner', href: '/attendance/kiosk', icon: '📱', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager'] },
+        { name: '201 Files', href: '/employees', icon: '📋', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
+        { name: 'Attendance', href: '/attendance', icon: '⏰', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
+        { name: 'Leave Requests', href: '/leave', icon: '🏖️', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
+        { name: 'Emergency Loans', href: '/loans', icon: '💰', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
+        { name: 'Employee Bonuses', href: '/bonuses', icon: '🎁', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
+        { name: 'Payroll', href: '/payroll', icon: '💰', roles: ['HR', 'President', 'Vice President', 'Admin', 'Finance', 'Operations Manager'] },
+        { name: 'Transportation Allowance', href: '/transportation', icon: '🚗', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
+        { name: 'Reports', href: '/reports', icon: '📈', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
+        { name: 'Memos & Announcements', href: '/announcements', icon: '📢', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
+        { name: 'Kiosk Scanner', href: '/attendance/kiosk', icon: '📱', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'User Management', href: '/users', icon: '👥', roles: ['President', 'Vice President', 'Admin'] },
     ];
 
@@ -564,7 +564,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     gap: 12px;
                     transition: height 0.3s ease;
                     position: relative;
-                    z-index: 999;
+                    z-index: 2000;
                     overflow: visible; /* Prevent clipping of dropdowns/badges */
                 }
 

@@ -22,7 +22,7 @@ export interface User {
  */
 export function canAccessPayroll(user: User, branch: string): boolean {
     // Super Admin can access all branches
-    if (user.role === 'Super Admin' || user.role === 'Admin') {
+    if (user.role === 'Super Admin' || user.role === 'Admin' || user.role === 'Operations Manager') {
         return true;
     }
 
@@ -53,35 +53,35 @@ export function canAccessPayroll(user: User, branch: string): boolean {
  * Check if user can create payroll
  */
 export function canCreatePayroll(user: User): boolean {
-    return ['Super Admin', 'Admin', 'HR', 'President', 'Vice President'].includes(user.role);
+    return ['Super Admin', 'Admin', 'HR', 'President', 'Vice President', 'Operations Manager'].includes(user.role);
 }
 
 /**
  * Check if user can approve payroll
  */
 export function canApprovePayroll(user: User): boolean {
-    return ['Super Admin', 'Admin', 'President', 'Vice President'].includes(user.role);
+    return ['Super Admin', 'Admin', 'President', 'Vice President', 'Operations Manager'].includes(user.role);
 }
 
 /**
  * Check if user can lock payroll
  */
 export function canLockPayroll(user: User): boolean {
-    return ['Super Admin', 'Admin', 'President', 'Vice President'].includes(user.role);
+    return ['Super Admin', 'Admin', 'President', 'Vice President', 'Operations Manager'].includes(user.role);
 }
 
 /**
  * Check if user can edit payroll days
  */
 export function canEditPayrollDays(user: User): boolean {
-    return ['Super Admin', 'Admin', 'HR', 'President', 'Vice President'].includes(user.role);
+    return ['Super Admin', 'Admin', 'HR', 'President', 'Vice President', 'Operations Manager'].includes(user.role);
 }
 
 /**
  * Check if user can delete payroll
  */
 export function canDeletePayroll(user: User): boolean {
-    return ['Super Admin', 'Admin'].includes(user.role);
+    return ['Super Admin', 'Admin', 'HR', 'Operations Manager', 'President', 'Vice President'].includes(user.role);
 }
 
 /**
@@ -89,7 +89,7 @@ export function canDeletePayroll(user: User): boolean {
  */
 export function canViewPayslip(user: User, employeeId: number): boolean {
     // Admins and executives can view all
-    if (['Super Admin', 'Admin', 'President', 'Vice President', 'HR', 'Finance'].includes(user.role)) {
+    if (['Super Admin', 'Admin', 'President', 'Vice President', 'HR', 'Finance', 'Operations Manager'].includes(user.role)) {
         return true;
     }
 
@@ -106,7 +106,7 @@ export function canViewPayslip(user: User, employeeId: number): boolean {
  */
 export function getAccessibleBranches(user: User): string[] {
     // Super Admin, President, VP, Finance can access all
-    if (['Super Admin', 'Admin', 'President', 'Vice President', 'Finance'].includes(user.role)) {
+    if (['Super Admin', 'Admin', 'President', 'Vice President', 'Finance', 'Operations Manager'].includes(user.role)) {
         return ['All', 'Ormoc', 'Naval'];
     }
 

@@ -125,23 +125,17 @@ export async function GET(request: NextRequest) {
                 if (emp.date_separated && periodEndParam) {
                     const separationDate = new Date(emp.date_separated);
                     const periodEnd = new Date(periodEndParam);
-                    // If separation date is ON or BEFORE period end, they might be excluded depending on policy.
-                    // Usually if separated within the period, they are included for prorated pay.
-                    // User said: "Not resigned with an effective date on or before the payroll period"
-                    // This implies if they resigned BEFORE the period starts, they are out.
-                    // If they resigned DURING the period, they should probably be Paid (Prorated).
-                    // User Text: "Not resigned with an effective date on or before the payroll period"
-                    // This phrasing is ambiguous. "on or before the payroll period" could mean "before the period starts".
-                    // Let's assume if date_separated < period_start, exclude.
-                    // But I only have period_end here.
-                    // Let's stick to "Active" status mostly covering this, but if date_separated is set and past, status should be Resigned.
-                    // If status is Active, date_separated shouldn't be in the past.
-                    // So just checking status 'Active' is usually enough, but let's be safe.
-
+                    if (separationDate <= periodEnd) {
+                        console.log(`[Payroll-Check] Filtered ${emp.first_name} ${emp.last_name}: Resigned on/before ${periodEndParam}`);
+                        return false;
+                    }
                 }
 
+                console.log(`[Payroll-Check] Included ${emp.first_name} ${emp.last_name} (${emp.branch})`);
                 return true;
             });
+
+            console.log(`[Payroll-Check] Found ${employees.length} eligible employees out of ${allEmployees.length} total.`);
         } else if (statusParam) {
             employees = await filterEmployees({ employment_status: statusParam });
         } else {
