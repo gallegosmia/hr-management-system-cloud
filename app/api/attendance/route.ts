@@ -106,7 +106,54 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Efficiently save all records in one batch
+        // --- Handle Leave Deductions ---
+        for (let i = 0; i < records.length; i++) {
+            let record = records[i];
+            const isDeductibleLeave = record.status === 'Sick Leave' || record.status === 'Vacation Leave';
+
+            if (isDeductibleLeave) {
+                // Fetch employee data to check credits
+                const employeesRes = await query("SELECT id, leave_credits FROM employees WHERE id = $1", [record.employee_id]);
+                const employee = employeesRes.rows[0];
+
+                if (employee) {
+                    const currentCredits = employee.leave_credits || 0;
+
+                    if (currentCredits >= 1) {
+                        // Deduct leave credits
+                        const newCredits = currentCredits - 1;
+                        await query("UPDATE employees SET leave_credits = $1 WHERE id = $2", [newCredits, employee.id]);
+
+                        // Add Audit Log
+                        // Get HR user info from headers or assign system
+                        const sessionId = request.headers.get('x-session-id');
+                        let hrUser = 'System (Batch Update)';
+                        if (sessionId) {
+                            // Try to pick up the active HR name if available, fallback to basic generic name
+                            // Assuming user object is handled in the frontend, for now log basic string
+                            hrUser = `HR Session [${sessionId.substring(0, 8)}]`;
+                        }
+
+                        // NOTE: if your DB doesn't have an audit_logs table, this query will fail. 
+                        // I will add a silent catch if the table doesn't exist yet, or I will rely on my migration tool.
+                        try {
+                            await query(`
+                                INSERT INTO audit_logs (hr_user, employee_id, action, details, previous_credits, new_credits)
+                                VALUES ($1, $2, $3, $4, $5, $6)
+                            `, [hrUser, employee.id, 'LEAVE_CREDIT_DEDUCTION', `Deducted 1 credit for ${record.status} on ${date}`, currentCredits, newCredits]);
+                        } catch (auditError) {
+                            console.warn("Audit Log insert failed, table might not exist:", auditError);
+                        }
+
+                    } else {
+                        // Enforce LWOP if no credits
+                        record.status = 'Leave Without Pay';
+                    }
+                }
+            }
+        }
+
+        // Efficiently save all records in one batch after modifying their statuses
         await batchRecordAttendance(records.map(record => ({
             employee_id: record.employee_id,
             date: date,

@@ -22,11 +22,12 @@ export default function PayslipDetailModal({ isOpen, onClose, payslip, employee,
     // Helper to safely get nested values
     const safeVal = (val: any) => parseFloat(val || 0);
 
+
     // Calculate Totals (if not pre-calculated)
     const earnings = [
         { label: 'Basic Pay', amount: safeVal(payslip.basic_pay) },
+        { label: 'Special Allowance', amount: safeVal(payslip.special_allowance || payslip.allowances?.special) },
         { label: 'Regular Allowance', amount: safeVal(payslip.allowances?.regular) },
-        { label: 'Special Allowance', amount: safeVal(payslip.allowances?.special) },
         { label: 'Overtime', amount: safeVal(payslip.overtime_pay) },
         { label: 'Bonuses', amount: safeVal(payslip.bonuses) },
     ].filter(e => e.amount > 0);
@@ -37,20 +38,34 @@ export default function PayslipDetailModal({ isOpen, onClose, payslip, employee,
 
     // Group Statutory Deductions
     const statutory = [
-        { label: 'SSS Contribution', amount: safeVal(payslip.deductions?.sss_contribution) },
-        { label: 'PhilHealth', amount: safeVal(payslip.deductions?.philhealth_contribution) },
-        { label: 'Pag-IBIG', amount: safeVal(payslip.deductions?.pagibig_contribution) },
+        { label: 'SSS Contribution', amount: safeVal(payslip.sss || payslip.deductions?.sss_contribution) },
+        { label: 'PhilHealth', amount: safeVal(payslip.phic || payslip.deductions?.philhealth_contribution) },
+        { label: 'Pag-IBIG', amount: safeVal(payslip.pagibig || payslip.deductions?.pagibig_contribution) },
     ].filter(d => d.amount > 0);
 
     // Other Deductions
+    const companyLoanDeduction = safeVal(payslip.company_loan || payslip.deductions?.company_loan?.amortization || payslip.deductions?.company_loan);
     const otherDeductions = [
-        { label: 'SSS Loan', amount: safeVal(payslip.deductions?.sss_loan?.amortization) },
-        { label: 'Pag-IBIG Loan', amount: safeVal(payslip.deductions?.pagibig_loan?.amortization) },
-        { label: 'Company Loan', amount: safeVal(payslip.deductions?.company_loan?.amortization) },
-        { label: 'Cash Advance', amount: safeVal(payslip.deductions?.cash_advance) },
-        ...(Array.isArray(payslip.deductions?.other_deductions)
-            ? payslip.deductions.other_deductions.map((d: any) => ({ label: d.note || 'Other', amount: safeVal(d.amount) }))
-            : [])
+        { label: 'SSS Loan', amount: safeVal(payslip.sss_loan || payslip.deductions?.sss_loan?.amortization || payslip.deductions?.sss_loan) },
+        { label: 'Pag-IBIG Loan', amount: safeVal(payslip.pagibig_loan || payslip.deductions?.pagibig_loan?.amortization || payslip.deductions?.pagibig_loan) },
+        { label: 'Company Loan', amount: companyLoanDeduction },
+        { label: 'Cash Advance', amount: safeVal(payslip.cash_advance || payslip.deductions?.cash_advance) },
+        { label: 'Company Funds', amount: safeVal(payslip.company_funds) },
+        ...(payslip.other_deductions_breakdown
+            ? (typeof payslip.other_deductions_breakdown === 'string'
+                ? JSON.parse(payslip.other_deductions_breakdown)
+                : payslip.other_deductions_breakdown
+            ).map((d: any) => ({
+                label: `${d.name || d.note || 'Other Deduction'}${d.balance ? ` (Bal: ${formatCurrency(d.balance)})` : ''}`,
+                amount: safeVal(d.amount)
+            }))
+            : Array.isArray(payslip.deductions?.other_deductions)
+                ? payslip.deductions.other_deductions.map((d: any) => ({
+                    label: d.note || d.name || 'Other',
+                    amount: safeVal(d.amount)
+                }))
+                : []
+        )
     ].filter(d => d.amount > 0);
 
     const totalEarnings = earnings.reduce((sum, item) => sum + item.amount, 0);
@@ -60,10 +75,23 @@ export default function PayslipDetailModal({ isOpen, onClose, payslip, employee,
     // Net Pay should ideally come from DB, but we verify here
     const netPay = safeVal(payslip.net_pay);
 
+    // Calculate Loan Balance Display
+    // If not released, the balance fetched is likely the 'starting' balance. 
+    // We should show the 'ending' balance (Starting - Deduction).
+    let loanBalanceDisplay = safeVal(payslip.company_loan_balance || employee?.company_loan_balance || employee?.ledger_balance);
+    // Assuming 'RELEASED' is the status where loans are updated. 
+    // If status is DRAFT, APPROVED, etc., we subtract the current deduction to show projected ending balance.
+    // Note: status might be uppercase or lowercase depending on where it comes from, ensuring case-insensitivity or checking specific known statuses.
+    const isReleased = run?.status?.toUpperCase().includes('RELEASED');
+
+    if (!isReleased && loanBalanceDisplay > 0 && companyLoanDeduction > 0) {
+        loanBalanceDisplay = Math.max(0, loanBalanceDisplay - companyLoanDeduction);
+    }
+
     return (
         <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000,
+            backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             backdropFilter: 'blur(4px)'
         }} onClick={onClose} className="payslip-modal-overlay">
@@ -89,19 +117,29 @@ export default function PayslipDetailModal({ isOpen, onClose, payslip, employee,
                 }}>×</button>
 
                 {/* Header */}
-                <div style={{ padding: '32px 40px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                        <div style={{ width: '48px', height: '48px', background: '#2563eb', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
+                <div style={{ padding: '32px 40px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                        <div style={{
+                            width: '120px',
+                            padding: '8px',
+                            background: 'white',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
+                            border: '1px solid #f3f4f6'
+                        }}>
+                            <img src="/images/logo.jpg" alt="Melann Lending" style={{ width: '100%', height: 'auto' }} />
                         </div>
                         <div>
-                            <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#111827', margin: 0 }}>Melann Lending Investor Corporation</h2>
-                            <p style={{ fontSize: '12px', color: '#9ca3af', margin: '4px 0 0', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase' }}>PAYROLL SYSTEM</p>
+                            <p style={{ fontSize: '11px', color: '#9ca3af', margin: '0 0 4px', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase' }}>OFFICIAL PAYSLIP</p>
+                            <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#111827', margin: 0 }}>Melann Lending Investor Corp.</h2>
                         </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                         <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', margin: 0 }}>{employee.first_name} {employee.last_name}</h3>
-                        <p style={{ fontSize: '13px', color: '#6b7280', margin: '4px 0 0' }}>Employee ID: {employee.employee_id}</p>
+                        <p style={{ fontSize: '13px', color: '#6b7280', margin: '4px 0 0' }}>Employee ID: {employee.employee_year ? `${employee.employee_year}-${employee.employee_id.toString().padStart(4, '0')}` : employee.employee_number || employee.employee_id}</p>
                         <p style={{ fontSize: '13px', color: '#9ca3af', margin: '2px 0 0' }}>{employee.position} • {employee.department}</p>
                     </div>
                 </div>
@@ -132,7 +170,7 @@ export default function PayslipDetailModal({ isOpen, onClose, payslip, employee,
 
                 {/* Main Content Area */}
                 <div style={{ padding: '40px', overflowY: 'auto', flex: 1 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '40px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 1fr', gap: '40px' }}>
 
                         {/* Column 1: Earnings */}
                         <div>
@@ -148,48 +186,82 @@ export default function PayslipDetailModal({ isOpen, onClose, payslip, employee,
                                 ))}
                             </div>
                             <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700' }}>
-                                <span style={{ color: '#111827', textTransform: 'uppercase', fontSize: '12px' }}>TOTAL EARNINGS</span>
+                                <span style={{ color: '#111827', textTransform: 'uppercase', fontSize: '12px' }}>TOTAL GROSS PAY</span>
                                 <span style={{ color: '#111827' }}>{formatCurrency(totalEarnings)}</span>
                             </div>
                         </div>
 
-                        {/* Column 2: Taxes */}
+                        {/* Column 2: Deductions (Includes Tax & Statutory) */}
                         <div>
                             <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #ef4444', paddingBottom: '12px', marginBottom: '20px' }}>
-                                TAXES
-                            </h4>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                {taxes.length > 0 ? taxes.map((item, i) => (
-                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                                        <span style={{ color: '#4b5563' }}>{item.label}</span>
-                                        <span style={{ color: '#ef4444', fontWeight: '500' }}>-{formatCurrency(item.amount)}</span>
-                                    </div>
-                                )) : (
-                                    <div style={{ fontSize: '14px', color: '#9ca3af', fontStyle: 'italic' }}>None</div>
-                                )}
-                            </div>
-                            <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700' }}>
-                                <span style={{ color: '#ef4444', textTransform: 'uppercase', fontSize: '12px' }}>TOTAL TAXES</span>
-                                <span style={{ color: '#ef4444' }}>-{formatCurrency(totalTaxes)}</span>
-                            </div>
-                        </div>
-
-                        {/* Column 3: Deductions */}
-                        <div>
-                            <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #f59e0b', paddingBottom: '12px', marginBottom: '20px' }}>
                                 DEDUCTIONS
                             </h4>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                {[...statutory, ...otherDeductions].map((item, i) => (
-                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                {statutory.map((item, i) => (
+                                    <div key={`stat-${i}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
                                         <span style={{ color: '#4b5563' }}>{item.label}</span>
                                         <span style={{ color: '#ef4444', fontWeight: '500' }}>-{formatCurrency(item.amount)}</span>
                                     </div>
                                 ))}
+                                {taxes.map((item, i) => (
+                                    <div key={`tax-${i}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                        <span style={{ color: '#4b5563' }}>{item.label}</span>
+                                        <span style={{ color: '#ef4444', fontWeight: '500' }}>-{formatCurrency(item.amount)}</span>
+                                    </div>
+                                ))}
+                                {otherDeductions.map((item, i) => (
+                                    <div key={`other-${i}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                        <span style={{ color: '#4b5563' }}>{item.label.replace(/ \(Bal: .*\)/, '')}</span>
+                                        <span style={{ color: '#ef4444', fontWeight: '500' }}>-{formatCurrency(item.amount)}</span>
+                                    </div>
+                                ))}
+                                {(statutory.length === 0 && taxes.length === 0 && otherDeductions.length === 0) && (
+                                    <div style={{ fontSize: '14px', color: '#9ca3af', fontStyle: 'italic' }}>None</div>
+                                )}
                             </div>
                             <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700' }}>
                                 <span style={{ color: '#ef4444', textTransform: 'uppercase', fontSize: '12px' }}>TOTAL DEDUCTIONS</span>
-                                <span style={{ color: '#ef4444' }}>-{formatCurrency(totalDeductions)}</span>
+                                <span style={{ color: '#ef4444' }}>-{formatCurrency(totalDeductions + totalTaxes)}</span>
+                            </div>
+                        </div>
+
+                        {/* Column 3: Balances */}
+                        <div>
+                            <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #f59e0b', paddingBottom: '12px', marginBottom: '20px' }}>
+                                BALANCES
+                            </h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {/* Company Balance */}
+                                {loanBalanceDisplay > 0 && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                        <span style={{ color: '#4b5563' }}>Company Loan</span>
+                                        <span style={{ color: '#111827', fontWeight: '600' }}>{formatCurrency(loanBalanceDisplay)}</span>
+                                    </div>
+                                )}
+
+                                {/* Other Deduction Balances */}
+                                {(() => {
+                                    const breakdown = payslip.other_deductions_breakdown
+                                        ? (typeof payslip.other_deductions_breakdown === 'string'
+                                            ? JSON.parse(payslip.other_deductions_breakdown)
+                                            : payslip.other_deductions_breakdown)
+                                        : [];
+
+                                    const balances = Array.isArray(breakdown)
+                                        ? breakdown.filter((d: any) => parseFloat(d.balance) > 0)
+                                        : [];
+
+                                    return balances.map((d: any, i: number) => (
+                                        <div key={`bal-${i}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                            <span style={{ color: '#4b5563' }}>{d.name || d.note || 'Other'}</span>
+                                            <span style={{ color: '#111827', fontWeight: '600' }}>{formatCurrency(d.balance)}</span>
+                                        </div>
+                                    ));
+                                })()}
+
+                                {(loanBalanceDisplay <= 0 && (!payslip.other_deductions_breakdown || (Array.isArray(JSON.parse(JSON.stringify(payslip.other_deductions_breakdown || '[]'))) && JSON.parse(JSON.stringify(payslip.other_deductions_breakdown || '[]')).filter((d: any) => d.balance > 0).length === 0))) && (
+                                    <div style={{ fontSize: '14px', color: '#9ca3af', fontStyle: 'italic' }}>None</div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -230,14 +302,7 @@ export default function PayslipDetailModal({ isOpen, onClose, payslip, employee,
                         }}>
                             Close
                         </button>
-                        <button onClick={() => window.print()} style={{
-                            padding: '10px 20px', borderRadius: '8px', border: 'none',
-                            background: '#2563eb', color: 'white', fontSize: '13px', fontWeight: '600', cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', gap: '6px'
-                        }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9V2h12v7" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><path d="M6 14h12v8H6z" /></svg>
-                            Print Payslip
-                        </button>
+
                     </div>
                 </div>
             </div>

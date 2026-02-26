@@ -14,20 +14,20 @@ export async function POST(request: NextRequest) {
         }
 
         // Validate role (Simplified 3-role system)
-        const validRoles = ['Employee', 'HR', 'President', 'Vice President', 'Operations Manager'];
+        const validRoles = ['Employee', 'HR', 'President', 'Vice President', 'Operations Manager', 'Manager'];
         if (!validRoles.includes(role)) {
             return NextResponse.json(
-                { error: 'Invalid role selected. Valid roles: Employee, HR, President, Vice President, Operations Manager' },
+                { error: 'Invalid role selected. Valid roles: Employee, HR, Manager, Operations Manager, President, Vice President' },
                 { status: 400 }
             );
         }
 
         // Validate branch assignment based on role
-        if (role === 'HR') {
-            // HR users MUST have an assigned branch
+        if (role === 'HR' || role === 'Manager') {
+            // HR/Manager users MUST have an assigned branch
             if (!assigned_branch) {
                 return NextResponse.json(
-                    { error: 'HR users must have an assigned branch (Naval or Ormoc)' },
+                    { error: `${role} users must have an assigned branch (Naval or Ormoc)` },
                     { status: 400 }
                 );
             }

@@ -254,6 +254,14 @@ export default function CreatePayrollPage() {
             }
             if (!sInfo) sInfo = {};
 
+            const getSafeValue = (val: any) => {
+                if (!val) return 0;
+                if (typeof val === 'number') return val;
+                if (typeof val === 'string') return parseFloat(val) || 0;
+                if (typeof val === 'object') return parseFloat(val.amortization || val.amount || 0);
+                return 0;
+            };
+
             const monthlySalary = parseFloat(sInfo.monthly_salary || sInfo.basic_salary) || 0;
 
             // Standard Calculation (Same as Backend)
@@ -274,21 +282,22 @@ export default function CreatePayrollPage() {
             let sss = 0, sssLoan = 0;
 
             // Common
-            const companyLoan = parseFloat(deductionsInfo.company_loan?.amortization || 0);
-            const cashAdvance = parseFloat(deductionsInfo.cash_advance || 0);
+            const companyLoan = getSafeValue(deductionsInfo.company_loan);
+            const cashAdvance = getSafeValue(deductionsInfo.cash_advance);
+
             let otherDeductions = 0;
             if (Array.isArray(deductionsInfo.other_deductions)) {
                 otherDeductions = deductionsInfo.other_deductions.reduce((sum: number, d: any) => sum + (parseFloat(d.amount) || 0), 0);
             }
 
             if (cutoff === 15) {
-                phic = parseFloat(deductionsInfo.philhealth_contribution || 0);
-                pagibig = parseFloat(deductionsInfo.pagibig_contribution || 0);
-                pagibigLoan = parseFloat(deductionsInfo.pagibig_loan?.amortization || 0);
-                companyFunds = parseFloat(deductionsInfo.company_funds || deductionsInfo.company_cash_fund || 0);
+                phic = getSafeValue(deductionsInfo.philhealth_contribution);
+                pagibig = getSafeValue(deductionsInfo.pagibig_contribution);
+                pagibigLoan = getSafeValue(deductionsInfo.pagibig_loan);
+                companyFunds = getSafeValue(deductionsInfo.company_funds || deductionsInfo.company_cash_fund);
             } else {
-                sss = parseFloat(deductionsInfo.sss_contribution || 0);
-                sssLoan = parseFloat(deductionsInfo.sss_loan?.amortization || 0);
+                sss = getSafeValue(deductionsInfo.sss_contribution);
+                sssLoan = getSafeValue(deductionsInfo.sss_loan);
             }
 
             const empDeductions = phic + pagibig + pagibigLoan + companyFunds + sss + sssLoan + companyLoan + cashAdvance + otherDeductions;
@@ -491,7 +500,7 @@ export default function CreatePayrollPage() {
                                     {/* Total Taxes */}
                                     <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                            <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>TOTAL TAXES & DEDUCTIONS</span>
+                                            <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>GOVERNMENT DEDUCTIONS</span>
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><path d="M3 21h18M5 21V7l8-4 8 4v14" /></svg>
                                         </div>
                                         <div style={{ fontSize: '28px', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>{formatCurrency(estimates.totalDeductions)}</div>

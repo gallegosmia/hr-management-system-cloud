@@ -90,10 +90,10 @@ export function computePayslip(
     // Step 3: Calculate total allowances
     const allowances = input.allowances || {};
     const totalAllowances =
-        (allowances.regular || 0) +
-        (allowances.special || 0) +
-        (allowances.holiday || 0) +
-        (allowances.other || 0);
+        ((allowances.regular || 0) +
+            (allowances.special || 0) +
+            (allowances.holiday || 0) +
+            (allowances.other || 0)) / 2;
 
     // Step 4: Calculate gross pay
     const grossPay = roundToTwo(basicPay + totalAllowances);

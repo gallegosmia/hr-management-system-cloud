@@ -37,8 +37,10 @@ const StatusBadge = ({ status }: { status: string }) => {
         case 'Half-Day':
             styles = { bg: '#fef9c3', color: '#854d0e' };
             break;
-        case 'On Leave':
-            styles = { bg: '#e0f2fe', color: '#075985' };
+        case 'Birthday Leave':
+        case 'Training / Seminar':
+        case 'Official Business':
+            styles = { bg: '#e0f2fe', color: '#075985' }; // Light blue, dark blue text
             break;
         default:
             styles = { bg: '#f1f5f9', color: '#475569' };

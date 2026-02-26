@@ -106,7 +106,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
     const [processing, setProcessing] = useState(false);
     const [showBatchPrint, setShowBatchPrint] = useState(false);
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
-    const [syncing, setSyncing] = useState(false);
+
 
     useEffect(() => {
         if (payrollRun) {
@@ -157,9 +157,10 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                 alert(`Error: ${data.error}`);
                 router.push('/payroll');
             }
-        } catch (error) {
-            console.error('Error fetching payroll run:', error);
-            alert('Failed to load payroll run');
+        } catch (error: any) {
+            console.error('Failed to load payroll run:', error);
+            alert(`Failed to load payroll run: ${error.message || error}`);
+            // router.push('/payroll'); // Don't redirect immediately to allow reading error
         } finally {
             setLoading(false);
         }
@@ -193,9 +194,22 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
     const handleCellClick = (payslipId: number, field: string, currentValue: any) => {
         if (!permissions.canEdit || payrollRun?.status === 'APPROVED' || payrollRun?.status === 'locked') return;
 
+        // Prevent manual override for Days Worked unless Admin
+        if (field === 'payroll_days') {
+            const isAdmin = user?.role === 'Admin' || user?.role === 'Super Admin' || user?.role === 'HR';
+            if (!isAdmin) {
+                // If clicked, just return (input is effectively read-only or we show alert)
+                // We'll return early so the input box doesn't appear
+                return;
+            }
+        }
+
         setEditingCell({ payslipId, field });
         setEditValue(currentValue?.toString() || '0');
     };
+
+
+
 
     const handleCellBlur = async () => {
         if (!editingCell) return;
@@ -401,6 +415,38 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
         }
     };
 
+    const handleRelease = async () => {
+        if (!confirm('Are you sure you want to mark this payroll as RELEASED?')) return;
+
+        try {
+            setProcessing(true);
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch(`/api/payroll/runs/${params.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
+                body: JSON.stringify({ action: 'release' })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Payroll marked as Released!');
+                fetchPayrollRun();
+                fetchAuditLogs();
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Error in releasing payroll:', error);
+            alert('Failed to release payroll');
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     const handleLock = async () => {
         if (!confirm('Are you sure you want to lock this payroll run? This action cannot be undone.')) return;
 
@@ -455,7 +501,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                 await fetchAuditLogs(); // Refresh logs
                 // alert('Payroll finalized successfully!'); 
             } else {
-                alert(data.error || 'Failed to finalize payroll');
+                alert(`Error: ${data.error}${data.details ? `\nDetails: ${data.details}` : ''}`);
             }
         } catch (error) {
             console.error('Error finalizing:', error);
@@ -489,32 +535,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
         }
     };
 
-    const handleSyncAttendance = async () => {
-        if (!confirm('Sync days worked from attendance records? This will update all employee days based on their actual attendance within the payroll period.')) return;
 
-        try {
-            setSyncing(true);
-            const sessionId = localStorage.getItem('sessionId');
-            const response = await fetch(`/api/payroll/runs/${params.id}/sync-attendance`, {
-                method: 'POST',
-                headers: { 'x-session-id': sessionId || '' }
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                alert(`✅ ${data.message}`);
-                await fetchPayrollRun(); // Refresh to show updated days
-            } else {
-                alert(`Error: ${data.error}`);
-            }
-        } catch (error) {
-            console.error('Error syncing attendance:', error);
-            alert('Failed to sync attendance data');
-        } finally {
-            setSyncing(false);
-        }
-    };
 
     const handleExportPDF = async () => {
         try {
@@ -538,6 +559,31 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
         } catch (error) {
             console.error('Error exporting to PDF:', error);
             alert('Failed to export to PDF');
+        }
+    };
+
+    const handleExportExcel = async () => {
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+            const response = await fetch(`/api/payroll/runs/${params.id}/export`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId || ''
+                },
+                body: JSON.stringify({ format: 'excel' })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                await downloadExcelExport(data.data);
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Error exporting to Excel:', error);
+            alert('Failed to export to Excel');
         }
     };
 
@@ -606,17 +652,17 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
             return [
                 { key: 'phic', label: 'PHIC' },
                 { key: 'pagibig', label: 'PAG-IBIG' },
-                { key: 'pagibig_loan', label: <>PAG-IBIG<br />LN</> },
-                { key: 'company_loan', label: <>CO.<br />LOAN</> },
-                { key: 'cash_advance', label: <>CASH<br />ADV</> },
-                { key: 'company_funds', label: <>CO.<br />FUNDS</> }
+                { key: 'pagibig_loan', label: <div style={{ textAlign: 'right' }}>PAG-IBIG<br />LN</div> },
+                { key: 'company_loan', label: <div style={{ textAlign: 'right' }}>CO.<br />LOAN</div> },
+                { key: 'cash_advance', label: <div style={{ textAlign: 'right' }}>CASH<br />ADV</div> },
+                { key: 'company_funds', label: <div style={{ textAlign: 'right' }}>CO.<br />FUNDS</div> }
             ];
         } else {
             return [
                 { key: 'sss', label: 'SSS' },
-                { key: 'sss_loan', label: 'SSS LN' },
-                { key: 'company_loan', label: 'LOANS' },
-                { key: 'cash_advance', label: 'CASH ADV' },
+                { key: 'sss_loan', label: <div style={{ textAlign: 'right' }}>SSS<br />LN</div> },
+                { key: 'company_loan', label: <div style={{ textAlign: 'right' }}>CO.<br />LOAN</div> },
+                { key: 'cash_advance', label: <div style={{ textAlign: 'right' }}>CASH<br />ADV</div> },
                 { key: 'other_deductions', label: 'OTHER' }
             ];
         }
@@ -719,7 +765,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                 <div className="step-line"></div>
                             </div>
                             <div className="step-content">
-                                <div className="step-main">
+                                <div className={`step-main ${(payrollRun.workflow_stage || 0) >= 2 ? 'active-card' : ''}`}>
                                     <div className="step-header">
                                         <span className="step-name">HR Finalization</span>
                                         <span className={`status-badge ${(payrollRun.workflow_stage || 0) >= 2 ? 'completed' : 'pending'}`}>
@@ -733,19 +779,31 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                             </div>
                                             <div className="detail-text">
                                                 <label>APPROVER</label>
-                                                <span>{auditLogs.find(l => l.action === 'FINALIZED_BY_HR' || l.action === 'SUBMITTED_FOR_REVIEW')?.username || 'Pending'}</span>
+                                                <span>
+                                                    {(payrollRun.workflow_stage || 0) >= 2
+                                                        ? (auditLogs.find(l => l.action === 'FINALIZED_BY_HR' || l.action === 'SUBMITTED_FOR_REVIEW')?.username || payrollRun.created_by_name || 'HR Officer')
+                                                        : '-'}
+                                                </span>
                                             </div>
                                         </div>
                                         <div className="detail-group">
                                             <div className="detail-text">
                                                 <label>DATE</label>
-                                                <span>{auditLogs.find(l => l.action === 'FINALIZED_BY_HR' || l.action === 'SUBMITTED_FOR_REVIEW')?.performed_at ? new Date(auditLogs.find(l => l.action === 'FINALIZED_BY_HR' || l.action === 'SUBMITTED_FOR_REVIEW')?.performed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}</span>
+                                                <span>
+                                                    {(payrollRun.workflow_stage || 0) >= 2
+                                                        ? new Date(auditLogs.find(l => l.action === 'FINALIZED_BY_HR' || l.action === 'SUBMITTED_FOR_REVIEW')?.performed_at || (payrollRun as any).process_date || new Date().toISOString()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                                        : '-'}
+                                                </span>
                                             </div>
                                         </div>
                                         <div className="detail-group">
                                             <div className="detail-text">
                                                 <label>TIME</label>
-                                                <span>{auditLogs.find(l => l.action === 'FINALIZED_BY_HR' || l.action === 'SUBMITTED_FOR_REVIEW')?.performed_at ? new Date(auditLogs.find(l => l.action === 'FINALIZED_BY_HR' || l.action === 'SUBMITTED_FOR_REVIEW')?.performed_at).toLocaleTimeString() : '-'}</span>
+                                                <span>
+                                                    {(payrollRun.workflow_stage || 0) >= 2
+                                                        ? new Date(auditLogs.find(l => l.action === 'FINALIZED_BY_HR' || l.action === 'SUBMITTED_FOR_REVIEW')?.performed_at || (payrollRun as any).process_date || new Date().toISOString()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                                        : '-'}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -789,19 +847,19 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                             </div>
                                             <div className="detail-text">
                                                 <label>APPROVER</label>
-                                                <span>{auditLogs.find(l => l.action === 'OPERATIONS_APPROVED')?.username || 'Victorio Reloba Jr.'}</span>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 3 ? (auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.username || 'Victorio Reloba Jr.') : '-'}</span>
                                             </div>
                                         </div>
                                         <div className="detail-group">
                                             <div className="detail-text">
                                                 <label>DATE</label>
-                                                <span>{auditLogs.find(l => l.action === 'OPERATIONS_APPROVED')?.performed_at ? new Date(auditLogs.find(l => l.action === 'OPERATIONS_APPROVED')?.performed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : <span className="italic text-gray-400">Pending...</span>}</span>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 3 && auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.performed_at ? new Date(auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.performed_at as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : <span className="italic text-gray-400">-</span>}</span>
                                             </div>
                                         </div>
                                         <div className="detail-group">
                                             <div className="detail-text">
                                                 <label>TIME</label>
-                                                <span>{auditLogs.find(l => l.action === 'OPERATIONS_APPROVED')?.performed_at ? new Date(auditLogs.find(l => l.action === 'OPERATIONS_APPROVED')?.performed_at).toLocaleTimeString() : <span className="italic text-gray-400">--:--</span>}</span>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 3 && auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.performed_at ? new Date(auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.performed_at as string).toLocaleTimeString() : <span className="italic text-gray-400">-</span>}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -812,10 +870,10 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                         {/* Vice President Step */}
                         <div className="step-item">
                             <div className="step-left">
-                                <div className={`step-icon ${payrollRun.status === 'APPROVED' ? 'completed' :
+                                <div className={`step-icon ${(payrollRun.workflow_stage || 0) >= 4 ? 'completed' :
                                     (payrollRun.workflow_stage || 0) === 3 ? 'active-blue' : 'upcoming'
                                     }`}>
-                                    {payrollRun.status === 'APPROVED' ? (
+                                    {(payrollRun.workflow_stage || 0) >= 4 ? (
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                                     ) : (
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
@@ -826,11 +884,11 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                 <div className={`step-main ${(payrollRun.workflow_stage || 0) === 3 ? 'active-card' : ''}`}>
                                     <div className="step-header">
                                         <span className="step-name">Vice President</span>
-                                        <span className={`status-badge ${payrollRun.status === 'APPROVED' ? 'completed' :
+                                        <span className={`status-badge ${(payrollRun.workflow_stage || 0) >= 4 ? 'completed' :
                                             (payrollRun.workflow_stage || 0) === 3 ? 'in-review' : 'pending'
                                             }`}>
-                                            {payrollRun.status === 'APPROVED' ? 'Approved' :
-                                                (payrollRun.workflow_stage || 0) === 3 ? 'In Review' : 'Upcoming'}
+                                            {(payrollRun.workflow_stage || 0) >= 4 ? 'Approved' :
+                                                (payrollRun.workflow_stage || 0) === 3 ? 'In Review' : 'Pending'}
                                         </span>
                                     </div>
                                     <div className="step-details-grid">
@@ -840,19 +898,19 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                             </div>
                                             <div className="detail-text">
                                                 <label>APPROVER</label>
-                                                <span>{auditLogs.find(l => l.action === 'EVP_APPROVED')?.username || 'Anna Liza Rodriguez'}</span>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 4 ? (auditLogs.find(l => l.action === 'APPROVED_BY_VP')?.username || payrollRun.approved_by_name || 'Anna Liza Rodriguez') : '-'}</span>
                                             </div>
                                         </div>
                                         <div className="detail-group">
                                             <div className="detail-text">
                                                 <label>DATE</label>
-                                                <span>{auditLogs.find(l => l.action === 'EVP_APPROVED')?.performed_at ? new Date(auditLogs.find(l => l.action === 'EVP_APPROVED')?.performed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}</span>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 4 ? new Date(auditLogs.find(l => l.action === 'APPROVED_BY_VP')?.performed_at || payrollRun.approved_at || (payrollRun as any).evp_review_date || new Date().toISOString()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}</span>
                                             </div>
                                         </div>
                                         <div className="detail-group">
                                             <div className="detail-text">
                                                 <label>TIME</label>
-                                                <span>{auditLogs.find(l => l.action === 'EVP_APPROVED')?.performed_at ? new Date(auditLogs.find(l => l.action === 'EVP_APPROVED')?.performed_at).toLocaleTimeString() : '-'}</span>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 4 ? new Date(auditLogs.find(l => l.action === 'APPROVED_BY_VP')?.performed_at || payrollRun.approved_at || (payrollRun as any).evp_review_date || new Date().toISOString()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -932,9 +990,9 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                     <thead>
                                         <tr>
                                             <th className="th-employee">EMPLOYEE DETAILS</th>
-                                            <th className="th-center" style={{ width: '40px' }}>DAYS</th>
+                                            <th className="th-center" style={{ width: '120px' }}>DAYS</th>
                                             <th className="th-right" style={{ width: '80px' }}>BASIC</th>
-                                            <th className="th-right" style={{ width: '60px' }}>REG.<br />ALW.</th>
+
                                             <th className="th-right" style={{ width: '60px' }}>SPCL.<br />ALW.</th>
                                             <th className="th-right text-green-600" style={{ width: '90px' }}>GROSS<br />PAY</th>
                                             {getDeductionColumns().map(col => (
@@ -980,24 +1038,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                                 <td className="td-right">{formatCurrency(payslip.basic_pay).replace('₱', '')}</td>
 
                                                 {/* Allowances */}
-                                                <td
-                                                    className="td-right td-editable"
-                                                    onClick={() => handleCellClick(payslip.id, 'regular_allowance', payslip.regular_allowance)}
-                                                >
-                                                    {editingCell?.payslipId === payslip.id && editingCell?.field === 'regular_allowance' ? (
-                                                        <input
-                                                            type="number"
-                                                            value={editValue}
-                                                            onChange={(e) => setEditValue(e.target.value)}
-                                                            onBlur={handleCellBlur}
-                                                            onKeyDown={(e) => e.key === 'Enter' && handleCellBlur()}
-                                                            autoFocus
-                                                            className="cell-input"
-                                                        />
-                                                    ) : (
-                                                        formatCurrency(payslip.regular_allowance || 0).replace('₱', '')
-                                                    )}
-                                                </td>
+
 
                                                 <td
                                                     className="td-right td-editable"
@@ -1090,7 +1131,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                             <td className="td-employee font-bold">TOTAL SUMMARY ({totalEmployees} EMP)</td>
                                             <td className="td-center font-bold">{totalDays.toFixed(2)}</td>
                                             <td className="td-right font-bold">{formatCurrency(totalBasicPay).replace('₱', '')}</td>
-                                            <td className="td-right font-bold">{formatCurrency(totalRegAllow).replace('₱', '')}</td>
+
                                             <td className="td-right font-bold">{formatCurrency(totalSpclAllow).replace('₱', '')}</td>
                                             <td className="td-right font-bold text-green-600">{formatCurrency(totalGrossPay).replace('₱', '')}</td>
                                             {getDeductionColumns().map(col => (
@@ -1168,7 +1209,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
 
                                         {/* VP Final Approve/Return */}
                                         {payrollRun.status === 'Under Review - Vice President' &&
-                                            (user?.role === 'President' || user?.role === 'Vice President' || user?.role === 'Super Admin') && (
+                                            (user?.role === 'Vice President' || user?.role === 'Super Admin') && (
                                                 <>
                                                     <button onClick={handleFinalApprove} className="approve-btn" disabled={processing}>
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -1182,53 +1223,71 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                     </>
                                 )}
 
-                                {['DRAFT', 'RETURNED TO PREPARER', 'RETURNED TO HR'].includes(payrollRun.status?.toUpperCase()) && (user?.role === 'HR' || user?.role === 'Super Admin') && (
+                                {/* Release Button */}
+                                {(payrollRun.status === 'For Release' || (payrollRun.status.includes('Approved') && !payrollRun.status.includes('Released'))) && payrollRun.evp_review_status === 'Approved' && (
+                                    (user?.role === 'Finance' || user?.role === 'Admin' || user?.role === 'Super Admin' || user?.role === 'HR') && (
+                                        <>
+                                            <button onClick={handleRelease} className="approve-btn" disabled={processing} style={{ backgroundColor: '#059669', marginBottom: '16px' }}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                MARK AS RELEASED
+                                            </button>
+                                            <div className="divider-h"></div>
+                                        </>
+                                    )
+                                )}
+
+                                {['DRAFT', 'RETURNED TO PREPARER', 'RETURNED TO HR'].includes(payrollRun.status?.toUpperCase()) && (user?.role === 'HR' || user?.role === 'Super Admin' || user?.role === 'President' || user?.role === 'Vice President' || user?.role === 'Admin') && (
                                     <>
+
+
                                         <button
                                             onClick={() => setShowFinalizeModal(true)}
                                             className="action-btn-primary"
                                             style={{
                                                 width: '100%',
                                                 justifyContent: 'center',
-                                                background: '#16a34a', // Green
-                                                borderColor: '#16a34a',
+                                                background: payrollRun.status?.toUpperCase().includes('RETURNED') ? '#ca8a04' : '#16a34a',
+                                                borderColor: payrollRun.status?.toUpperCase().includes('RETURNED') ? '#ca8a04' : '#16a34a',
                                                 marginBottom: '16px'
                                             }}
                                             disabled={processing}
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                            Finalize Payroll
+                                            {payrollRun.status?.toUpperCase().includes('RETURNED') ? (
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                                            ) : (
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                            )}
+                                            {payrollRun.status?.toUpperCase().includes('RETURNED') ? 'Resubmit Payroll' : 'Finalize Payroll'}
                                         </button>
                                         <div className="divider-h"></div>
                                     </>
                                 )}
 
-                                {/* Sync from Attendance Button */}
-                                {['DRAFT', 'RETURNED TO PREPARER', 'RETURNED TO HR'].includes(payrollRun.status?.toUpperCase()) && (user?.role === 'HR' || user?.role === 'Super Admin') && (
-                                    <>
-                                        <button
-                                            onClick={handleSyncAttendance}
-                                            className="secondary-action-btn"
-                                            style={{
-                                                width: '100%',
-                                                justifyContent: 'center',
-                                                marginBottom: '12px'
-                                            }}
-                                            disabled={syncing}
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                                            {syncing ? 'Syncing...' : 'Sync from Attendance'}
-                                        </button>
-                                        <div className="divider-h"></div>
-                                    </>
-                                )}
-
-                                <button onClick={handleExportPDF} className="secondary-action-btn">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                                    DOWNLOAD SUMMARY
+                                <button onClick={handlePrintBatch} className="secondary-action-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                    PRINT ALL PAYSLIPS
                                 </button>
 
-                                {payrollRun.status !== 'locked' && permissions.canDelete && (
+                                <button onClick={handleExportPDF} className="secondary-action-btn" style={{ color: '#e11d48', borderColor: '#e11d48', background: '#fff1f2' }}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    DOWNLOAD PDF SUMMARY
+                                </button>
+
+                                {payrollRun.status?.toLowerCase() === 'draft' && (user?.role === 'HR' || user?.role === 'Super Admin' || user?.role === 'Admin') && (
+                                    <>
+                                        <div className="divider-h"></div>
+                                        <button
+                                            onClick={handleDelete}
+                                            className="secondary-action-btn"
+                                            style={{ borderColor: '#fee2e2', color: '#dc2626', background: '#fef2f2' }}
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                            DELETE PAYROLL
+                                        </button>
+                                    </>
+                                )}
+
+                                {payrollRun.status?.toLowerCase() === 'draft' && permissions.canDelete && (
                                     <button onClick={handleDelete} className="danger-action-link">
                                         Delete this payroll run
                                     </button>
@@ -1236,24 +1295,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                             </div>
                         </div>
 
-                        {/* Audit Trail Panel */}
-                        <div className="sidebar-card-new mt-24">
-                            <h3 className="sidebar-title">Audit Trail</h3>
-                            <div className="audit-list">
-                                {auditLogs.length > 0 ? auditLogs.map((log, idx) => (
-                                    <div key={idx} className="audit-item">
-                                        <div className="audit-dot"></div>
-                                        <div className="audit-content">
-                                            <div className="audit-action">{log.action.replace(/_/g, ' ')}</div>
-                                            <div className="audit-user">by {log.username}</div>
-                                            <div className="audit-time">{new Date(log.performed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(log.performed_at).toLocaleDateString()}</div>
-                                        </div>
-                                    </div>
-                                )) : (
-                                    <div className="empty-audit">No audit logs found</div>
-                                )}
-                            </div>
-                        </div>
+
                     </div>
                 </div>
 
@@ -1409,7 +1451,9 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                 @media print {
                     /* Always hide layout elements: Sidebar and Top Header */
                     aside.main-sidebar,
-                    header.premium-header {
+                    header.premium-header,
+                    .breadcrumb-nav,
+                    .header-controls {
                         display: none !important;
                     }
 
@@ -1428,12 +1472,20 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                         overflow: visible !important;
                     }
 
-                    /* Batch Mode Specifics */
+                    /* Batch Mode Specifics - Hide the normal UI when printing payslips */
+                    .batch-mode .premium-header,
+                    .batch-mode .approval-tracker-container,
+                    .batch-mode .return-remarks-banner-new,
+                    .batch-mode .redesigned-grid-container,
                     .batch-mode .page-header, 
                     .batch-mode .summary-grid, 
-                    .batch-mode .main-card {
+                    .batch-mode .main-card,
+                    .batch-mode .main-card-new,
+                    .batch-mode .premium-summary-grid,
+                    .batch-mode .right-sidebar-new {
                         display: none !important;
                     }
+                    
                     .print-only-batch {
                         display: block !important;
                         width: 100%;
@@ -1742,14 +1794,30 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                     background-color: #eff6ff;
                     box-shadow: inset 0 0 0 1px #3b82f6;
                 }
+                /* Hide number spinners */
+                input[type=number]::-webkit-inner-spin-button, 
+                input[type=number]::-webkit-outer-spin-button { 
+                    -webkit-appearance: none; 
+                    margin: 0; 
+                }
                 .cell-input {
                     width: 100%;
-                    padding: 4px 8px;
+                    padding: 10px 12px;
                     border: 2px solid #3b82f6;
-                    border-radius: 4px;
-                    font-size: 13px;
+                    border-radius: 6px;
+                    font-size: 16px;
+                    font-weight: 600;
                     outline: none;
                     text-align: inherit;
+                    background-color: #f0f9ff;
+                    color: #1e40af;
+                    min-width: 80px;
+                    height: 48px;
+                    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+                }
+                .cell-input:focus {
+                    border-color: #2563eb;
+                    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
                 }
                 
                 .table-summary-row td {
@@ -2026,7 +2094,10 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                 }
                 .table-container-new {
                     overflow-x: auto;
+                    overflow-y: auto;
+                    max-height: 65vh;
                     padding: 0 24px;
+                    border-bottom: 1px solid #f3f4f6;
                 }
                 .table-footer-new {
                     padding: 20px 24px;
@@ -2390,6 +2461,27 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                     transition: background 0.2s;
                 }
                 .nudge-btn:hover { background: #1d4ed8; }
+                
+                .sync-btn {
+                    background: #4f46e5;
+                    color: white;
+                    font-size: 10px;
+                    font-weight: 600;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    border: none;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                    white-space: nowrap;
+                    margin-left: 4px;
+                }
+                .sync-btn:hover {
+                    background: #4338ca;
+                }
+                .sync-btn:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
             `}</style>
             {/* Finalize Confirmation Modal */}
             {showFinalizeModal && (

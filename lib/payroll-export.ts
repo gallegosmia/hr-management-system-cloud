@@ -5,41 +5,302 @@
 
 import { formatCurrency } from './payroll-calculations';
 
+import * as ExcelJS from 'exceljs';
+
 /**
- * Generate and download Excel file from payroll data
+ * Generate and download Excel file from payroll data matching the ML format
  */
-export function downloadExcelExport(data: any) {
-    // Create CSV content (Excel-compatible)
-    let csv = '';
+export async function downloadExcelExport(data: {
+    runNumber: string;
+    branch: string;
+    periodEnd: string;
+    periodStart: string;
+    cutoff: string;
+    payslips: any[];
+}) {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Payroll');
 
-    // Header
-    csv += `Payroll Run: ${data.runNumber}\n`;
-    csv += `Branch: ${data.branch}\n`;
-    csv += `Period: ${data.period}\n`;
-    csv += `Cutoff: ${data.cutoff}\n`;
-    csv += '\n';
+    // 1. Setup Page & Base Styles
+    sheet.pageSetup.orientation = 'landscape';
+    sheet.pageSetup.fitToPage = true;
+    sheet.pageSetup.margins = { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 };
 
-    // Column headers
-    csv += data.columns.join(',') + '\n';
-
-    // Data rows
-    data.rows.forEach((row: any[]) => {
-        csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+    // Default Font
+    sheet.columns.forEach(col => {
+        col.font = { name: 'Calibri', size: 10 };
     });
 
-    // Totals row
-    csv += '\n';
-    csv += 'TOTALS,' + data.totals.slice(1).map((cell: string) => `"${cell}"`).join(',') + '\n';
+    // 2. Company Address Block (Rows 1-4)
+    sheet.mergeCells('A1:L1');
+    sheet.getCell('A1').value = 'MELANN LENDING INVESTOR CORPORATION';
+    sheet.getCell('A1').font = { name: 'Arial', size: 12, bold: true };
+    // We would put logo somewhere but without access to the image file, text is enough
 
-    // Create blob and download
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    sheet.mergeCells('A2:L2');
+    sheet.getCell('A2').value = 'Kaagapay mo sa Pag-unlad';
+    sheet.getCell('A2').font = { name: 'Arial', size: 9, italic: true, color: { argb: 'FF800000' } }; // brownish red
+
+    sheet.mergeCells('A3:P3');
+    sheet.getCell('A3').value = '943 Purok II, Brgy. Bagong Buhay, Ormoc City';
+    sheet.getCell('A3').font = { name: 'Arial', size: 8 };
+
+    sheet.mergeCells('A4:P4');
+    sheet.getCell('A4').value = 'Contact Nos. (053)561-8659, 09190085182, 09176794449';
+    sheet.getCell('A4').font = { name: 'Arial', size: 8 };
+
+    // Row 5: Empty Spacer
+
+    // Row 6: Title
+    sheet.mergeCells('A6:E6');
+    sheet.getCell('A6').value = 'P A Y R O L L';
+    sheet.getCell('A6').font = { name: 'Arial', size: 16, bold: true };
+
+    const formatDate = (dateStr: string) => {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    };
+
+    sheet.getCell('C6').value = `for the Period ${formatDate(data.periodStart).split(',')[0].split(' ')[0]} ${new Date(data.periodStart).getDate()}-${new Date(data.periodEnd).getDate()}, ${new Date(data.periodEnd).getFullYear()}`;
+    sheet.getCell('C6').font = { name: 'Arial', size: 12, bold: true, underline: true };
+    sheet.getCell('C6').alignment = { horizontal: 'left', vertical: 'bottom' };
+
+    // Row 7: Acknowledge text
+    sheet.mergeCells('A7:T7');
+    sheet.getCell('A7').value = 'WE HEREBY ACKNOWLEDGE to have received from MELANN LENDING INVESTOR CORP., 943 Purok 2, Brgy. Bagong Buhay, Ormoc City, 6541 Philippines, the sum specified opposite our respective names, as full compensation for our services rendered.';
+    sheet.getCell('A7').font = { name: 'Arial', size: 8, italic: true };
+
+    // Row 8: Empty Spacer
+
+    // 3. Define the Headers (Rows 9 & 10)
+    // We create the bounds first
+    const headerCols = [
+        { key: 'num', width: 4 },            // A
+        { key: 'name', width: 25 },          // B
+        { key: 'daily', width: 8 },          // C
+        { key: 'days', width: 8 },           // D
+        { key: 'regPay', width: 10 },        // E
+        { key: 'holNo', width: 6 },          // F
+        { key: 'holAmt', width: 8 },         // G
+        { key: 'allReg', width: 8 },         // H
+        { key: 'allSpec', width: 8 },        // I
+        { key: 'allTot', width: 8 },         // J
+        { key: 'totDays', width: 8 },        // K
+        { key: 'gross', width: 11 },         // L
+        { key: 'phic', width: 8 },           // M
+        { key: 'pagibig', width: 8 },        // N
+        { key: 'cashFund', width: 8 },       // O
+        { key: 'pagLoan', width: 8 },        // P
+        { key: 'cashAdv', width: 10 },       // Q
+        { key: 'emLoan', width: 10 },        // R
+        { key: 'dedTot', width: 11 },        // S
+        { key: 'net', width: 12 },           // T
+        { key: 'sig', width: 20 },           // U
+    ];
+
+    sheet.columns = headerCols;
+
+    // Apply header styles to Row 9 and 10
+    const borderAll = {
+        top: { style: 'thin' as any }, left: { style: 'thin' as any }, bottom: { style: 'thin' as any }, right: { style: 'thin' as any }
+    };
+    const headerFont = { name: 'Arial', size: 9, bold: true };
+    const centerAlign = { horizontal: 'center' as any, vertical: 'middle' as any, wrapText: true };
+
+    // Single Row merged headers
+    sheet.mergeCells('A9:B10'); sheet.getCell('A9').value = 'Names of Employees';
+    sheet.mergeCells('C9:C10'); sheet.getCell('C9').value = 'Daily Rate';
+    sheet.mergeCells('D9:D10'); sheet.getCell('D9').value = 'Regular Days Worked';
+    sheet.mergeCells('E9:E10'); sheet.getCell('E9').value = 'Regular Pay';
+
+    sheet.mergeCells('F9:G9'); sheet.getCell('F9').value = 'Holidays';
+    sheet.getCell('F10').value = 'No. of';
+    sheet.getCell('G10').value = 'Amount';
+
+    sheet.mergeCells('H9:J9'); sheet.getCell('H9').value = 'Allowance';
+    sheet.getCell('H10').value = 'Regular';
+    sheet.getCell('I10').value = 'Special';
+    sheet.getCell('J10').value = 'Total';
+
+    sheet.mergeCells('K9:K10'); sheet.getCell('K9').value = 'Total Days Worked';
+    sheet.mergeCells('L9:L10'); sheet.getCell('L9').value = 'TOTAL\nINCOME';
+
+    sheet.mergeCells('M9:S9'); sheet.getCell('M9').value = 'DEDUCTIONS';
+    sheet.getCell('M10').value = 'PHIC';
+    sheet.getCell('N10').value = 'Pag-ibig';
+    sheet.getCell('O10').value = 'Cash\nFund';
+    sheet.getCell('P10').value = 'PAG-\nIBIG';
+    sheet.getCell('Q10').value = 'Cash\nAdvance';
+    sheet.getCell('R10').value = 'Emergency\nLoan';
+    sheet.getCell('S10').value = 'TOTAL';
+
+    sheet.mergeCells('T9:T10'); sheet.getCell('T9').value = 'NET PAY';
+    sheet.mergeCells('U9:U10'); sheet.getCell('U9').value = 'Signature of Payee';
+
+    // Apply borders and fonts to A9:U10
+    for (let r = 9; r <= 10; r++) {
+        for (let c = 1; c <= 21; c++) {
+            const cell = sheet.getCell(r, c);
+            cell.border = borderAll;
+            cell.font = headerFont;
+            cell.alignment = centerAlign;
+            if (c === 12 || c >= 20) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } }; // Slight bg for totals
+        }
+    }
+
+    // 4. Data Rows
+    let currentRow = 11;
+    let totals = {
+        days: 0, regPay: 0, holAmt: 0, allReg: 0, allSpec: 0, allTot: 0,
+        gross: 0, phic: 0, pagibig: 0, cashFund: 0, pagLoan: 0, cashAdv: 0, emLoan: 0, dedTot: 0, net: 0
+    };
+
+    // Sort alphabetically by last name before processing as per standard
+    const sortedPayslips = [...data.payslips].sort((a, b) => (a.lastName || a.last_name || '').localeCompare(b.lastName || b.last_name || ''));
+
+    sortedPayslips.forEach((ps, index) => {
+        const lastName = ps.lastName || ps.last_name || '';
+        const firstName = ps.firstName || ps.first_name || '';
+        const name = `${lastName.toUpperCase()}, ${firstName}`;
+
+        const daily = ps.dailyRate || ps.daily_rate || 0;
+        const days = ps.payrollDays || ps.payroll_days || 0;
+        const regPay = ps.basicPay || ps.basic_pay || 0;
+        const holNo = (ps.holidayPay || ps.holiday_pay || 0) > 0 ? 1 : 0;
+        const holAmt = ps.holidayPay || ps.holiday_pay || 0;
+        const allReg = ps.regularAllowance || ps.regular_allowance || 0;
+        const allSpec = ps.specialAllowance || ps.special_allowance || 0;
+        const allTot = allReg + allSpec;
+        const totDays = days; // Assumed equal for now
+        const gross = ps.grossPay || ps.gross_pay || 0;
+
+        const phic = ps.phic || 0;
+        const pagibig = ps.pagibig || 0;
+        const cashFund = ps.companyFunds || ps.company_funds || 0;
+        const pagLoan = ps.pagibigLoan || ps.pagibig_loan || 0;
+        const cashAdv = ps.cashAdvance || ps.cash_advance || 0;
+        const emLoan = ps.companyLoan || ps.company_loan || 0; // Emergency Loan
+        const dedTot = phic + pagibig + cashFund + pagLoan + cashAdv + emLoan;
+        const net = ps.netPay || ps.net_pay || 0;
+
+        // Add to totals
+        totals.days += days;
+        totals.regPay += regPay;
+        totals.holAmt += holAmt;
+        totals.allReg += allReg;
+        totals.allSpec += allSpec;
+        totals.allTot += allTot;
+        totals.gross += gross;
+        totals.phic += phic;
+        totals.pagibig += pagibig;
+        totals.cashFund += cashFund;
+        totals.pagLoan += pagLoan;
+        totals.cashAdv += cashAdv;
+        totals.emLoan += emLoan;
+        totals.dedTot += dedTot;
+        totals.net += net;
+
+        const row = sheet.getRow(currentRow);
+        row.values = [
+            index + 1, name, daily, days, regPay, holNo, holAmt || '-', allReg || '-', allSpec || '-', allTot || '-',
+            totDays, gross, phic || '-', pagibig || '-', cashFund || '-', pagLoan || '-', cashAdv || '-', emLoan || '-', dedTot || '-', net, ''
+        ];
+
+        // Style the data row
+        for (let c = 1; c <= 21; c++) {
+            const cell = row.getCell(c);
+            cell.border = borderAll;
+            cell.alignment = { vertical: 'middle', horizontal: (c <= 2) ? 'left' : (c === 21 ? 'center' : 'right') };
+
+            // Number formatting
+            if (c >= 3 && c <= 20 && c !== 4 && c !== 6 && c !== 11) {
+                cell.numFmt = '#,##0.00';
+            }
+            if (c === 12 || c === 19 || c === 20) {
+                cell.font = { bold: true };
+            }
+        }
+        currentRow++;
+    });
+
+    // Row for Totals
+    const tRow = sheet.getRow(currentRow);
+    tRow.values = [
+        'TOTAL', '', '', '', totals.regPay, '', totals.holAmt || '-', totals.allReg || '-', totals.allSpec || '-', totals.allTot || '-',
+        '', totals.gross, totals.phic || '-', totals.pagibig || '-', totals.cashFund || '-', totals.pagLoan || '-', totals.cashAdv || '-', totals.emLoan || '-', totals.dedTot, 0.00, totals.net, '', 0.00
+    ];
+
+    sheet.mergeCells(`A${currentRow}:D${currentRow}`);
+    tRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+
+    // Adjust total row values position
+    tRow.getCell(5).value = totals.regPay;
+    tRow.getCell(20).value = totals.net;
+    tRow.getCell(21).value = '';
+    tRow.getCell(22).value = 0.00; // The weird red 0.00 in the image
+
+    for (let c = 1; c <= 22; c++) {
+        const cell = tRow.getCell(c);
+        if (c <= 21) cell.border = borderAll;
+        cell.font = { bold: true };
+        if (c >= 5 && c <= 20) {
+            cell.numFmt = '#,##0.00';
+            cell.alignment = { horizontal: 'right', vertical: 'middle' };
+        }
+        if (c === 22) {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF0000' } };
+            cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+            cell.alignment = { horizontal: 'right', vertical: 'middle' };
+            cell.border = borderAll;
+        }
+    }
+
+    currentRow += 2;
+
+    // Footer Certify Text
+    sheet.mergeCells(`B${currentRow}:P${currentRow}`);
+    sheet.getCell(`B${currentRow}`).value = 'I HEREBY CERTIFY that I have personally paid in cash to each employee whose names appear in the above payroll the amount set opposite his name. The amount paid in this payroll is';
+    sheet.getCell(`B${currentRow}`).font = { name: 'Arial', size: 8 };
+    sheet.getCell(`B${currentRow}`).alignment = { horizontal: 'left' };
+
+    sheet.mergeCells(`T${currentRow}:U${currentRow}`);
+    sheet.getCell(`T${currentRow}`).value = totals.net;
+    sheet.getCell(`T${currentRow}`).font = { name: 'Arial', size: 10, bold: true };
+    sheet.getCell(`T${currentRow}`).numFmt = '#,##0.00';
+    sheet.getCell(`T${currentRow}`).alignment = { horizontal: 'left' };
+
+    currentRow += 4;
+
+    // Signatures
+    sheet.mergeCells(`P${currentRow}:Q${currentRow}`);
+    sheet.getCell(`P${currentRow}`).value = 'MARILYN O. RELOBA';
+    sheet.getCell(`P${currentRow}`).font = { name: 'Arial', size: 10, bold: true, underline: true };
+    sheet.getCell(`P${currentRow}`).alignment = { horizontal: 'center' };
+
+    sheet.mergeCells(`T${currentRow}:U${currentRow}`);
+    sheet.getCell(`T${currentRow}`).value = 'ANNA LIZA R. DOMINGONO';
+    sheet.getCell(`T${currentRow}`).font = { name: 'Arial', size: 10, bold: true, underline: true };
+    sheet.getCell(`T${currentRow}`).alignment = { horizontal: 'center' };
+
+    currentRow++;
+    sheet.mergeCells(`P${currentRow}:Q${currentRow}`);
+    sheet.getCell(`P${currentRow}`).value = 'Paymaster';
+    sheet.getCell(`P${currentRow}`).font = { name: 'Arial', size: 10 };
+    sheet.getCell(`P${currentRow}`).alignment = { horizontal: 'center' };
+
+    sheet.mergeCells(`T${currentRow}:U${currentRow}`);
+    sheet.getCell(`T${currentRow}`).value = 'Manager';
+    sheet.getCell(`T${currentRow}`).font = { name: 'Arial', size: 10 };
+    sheet.getCell(`T${currentRow}`).alignment = { horizontal: 'center' };
+
+    // Write to Blob
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = URL.createObjectURL(blob);
-
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${data.runNumber}_Payroll.csv`);
-    link.style.visibility = 'hidden';
-
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Payroll_Register_${data.runNumber}.xlsx`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -80,351 +341,249 @@ function printHTML(html: string) {
  * Generate HTML for Payroll Register (Table View) - Premium Redesign
  */
 function generateRegisterPDFHTML(data: any): string {
-    const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const formatDateText = (start: string, end: string) => {
+        if (!start || !end) return '';
+        const d1 = new Date(start);
+        const d2 = new Date(end);
+        return `${d1.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}-${d2.getDate()}, ${d2.getFullYear()}`;
     };
 
-    const formatFullTimestamp = (dateStr: string) => {
-        if (!dateStr) return 'Pending Approval';
-        const date = new Date(dateStr);
-        return date.toISOString().replace('T', ' ').slice(0, 19).replace(/-/g, '-');
-    };
+    const formatNumber = (num: number) => num ? num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
 
-    const cutoff = data.cutoff;
-    const runId = data.runNumber;
-    const reportDate = formatDate(new Date().toISOString());
+    const sortedPayslips = [...data.payslips].sort((a, b) => (a.lastName || a.last_name || '').localeCompare(b.lastName || b.last_name || ''));
+
+    let totals = { days: 0, regPay: 0, holAmt: 0, allReg: 0, allSpec: 0, allTot: 0, gross: 0, phic: 0, pagibig: 0, cashFund: 0, pagLoan: 0, cashAdv: 0, emLoan: 0, dedTot: 0, net: 0 };
+
+    const rowsHtml = sortedPayslips.map((ps, index) => {
+        const lastName = ps.lastName || ps.last_name || '';
+        const firstName = ps.firstName || ps.first_name || '';
+        const name = `${lastName.toUpperCase()}, ${firstName}`;
+
+        const daily = ps.dailyRate || ps.daily_rate || 0;
+        const days = ps.payrollDays || ps.payroll_days || 0;
+        const regPay = ps.basicPay || ps.basic_pay || 0;
+        const holNo = (ps.holidayPay || ps.holiday_pay || 0) > 0 ? 1 : 0;
+        const holAmt = ps.holidayPay || ps.holiday_pay || 0;
+        const allReg = ps.regularAllowance || ps.regular_allowance || 0;
+        const allSpec = ps.specialAllowance || ps.special_allowance || 0;
+        const allTot = allReg + allSpec;
+        const totDays = days;
+        const gross = ps.grossPay || ps.gross_pay || 0;
+
+        const phic = ps.phic || 0;
+        const pagibig = ps.pagibig || 0;
+        const cashFund = ps.companyFunds || ps.company_funds || 0;
+        const pagLoan = ps.pagibigLoan || ps.pagibig_loan || 0;
+        const cashAdv = ps.cashAdvance || ps.cash_advance || 0;
+        const emLoan = ps.companyLoan || ps.company_loan || 0;
+        const dedTot = phic + pagibig + cashFund + pagLoan + cashAdv + emLoan;
+        const net = ps.netPay || ps.net_pay || 0;
+
+        totals.regPay += regPay; totals.holAmt += holAmt; totals.allReg += allReg; totals.allSpec += allSpec; totals.allTot += allTot;
+        totals.gross += gross; totals.phic += phic; totals.pagibig += pagibig; totals.cashFund += cashFund; totals.pagLoan += pagLoan; totals.cashAdv += cashAdv; totals.emLoan += emLoan; totals.dedTot += dedTot; totals.net += net;
+
+        return `<tr>
+            <td>${index + 1}</td>
+            <td class="text-left" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">${name}</td>
+            <td>${daily}</td>
+            <td>${days}</td>
+            <td class="text-right">${formatNumber(regPay)}</td>
+            <td>${holNo || 0}</td>
+            <td class="text-right">${formatNumber(holAmt)}</td>
+            <td class="text-right">${formatNumber(allReg)}</td>
+            <td class="text-right">${formatNumber(allSpec)}</td>
+            <td class="text-right">${formatNumber(allTot)}</td>
+            <td>${totDays}</td>
+            <td class="text-right text-bold" style="background: #e5e7eb;">${formatNumber(gross)}</td>
+            <td class="text-right">${formatNumber(phic)}</td>
+            <td class="text-right">${formatNumber(pagibig)}</td>
+            <td class="text-right">${formatNumber(cashFund)}</td>
+            <td class="text-right">${formatNumber(pagLoan)}</td>
+            <td class="text-right">${formatNumber(cashAdv)}</td>
+            <td class="text-right">${formatNumber(emLoan)}</td>
+            <td class="text-right text-bold" style="background: #e5e7eb;">${formatNumber(dedTot)}</td>
+            <td class="text-right"></td>
+            <td class="text-right text-bold">${formatNumber(net)}</td>
+            <td></td>
+            <td></td>
+        </tr>`;
+    }).join('');
 
     return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Payroll Register - ${runId}</title>
+    <title>Payroll Register - ${data.runNumber}</title>
     <style>
         @page {
-            size: letter portrait;
-            margin: 10mm;
+            size: legal landscape;
+            margin: 5mm;
         }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: Arial, sans-serif;
             font-size: 8px;
-            line-height: 1.4;
-            color: #1f2937;
+            color: #000;
             background: #fff;
-            position: relative;
+            margin: 0;
+            padding: 0;
         }
-
-        /* Diagonal Watermark */
-        .watermark {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 110px;
-            font-weight: 900;
-            color: rgba(229, 231, 235, 0.4);
-            z-index: -1;
-            white-space: nowrap;
-            pointer-events: none;
-            letter-spacing: 0.1em;
-        }
-
-        .container { padding: 10mm; }
-
-        /* Header Section */
-        .header-top {
+        .header-box {
             display: flex;
-            justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
-        .company-branding { display: flex; align-items: center; gap: 12px; }
-        .logo-icon {
-            width: 32px;
-            height: 32px;
-            background: #2563eb;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-        .company-name {
-            font-size: 14px;
-            font-weight: 800;
-            color: #111827;
-            letter-spacing: -0.01em;
-        }
-        .division-name {
-            font-size: 9px;
-            font-weight: 500;
-            color: #6b7280;
-            text-transform: uppercase;
-        }
-        .report-title-section { text-align: right; }
-        .report-title {
-            font-size: 16px;
-            font-weight: 800;
-            color: #111827;
-            margin-bottom: 4px;
-        }
-        .meta-data { font-size: 9px; color: #4b5563; }
-        .meta-data strong { color: #111827; }
-
-        /* Status Section */
-        .section-label {
-            font-size: 9px;
-            font-weight: 700;
-            color: #9ca3af;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            letter-spacing: 0.05em;
-        }
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 40px;
-        }
-        .status-card {
-            background: #fdfdfd;
-            border: 1px solid #f3f4f6;
-            border-radius: 8px;
-            padding: 12px;
-            position: relative;
-        }
-        .badge-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .badge {
-            font-size: 7px;
-            padding: 2px 8px;
+        .logo-box {
+            border: 2px solid #000;
+            padding: 5px 15px;
             border-radius: 4px;
-            font-weight: 700;
+            font-weight: 900;
+            font-size: 20px;
+            color: #10b981;
+            margin-right: 15px;
+            box-shadow: 2px 2px 0 #000;
+            background: #d1fae5;
         }
-        .badge-verified { background: #ecfdf5; color: #059669; }
-        .badge-authorized { background: #eff6ff; color: #2563eb; }
-        .check-icon { color: #10b981; }
-        
-        .signature-placeholder {
-            height: 35px;
+        .payroll-title-wrap {
+            margin-top: 15px;
             margin-bottom: 10px;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            align-items: baseline;
+            gap: 15px;
         }
-        .signature-img { height: 100%; object-fit: contain; }
-        .signature-line { width: 100%; height: 1px; background: #e5e7eb; }
-        
-        .signee-info { margin-bottom: 4px; }
-        .signee-name { font-size: 10px; font-weight: 700; color: #111827; }
-        .signee-role { font-size: 8px; color: #6b7280; }
-        .timestamp { font-size: 7px; color: #9ca3af; font-style: italic; }
-
-        /* Table Styles */
-        table {
+        .payroll-title {
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 0.3em;
+        }
+        .payroll-period {
+            font-size: 11px;
+        }
+        .payroll-period span {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        .ack-text {
+            font-size: 8px;
+            font-style: italic;
+            margin-bottom: 10px;
+            max-width: 90%;
+        }
+        .payroll-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
+            font-size: 7.5px;
+            text-align: center;
         }
-        thead th {
-            background: #111827;
-            color: white;
-            padding: 8px 12px;
-            text-align: left;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        .payroll-table th, .payroll-table td {
+            border: 1px solid #000;
+            padding: 3px 2px;
         }
-        tbody tr { border-bottom: 1px solid #f3f4f6; }
-        tbody td { padding: 10px 12px; font-size: 9px; }
-        .text-right { text-align: right; }
-        .text-center { text-align: center; }
-        .val-gross { font-weight: 600; }
-        .val-deduction { color: #ef4444; }
-        .val-net { font-weight: 800; color: #111827; }
-        .emp-id { color: #6b7280; font-family: monospace; font-size: 8px; }
-
-        /* Financial Summary Box */
-        .bottom-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-top: 50px;
+        .payroll-table th {
+            font-weight: bold;
+            background: #fdfdfd;
         }
-        .confidential-note { width: 50%; color: #9ca3af; font-size: 7px; }
-        .summary-box {
-            background: #1f2937;
-            padding: 20px;
-            border-radius: 12px;
-            width: 280px;
-            color: white;
-        }
-        .summary-title {
-            font-size: 8px;
-            font-weight: 700;
-            color: #9ca3af;
-            text-transform: uppercase;
-            margin-bottom: 15px;
-            letter-spacing: 0.05em;
-        }
-        .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 10px; }
-        .summary-row.total { 
-            margin-top: 20px; 
-            padding-top: 15px; 
-            border-top: 1px solid #374151;
-            font-size: 12px;
-            font-weight: 800;
-        }
-        .amount-highlight { color: #60a5fa; }
-        .deduction-highlight { color: #f87171; }
-
-        /* Footer Metadata */
-        .report-footer {
-            margin-top: 60px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 7px;
-            color: #d1d5db;
-            text-transform: uppercase;
-            padding-top: 15px;
-            border-top: 1px dashed #f3f4f6;
-        }
+        .text-left { text-align: left !important; }
+        .text-right { text-align: right !important; }
+        .text-bold { font-weight: bold; }
+        .bg-red { background-color: #ef4444 !important; color: white !important; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="watermark">CONFIDENTIAL</div>
-
-    <div class="container">
-        <!-- Header -->
-        <div class="header-top">
-            <div class="company-branding">
-                <div class="logo-icon">ML</div>
-                <div>
-                    <div class="company-name">Melann Lending Investor Corporation</div>
-                    <div class="division-name">Financial Services Division</div>
-                </div>
-            </div>
-            <div class="report-title-section">
-                <h1 class="report-title">PAYROLL SUMMARY REPORT</h1>
-                <div class="meta-data">
-                    <div><strong>Run ID:</strong> ${runId}</div>
-                    <div><strong>Period:</strong> ${formatDate(data.periodStart)} - ${formatDate(data.periodEnd)}</div>
-                    <div><strong>Report Date:</strong> ${reportDate}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="section-label">Status & Approvals</div>
-        
-        <!-- Status Grid -->
-        <div class="status-grid">
-            <!-- HR Verification -->
-            <div class="status-card">
-                <div class="badge-row">
-                    <span class="badge badge-verified">VERIFIED (HR)</span>
-                    <span class="check-icon">●</span>
-                </div>
-                <div class="signature-placeholder">
-                    <div class="signature-line"></div>
-                </div>
-                <div class="signee-info">
-                    <div class="signee-name">Marilyn Reloba</div>
-                    <div class="signee-role">Human Resources Director</div>
-                </div>
-                <div class="timestamp">Timestamp: ${formatFullTimestamp(data.hr_review_date)}</div>
-            </div>
-
-            <!-- Operations Verification -->
-            <div class="status-card">
-                <div class="badge-row">
-                    <span class="badge badge-verified">VERIFIED (OPS)</span>
-                    <span class="check-icon">●</span>
-                </div>
-                <div class="signature-placeholder">
-                    <div class="signature-line"></div>
-                </div>
-                <div class="signee-info">
-                    <div class="signee-name">Victorio Reloba Jr.</div>
-                    <div class="signee-role">Operations Manager</div>
-                </div>
-                <div class="timestamp">Timestamp: ${formatFullTimestamp(data.operations_review_date)}</div>
-            </div>
-
-            <!-- Executive Authorization -->
-            <div class="status-card">
-                <div class="badge-row">
-                    <span class="badge badge-authorized">AUTHORIZED</span>
-                    <span class="check-icon">●</span>
-                </div>
-                <div class="signature-placeholder">
-                    <div class="signature-line"></div>
-                </div>
-                <div class="signee-info">
-                    <div class="signee-name">Anna Liza Rodriguez</div>
-                    <div class="signee-role">Executive Vice President</div>
-                </div>
-                <div class="timestamp">Release Date: ${formatDate(data.evp_review_date || new Date().toISOString())}</div>
-            </div>
-        </div>
-
-        <!-- Main Payload Table -->
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 40%">Employee Name</th>
-                    <th style="width: 15%">Employee ID</th>
-                    <th style="width: 15%" class="text-right">Gross Pay</th>
-                    <th style="width: 15%" class="text-right">Deductions</th>
-                    <th style="width: 15%" class="text-right">Net Pay</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${data.payslips.map((ps: any) => `
-                    <tr>
-                        <td style="font-weight: 500;">${ps.lastName.toUpperCase()}, ${ps.firstName}</td>
-                        <td class="emp-id">${ps.employeeNumber}</td>
-                        <td class="text-right val-gross">${formatCurrency(ps.grossPay).replace('₱', '₱ ')}</td>
-                        <td class="text-right val-deduction">(${formatCurrency(ps.totalDeductions).replace('₱', '')})</td>
-                        <td class="text-right val-net">${formatCurrency(ps.netPay).replace('₱', '₱ ')}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-
-        <!-- Bottom Summary Section -->
-        <div class="bottom-section">
-            <div class="confidential-note">
-                <div style="font-weight: bold; margin-bottom: 5px; color: #6b7280;">CONFIDENTIAL INFORMATION</div>
-                This document is a formal record of payroll disbursement. Unauthorized access or reproduction is strictly prohibited and may be subject to legal action.
-            </div>
-            
-            <div class="summary-box">
-                <div class="summary-title">Financial Summary</div>
-                <div class="summary-row">
-                    <span>Total Gross Pay</span>
-                    <span>${formatCurrency(data.summary.totalGrossPay).replace('₱', '₱ ')}</span>
-                </div>
-                <div class="summary-row">
-                    <span>Total Deductions</span>
-                    <span class="deduction-highlight">(${formatCurrency(data.summary.totalDeductions).replace('₱', '')})</span>
-                </div>
-                <div class="summary-row total">
-                    <span>TOTAL NET PAY</span>
-                    <span class="amount-highlight">${formatCurrency(data.summary.totalNetPay).replace('₱', '₱ ')}</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="report-footer">
-            <span>PR-ID: ${runId}  |  SYSTEM GENERATED</span>
-            <span>PAGE 1 OF 1</span>
+    <div class="header-box">
+        <div class="logo-box">MELANN</div>
+        <div>
+            <div style="font-weight: 900; font-size: 13px;">LENDING INVESTOR CORPORATION</div>
+            <div style="color: #b91c1c; font-style: italic; font-size: 10px;">Kaagapay mo sa Pag-unlad</div>
+            <div style="font-size: 9px;">943 Purok II, Brgy. Bagong Buhay, Ormoc City</div>
+            <div style="font-size: 9px;">Contact Nos. (053)561-8659, 09190085182, 09176794449</div>
+            <div style="font-size: 9px; color: #2563eb;">Email Address: melann.lic2016@gmail.com</div>
         </div>
     </div>
+
+    <div class="payroll-title-wrap">
+        <div class="payroll-title">P A Y R O L L</div>
+        <div class="payroll-period">for the Period <span>${formatDateText(data.periodStart, data.periodEnd)}</span></div>
+    </div>
+
+    <div class="ack-text">
+        WE HEREBY ACKNOWLEDGE to have received from MELANN LENDING INVESTOR CORP., 943 Purok 2, Brgy. Bagong Buhay, Ormoc City, 6541 Philippines, the sum specified opposite our respective names, as full compensation for our services rendered.
+    </div>
+
+    <table class="payroll-table">
+        <thead>
+            <tr>
+                <th rowspan="2" style="width: 2%"></th>
+                <th rowspan="2" style="width: 14%">Names of Employees</th>
+                <th rowspan="2" style="width: 3%">Daily<br>Rate</th>
+                <th rowspan="2" style="width: 3%">Regular<br>Days<br>Worked</th>
+                <th rowspan="2" style="width: 5%">Regular<br>Pay</th>
+                <th colspan="2" style="width: 5%">Holidays</th>
+                <th colspan="3" style="width: 9%">Allowance</th>
+                <th rowspan="2" style="width: 3%">Total<br>Days<br>Worked</th>
+                <th rowspan="2" style="width: 6%; background: #e5e7eb;">TOTAL<br>INCOME</th>
+                <th colspan="7" style="width: 28%">DEDUCTIONS</th>
+                <th rowspan="2" style="width: 2%"></th>
+                <th rowspan="2" style="width: 6%;">NET PAY</th>
+                <th rowspan="2" style="width: 2%"></th>
+                <th rowspan="2" style="width: 12%; border: 2px solid #10b981;">Signature of Payee</th>
+            </tr>
+            <tr>
+                <th>No.<br>of</th>
+                <th>Amount</th>
+                <th>Regula<br>r</th>
+                <th>Special</th>
+                <th>Total</th>
+                <th>PHIC</th>
+                <th>Pag-ibig</th>
+                <th>Cash<br>Fund</th>
+                <th>PAG-<br>IBIG</th>
+                <th>Cash<br>Advanc</th>
+                <th>Emergenc<br>y Loan</th>
+                <th style="background: #e5e7eb;">TOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${rowsHtml}
+            
+            <tr class="text-bold">
+                <td colspan="4" class="text-center" style="letter-spacing: 0.5em;">T O T A L</td>
+                <td class="text-right">${formatNumber(totals.regPay)}</td>
+                <td>0</td>
+                <td class="text-right">${formatNumber(totals.holAmt)}</td>
+                <td class="text-right">${formatNumber(totals.allReg)}</td>
+                <td class="text-right">${formatNumber(totals.allSpec)}</td>
+                <td class="text-right">${formatNumber(totals.allTot)}</td>
+                <td></td>
+                <td class="text-right" style="background: #e5e7eb;">${formatNumber(totals.gross)}</td>
+                <td class="text-right">${formatNumber(totals.phic)}</td>
+                <td class="text-right">${formatNumber(totals.pagibig)}</td>
+                <td class="text-right">${formatNumber(totals.cashFund)}</td>
+                <td class="text-right">${formatNumber(totals.pagLoan)}</td>
+                <td class="text-right">${formatNumber(totals.cashAdv)}</td>
+                <td class="text-right">${formatNumber(totals.emLoan)}</td>
+                <td class="text-right" style="background: #e5e7eb;">${formatNumber(totals.dedTot)}</td>
+                <td class="text-right">0.00</td>
+                <td class="text-right">${formatNumber(totals.net)}</td>
+                <td class="text-right">######</td>
+                <td class="text-center bg-red">0.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="font-size: 9px; margin-top: 10px; display: flex; align-items: baseline;">
+        <span style="margin-right: 5px;">I HEREBY CERTIFY that I have personally paid in cash to each employee whose names appear in the above payroll the amount set opposite his name. The amount paid in this payroll is</span>
+        <span style="font-weight: bold; font-size: 11px; border-bottom: 1px solid #000; padding: 0 10px;">${formatNumber(totals.net)}</span>
+    </div>
+
+    <table style="width: 100%; border: none; margin-top: 25px; font-size: 9px; text-align: left;">
+        <tr>
+            <td style="width: 25%; border: none; padding: 0;">Prepared by: _______________________</td>
+            <td style="width: 25%; border: none; padding: 0;">Reviewed by: _______________________</td>
+            <td style="width: 25%; border: none; padding: 0;">Approved for Payment: _______________________</td>
+            <td style="width: 25%; border: none; padding: 0;">Payment Date: _______________________</td>
+        </tr>
+    </table>
 </body>
 </html>
     `;

@@ -488,11 +488,11 @@ export async function getDashboardStats(branch?: string) {
     const todayRecords = attendanceRes.rows;
 
     const todayPresents = todayRecords.filter((r: any) =>
-        ['present', 'late', 'on time'].includes(r.status.toLowerCase())
+        ['present', 'late', 'on time', 'official business', 'training / seminar'].includes(r.status.toLowerCase())
     ).length;
 
     const todayAbsents = todayRecords.filter((r: any) =>
-        ['absent', 'walk-in'].includes(r.status.toLowerCase())
+        ['absent', 'walk-in', 'leave without pay'].includes(r.status.toLowerCase())
     ).length;
 
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -671,8 +671,10 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
         const late = empAttendance.filter((a: any) => a.status?.toLowerCase() === 'late').length;
         const absent = empAttendance.filter((a: any) => a.status?.toLowerCase() === 'absent').length;
 
-        // Calculate onLeave from attendance OR approved leave requests
-        const attendanceOnLeave = empAttendance.filter((a: any) => a.status?.toLowerCase() === 'on leave').length;
+        // Calculate onLeave (Training/Seminar/Leaves) from attendance
+        const attendanceOnLeave = empAttendance.filter((a: any) =>
+            ['sick leave', 'vacation leave', 'birthday leave', 'official business', 'training / seminar', 'leave without pay'].includes(a.status?.toLowerCase())
+        ).length;
 
         // Also check leave requests falling in this period
         const empLeaves = leaves.filter((l: any) => l.employee_id === emp.id);
@@ -710,7 +712,7 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
     // 2. Leave - Computation based primarily on Attendance 'On Leave' status
     const currentYearStart = new Date(now.getFullYear(), 0, 1);
     const yearlyLeaveRes = await query(
-        "SELECT employee_id, COUNT(*) as count FROM attendance WHERE (LOWER(status) = 'on leave' OR LOWER(status) = 'sick leave' OR LOWER(status) = 'vacation leave' OR LOWER(status) = 'emergency leave') AND date >= $1 GROUP BY employee_id",
+        "SELECT employee_id, COUNT(*) as count FROM attendance WHERE (LOWER(status) = 'sick leave' OR LOWER(status) = 'vacation leave' OR LOWER(status) = 'emergency leave' OR LOWER(status) = 'on leave' OR LOWER(status) = 'leave without pay') AND date >= $1 GROUP BY employee_id",
         [currentYearStart]
     );
     const yearlyAttendanceLeaveMap = new Map(yearlyLeaveRes.rows.map((r: any) => [Number(r.employee_id), parseInt(r.count)]));
@@ -1008,20 +1010,11 @@ export async function recordAttendance(data: {
     status: string;
     remarks?: string;
 }): Promise<void> {
+
     // Auto-determine Leave vs Absent if no times are provided
-    if (!data.morning_in && !data.afternoon_in && !data.time_in && !data.morning_out && !data.afternoon_out) {
-        const year = new Date(data.date).getFullYear();
-        try {
-            const used = await getEmployeeLeaveCount(data.employee_id, year);
-            if (used < 5) {
-                data.status = 'On Leave';
-            } else {
-                data.status = 'Absent';
-            }
-        } catch (e) {
-            console.error('Failed to auto-calc leave status:', e);
-            data.status = 'Absent'; // Fallback
-        }
+    // Leaves are explicitly set in the UI or come from approved requests.
+    if (!data.status) {
+        data.status = 'Absent';
     }
 
     const isLeave = data.status.toLowerCase().includes('leave');

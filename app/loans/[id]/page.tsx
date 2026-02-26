@@ -90,7 +90,14 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
                 body.approved_amount = loan.requested_amount;
                 if (loan.current_approval_level < 3) {
                     body.current_approval_level = loan.current_approval_level + 1;
-                    body.status = 'Under Review';
+
+                    if (body.current_approval_level === 2) {
+                        body.status = 'Under Review - Vice President';
+                    } else if (body.current_approval_level === 3) {
+                        body.status = 'Approved';
+                    } else {
+                        body.status = 'Under Review';
+                    }
                 }
             } else if (newStatus === 'Disapproved') {
                 body.disapproval_reason = reason;
@@ -195,32 +202,37 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
     // Role Checks
     const isHR = user?.role === 'HR' || user?.role === 'Admin';
     const isFinance = user?.role === 'Admin' || user?.role === 'Vice President' || user?.role === 'Finance';
-    const canApprove = user && (user.role === 'Admin' || user.role === 'President' || user.role === 'Vice President' || user.role === 'HR');
+    const canApprove = user && (
+        user.role === 'Admin' ||
+        user.role === 'President' ||
+        (loan.current_approval_level === 1 && user.role === 'Branch Manager') ||
+        (loan.current_approval_level === 2 && user.role === 'Vice President')
+    );
     const canRelease = (user?.role === 'Admin' || user?.role === 'HR' || user?.role === 'President' || user?.role === 'Vice President' || user?.role === 'Finance');
 
-    const isPending = loan.status === 'Submitted' || loan.status === 'Under Review';
+    const isPending = loan.status === 'Submitted' || loan.status.includes('Under Review');
     const isApproved = loan.status === 'Approved';
     const isPartiallyReleased = loan.status === 'Partially Released';
     const isOwner = user?.employee_id === loan.employee_id;
 
     // Workflow Steps
     const steps = [
-        { label: 'Submitted', status: 'done', date: loan.created_at },
+        { label: 'HR Submitted', status: 'done', date: loan.created_at },
         {
-            label: 'HR Review',
+            label: 'Branch Manager Review',
             status: loan.status === 'Disapproved' && loan.current_approval_level === 1
                 ? 'error'
-                : (loan.current_approval_level > 1 || loan.status === 'Approved' || loan.status.includes('Released') ? 'done' : 'pending')
+                : (loan.current_approval_level > 1 || loan.status === 'Approved' || loan.status.includes('Released') ? 'done' : 'active') // Change to active since this is the immediate next step after HR submits
         },
         {
-            label: 'Finance Approval',
+            label: 'Vice President Approved',
             status: loan.status === 'Disapproved' && loan.current_approval_level === 2
                 ? 'error'
-                : (loan.current_approval_level > 2 || loan.status === 'Approved' || loan.status.includes('Released') ? 'done' : 'pending')
+                : (loan.current_approval_level > 2 || loan.status === 'Approved' || loan.status.includes('Released') ? 'done' : (loan.current_approval_level === 2 ? 'active' : 'pending'))
         },
         {
             label: loan.status === 'Fully Released' ? 'Fully Released' : (loan.status === 'Partially Released' ? 'Partially Released' : 'Release'),
-            status: loan.status === 'Fully Released' ? 'done' : (loan.status === 'Partially Released' ? 'active' : 'pending')
+            status: loan.status === 'Fully Released' ? 'done' : (loan.status === 'Partially Released' ? 'active' : (loan.status === 'Approved' ? 'active' : 'pending'))
         }
     ];
 

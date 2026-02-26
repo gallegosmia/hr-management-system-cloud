@@ -64,7 +64,11 @@ function loadDB() {
     admin_approval_queue: [],
     announcements: [],
     emergency_loans: [],
-    notifications: []
+    notifications: [],
+    payroll_runs: [],
+    payslips: [],
+    payroll_audit_log: [],
+    employee_loans: []
   };
 }
 
@@ -107,15 +111,22 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
         rowCount: res.rowCount || 0
       };
     } catch (error: any) {
-      const errorMsg = (error.message || '').toLowerCase();
-      const isConnectionError = errorMsg.includes('connection') ||
+      const errorMsg = String(error.message || '').toLowerCase();
+      const errorCode = String(error.code || '').toLowerCase();
+
+      // Better connection error detection (including AggregateError and explicit codes)
+      const isConnectionError =
+        errorMsg.includes('connection') ||
         errorMsg.includes('econnrefused') ||
-        errorMsg.includes('etimedout');
+        errorMsg.includes('etimedout') ||
+        errorMsg.includes('promise') || // AggregateError "All promises were rejected"
+        errorCode === 'econnrefused' ||
+        errorCode === 'etimedout';
 
       if (isConnectionError) {
-        console.error('⚠ DATABASE CONNECTION ERROR. Falling back to local JSON database.', errorMsg);
-        pool = null;
-        // Proceed to fallback logic below
+        console.error('⚠ DATABASE CONNECTION ERROR. Falling back to local JSON database.', { msg: errorMsg, code: errorCode });
+        pool = null; // Clear the pool to trigger fallback for future queries
+        // Proceed to simulation logic below
       } else {
         console.error(`[PostgreSQL] Query Error: ${sql}`, error);
         throw error;
@@ -177,7 +188,7 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
 
       let results = [];
       // Also improve JOIN detection to skip joins inside subqueries
-      let isJoin: RegExpMatchArray | null = null;
+      let isJoin: any = null;
       let pos = 0;
       const joinKeyword = ' JOIN ';
       const lowerSql = normalizedSql.toUpperCase();
@@ -186,40 +197,57 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
         const opens = (beforeJoin.match(/\(/g) || []).length;
         const closes = (beforeJoin.match(/\)/g) || []).length;
         if (opens === closes) {
-          isJoin = normalizedSql.substring(pos).match(/JOIN\s+([a-z0-9_]+)(?:\s+[a-z0-9_]+)?\s+ON/i);
+          // Capture table name and the ON clause
+          isJoin = normalizedSql.substring(pos).match(/JOIN\s+([a-z0-9_]+)(?:\s+[a-z0-9_]+)?\s+ON\s+(.+?)(?:\s+(?:WHERE|ORDER|LIMIT|GROUP)|$)/i);
           if (isJoin) break;
         }
         pos += joinKeyword.length;
       }
 
       if (isJoin) {
-        // Simple JOIN support (attendance + employees)
         const table1 = table;
         const table2 = isJoin[1].toLowerCase();
+        const onClause = isJoin[2];
 
         const data1 = db[table1] || [];
         const data2 = db[table2] || [];
 
+        // Extract join columns from ON clause (e.g. pal.performed_by = u.id)
+        let col1 = '';
+        let col2 = '';
+        const onMatch = onClause.match(/([a-z0-9_\.]+)\s*=\s*([a-z0-9_\.]+)/i);
+        if (onMatch) {
+          const p1 = onMatch[1].includes('.') ? onMatch[1].split('.')[1] : onMatch[1];
+          const p2 = onMatch[2].includes('.') ? onMatch[2].split('.')[1] : onMatch[2];
+
+          // Determine which column belongs to which table by checking existing data
+          const testItem1 = data1[0] || {};
+          const testItem2 = data2[0] || {};
+
+          if (testItem1.hasOwnProperty(p1) && testItem2.hasOwnProperty(p2)) {
+            col1 = p1; col2 = p2;
+          } else if (testItem1.hasOwnProperty(p2) && testItem2.hasOwnProperty(p1)) {
+            col1 = p2; col2 = p1;
+          }
+        }
+
         results = data1.map((item1: any) => {
-          // Smart join: Find match in table2
-          // Prioritize specific foreign keys over generic 'id'
           const item2 = data2.find((i: any) => {
+            if (col1 && col2) {
+              return String(i[col2]) === String(item1[col1]);
+            }
+            // Fallback for legacy hardcoded cases
             if (table2 === 'employees' && item1.employee_id) {
               return String(i.id) === String(item1.employee_id);
             }
             if (table1 === 'employees' && i.employee_id) {
               return String(i.employee_id) === String(item1.id);
             }
-            // Fallback to simple ID match only if tables are obviously related
-            return String(i.id) === String(item1.id);
+            return false;
           });
 
           if (item2) {
-            // Create a merged object but BE CAREFUL with 'id'
-            // The ID of the primary table (table1) should usually prevail for the row identity
             const merged = { ...item2, ...item1 };
-
-            // Special handling for employee names and branches
             if (table2 === 'employees' || table1 === 'employees') {
               const emp = table2 === 'employees' ? item2 : item1;
               (merged as any).employee_name = `${emp.first_name || ''} ${emp.last_name || ''}`.trim();
@@ -265,6 +293,21 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
               const pattern = val.replace(/%/g, '.*');
               return new RegExp(`^${pattern}$`, 'i').test(row[col]);
             }
+            if (match = part.match(/([a-z0-9_]+)\s+IN\s+\((.*?)\)/i)) {
+              const [_, col, listStr] = match;
+              // Very basic parsing for IN ('a', 'b', ...)
+              let allowedValues: string[] = [];
+              if (listStr.includes("'")) {
+                const parts = listStr.split(',').map(s => s.trim());
+                allowedValues = parts.map(p => {
+                  if (p.startsWith("'") && p.endsWith("'")) return p.substring(1, p.length - 1);
+                  return p;
+                });
+              } else {
+                allowedValues = listStr.split(',').map(s => s.trim());
+              }
+              return allowedValues.includes(String(row[col]));
+            }
             return true;
           });
         });
@@ -284,8 +327,8 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
       const colsMatch = normalizedSql.match(/\((.+?)\)\s*VALUES/i);
       const columns = colsMatch![1].split(',').map(s => s.trim());
 
-      // Find the VALUES part to extract literals vs params
-      const valuesMatch = normalizedSql.match(/VALUES\s*\((.+?)\)/i);
+      // Find the VALUES part to extract literals vs params (greedy match to handle NOW())
+      const valuesMatch = normalizedSql.match(/VALUES\s*\((.+)\)/i);
       const valParts = valuesMatch![1].split(',').map(s => s.trim());
 
       const newItem: any = {};
@@ -353,10 +396,12 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
                 const valPart = valRaw.trim();
                 if (valPart.startsWith('$')) {
                   row[col] = params[parseInt(valPart.substring(1)) - 1];
-                } else if (valPart.match(/CURRENT_TIMESTAMP/i)) {
+                } else if (valPart.match(/CURRENT_TIMESTAMP/i) || valPart.match(/NOW\(\)/i)) {
                   row[col] = new Date().toISOString();
                 } else if (valPart.startsWith("'") && valPart.endsWith("'")) {
                   row[col] = valPart.substring(1, valPart.length - 1);
+                } else {
+                  row[col] = isNaN(Number(valPart)) ? valPart : Number(valPart);
                 }
               }
             });
@@ -402,23 +447,13 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
 }
 
 export async function getAll(table: string): Promise<any[]> {
-  const activePool = getPool();
-  if (activePool) {
-    const res = await activePool.query(`SELECT * FROM ${table}`);
-    return safeJson(res.rows);
-  }
-  const db = loadDB();
-  return safeJson(db[table] || []);
+  const res = await query(`SELECT * FROM ${table}`);
+  return res.rows;
 }
 
 export async function getById(table: string, id: number | string): Promise<any | undefined> {
-  const activePool = getPool();
-  if (activePool) {
-    const res = await activePool.query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
-    return safeJson(res.rows[0]);
-  }
-  const db = loadDB();
-  return safeJson((db[table] || []).find((item: any) => String(item.id) === String(id)));
+  const res = await query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
+  return res.rows[0];
 }
 
 export async function insert(table: string, data: any): Promise<number> {

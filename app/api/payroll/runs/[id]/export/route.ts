@@ -107,8 +107,8 @@ export async function POST(
         });
 
         if (format === 'excel') {
-            // Generate Excel data
-            const excelData = generateExcelData(payrollRun, payslips);
+            // Generate Excel data reusing PDF structured data format
+            const excelData = generatePDFData(payrollRun, payslips);
             return NextResponse.json({
                 success: true,
                 format: 'excel',

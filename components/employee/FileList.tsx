@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function FileList({ employeeId, showAlert, showConfirm, refreshTrigger }: {
     employeeId: string;
@@ -11,23 +10,31 @@ function FileList({ employeeId, showAlert, showConfirm, refreshTrigger }: {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('All');
 
-    useEffect(() => {
-        const fetchFiles = async () => {
-            try {
-                const sessionId = localStorage.getItem('sessionId');
-                const res = await fetch(`/api/employees/documents?employeeId=${employeeId}`, {
-                    headers: { 'x-session-id': sessionId || '' }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setFiles(data);
-                }
-            } catch (err) {
-                console.error('Failed to fetch files:', err);
-            } finally {
-                setLoading(false);
+    // Upload State
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadCategory, setUploadCategory] = useState('Employment');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const fetchFiles = async () => {
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch(`/api/employees/documents?employeeId=${employeeId}`, {
+                headers: { 'x-session-id': sessionId || '' }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setFiles(data);
             }
-        };
+        } catch (err) {
+            console.error('Failed to fetch files:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchFiles();
     }, [employeeId, refreshTrigger]);
 
@@ -42,6 +49,43 @@ function FileList({ employeeId, showAlert, showConfirm, refreshTrigger }: {
     };
 
     const filteredFiles = files.filter(f => activeTab === 'All' || getCategory(f.type) === activeTab);
+
+    const handleUpload = async () => {
+        if (!selectedFile) {
+            showAlert('Please select a file to upload.');
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('employeeId', employeeId);
+            formData.append('documentType', uploadCategory);
+
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch('/api/employees/documents', {
+                method: 'POST',
+                headers: { 'x-session-id': sessionId || '' },
+                body: formData
+            });
+
+            if (res.ok) {
+                showAlert('Document uploaded successfully.');
+                setSelectedFile(null);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                fetchFiles();
+            } else {
+                const data = await res.json();
+                showAlert(data.error || 'Failed to upload document.');
+            }
+        } catch (err) {
+            console.error('Upload Error:', err);
+            showAlert('An error occurred during upload.');
+        } finally {
+            setIsUploading(false);
+        }
+    };
 
     const handleDelete = (filename: string) => {
         showConfirm('Are you sure you want to delete this file?', async () => {
@@ -69,6 +113,63 @@ function FileList({ employeeId, showAlert, showConfirm, refreshTrigger }: {
 
     return (
         <div>
+            {/* Upload Section */}
+            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 'bold', color: '#475569', marginBottom: '0.25rem' }}>Document Category</label>
+                        <select
+                            value={uploadCategory}
+                            onChange={(e) => setUploadCategory(e.target.value)}
+                            style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.875rem', outline: 'none' }}
+                            disabled={isUploading}
+                        >
+                            <option value="Resume">Resume / CV</option>
+                            <option value="Contract">Employment Contract</option>
+                            <option value="Medical">Medical Certificate</option>
+                            <option value="NBI">NBI Clearance</option>
+                            <option value="SSS">SSS Form</option>
+                            <option value="PhilHealth">PhilHealth Form</option>
+                            <option value="Pag-IBIG">Pag-IBIG Form</option>
+                            <option value="TIN">TIN / BIR Form</option>
+                            <option value="Training">Training Certificate</option>
+                            <option value="Disciplinary">Disciplinary Action</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div style={{ flex: 2, minWidth: '250px' }}>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 'bold', color: '#475569', marginBottom: '0.25rem' }}>Select File</label>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
+                                style={{ flex: 1, padding: '0.4rem', background: 'white', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.875rem' }}
+                                disabled={isUploading}
+                            />
+                            <button
+                                onClick={handleUpload}
+                                disabled={!selectedFile || isUploading}
+                                style={{
+                                    padding: '0.5rem 1rem',
+                                    background: (!selectedFile || isUploading) ? '#94a3b8' : '#3b82f6',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    fontWeight: 'bold',
+                                    fontSize: '0.875rem',
+                                    cursor: (!selectedFile || isUploading) ? 'not-allowed' : 'pointer',
+                                    transition: 'all 0.2s',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                {isUploading ? 'Uploading...' : 'Upload Document'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '4px' }}>
                 {tabs.map(tab => (
                     <button

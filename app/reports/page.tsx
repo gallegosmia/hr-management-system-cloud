@@ -322,7 +322,7 @@ export default function ReportsPage() {
                         <th style="${thStyle}; text-align: center;">Present</th>
                         <th style="${thStyle}; text-align: center;">Late</th>
                         <th style="${thStyle}; text-align: center;">Absent</th>
-                         <th style="${thStyle}; text-align: center;">On Leave</th>
+                         <th style="${thStyle}; text-align: center;">Training / Seminar</th>
                         <th style="${thStyle}; text-align: right;">Tardiness</th>
                     </tr>
                 </thead>
@@ -746,7 +746,7 @@ export default function ReportsPage() {
             case 'attendance':
                 exportData = filterData(data.attendanceSummary).map(r => ({
                     'ID': r.id, 'Name': r.name, 'Department': r.department, 'Branch': r.branch,
-                    'Present': r.present, 'Late': r.late, 'Absent': r.absent, 'On Leave': r.onLeave, 'Tardiness Rate': r.tardinessRate + '%'
+                    'Present': r.present, 'Late': r.late, 'Absent': r.absent, 'Training / Seminar': r.onLeave, 'Tardiness Rate': r.tardinessRate + '%'
                 }));
                 fileName = 'Attendance_Report';
                 break;

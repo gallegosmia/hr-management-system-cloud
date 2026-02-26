@@ -181,6 +181,7 @@ export default function RegisterPage() {
                                 >
                                     <option value="Employee">Employee</option>
                                     <option value="HR">HR Officer</option>
+                                    <option value="Manager">Branch Manager</option>
                                     <option value="Operations Manager">Operations Manager</option>
                                     <option value="President">President (Super Admin)</option>
                                     <option value="Vice President">Vice President (Super Admin)</option>
@@ -192,11 +193,11 @@ export default function RegisterPage() {
                                 </p>
                             </div>
 
-                            {/* Show Branch Dropdown only for HR and Employee roles */}
-                            {(role === 'HR' || role === 'Employee') && (
+                            {/* Show Branch Dropdown only for HR, Employee, and Manager roles */}
+                            {(role === 'HR' || role === 'Employee' || role === 'Manager') && (
                                 <div className="login-input-group">
                                     <label className="form-label">
-                                        Assigned Branch {role === 'HR' && <span style={{ color: '#ef4444' }}>*</span>}
+                                        Assigned Branch {(role === 'HR' || role === 'Manager') && <span style={{ color: '#ef4444' }}>*</span>}
                                     </label>
                                     <select
                                         className="form-select"
@@ -209,7 +210,7 @@ export default function RegisterPage() {
                                         <option value="Ormoc">Ormoc Branch</option>
                                     </select>
                                     <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.5rem' }}>
-                                        {role === 'HR' ? '⚠️ Required: You will only access employees from this branch' : 'ℹ️ Optional: Your home branch location'}
+                                        {(role === 'HR' || role === 'Manager') ? '⚠️ Required: You will only access employees from this branch' : 'ℹ️ Optional: Your home branch location'}
                                     </p>
                                 </div>
                             )}

@@ -130,7 +130,7 @@ export default function PayslipViewModal({ payslip, onClose, payrollRun }: Paysl
                                 <span className="amount">{payslip.regular_allowance > 0 ? formatCurrency(payslip.regular_allowance).replace('₱', '') : '-'}</span>
                             </div>
                             <div className="row total-row">
-                                <span className="label">Total Pay</span>
+                                <span className="label">TOTAL GROSS PAY</span>
                                 <span className="amount">{formatCurrency(payslip.gross_pay).replace('₱', '')}</span>
                             </div>
 
@@ -180,7 +180,17 @@ export default function PayslipViewModal({ payslip, onClose, payrollRun }: Paysl
 
                             <div className="row">
                                 <span className="label">Company Loan Balance</span>
-                                <span className="amount">{payslip.company_loan_balance && payslip.company_loan_balance > 0 ? formatCurrency(payslip.company_loan_balance).replace('₱', '') : '-'}</span>
+                                <span className="amount">
+                                    {(() => {
+                                        let balance = payslip.company_loan_balance || 0;
+                                        // If not released, subtract current deduction to show projected balance
+                                        const isReleased = payrollRun?.status?.toUpperCase().includes('RELEASED');
+                                        if (!isReleased && balance > 0 && payslip.company_loan > 0) {
+                                            balance = Math.max(0, balance - payslip.company_loan);
+                                        }
+                                        return balance > 0 ? formatCurrency(balance).replace('₱', '') : '-';
+                                    })()}
+                                </span>
                             </div>
 
                             <div className="spacer"></div>

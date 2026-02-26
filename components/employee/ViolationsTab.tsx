@@ -95,11 +95,13 @@ export default function ViolationsTab({ employeeId }: Props) {
         try {
             const sessionId = localStorage.getItem('sessionId');
             const [violationsRes, warningsRes] = await Promise.all([
-                fetch(`/api/employees/violations?employee_id=${employeeId}&type=violations`, {
-                    headers: { 'x-session-id': sessionId || '' }
+                fetch(`/api/employees/violations?employee_id=${employeeId}&type=violations&t=${Date.now()}`, {
+                    headers: { 'x-session-id': sessionId || '' },
+                    cache: 'no-store'
                 }),
-                fetch(`/api/employees/violations?employee_id=${employeeId}&type=warnings`, {
-                    headers: { 'x-session-id': sessionId || '' }
+                fetch(`/api/employees/violations?employee_id=${employeeId}&type=warnings&t=${Date.now()}`, {
+                    headers: { 'x-session-id': sessionId || '' },
+                    cache: 'no-store'
                 })
             ]);
 

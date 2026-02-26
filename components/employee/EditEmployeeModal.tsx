@@ -36,6 +36,7 @@ interface Employee {
         year_graduated: string;
         honors_awards?: string;
     }[];
+    profile_picture?: string;
 }
 
 interface EditEmployeeModalProps {
@@ -113,6 +114,44 @@ export default function EditEmployeeModal({ isOpen, onClose, onSave, employee, s
             case 'basic':
                 return (
                     <>
+                        <FormGroup label="Profile Picture">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                {formData.profile_picture && (
+                                    <img
+                                        src={formData.profile_picture}
+                                        alt="Current Profile"
+                                        style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #e2e8f0' }}
+                                    />
+                                )}
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            if (file.size > 2.5 * 1024 * 1024) {
+                                                alert('File too large. Please select an image under 2.5MB.');
+                                                e.target.value = ''; // Reset input
+                                                return;
+                                            }
+                                            const reader = new FileReader();
+                                            reader.onloadend = () => {
+                                                setFormData(prev => ({ ...prev, profile_picture: reader.result as string }));
+                                            };
+                                            reader.readAsDataURL(file);
+                                        }
+                                    }}
+                                    style={{
+                                        border: '1px solid #e2e8f0',
+                                        padding: '0.5rem',
+                                        borderRadius: '8px',
+                                        fontSize: '0.875rem',
+                                        width: '100%',
+                                        background: '#f8fafc'
+                                    }}
+                                />
+                            </div>
+                        </FormGroup>
                         <FormGroup label="First Name">
                             <input name="first_name" value={formData.first_name || ''} onChange={handleChange} required />
                         </FormGroup>

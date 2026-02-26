@@ -82,16 +82,16 @@ export default function LoansPage() {
     };
 
     const getStatusStyles = (status: string) => {
-        switch (status) {
-            case 'Approved': return { background: '#eff6ff', color: '#1e40af' }; // Blue
-            case 'Disapproved': return { background: '#fef2f2', color: '#991b1b' };
-            case 'Fully Released': return { background: '#ecfdf5', color: '#065f46' }; // Green
-            case 'Partially Released': return { background: '#fef9c3', color: '#854d0e' }; // Yellow
-            case 'Released': return { background: '#ecfdf5', color: '#065f46' }; // Treat legacy 'Released' as Green
-            case 'Closed': return { background: '#f8fafc', color: '#64748b' };
-            case 'Draft': return { background: '#f3f4f6', color: '#374151' };
-            default: return { background: '#fff7ed', color: '#9a3412' }; // Submitted / Under Review
-        }
+        if (!status) return { background: '#fff7ed', color: '#9a3412' };
+        if (status === 'Approved') return { background: '#eff6ff', color: '#1e40af' }; // Blue
+        if (status === 'Disapproved') return { background: '#fef2f2', color: '#991b1b' };
+        if (status === 'Fully Released') return { background: '#ecfdf5', color: '#065f46' }; // Green
+        if (status === 'Partially Released') return { background: '#fef9c3', color: '#854d0e' }; // Yellow
+        if (status === 'Released') return { background: '#ecfdf5', color: '#065f46' }; // Treat legacy 'Released' as Green
+        if (status === 'Closed') return { background: '#f8fafc', color: '#64748b' };
+        if (status === 'Draft') return { background: '#f3f4f6', color: '#374151' };
+        if (status.includes('Vice President')) return { background: '#fef9c3', color: '#854d0e' }; // Yellow for VP Review
+        return { background: '#fff7ed', color: '#9a3412' }; // Submitted / Under Review (Orange)
     };
 
     const filteredLoans = loans
@@ -132,8 +132,8 @@ export default function LoansPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                 {[
                     { label: 'Total Requests', value: loans.length, color: '#3b82f6' },
-                    { label: 'Pending Approval', value: loans.filter(l => l.status === 'Submitted' || l.status === 'Under Review').length, color: '#f59e0b' },
-                    { label: 'Approved & Released', value: loans.filter(l => l.status === 'Approved' || l.status === 'Released').length, color: '#10b981' },
+                    { label: 'Pending Approval', value: loans.filter(l => l.status === 'Submitted' || l.status?.includes('Under Review')).length, color: '#f59e0b' },
+                    { label: 'Approved & Released', value: loans.filter(l => l.status === 'Approved' || l.status?.includes('Released')).length, color: '#10b981' },
                     { label: 'Closed/Settled', value: loans.filter(l => l.status === 'Closed').length, color: '#64748b' }
                 ].map((stat, i) => (
                     <div key={i} style={{ background: 'white', padding: '1.25rem', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
@@ -209,7 +209,11 @@ export default function LoansPage() {
                                             textTransform: 'uppercase',
                                             ...getStatusStyles(loan.status)
                                         }}>
-                                            {loan.status}
+                                            {loan.status === 'Submitted' ? 'For Branch Manager Review' : (
+                                                loan.status === 'Under Review' ? 'For Branch Manager Review' : (
+                                                    loan.status === 'Under Review - Vice President' ? 'For VP Approval' : loan.status
+                                                )
+                                            )}
                                         </span>
                                     </td>
                                     <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>

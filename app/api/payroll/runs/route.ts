@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
+import { query, isPostgres } from '@/lib/database';
 import { requireBranchAuth } from '@/lib/middleware/branch-auth';
 import { canAccessPayroll, canCreatePayroll, validatePayrollAccess, getAccessibleBranches } from '@/lib/payroll-access';
 import { generateRunNumber, validatePayrollDays } from '@/lib/payroll-calculations';
@@ -32,49 +32,110 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'No access to payroll' }, { status: 403 });
         }
 
-        // Build query
-        let sql = `
-            SELECT 
-                pr.*,
-                u.username as created_by_name,
-                a.username as approved_by_name,
-                COUNT(ps.id) as employee_count,
-                SUM(ps.net_pay) as total_net_pay
-            FROM payroll_runs pr
-            LEFT JOIN users u ON pr.created_by = u.id
-            LEFT JOIN users a ON pr.approved_by = a.id
-            LEFT JOIN payslips ps ON pr.id = ps.payroll_run_id
-            WHERE 1=1
-        `;
+        let runs = [];
+        let total = 0;
 
-        const params: any[] = [];
-        let paramIndex = 1;
+        // Optimized query for PostgreSQL
+        if (isPostgres()) {
+            let sql = `
+                SELECT 
+                    pr.*,
+                    u.username as created_by_name,
+                    a.username as approved_by_name,
+                    COUNT(ps.id) as employee_count,
+                    SUM(ps.net_pay) as total_net_pay
+                FROM payroll_runs pr
+                LEFT JOIN users u ON pr.created_by = u.id
+                LEFT JOIN users a ON pr.approved_by = a.id
+                LEFT JOIN payslips ps ON pr.id = ps.payroll_run_id
+                WHERE 1=1
+            `;
 
-        // Filter by branch access
-        if (branch && branch !== 'All') {
-            sql += ` AND pr.branch = $${paramIndex++}`;
-            params.push(branch);
-        } else if (!accessibleBranches.includes('All')) {
-            sql += ` AND pr.branch = ANY($${paramIndex++})`;
-            params.push(accessibleBranches);
+            const params: any[] = [];
+            let paramIndex = 1;
+
+            // Filter by branch access
+            if (branch && branch !== 'All') {
+                sql += ` AND pr.branch = $${paramIndex++}`;
+                params.push(branch);
+            } else if (!accessibleBranches.includes('All')) {
+                sql += ` AND pr.branch = ANY($${paramIndex++})`;
+                params.push(accessibleBranches);
+            }
+
+            // Filter by status
+            if (status) {
+                sql += ` AND pr.status = $${paramIndex++}`;
+                params.push(status);
+            }
+
+            sql += ` GROUP BY pr.id, u.username, a.username`;
+            sql += ` ORDER BY pr.created_at DESC`;
+            sql += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+            params.push(limit, offset);
+
+            const result = await query(sql, params);
+            runs = result.rows;
+            total = result.rows.length; // Approximate for now or run count query
+        } else {
+            // Fallback for Local JSON DB (No Aggregation Support)
+            let sql = `SELECT * FROM payroll_runs WHERE 1=1`;
+            const params: any[] = [];
+            let paramIndex = 1;
+
+            if (branch && branch !== 'All') {
+                sql += ` AND branch = $${paramIndex++}`;
+                params.push(branch);
+            }
+            if (status) {
+                sql += ` AND status = $${paramIndex++}`;
+                params.push(status);
+            }
+
+            sql += ` ORDER BY created_at DESC`;
+            // Local DB doesn't support OFFSET/LIMIT well in query string usually, but let's try or slice later
+
+            const result = await query(sql, params);
+            let allRuns = result.rows;
+
+            // Manual Pagination
+            total = allRuns.length;
+            const slicedRuns = allRuns.slice(offset, offset + limit);
+
+            // Manual Hydration (Joins & Aggregates)
+            runs = await Promise.all(slicedRuns.map(async (run: any) => {
+                // Get Creator Name
+                let created_by_name = 'System';
+                if (run.created_by) {
+                    const uRes = await query(`SELECT username FROM users WHERE id = $1`, [run.created_by]);
+                    if (uRes.rows.length > 0) created_by_name = uRes.rows[0].username;
+                }
+
+                // Get Approver Name
+                let approved_by_name = null;
+                if (run.approved_by) {
+                    const aRes = await query(`SELECT username FROM users WHERE id = $1`, [run.approved_by]);
+                    if (aRes.rows.length > 0) approved_by_name = aRes.rows[0].username;
+                }
+
+                // Get Payslips Stats
+                const pRes = await query(`SELECT net_pay FROM payslips WHERE payroll_run_id = $1`, [run.id]);
+                const employee_count = pRes.rowCount || 0;
+                const total_net_pay = pRes.rows.reduce((sum: number, p: any) => sum + (parseFloat(p.net_pay) || 0), 0);
+
+                return {
+                    ...run,
+                    created_by_name,
+                    approved_by_name,
+                    employee_count,
+                    total_net_pay
+                };
+            }));
         }
-
-        // Filter by status
-        if (status) {
-            sql += ` AND pr.status = $${paramIndex++}`;
-            params.push(status);
-        }
-
-        sql += ` GROUP BY pr.id, u.username, a.username`;
-        sql += ` ORDER BY pr.created_at DESC`;
-        sql += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
-        params.push(limit, offset);
-
-        const result = await query(sql, params);
 
         return NextResponse.json({
-            runs: result.rows,
-            total: result.rows.length,
+            runs,
+            total,
             limit,
             offset
         });
@@ -291,9 +352,9 @@ export async function POST(request: NextRequest) {
             const payrollDays = 15.00;
             const basicPay = Math.round((dailyRate * payrollDays) * 100) / 100;
 
-            // Allowances - Check both regular and special fields
-            const regularAllowance = getSalaryVal(sInfo.allowances?.regular);
-            const specialAllowance = getSalaryVal(sInfo.allowances?.special);
+            // Allowances - Check both regular and special fields - Split by 2 (Semi-monthly)
+            const regularAllowance = getSalaryVal(sInfo.allowances?.regular) / 2;
+            const specialAllowance = getSalaryVal(sInfo.allowances?.special) / 2;
 
             const grossPay = basicPay + regularAllowance + specialAllowance;
 
@@ -306,27 +367,56 @@ export async function POST(request: NextRequest) {
             let sssLoan = 0;
 
             // Common Deductions
-            let companyLoan = getSalaryVal(deductionsInfo.company_loan?.amortization);
+            let companyLoan = getSalaryVal(deductionsInfo.company_loan?.amortization || deductionsInfo.company_loan);
             let cashAdvance = getSalaryVal(deductionsInfo.cash_advance);
 
             // Other deductions (sum of array)
             let otherDeductions = 0;
+            let otherDeductionsBreakdown = null;
+
             if (Array.isArray(deductionsInfo.other_deductions)) {
                 otherDeductions = deductionsInfo.other_deductions.reduce((sum: number, d: any) => sum + getSalaryVal(d.amount), 0);
+                otherDeductionsBreakdown = JSON.stringify(deductionsInfo.other_deductions);
+            } else if (deductionsInfo.other_deductions) {
+                // Handle legacy number format
+                otherDeductions = getSalaryVal(deductionsInfo.other_deductions);
             }
 
             // Cutoff Specific Deductions
             if (cutoffDay === 15) {
                 // 1st Cutoff: PHIC, Pag-IBIG, Pag-IBIG Loan, Company Funds
-                phic = getSalaryVal(deductionsInfo.philhealth_contribution);
-                pagibig = getSalaryVal(deductionsInfo.pagibig_contribution);
-                pagibigLoan = getSalaryVal(deductionsInfo.pagibig_loan?.amortization);
+                phic = getSalaryVal(deductionsInfo.phic); // Legacy name
+                if (!phic) phic = getSalaryVal(deductionsInfo.philhealth_contribution);
+
+                pagibig = getSalaryVal(deductionsInfo.pagibig); // Legacy name
+                if (!pagibig) pagibig = getSalaryVal(deductionsInfo.pagibig_contribution);
+
+                pagibigLoan = getSalaryVal(deductionsInfo.pagibig_loan_15th);
+                if (!pagibigLoan && deductionsInfo.pagibig_loan && !deductionsInfo.pagibig_loan_30th) {
+                    // Fallback for legacy single loan field (assume 1st cutoff if not split)
+                    pagibigLoan = getSalaryVal(deductionsInfo.pagibig_loan?.amortization || deductionsInfo.pagibig_loan);
+                }
+
                 companyFunds = getSalaryVal(deductionsInfo.company_funds || deductionsInfo.company_cash_fund);
             } else {
-                // 2nd Cutoff (30/31): SSS, SSS Loan
-                sss = getSalaryVal(deductionsInfo.sss_contribution);
-                sssLoan = getSalaryVal(deductionsInfo.sss_loan?.amortization);
+                // 2nd Cutoff (30/31): SSS, SSS Loan, Pag-IBIG Loan (30th)
+                sss = getSalaryVal(deductionsInfo.sss); // Legacy name
+                if (!sss) sss = getSalaryVal(deductionsInfo.sss_contribution);
+
+                sssLoan = getSalaryVal(deductionsInfo.sss_loan?.amortization || deductionsInfo.sss_loan);
+
+                // Add Pag-IBIG Loan 30th support
+                const pbLoan30 = getSalaryVal(deductionsInfo.pagibig_loan_30th);
+                if (pbLoan30 > 0) {
+                    pagibigLoan = pbLoan30;
+                }
             }
+
+            // Common Deductions always applied (split logic handled in CompensationTab, here we take values as is)
+            // Wait, standard practice is often to apply loans every cutoff or split.
+            // Current logic: companyLoan and cashAdvance are applied EVERY cutoff if present in deductionsInfo.
+            // Ensure we are not double-deducting if using monthly values.
+            // Usually these fields in salary_info represent the "Deduction per Cutoff".
 
             const totalDeductions = phic + pagibig + pagibigLoan + companyFunds + sss + sssLoan + companyLoan + cashAdvance + otherDeductions;
             const netPay = grossPay - totalDeductions;
@@ -352,8 +442,9 @@ export async function POST(request: NextRequest) {
                     sss_loan,
                     company_loan,
                     cash_advance,
-                    other_deductions
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+                    other_deductions,
+                    other_deductions_breakdown
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
                 RETURNING *
             `, [
                 payrollRun.id,
@@ -375,7 +466,8 @@ export async function POST(request: NextRequest) {
                 sssLoan,
                 companyLoan,
                 cashAdvance,
-                otherDeductions
+                otherDeductions,
+                otherDeductionsBreakdown
             ]);
 
             payslips.push(payslipResult.rows[0]);

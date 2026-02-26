@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { format, differenceInMinutes, parse } from 'date-fns';
 import jsPDF from 'jspdf';
@@ -25,7 +25,7 @@ interface AttendanceRecord {
     morning_hours?: number;
     afternoon_hours?: number;
     total_hours?: number;
-    status: 'Present' | 'Late' | 'Absent' | 'Half-Day' | 'On Leave' | 'No Work' | 'Sick Leave' | 'Vacation Leave' | 'Birthday Leave' | 'Official Business' | 'Holiday';
+    status: 'Present' | 'Late' | 'Absent' | 'Half-Day' | 'Training / Seminar' | 'No Work' | 'Sick Leave' | 'Vacation Leave' | 'Birthday Leave' | 'Official Business' | 'Leave Without Pay' | 'Holiday';
     remarks?: string;
     is_locked?: boolean;
 }
@@ -112,7 +112,7 @@ const StatusBadge = ({ status }: { status: string }) => {
         case 'Half-Day':
             styles = { bg: '#fef3c7', color: '#d97706', icon: '🌓' };
             break;
-        case 'On Leave':
+        case 'Training / Seminar':
             styles = { bg: '#e0e7ff', color: '#4f46e5', icon: '📅' };
             break;
         case 'No Work':
@@ -164,6 +164,73 @@ const CheckpointCell = ({ time, label }: { time?: string, label: string }) => {
             return `${h12}:${minutes} ${ampm}`;
         } catch {
             return t;
+        }
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'Present':
+                return {
+                    bg: 'bg-green-50',
+                    text: 'text-green-700',
+                    border: 'border-green-200',
+                    icon: 'bg-green-100 text-green-600',
+                    dot: 'bg-green-500'
+                };
+            case 'Late':
+                return {
+                    bg: 'bg-yellow-50',
+                    text: 'text-yellow-700',
+                    border: 'border-yellow-200',
+                    icon: 'bg-yellow-100 text-yellow-600',
+                    dot: 'bg-yellow-500'
+                };
+            case 'Half-Day':
+                return {
+                    bg: 'bg-orange-50',
+                    text: 'text-orange-700',
+                    border: 'border-orange-200',
+                    icon: 'bg-orange-100 text-orange-600',
+                    dot: 'bg-orange-500'
+                };
+            case 'No Work':
+            case 'Holiday':
+                return {
+                    bg: 'bg-gray-50',
+                    text: 'text-gray-700',
+                    border: 'border-gray-200',
+                    icon: 'bg-gray-100 text-gray-600',
+                    dot: 'bg-gray-500'
+                };
+            case 'Sick Leave':
+            case 'Vacation Leave':
+            case 'Birthday Leave':
+            case 'Training / Seminar':
+            case 'Official Business':
+                return {
+                    bg: 'bg-blue-50',
+                    text: 'text-blue-700',
+                    border: 'border-blue-200',
+                    icon: 'bg-blue-100 text-blue-600',
+                    dot: 'bg-blue-500'
+                };
+            case 'Absent':
+            case 'Leave Without Pay':
+                return {
+                    bg: 'bg-red-50',
+                    text: 'text-red-700',
+                    border: 'border-red-200',
+                    icon: 'bg-red-100 text-red-600',
+                    dot: 'bg-red-500'
+                };
+            default:
+                return {
+                    bg: 'bg-gray-50',
+                    text: 'text-gray-700',
+                    border: 'border-gray-200',
+                    icon: 'bg-gray-100 text-gray-600',
+                    dot: 'bg-gray-500'
+                };
         }
     };
 
@@ -457,6 +524,47 @@ export default function AttendancePage() {
         }
     };
 
+    const changeStatus = async (id: number, newStatus: string) => {
+        // --- 🔒 SAFETY PROMPT LOGIC ---
+        if (newStatus === 'Sick Leave' || newStatus === 'Vacation Leave') {
+            const isConfirmed = window.confirm("This action will deduct leave credits from the employee. Continue?");
+            if (!isConfirmed) return;
+        }
+
+        // --- End Safety Prompt ---
+
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+            const record = attendance.find(a => a.id === id);
+            if (!record) return;
+
+            const res = await fetch('/api/attendance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-session-id': sessionId || '' },
+                body: JSON.stringify({
+                    date: record.date.split('T')[0],
+                    records: [{
+                        employee_id: record.employee_id,
+                        status: newStatus,
+                        time_in: record.time_in,
+                        time_out: record.time_out,
+                        remarks: record.remarks
+                    }]
+                })
+            });
+
+            if (res.ok) {
+                setAttendance(prev => prev.map(a => a.id === id ? { ...a, status: newStatus as any } : a));
+                alert('Status updated successfully');
+            } else {
+                throw new Error('Failed to update status');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Failed to update status');
+        }
+    };
+
     // --- Actions ---
     const handleAdd = () => {
         setEditingRecord({
@@ -583,15 +691,7 @@ export default function AttendancePage() {
         setEditingRecord(prev => prev ? ({ ...prev, ...updates }) : null);
     };
 
-    // --- Metrics ---
-    const stats = {
-        total: employees.length,
-        present: filteredAttendance.filter(r => r.status === 'Present').length,
-        absent: filteredAttendance.filter(r => r.status === 'Absent').length,
-        late: filteredAttendance.filter(r => r.status === 'Late').length,
-        halfDay: filteredAttendance.filter(r => r.status === 'Half-Day').length,
-        onLeave: filteredAttendance.filter(r => r.status === 'On Leave').length,
-    };
+
 
     // --- Pagination Logic ---
     const totalPages = Math.ceil(filteredAttendance.length / rowsPerPage);
@@ -599,6 +699,50 @@ export default function AttendancePage() {
     const paginatedRecords = filteredAttendance.slice(startIndex, startIndex + rowsPerPage);
 
     const [viewMode, setViewMode] = useState('list');
+
+    const stats = useMemo(() => {
+        const initialStats = {
+            total: 0,
+            present: 0,
+            absent: 0,
+            late: 0,
+            halfDay: 0,
+            onLeave: 0,
+        };
+
+        if (!filteredAttendance || filteredAttendance.length === 0) {
+            return initialStats;
+        }
+
+        return filteredAttendance.reduce((acc, record) => {
+            acc.total++;
+            switch (record.status) {
+                case 'Present':
+                    acc.present++;
+                    break;
+                case 'Absent':
+                    acc.absent++;
+                    break;
+                case 'Late':
+                    acc.late++;
+                    break;
+                case 'Half-Day':
+                    acc.halfDay++;
+                    break;
+                case 'Sick Leave':
+                case 'Vacation Leave':
+                case 'Birthday Leave':
+                case 'Official Business':
+                case 'Training / Seminar':
+                case 'Leave Without Pay':
+                    acc.onLeave++;
+                    break;
+                default:
+                    break;
+            }
+            return acc;
+        }, initialStats);
+    }, [filteredAttendance]);
 
     return (
         <DashboardLayout>
@@ -665,31 +809,7 @@ export default function AttendancePage() {
                         </div>
 
                         <div style={{ display: 'flex', gap: '12px', flex: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
-                            {/* View Toggle */}
-                            <div style={{ display: 'flex', background: '#f3f4f6', padding: '4px', borderRadius: '8px' }}>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    style={{
-                                        padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer',
-                                        background: viewMode === 'list' ? 'white' : 'transparent',
-                                        boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
-                                        color: viewMode === 'list' ? '#f97316' : '#6b7280', fontWeight: 600, fontSize: '0.875rem'
-                                    }}
-                                >
-                                    List View
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('card')}
-                                    style={{
-                                        padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer',
-                                        background: viewMode === 'card' ? '#f97316' : 'transparent',
-                                        boxShadow: viewMode === 'card' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
-                                        color: viewMode === 'card' ? 'white' : '#6b7280', fontWeight: 600, fontSize: '0.875rem'
-                                    }}
-                                >
-                                    Card View
-                                </button>
-                            </div>
+
 
                             {/* Search */}
                             <div style={{ position: 'relative', width: '240px' }}>
@@ -773,6 +893,15 @@ export default function AttendancePage() {
                             <option value="Present">Present</option>
                             <option value="Late">Late</option>
                             <option value="Absent">Absent</option>
+                            <option value="Half-Day">Half-Day</option>
+                            <option value="Training / Seminar">Training / Seminar</option>
+                            <option value="No Work">No Work</option>
+                            <option value="Sick Leave">Sick Leave</option>
+                            <option value="Vacation Leave">Vacation Leave</option>
+                            <option value="Birthday Leave">Birthday Leave</option>
+                            <option value="Official Business">Official Business</option>
+                            <option value="Leave Without Pay">Leave Without Pay</option>
+                            <option value="Holiday">Holiday</option>
                         </select>
                     </div>
 
@@ -1110,11 +1239,12 @@ export default function AttendancePage() {
                                     <option value="Late">Late</option>
                                     <option value="Absent">Absent</option>
                                     <option value="Half-Day">Half-Day</option>
-                                    <option value="On Leave">On Leave</option>
+                                    <option value="Training / Seminar">Training / Seminar</option>
                                     <option value="Sick Leave">Sick Leave</option>
                                     <option value="Vacation Leave">Vacation Leave</option>
                                     <option value="Birthday Leave">Birthday Leave</option>
                                     <option value="Official Business">Official Business</option>
+                                    <option value="Leave Without Pay">Leave Without Pay</option>
                                     <option value="Holiday">Holiday</option>
                                     <option value="No Work">No Work</option>
                                 </select>

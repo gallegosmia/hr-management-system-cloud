@@ -37,19 +37,21 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
             pagibig_loan_30th = info.deductions.pagibig_loan;
         }
 
+        const totalAllowance = (info.allowances?.regular || 0) + (info.allowances?.special || 0);
+
         return {
             daily_rate: info.daily_rate || 0,
             monthly_salary: info.monthly_salary || 0,
             allowances: {
-                regular: info.allowances?.regular || 0,
-                special: info.allowances?.special || 0
+                regular: 0, // Consolidated into special
+                special: totalAllowance
             },
             deductions: {
                 phic: info.deductions?.phic || 0,
                 pagibig: info.deductions?.pagibig || 0,
                 pagibig_loan_15th: pagibig_loan_15th,
                 pagibig_loan_30th: pagibig_loan_30th,
-                company_funds: info.deductions?.company_funds || 0,
+                company_funds: 300, // Fixed at 300
                 sss: info.deductions?.sss || 0,
                 sss_loan: info.deductions?.sss_loan || 0,
                 company_loan: info.deductions?.company_loan || 0,
@@ -132,7 +134,7 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
     const calculateGrossPayPerCutoff = () => {
         const dailyRate = salaryInfo.daily_rate || 0;
         const basicPay = dailyRate * 15; // Default 15 days
-        const totalAllowances = (salaryInfo.allowances?.regular || 0) + (salaryInfo.allowances?.special || 0);
+        const totalAllowances = ((salaryInfo.allowances?.regular || 0) + (salaryInfo.allowances?.special || 0)) / 2;
         return basicPay + totalAllowances;
     };
 
@@ -144,7 +146,13 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
         const company_funds = (deductions.company_funds !== null && deductions.company_funds !== undefined && !isNaN(deductions.company_funds)) ? deductions.company_funds : 0;
         const company_loan = (deductions.company_loan !== null && deductions.company_loan !== undefined && !isNaN(deductions.company_loan)) ? deductions.company_loan : 0;
         const cash_advance = (deductions.cash_advance !== null && deductions.cash_advance !== undefined && !isNaN(deductions.cash_advance)) ? deductions.cash_advance : 0;
-        const other_deductions = (deductions.other_deductions !== null && deductions.other_deductions !== undefined && !isNaN(deductions.other_deductions)) ? deductions.other_deductions : 0;
+
+        let other_deductions = 0;
+        if (Array.isArray(deductions.other_deductions)) {
+            other_deductions = deductions.other_deductions.reduce((sum: number, item: any) => sum + (parseFloat(item.amount) || 0), 0);
+        } else {
+            other_deductions = (deductions.other_deductions !== null && deductions.other_deductions !== undefined && !isNaN(deductions.other_deductions)) ? deductions.other_deductions : 0;
+        }
 
         return phic + pagibig + pagibig_loan_15th + company_funds + company_loan + cash_advance + other_deductions;
     };
@@ -156,7 +164,13 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
         const pagibig_loan_30th = (deductions.pagibig_loan_30th !== null && deductions.pagibig_loan_30th !== undefined && !isNaN(deductions.pagibig_loan_30th)) ? deductions.pagibig_loan_30th : 0;
         const company_loan = (deductions.company_loan !== null && deductions.company_loan !== undefined && !isNaN(deductions.company_loan)) ? deductions.company_loan : 0;
         const cash_advance = (deductions.cash_advance !== null && deductions.cash_advance !== undefined && !isNaN(deductions.cash_advance)) ? deductions.cash_advance : 0;
-        const other_deductions = (deductions.other_deductions !== null && deductions.other_deductions !== undefined && !isNaN(deductions.other_deductions)) ? deductions.other_deductions : 0;
+
+        let other_deductions = 0;
+        if (Array.isArray(deductions.other_deductions)) {
+            other_deductions = deductions.other_deductions.reduce((sum: number, item: any) => sum + (parseFloat(item.amount) || 0), 0);
+        } else {
+            other_deductions = (deductions.other_deductions !== null && deductions.other_deductions !== undefined && !isNaN(deductions.other_deductions)) ? deductions.other_deductions : 0;
+        }
 
         return sss + sss_loan + pagibig_loan_30th + company_loan + cash_advance + other_deductions;
     };
@@ -305,35 +319,7 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
                             🎁 Allowances
                         </h3>
 
-                        <div style={{ marginBottom: '12px' }}>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
-                                Regular Allowance
-                            </label>
-                            {editing ? (
-                                <input
-                                    type="number"
-                                    value={salaryInfo.allowances?.regular || 0}
-                                    onChange={(e) => setSalaryInfo({
-                                        ...salaryInfo,
-                                        allowances: {
-                                            ...salaryInfo.allowances,
-                                            regular: parseFloat(e.target.value) || 0
-                                        }
-                                    })}
-                                    style={{
-                                        width: '100%',
-                                        padding: '8px 12px',
-                                        border: '1px solid #d1d5db',
-                                        borderRadius: '6px',
-                                        fontSize: '14px'
-                                    }}
-                                />
-                            ) : (
-                                <div style={{ fontSize: '15px', fontWeight: 500 }}>
-                                    {formatCurrency(salaryInfo.allowances?.regular || 0)}
-                                </div>
-                            )}
-                        </div>
+
 
                         <div>
                             <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
@@ -389,19 +375,27 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
                                     <input
                                         type="number"
                                         value={(salaryInfo.deductions as any)?.[key] || 0}
-                                        onChange={(e) => setSalaryInfo({
-                                            ...salaryInfo,
-                                            deductions: {
-                                                ...salaryInfo.deductions,
-                                                [key]: parseFloat(e.target.value) || 0
-                                            }
-                                        })}
+                                        disabled={key === 'company_funds'}
+                                        readOnly={key === 'company_funds'}
+                                        onChange={(e) => {
+                                            if (key === 'company_funds') return; // Prevent changes
+                                            setSalaryInfo({
+                                                ...salaryInfo,
+                                                deductions: {
+                                                    ...salaryInfo.deductions,
+                                                    [key]: parseFloat(e.target.value) || 0
+                                                }
+                                            });
+                                        }}
                                         style={{
                                             width: '100%',
                                             padding: '8px 12px',
                                             border: '1px solid #d1d5db',
                                             borderRadius: '6px',
-                                            fontSize: '14px'
+                                            fontSize: '14px',
+                                            backgroundColor: key === 'company_funds' ? '#f3f4f6' : 'white',
+                                            color: key === 'company_funds' ? '#6b7280' : 'inherit',
+                                            cursor: key === 'company_funds' ? 'not-allowed' : 'text'
                                         }}
                                     />
                                 ) : (
@@ -465,8 +459,7 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
                         {[
                             { key: 'company_loan', label: 'Company Loan (Deduction)' },
                             { key: 'company_loan_balance', label: 'Company Loan Balance' },
-                            { key: 'cash_advance', label: 'Cash Advance' },
-                            { key: 'other_deductions', label: 'Other Deductions' }
+                            { key: 'cash_advance', label: 'Cash Advance' }
                         ].map(({ key, label }) => (
                             <div key={key} style={{ marginBottom: '12px' }}>
                                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
@@ -498,6 +491,155 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
                                 )}
                             </div>
                         ))}
+
+                        {/* Other Deductions Dynamic List */}
+                        <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151' }}>
+                                    Other Deductions
+                                </label>
+                                {editing && (
+                                    <button
+                                        onClick={() => {
+                                            const current = Array.isArray(salaryInfo.deductions.other_deductions)
+                                                ? salaryInfo.deductions.other_deductions
+                                                : [];
+                                            setSalaryInfo({
+                                                ...salaryInfo,
+                                                deductions: {
+                                                    ...salaryInfo.deductions,
+                                                    other_deductions: [...current, { name: '', amount: 0, balance: 0 }]
+                                                }
+                                            });
+                                        }}
+                                        style={{
+                                            padding: '4px 8px',
+                                            background: '#dbeafe',
+                                            color: '#1e40af',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            fontSize: '11px',
+                                            fontWeight: 600
+                                        }}
+                                    >
+                                        + Add Item
+                                    </button>
+                                )}
+                            </div>
+
+                            {(!salaryInfo.deductions.other_deductions ||
+                                (Array.isArray(salaryInfo.deductions.other_deductions) && salaryInfo.deductions.other_deductions.length === 0) ||
+                                (!Array.isArray(salaryInfo.deductions.other_deductions) && salaryInfo.deductions.other_deductions === 0)
+                            ) ? (
+                                <div style={{ fontSize: '13px', color: '#9ca3af', fontStyle: 'italic', padding: '8px 0' }}>
+                                    No other deductions
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {Array.isArray(salaryInfo.deductions.other_deductions) ? (
+                                        salaryInfo.deductions.other_deductions.map((item: any, index: number) => (
+                                            <div key={index} style={{
+                                                background: '#f9fafb',
+                                                border: '1px solid #e5e7eb',
+                                                borderRadius: '6px',
+                                                padding: '10px'
+                                            }}>
+                                                {editing ? (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Deduction Name"
+                                                            value={item.name}
+                                                            onChange={(e) => {
+                                                                const updated = [...salaryInfo.deductions.other_deductions];
+                                                                updated[index] = { ...updated[index], name: e.target.value };
+                                                                setSalaryInfo({
+                                                                    ...salaryInfo,
+                                                                    deductions: { ...salaryInfo.deductions, other_deductions: updated }
+                                                                });
+                                                            }}
+                                                            style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
+                                                        />
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                                            <div>
+                                                                <label style={{ fontSize: '11px', color: '#6b7280', display: 'block', marginBottom: '2px' }}>Amount</label>
+                                                                <input
+                                                                    type="number"
+                                                                    placeholder="Amount"
+                                                                    value={item.amount}
+                                                                    onChange={(e) => {
+                                                                        const updated = [...salaryInfo.deductions.other_deductions];
+                                                                        updated[index] = { ...updated[index], amount: parseFloat(e.target.value) || 0 };
+                                                                        setSalaryInfo({
+                                                                            ...salaryInfo,
+                                                                            deductions: { ...salaryInfo.deductions, other_deductions: updated }
+                                                                        });
+                                                                    }}
+                                                                    style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label style={{ fontSize: '11px', color: '#6b7280', display: 'block', marginBottom: '2px' }}>Balance</label>
+                                                                <input
+                                                                    type="number"
+                                                                    placeholder="Balance"
+                                                                    value={item.balance || 0}
+                                                                    onChange={(e) => {
+                                                                        const updated = [...salaryInfo.deductions.other_deductions];
+                                                                        updated[index] = { ...updated[index], balance: parseFloat(e.target.value) || 0 };
+                                                                        setSalaryInfo({
+                                                                            ...salaryInfo,
+                                                                            deductions: { ...salaryInfo.deductions, other_deductions: updated }
+                                                                        });
+                                                                    }}
+                                                                    style={{ width: '100%', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => {
+                                                                const updated = salaryInfo.deductions.other_deductions.filter((_: any, i: number) => i !== index);
+                                                                setSalaryInfo({
+                                                                    ...salaryInfo,
+                                                                    deductions: { ...salaryInfo.deductions, other_deductions: updated }
+                                                                });
+                                                            }}
+                                                            style={{ alignSelf: 'flex-end', fontSize: '11px', color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div>
+                                                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                                                            {item.name || 'Unnamed Deduction'}
+                                                        </div>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                                                            <span style={{ color: '#ef4444' }}>Amount: {formatCurrency(item.amount)}</span>
+                                                            <span style={{ color: '#6b7280' }}>Bal: {formatCurrency(item.balance || 0)}</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        // Backwards compatibility for single number
+                                        <div style={{
+                                            background: '#f9fafb',
+                                            border: '1px solid #e5e7eb',
+                                            borderRadius: '6px',
+                                            padding: '10px'
+                                        }}>
+                                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>Legacy Deduction</div>
+                                            <div style={{ fontSize: '13px', color: '#ef4444' }}>
+                                                Amount: {formatCurrency(salaryInfo.deductions.other_deductions)}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

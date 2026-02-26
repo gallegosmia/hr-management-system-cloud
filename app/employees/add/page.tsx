@@ -46,7 +46,8 @@ export default function AddEmployeePage() {
         emergency_contact_number: '',
         emergency_contact_relationship: '',
         emergency_contact_address: '',
-        citizen_id_address: ''
+        citizen_id_address: '',
+        profile_picture: ''
     });
 
     // Education State
@@ -195,6 +196,41 @@ export default function AddEmployeePage() {
                             <h3 style={{ marginBottom: 'var(--spacing-lg)', fontSize: '1.125rem' }}>
                                 📝 Employee Profile
                             </h3>
+
+                            <div className="form-group" style={{ marginBottom: 'var(--spacing-lg)' }}>
+                                <label className="form-label">Profile Picture</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    {(formData as any).profile_picture && (
+                                        <img
+                                            src={(formData as any).profile_picture}
+                                            alt="Preview"
+                                            style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #e2e8f0' }}
+                                        />
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                if (file.size > 2.5 * 1024 * 1024) {
+                                                    alert('File too large. Please select an image under 2.5MB.');
+                                                    e.target.value = ''; // Reset input
+                                                    return;
+                                                }
+                                                const reader = new FileReader();
+                                                reader.onloadend = () => {
+                                                    setFormData(prev => ({ ...prev, profile_picture: reader.result as string }));
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
+                                        className="form-input"
+                                        style={{ width: 'auto' }}
+                                    />
+                                </div>
+                            </div>
+
 
                             <div className="form-row">
                                 <div className="form-group">

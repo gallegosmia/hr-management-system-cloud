@@ -527,6 +527,21 @@ export default function LeavePage() {
             return r.status === filterStatus;
         });
 
+    const canApproveRequest = (req: LeaveRequest) => {
+        if (!user || user.role === 'Employee') return false;
+
+        const reqStatus = req.status.toUpperCase();
+        if (reqStatus.includes('PENDING BRANCH MANAGER') || reqStatus === 'PENDING') {
+            return ['Admin', 'Manager', 'Vice President'].includes(user.role);
+        }
+
+        if (reqStatus.includes('PENDING EVP')) {
+            return ['Admin', 'HR', 'President', 'Vice President'].includes(user.role);
+        }
+
+        return ['Admin', 'HR', 'Manager', 'President', 'Vice President'].includes(user.role);
+    };
+
     return (
         <DashboardLayout>
             {/* Header Section */}
@@ -868,7 +883,7 @@ export default function LeavePage() {
                                             </td>
                                             <td style={{ padding: '1.25rem 1.5rem' }}>
                                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                    {req.status.startsWith('Pending') && (['Admin', 'HR', 'Manager', 'President', 'Vice President'].includes(user?.role)) && (
+                                                    {req.status.toLowerCase().includes('pending') && canApproveRequest(req) && (
                                                         <>
                                                             <button
                                                                 onClick={() => handleStatusUpdate(req.id, 'Approved')}
@@ -900,7 +915,7 @@ export default function LeavePage() {
                                                     >
                                                         📄
                                                     </button>
-                                                    {req.status.startsWith('Pending') && (
+                                                    {(req.status.toLowerCase().includes('pending') || req.status === 'Approved') && (
                                                         <button
                                                             onClick={() => handleStatusUpdate(req.id, 'Cancelled')}
                                                             style={{ width: '30px', height: '30px', background: '#fff7ed', color: '#ea580c', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -909,7 +924,7 @@ export default function LeavePage() {
                                                             🚫
                                                         </button>
                                                     )}
-                                                    {(['Admin', 'HR', 'Manager', 'President', 'Vice President'].includes(user?.role)) && (
+                                                    {canApproveRequest(req) && (
                                                         <button
                                                             onClick={() => handleDelete(req.id)}
                                                             style={{ width: '30px', height: '30px', background: '#fef2f2', color: '#dc2626', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}

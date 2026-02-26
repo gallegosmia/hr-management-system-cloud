@@ -146,6 +146,35 @@ export default function EmployeeProfileDashboard() {
 
     const tenure = getTenure(employee.date_hired);
 
+    const handleDownloadQR = () => {
+        const svg = document.getElementById('attendance-qr-svg');
+        if (!svg) return;
+
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        img.onload = () => {
+            canvas.width = img.width + 40;
+            canvas.height = img.height + 40;
+            if (ctx) {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 20, 20);
+
+                const pngFile = canvas.toDataURL('image/png');
+                const downloadLink = document.createElement('a');
+                downloadLink.download = `QR_${employee?.employee_id || 'Attendance'}.png`;
+                downloadLink.href = pngFile;
+                downloadLink.click();
+            }
+        };
+
+        img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+        showAlert('QR Code download started', 'Success');
+    };
+
     return (
         <DashboardLayout>
             <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={modalTitle} message={modalMessage} type={modalType} onConfirm={onConfirm} />
@@ -168,12 +197,21 @@ export default function EmployeeProfileDashboard() {
 
                             {/* Avatar */}
                             <div className="relative mb-5 group cursor-pointer" onClick={() => { setEditSection('basic'); setEditModalOpen(true); }}>
-                                <div className="w-40 h-40 rounded-2xl border-[6px] border-[#E0E7FF] shadow-inner overflow-hidden flex items-center justify-center bg-[#F1F5F9]">
+                                <div className="w-40 h-40 rounded-2xl border-[6px] border-[#E0E7FF] shadow-inner overflow-hidden flex items-center justify-center bg-[#F1F5F9] relative">
                                     {employee.profile_picture ? (
                                         <img src={employee.profile_picture} alt="Profile" className="w-full h-full object-cover" />
                                     ) : (
                                         <span className="text-4xl font-bold text-slate-300">{employee.first_name[0]}{employee.last_name[0]}</span>
                                     )}
+
+                                    {/* Upload Overlay */}
+                                    <div className="absolute inset-0 bg-slate-900/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 backdrop-blur-[2px]">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-white mb-2">
+                                            <path d="M12 9a3.75 3.75 0 100 7.5A3.75 3.75 0 0012 9z" />
+                                            <path fillRule="evenodd" d="M9.344 3.071a49.52 49.52 0 015.312 0c.967.052 1.83.585 2.332 1.39l.821 1.317c.24.383.645.643 1.11.71.386.054.77.113 1.152.177 1.432.239 2.429 1.493 2.429 2.909V18a3 3 0 01-3 3h-15a3 3 0 01-3-3V9.574c0-1.416.997-2.67 2.429-2.909.382-.064.766-.123 1.151-.178a1.56 1.56 0 001.11-.71l.822-1.315a2.942 2.942 0 012.332-1.39zM6.75 12.75a5.25 5.25 0 1110.5 0 5.25 5.25 0 01-10.5 0zm12-1.5a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+                                        </svg>
+                                        <span className="text-white text-xs font-bold uppercase tracking-wider">Upload Photo</span>
+                                    </div>
                                 </div>
                                 <div className={`absolute bottom-3 right-3 w-6 h-6 border-[3px] border-white rounded-full ${employee.employment_status === 'Resigned' ? 'bg-gray-400' : 'bg-[#10B981]'}`}></div>
                             </div>
@@ -216,14 +254,20 @@ export default function EmployeeProfileDashboard() {
                         </div>
 
                         {/* Attendance QR Card */}
-                        <div className="p-0 rounded-[20px] overflow-hidden shadow-lg shadow-blue-500/20 cursor-pointer transition-transform hover:scale-[1.02]">
+                        <div onClick={handleDownloadQR} title="Click to download QR Code" className="p-0 rounded-[20px] overflow-hidden shadow-lg shadow-blue-500/20 cursor-pointer transition-transform hover:scale-[1.02] group/qr relative">
                             <div className="bg-[#1D4ED8] p-6 flex flex-row items-center gap-5 relative h-full">
                                 {/* Decor */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl translate-x-10 -translate-y-10"></div>
-
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl translate-x-10 -translate-y-10 group-hover/qr:bg-white/20 transition-all"></div>
+                                {/* Download Overlay Icon */}
+                                <div className="absolute inset-0 bg-blue-900/40 opacity-0 group-hover/qr:opacity-100 transition-opacity flex items-center justify-end pr-8 z-20">
+                                    <div className="bg-white text-blue-700 p-2 rounded-full shadow-lg">
+                                        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    </div>
+                                </div>
                                 <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-lg shrink-0 z-10 p-2">
                                     {/* Real QR Code for Attendance */}
                                     <QRCodeSVG
+                                        id="attendance-qr-svg"
                                         value={employee.employee_id || 'UNKNOWN'}
                                         size={64}
                                         fgColor="#1e3a8a"
@@ -275,14 +319,18 @@ export default function EmployeeProfileDashboard() {
 
                             {/* Action Buttons (Edit / Share / View Mode) */}
                             <div className="flex items-center gap-3">
-                                <div className="hidden md:flex bg-white rounded-lg border border-gray-100 p-1 shadow-sm">
-                                    <button className="px-3 py-1.5 text-xs font-bold text-[#1D4ED8] bg-[#EFF6FF] rounded-md flex items-center gap-2">
-                                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z" /></svg>
-                                        Grid
-                                    </button>
-                                    <button className="px-3 py-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 rounded-md flex items-center gap-2 transition-colors">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
-                                        Focus
+                                <div className="hidden md:flex bg-white rounded-lg border border-gray-100 p-1 shadow-sm items-center">
+                                    <button className="px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-[#1D4ED8] hover:bg-slate-50 rounded-md flex items-center gap-2 transition-colors">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                                        </svg>
+                                        This Month
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" className="ml-1 opacity-50">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
                                     </button>
                                 </div>
                                 <div className="h-8 w-px bg-slate-200 hidden md:block"></div>
@@ -347,7 +395,7 @@ export default function EmployeeProfileDashboard() {
                                                     <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>
                                                 </button>
                                                 <p className="text-[10px] font-bold text-[#1D4ED8] uppercase tracking-wide mb-2 flex items-center gap-1">
-                                                    ! Emergency Contact
+                                                    Emergency Contact
                                                 </p>
                                                 <p className="text-sm font-bold text-[#0F172A]">{employee.emergency_contact_name || 'Not set'} <span className="font-normal text-slate-500">({employee.emergency_contact_relationship || 'Contact'})</span></p>
                                                 <p className="text-xs text-slate-500 mt-1 font-medium">{employee.emergency_contact_number}</p>

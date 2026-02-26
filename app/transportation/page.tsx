@@ -17,6 +17,12 @@ export default function TransportationAllowancePage() {
         const now = new Date();
         setSelectedMonth(String(now.getMonth() + 1).padStart(2, '0'));
         setSelectedYear(String(now.getFullYear()));
+
+        // Sync with Dashboard Branch Selection
+        const savedBranch = localStorage.getItem('selectedBranch');
+        if (savedBranch) {
+            setSelectedBranch(savedBranch);
+        }
     }, []);
 
     useEffect(() => {
@@ -35,6 +41,7 @@ export default function TransportationAllowancePage() {
                 const data = await response.json();
                 if (Array.isArray(data)) {
                     // Filter only active employees
+                    // Filter only active employees (Regular, Probationary, Contractual)
                     let activeEmployees = data.filter((emp: any) =>
                         emp.employment_status !== 'Resigned' && emp.employment_status !== 'Terminated'
                     );
@@ -183,21 +190,8 @@ export default function TransportationAllowancePage() {
                                     ))}
                                 </select>
                             </div>
-                            <div className="form-group" style={{ margin: 0 }}>
-                                <label className="form-label" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--gray-500)' }}>Specific Branch</label>
-                                <select
-                                    value={selectedBranch}
-                                    onChange={(e) => {
-                                        setSelectedBranch(e.target.value);
-                                    }}
-                                    className="form-select"
-                                    style={{ background: 'white', fontWeight: 500 }}
-                                >
-                                    <option value="All">All Branches</option>
-                                    <option value="Ormoc Branch">Ormoc Branch</option>
-                                    <option value="Naval Branch">Naval Branch</option>
-                                </select>
-                            </div>
+
+
                         </div>
                     </div>
 

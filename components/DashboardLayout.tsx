@@ -212,9 +212,11 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
             return user.username === 'superadmin';
         }
 
-        // Hide My Profile and TRACKER for superadmin
-        if ((item.name === 'My Profile' || item.name === 'TRACKER') && user.username === 'superadmin') {
-            return false;
+        // Hide My Profile and TRACKER for superadmin, President, and VP
+        if (item.name === 'My Profile' || item.name === 'TRACKER') {
+            if (user.username === 'superadmin' || user.role === 'President' || user.role === 'Vice President') {
+                return false;
+            }
         }
 
         // All other items filtered by role
@@ -228,20 +230,22 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                 <aside className="main-sidebar hr-pulse-sidebar" style={{ width: '260px', background: '#022c22', borderRight: '1px solid #064e3b', display: 'flex', flexDirection: 'column', padding: '24px 16px' }}>
 
                     {/* Branding */}
-                    <div className="sidebar-branding" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="sidebar-branding" style={{ marginBottom: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '0 8px' }}>
                         <div style={{
-                            width: '40px', height: '40px',
-                            background: '#10b981',
-                            borderRadius: '12px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: 'white', fontWeight: 700,
-                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                            width: '100%',
+                            maxWidth: '180px',
+                            background: 'white',
+                            borderRadius: '16px',
+                            padding: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)'
                         }}>
-                            <span style={{ fontSize: '1.4rem' }}>M</span>
+                            <img src="/images/logo.jpg" alt="Melann Lending" style={{ width: '100%', height: 'auto', borderRadius: '4px' }} />
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'white', fontFamily: "'Inter', sans-serif" }}>Melann HR</span>
-                            <span style={{ fontSize: '0.65rem', color: '#6ee7b7', letterSpacing: '1px', textTransform: 'uppercase' }}>Management System</span>
+                        <div style={{ color: '#6ee7b7', fontSize: '0.65rem', fontWeight: '700', letterSpacing: '1.5px', textTransform: 'uppercase', marginTop: '4px' }}>
+                            HR MANAGEMENT SYSTEM
                         </div>
                     </div>
 

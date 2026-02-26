@@ -17,7 +17,7 @@ export async function GET(
             FROM payroll_audit_log pal
             LEFT JOIN users u ON pal.performed_by = u.id
             WHERE pal.payroll_run_id = $1
-            ORDER BY pal.created_at DESC
+            ORDER BY pal.performed_at DESC
         `, [payrollRunId]);
 
         return NextResponse.json({ logs: result.rows });

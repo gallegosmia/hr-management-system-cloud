@@ -185,6 +185,47 @@ export default function PayrollListPage() {
                     </div>
                 </div>
 
+                {/* Returned Payroll Notification Banner */}
+                {filteredRuns.some(run => run.status.toLowerCase().includes('returned')) && (
+                    <div style={{
+                        background: '#fef2f2',
+                        border: '1px solid #fee2e2',
+                        borderRadius: '12px',
+                        padding: '16px 20px',
+                        marginBottom: '24px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '16px',
+                        boxShadow: '0 2px 5px rgba(220, 38, 38, 0.05)'
+                    }}>
+                        <div style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            background: '#fee2e2',
+                            color: '#dc2626',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                        }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#991b1b' }}>
+                                Action Required: Payroll Returned
+                            </h3>
+                            <p style={{ margin: 0, fontSize: '14px', color: '#b91c1c' }}>
+                                One or more payroll runs have been returned for correction. Please check the list below and review the remarks.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Filters Card */}
                 <div style={{
                     background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '20px', marginBottom: '24px',
@@ -357,21 +398,13 @@ export default function PayrollListPage() {
                                                             }}>
                                                                 Edit
                                                             </button>
-                                                        ) : s.includes('review') || s.includes('operations') || s.includes('vice president') ? (
+                                                        ) : s.includes('review') || s.includes('operations') || s.includes('vice president') || s === 'for release' ? (
                                                             <button style={{
                                                                 background: '#6366f1', border: 'none', cursor: 'pointer',
                                                                 color: 'white', fontSize: '13px', fontWeight: '600',
                                                                 padding: '6px 12px', borderRadius: '6px'
                                                             }}>
                                                                 View
-                                                            </button>
-                                                        ) : s === 'for release' ? (
-                                                            <button style={{
-                                                                background: '#3b82f6', border: 'none', cursor: 'pointer',
-                                                                color: 'white', fontSize: '13px', fontWeight: '600',
-                                                                padding: '6px 12px', borderRadius: '6px'
-                                                            }}>
-                                                                Download
                                                             </button>
                                                         ) : s === 'released' ? (
                                                             <button style={{
@@ -392,8 +425,8 @@ export default function PayrollListPage() {
                                                         )}
                                                     </Link>
 
-                                                    {/* Delete button - only for DRAFT payrolls */}
-                                                    {s === 'draft' && (
+                                                    {/* Delete button - Only show for Draft */}
+                                                    {(s === 'draft' || s === 'Draft') && (
                                                         <button
                                                             onClick={(e) => {
                                                                 e.preventDefault();

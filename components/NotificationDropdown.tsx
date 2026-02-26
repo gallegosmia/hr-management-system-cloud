@@ -8,7 +8,7 @@ interface Notification {
     id: string;
     title: string;
     message: string;
-    type: 'leave' | 'alert' | 'info' | 'system';
+    type: string;
     severity: 'high' | 'medium' | 'low';
     url: string;
     timestamp: string;
@@ -101,6 +101,10 @@ export default function NotificationDropdown() {
 
                     if (n.reference_id) {
                         readReferenceIds.add(n.reference_id);
+                    }
+
+                    if (n.type?.startsWith('PAYROLL_')) {
+                        notifItem.actionLabel = 'View Payroll';
                     }
                 });
             }
@@ -341,6 +345,10 @@ export default function NotificationDropdown() {
             case 'leave': return <div className="icon-circle yellow">🏖️</div>;
             case 'info': return <div className="icon-circle blue">ℹ️</div>;
             case 'alert': return <div className="icon-circle orange">⚠️</div>;
+            case 'PAYROLL_PENDING_VP': return <div className="icon-circle yellow">⚠️</div>;
+            case 'PAYROLL_APPROVED': return <div className="icon-circle green">✅</div>;
+            case 'PAYROLL_RELEASED': return <div className="icon-circle blue">💰</div>;
+            case 'PAYROLL_REJECTED': return <div className="icon-circle red">❌</div>;
             default: return <div className="icon-circle gray">🔔</div>;
         }
     };
@@ -404,7 +412,12 @@ export default function NotificationDropdown() {
                                                             {!notif.is_read && <span className="unread-dot"></span>}
                                                         </span>
                                                         <span className="notif-timestamp">
-                                                            {format(new Date(notif.timestamp), 'h:mm a')}
+                                                            {(() => {
+                                                                try {
+                                                                    const date = new Date(notif.timestamp);
+                                                                    return isNaN(date.getTime()) ? '' : format(date, 'h:mm a');
+                                                                } catch (e) { return ''; }
+                                                            })()}
                                                         </span>
                                                     </div>
                                                     <p className="notif-msg">{notif.message}</p>
@@ -602,6 +615,7 @@ export default function NotificationDropdown() {
                 .icon-circle.yellow { background: #fef9c3; color: #ca8a04; }
                 .icon-circle.blue { background: #dbeafe; color: #2563eb; }
                 .icon-circle.orange { background: #ffedd5; color: #ea580c; }
+                .icon-circle.red { background: #fee2e2; color: #dc2626; }
                 .icon-circle.gray { background: #f1f5f9; color: #64748b; }
 
                 .timeline-line {
