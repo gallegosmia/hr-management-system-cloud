@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAll, query } from '@/lib/database';
-import { recordAttendance, getAttendanceByDate, batchRecordAttendance, getEmployeeById } from '@/lib/data';
+import { recordAttendance, getAttendanceByDate, batchRecordAttendance, getEmployeeById, getEmployeeLeaveCount } from '@/lib/data';
 import { requireBranchAuth, canModifyBranchData } from '@/lib/middleware/branch-auth';
 import { filterByBranch } from '@/lib/branch-access';
 
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
         // --- Handle Leave Deductions ---
         for (let i = 0; i < records.length; i++) {
             let record = records[i];
-            const isDeductibleLeave = record.status === 'Sick Leave' || record.status === 'Vacation Leave';
+            const isDeductibleLeave = record.status === 'Sick Leave' || record.status === 'Vacation Leave' || record.status === 'Emergency Leave' || record.status === 'On Leave';
 
             if (isDeductibleLeave) {
                 // Fetch employee data to check credits
@@ -117,30 +117,30 @@ export async function POST(request: NextRequest) {
                 const employee = employeesRes.rows[0];
 
                 if (employee) {
-                    const currentCredits = employee.leave_credits || 0;
+                    const entitlement = employee.leave_credits || 5;
+                    const year = new Date(date).getFullYear();
+                    const used = await getEmployeeLeaveCount(employee.id, year);
 
-                    if (currentCredits >= 1) {
-                        // Deduct leave credits
-                        const newCredits = currentCredits - 1;
-                        await query("UPDATE employees SET leave_credits = $1 WHERE id = $2", [newCredits, employee.id]);
+                    // Check if current record was already counted as an active leave
+                    const existingRes = await query("SELECT status FROM attendance WHERE employee_id = $1 AND date = $2", [record.employee_id, date]);
+                    const existingRecord = existingRes.rows[0];
+                    const wasAlreadyLeave = existingRecord && ['sick leave', 'vacation leave', 'emergency leave', 'on leave'].includes((existingRecord.status || '').toLowerCase());
 
-                        // Add Audit Log
-                        // Get HR user info from headers or assign system
+                    const projectedUsed = wasAlreadyLeave ? used : used + 1;
+
+                    if (projectedUsed <= entitlement) {
+                        // Authorized leave, limit not exceeded for the year.
                         const sessionId = request.headers.get('x-session-id');
                         let hrUser = 'System (Batch Update)';
                         if (sessionId) {
-                            // Try to pick up the active HR name if available, fallback to basic generic name
-                            // Assuming user object is handled in the frontend, for now log basic string
                             hrUser = `HR Session [${sessionId.substring(0, 8)}]`;
                         }
 
-                        // NOTE: if your DB doesn't have an audit_logs table, this query will fail. 
-                        // I will add a silent catch if the table doesn't exist yet, or I will rely on my migration tool.
                         try {
                             await query(`
                                 INSERT INTO audit_logs (hr_user, employee_id, action, details, previous_credits, new_credits)
                                 VALUES ($1, $2, $3, $4, $5, $6)
-                            `, [hrUser, employee.id, 'LEAVE_CREDIT_DEDUCTION', `Deducted 1 credit for ${record.status} on ${date}`, currentCredits, newCredits]);
+                            `, [hrUser, employee.id, 'LEAVE_STATUS_GRANTED', `Granted ${record.status} on ${date}. Used ${projectedUsed}/${entitlement} this year`, entitlement - used, entitlement - projectedUsed]);
                         } catch (auditError) {
                             console.warn("Audit Log insert failed, table might not exist:", auditError);
                         }

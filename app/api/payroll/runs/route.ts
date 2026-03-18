@@ -253,13 +253,11 @@ export async function POST(request: NextRequest) {
 
         const payrollRun = runResult.rows[0];
 
-        // Fetch ACTIVE SSS config for the payroll year
-        const year = startDate.getFullYear();
-        const sssConfigRes = await query(
-            `SELECT * FROM gov_contribution_configs WHERE type = 'SSS' AND year_effective = $1`,
-            [year]
+        // Fetch ACTIVE SSS config for the payroll year (Always using 2025 Official Table as instructed)
+        const sssTableRes = await query(
+            `SELECT * FROM sss_contribution_table WHERE effectivity_year = 2025`
         );
-        const sssConfig = sssConfigRes.rows.length > 0 ? sssConfigRes.rows[0].config_data : null;
+        const sssTable = sssTableRes.rows;
 
 
         // Use getAllEmployees() — the SAME function as the employee list page (Step 2 in wizard)
@@ -421,11 +419,11 @@ export async function POST(request: NextRequest) {
                 // 1st Cutoff: PHIC, Pag-IBIG, Pag-IBIG Loan, Company Funds
                 phic = getSalaryVal(deductionsInfo.phic); // Legacy name
                 if (!phic) phic = getSalaryVal(deductionsInfo.philhealth_contribution);
-                phic_er = getSalaryVal(deductionsInfo.phic_er);
+                phic_er = phic; // ER strictly matches EE
 
                 pagibig = getSalaryVal(deductionsInfo.pagibig); // Legacy name
                 if (!pagibig) pagibig = getSalaryVal(deductionsInfo.pagibig_contribution);
-                pagibig_er = getSalaryVal(deductionsInfo.pagibig_er);
+                pagibig_er = pagibig; // ER strictly matches EE
 
                 pagibigLoan = getSalaryVal(deductionsInfo.pagibig_loan_15th);
                 if (!pagibigLoan && deductionsInfo.pagibig_loan && !deductionsInfo.pagibig_loan_30th) {
@@ -436,9 +434,6 @@ export async function POST(request: NextRequest) {
                 companyFunds = getSalaryVal(deductionsInfo.company_funds || deductionsInfo.company_cash_fund);
             } else {
                 // 2nd Cutoff (30/31): SSS, SSS Loan, Pag-IBIG Loan (30th)
-                sss = getSalaryVal(deductionsInfo.sss); // Legacy name
-                if (!sss) sss = getSalaryVal(deductionsInfo.sss_contribution);
-
                 sssLoan = getSalaryVal(deductionsInfo.sss_loan?.amortization || deductionsInfo.sss_loan);
 
                 // Add Pag-IBIG Loan 30th support
@@ -446,30 +441,22 @@ export async function POST(request: NextRequest) {
                 if (pbLoan30 > 0) {
                     pagibigLoan = pbLoan30;
                 }
-            }
 
-            // Common Deductions always applied (split logic handled in CompensationTab, here we take values as is)
-            // Wait, standard practice is often to apply loans every cutoff or split.
-            // Current logic: companyLoan and cashAdvance are applied EVERY cutoff if present in deductionsInfo.
-            // Ensure we are not double-deducting if using monthly values.
-            // Usually these fields in salary_info represent the "Deduction per Cutoff".
-
-            // SSS ER Strict Validation & Computation (Applies to both cutoffs for reporting but only deduced on 30th)
-            // We calculate the SSS ER based on the SSS Config brackets for this run.
-            if (cutoffDay === 30 || cutoffDay === 31) {
-                if (!sssConfig) {
-                    return NextResponse.json({ error: `SSS configuration for year ${year} is not set up. Please configure it in Compensation & Benefits.` }, { status: 400 });
+                // 2nd Cutoff (30/31): 1️⃣ SSS Source of Truth Rule
+                if (!sssTable || sssTable.length === 0) {
+                    return NextResponse.json({ error: 'System Error: SSS 2025 Official Contribution Table is not configured.' }, { status: 400 });
                 }
 
-                const brackets = Array.isArray(sssConfig) ? sssConfig : [];
-                // Compare using monthly salary instead of total estimated gross pay (common practice). Using fullMonthGross
-                const matchingBracket = brackets.find((b: any) => fullMonthGross >= Number(b.range_start) && fullMonthGross <= Number(b.range_end)) || brackets[brackets.length - 1];
+                // 2️⃣ Salary Mapping Rule using Basic Monthly Salary
+                const tableBracket = sssTable.find((b: any) => monthlySalary >= Number(b.salary_range_from) && monthlySalary <= Number(b.salary_range_to));
 
-                if (!matchingBracket) {
-                    return NextResponse.json({ error: `Salary for ${employee.first_name} ${employee.last_name} (${fullMonthGross}) does not match any SSS bracket in the 2025 configuration.` }, { status: 400 });
+                if (!tableBracket) {
+                    return NextResponse.json({ error: `ERROR: Salary for ${employee.first_name} ${employee.last_name} (${monthlySalary}) does not match any SSS MSC bracket.` }, { status: 400 });
                 }
 
-                sss_er = Number(matchingBracket.er_share) + Number(matchingBracket.ec);
+                // 3️⃣ Contribution Extraction Rule & 6️⃣ Validation Rules (Override any legacy manual overrides)
+                sss = Number(tableBracket.employee_share);
+                sss_er = Number(tableBracket.employer_share) + Number(tableBracket.ec_contribution);
             }
 
             const totalDeductions = phic + pagibig + pagibigLoan + companyFunds + sss + sssLoan + companyLoan + cashAdvance + otherDeductions;

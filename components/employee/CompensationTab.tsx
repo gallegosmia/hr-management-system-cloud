@@ -34,7 +34,7 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
         // If old pagibig_loan exists but new fields don't, migrate it
         if (info.deductions?.pagibig_loan && !pagibig_loan_15th && !pagibig_loan_30th) {
             pagibig_loan_15th = info.deductions.pagibig_loan;
-            pagibig_loan_30th = info.deductions.pagibig_loan;
+            // Removed migrating to 30th to avoid double deduction
         }
 
         const totalAllowance = (info.allowances?.regular || 0) + (info.allowances?.special || 0);
@@ -45,6 +45,10 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
             allowances: {
                 regular: 0, // Consolidated into special
                 special: totalAllowance
+            },
+            holidays: {
+                regular_holiday_days: info.holidays?.regular_holiday_days || 0,
+                special_holiday_days: info.holidays?.special_holiday_days || 0
             },
             deductions: {
                 phic: info.deductions?.phic || 0,
@@ -137,6 +141,7 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
         const dailyRate = salaryInfo.daily_rate || 0;
         const basicPay = dailyRate * 15; // Default 15 days
         const totalAllowances = ((salaryInfo.allowances?.regular || 0) + (salaryInfo.allowances?.special || 0)) / 2;
+
         return basicPay + totalAllowances;
     };
 
@@ -365,9 +370,7 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
 
                         {[
                             { key: 'phic', label: 'PhilHealth (PHIC) - EE' },
-                            { key: 'phic_er', label: 'PhilHealth (PHIC) - ER' },
                             { key: 'pagibig', label: 'Pag-IBIG - EE' },
-                            { key: 'pagibig_er', label: 'Pag-IBIG - ER' },
                             { key: 'pagibig_loan_15th', label: 'Pag-IBIG Loan' },
                             { key: 'company_funds', label: 'Company Funds' }
                         ].map(({ key, label }) => (

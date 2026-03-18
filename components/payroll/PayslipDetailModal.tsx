@@ -22,6 +22,18 @@ export default function PayslipDetailModal({ isOpen, onClose, payslip, employee,
     // Helper to safely get nested values
     const safeVal = (val: any) => parseFloat(val || 0);
 
+    const parsedOtherDeductionsBreakdown = (() => {
+        try {
+            if (!payslip.other_deductions_breakdown) return null;
+            const parsed = typeof payslip.other_deductions_breakdown === 'string'
+                ? JSON.parse(payslip.other_deductions_breakdown)
+                : payslip.other_deductions_breakdown;
+            return Array.isArray(parsed) ? parsed : null;
+        } catch (e) {
+            return null;
+        }
+    })();
+
 
     // Calculate Totals (if not pre-calculated)
     const earnings = [
@@ -51,11 +63,8 @@ export default function PayslipDetailModal({ isOpen, onClose, payslip, employee,
         { label: 'Company Loan', amount: companyLoanDeduction },
         { label: 'Cash Advance', amount: safeVal(payslip.cash_advance || payslip.deductions?.cash_advance) },
         { label: 'Company Funds', amount: safeVal(payslip.company_funds) },
-        ...(payslip.other_deductions_breakdown
-            ? (typeof payslip.other_deductions_breakdown === 'string'
-                ? JSON.parse(payslip.other_deductions_breakdown)
-                : payslip.other_deductions_breakdown
-            ).map((d: any) => ({
+        ...(parsedOtherDeductionsBreakdown
+            ? parsedOtherDeductionsBreakdown.map((d: any) => ({
                 label: `${d.name || d.note || 'Other Deduction'}${d.balance ? ` (Bal: ${formatCurrency(d.balance)})` : ''}`,
                 amount: safeVal(d.amount)
             }))
@@ -241,14 +250,8 @@ export default function PayslipDetailModal({ isOpen, onClose, payslip, employee,
 
                                 {/* Other Deduction Balances */}
                                 {(() => {
-                                    const breakdown = payslip.other_deductions_breakdown
-                                        ? (typeof payslip.other_deductions_breakdown === 'string'
-                                            ? JSON.parse(payslip.other_deductions_breakdown)
-                                            : payslip.other_deductions_breakdown)
-                                        : [];
-
-                                    const balances = Array.isArray(breakdown)
-                                        ? breakdown.filter((d: any) => parseFloat(d.balance) > 0)
+                                    const balances = parsedOtherDeductionsBreakdown
+                                        ? parsedOtherDeductionsBreakdown.filter((d: any) => parseFloat(d.balance) > 0)
                                         : [];
 
                                     return balances.map((d: any, i: number) => (
@@ -259,7 +262,7 @@ export default function PayslipDetailModal({ isOpen, onClose, payslip, employee,
                                     ));
                                 })()}
 
-                                {(loanBalanceDisplay <= 0 && (!payslip.other_deductions_breakdown || (Array.isArray(JSON.parse(JSON.stringify(payslip.other_deductions_breakdown || '[]'))) && JSON.parse(JSON.stringify(payslip.other_deductions_breakdown || '[]')).filter((d: any) => d.balance > 0).length === 0))) && (
+                                {(loanBalanceDisplay <= 0 && (!parsedOtherDeductionsBreakdown || parsedOtherDeductionsBreakdown.filter((d: any) => d.balance > 0).length === 0)) && (
                                     <div style={{ fontSize: '14px', color: '#9ca3af', fontStyle: 'italic' }}>None</div>
                                 )}
                             </div>

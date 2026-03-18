@@ -59,6 +59,7 @@ interface Payslip {
     basic_pay: number;
     regular_allowance: number;
     special_allowance: number;
+    holiday_days?: number;
     holiday_pay: number;
     other_earnings: number;
     gross_pay: number;
@@ -231,6 +232,8 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
 
             if (editingCell.field === 'payroll_days') {
                 updateData.payrollDays = newValue;
+            } else if (editingCell.field === 'holiday_days') {
+                updateData.allowances = { holiday_days: newValue };
             } else if (['regular_allowance', 'special_allowance', 'holiday_pay'].includes(editingCell.field)) {
                 updateData.allowances = {
                     [editingCell.field.replace('_allowance', '').replace('holiday_pay', 'holiday')]: newValue
@@ -635,6 +638,8 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
     const totalBasicPay = filteredPayslips.reduce((sum, p) => sum + (p.basic_pay || 0), 0);
     const totalRegAllow = filteredPayslips.reduce((sum, p) => sum + (p.regular_allowance || 0), 0);
     const totalSpclAllow = filteredPayslips.reduce((sum, p) => sum + (p.special_allowance || 0), 0);
+    const totalHolidayDays = filteredPayslips.reduce((sum, p) => sum + (p.holiday_days || 0), 0);
+    const totalHolidayPay = filteredPayslips.reduce((sum, p) => sum + (p.holiday_pay || 0), 0);
     // existing totals
     const totalEmployees = filteredPayslips.length;
     const totalGrossPay = filteredPayslips.reduce((sum, p) => sum + (p.gross_pay || 0), 0);
@@ -990,9 +995,12 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                     <thead>
                                         <tr>
                                             <th className="th-employee">EMPLOYEE DETAILS</th>
-                                            <th className="th-center" style={{ width: '120px' }}>DAYS</th>
+                                            <th className="th-right" style={{ width: '80px' }}>DAILY<br />RATE</th>
+                                            <th className="th-center" style={{ width: '120px' }}>WORK<br />DAYS</th>
                                             <th className="th-right" style={{ width: '80px' }}>BASIC</th>
 
+                                            <th className="th-center" style={{ width: '60px' }}>HOLIDAY<br />DAYS</th>
+                                            <th className="th-right" style={{ width: '60px' }}>HOLIDAY<br />PAY</th>
                                             <th className="th-right" style={{ width: '60px' }}>SPCL.<br />ALW.</th>
                                             <th className="th-right text-green-600" style={{ width: '90px' }}>GROSS<br />PAY</th>
                                             {getDeductionColumns().map(col => (
@@ -1013,6 +1021,11 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                                             ID: {payslip.employee_number}
                                                         </div>
                                                     </div>
+                                                </td>
+
+                                                {/* Daily Rate */}
+                                                <td className="td-right font-medium text-gray-500">
+                                                    {formatCurrency(payslip.daily_rate || 0).replace('₱', '')}
                                                 </td>
 
                                                 {/* Days */}
@@ -1036,6 +1049,46 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                                 </td>
 
                                                 <td className="td-right">{formatCurrency(payslip.basic_pay).replace('₱', '')}</td>
+
+                                                {/* Holiday Days */}
+                                                <td
+                                                    className="td-center td-editable"
+                                                    onClick={() => handleCellClick(payslip.id, 'holiday_days', payslip.holiday_days)}
+                                                >
+                                                    {editingCell?.payslipId === payslip.id && editingCell?.field === 'holiday_days' ? (
+                                                        <input
+                                                            type="number"
+                                                            value={editValue}
+                                                            onChange={(e) => setEditValue(e.target.value)}
+                                                            onBlur={handleCellBlur}
+                                                            onKeyDown={(e) => e.key === 'Enter' && handleCellBlur()}
+                                                            autoFocus
+                                                            className="cell-input"
+                                                        />
+                                                    ) : (
+                                                        <span className="font-medium">{(payslip.holiday_days || 0).toFixed(2)}</span>
+                                                    )}
+                                                </td>
+
+                                                {/* Holiday Pay */}
+                                                <td
+                                                    className="td-right td-editable"
+                                                    onClick={() => handleCellClick(payslip.id, 'holiday_pay', payslip.holiday_pay)}
+                                                >
+                                                    {editingCell?.payslipId === payslip.id && editingCell?.field === 'holiday_pay' ? (
+                                                        <input
+                                                            type="number"
+                                                            value={editValue}
+                                                            onChange={(e) => setEditValue(e.target.value)}
+                                                            onBlur={handleCellBlur}
+                                                            onKeyDown={(e) => e.key === 'Enter' && handleCellBlur()}
+                                                            autoFocus
+                                                            className="cell-input"
+                                                        />
+                                                    ) : (
+                                                        formatCurrency(payslip.holiday_pay || 0).replace('₱', '')
+                                                    )}
+                                                </td>
 
                                                 {/* Allowances */}
 
@@ -1129,9 +1182,12 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                     <tfoot className="table-summary-row">
                                         <tr>
                                             <td className="td-employee font-bold">TOTAL SUMMARY ({totalEmployees} EMP)</td>
+                                            <td className="td-center font-bold"></td>
                                             <td className="td-center font-bold">{totalDays.toFixed(2)}</td>
                                             <td className="td-right font-bold">{formatCurrency(totalBasicPay).replace('₱', '')}</td>
 
+                                            <td className="td-center font-bold">{totalHolidayDays.toFixed(2)}</td>
+                                            <td className="td-right font-bold">{formatCurrency(totalHolidayPay).replace('₱', '')}</td>
                                             <td className="td-right font-bold">{formatCurrency(totalSpclAllow).replace('₱', '')}</td>
                                             <td className="td-right font-bold text-green-600">{formatCurrency(totalGrossPay).replace('₱', '')}</td>
                                             {getDeductionColumns().map(col => (

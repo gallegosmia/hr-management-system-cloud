@@ -138,8 +138,8 @@ export async function GET(
 
         // Sort manually
         processedPayslips.sort((a: any, b: any) => {
-            const nameA = (a.last_name + a.first_name).toLowerCase();
-            const nameB = (b.last_name + b.first_name).toLowerCase();
+            const nameA = ((a.last_name || '') + ' ' + (a.first_name || '')).toLowerCase().trim();
+            const nameB = ((b.last_name || '') + ' ' + (b.first_name || '')).toLowerCase().trim();
             return nameA.localeCompare(nameB);
         });
 
@@ -226,6 +226,8 @@ async function updateCompanyLoanBalances(payrollRunId: string, isDeduction: bool
                     if (remaining <= 0) break;
 
                     const currentBalance = parseFloat(loan.balance);
+                    if (isNaN(currentBalance)) continue;
+                    
                     const deduction = Math.min(remaining, currentBalance);
                     const newBalance = currentBalance - deduction;
 
@@ -237,24 +239,20 @@ async function updateCompanyLoanBalances(payrollRunId: string, isDeduction: bool
                 }
             } else {
                 // REVERT (Add back)
-                // We add back to the most active loan, or if all paid, reactivate the last one?
-                // Strategy: Find the loan that looks like it was just paid or is active
-                // Simplest: Add to the most recently created loan (highest ID) that accepts payments?
-                // Or better: Add to the loan with ID match? We don't have ID.
-                // We'll add to the LATEST Active/Ongoing/Approved loan or LATEST Paid loan.
-
                 // Sort by ID DESC to target newest loan first
                 const targetLoans = loans.rows.sort((a: any, b: any) => b.id - a.id);
 
                 if (targetLoans.length > 0) {
                     const loan = targetLoans[0];
                     const currentBalance = parseFloat(loan.balance);
-                    const newBalance = currentBalance + remaining;
+                    if (!isNaN(currentBalance)) {
+                        const newBalance = currentBalance + remaining;
 
-                    let newStatus = loan.status;
-                    if (newStatus === 'Paid' && newBalance > 0) newStatus = 'Active'; // Reactivate
+                        let newStatus = loan.status;
+                        if (newStatus === 'Paid' && newBalance > 0) newStatus = 'Active'; // Reactivate
 
-                    await query(`UPDATE employee_loans SET balance = $1, status = $2 WHERE id = $3`, [newBalance, newStatus, loan.id]);
+                        await query(`UPDATE employee_loans SET balance = $1, status = $2 WHERE id = $3`, [newBalance, newStatus, loan.id]);
+                    }
                 }
             }
         }
@@ -658,7 +656,11 @@ export async function DELETE(
         if (auth instanceof NextResponse) return auth;
         const [user, selectedBranch] = auth;
 
-        const payrollRunId = params.id;
+        const payrollRunIdStr = params.id;
+        const payrollRunId = parseInt(payrollRunIdStr);
+        if (isNaN(payrollRunId)) {
+            return NextResponse.json({ error: 'Invalid payroll run ID' }, { status: 400 });
+        }
 
         // Get payroll run
         const runResult = await query(`SELECT * FROM payroll_runs WHERE id = $1`, [payrollRunId]);
@@ -685,28 +687,61 @@ export async function DELETE(
             return NextResponse.json({ error: 'Cannot delete locked payroll' }, { status: 400 });
         }
 
-        if (!payrollRun.status || payrollRun.status.toLowerCase() !== 'draft') {
-            return NextResponse.json({ error: 'Only Draft payroll can be deleted.' }, { status: 400 });
+        // Restriction: Only Draft payroll can be deleted BY DEFAULT.
+        // Super Admin, President, VP, HR, and Finance can delete any non-locked payroll (emergency override)
+        const isAuthorized = ['Super Admin', 'Admin', 'President', 'Vice President', 'HR', 'Finance', 'Operations Manager'].includes(user.role);
+        
+        if (!isAuthorized && (!payrollRun.status || payrollRun.status.toLowerCase() !== 'draft')) {
+            return NextResponse.json({ error: 'Only Draft payroll can be deleted by this user role.' }, { status: 400 });
         }
 
-        // Delete payslips first
+        // If payroll was NOT draft (i.e. was finalized, approved or released), revert loan deductions
+        const wasProcessed = payrollRun.status && payrollRun.status.toLowerCase() !== 'draft' && !payrollRun.status.toLowerCase().includes('returned');
+        if (wasProcessed) {
+            console.log(`[DELETE] Reverting loan balances for processed payroll run ${payrollRunId} (Status: ${payrollRun.status})`);
+            try {
+                await updateCompanyLoanBalances(payrollRunId.toString(), false);
+            } catch (loanError: any) {
+                console.error(`[DELETE] Failed to revert loan balances: ${loanError.message}`);
+                throw new Error(`Failed to revert loan balances: ${loanError.message}`);
+            }
+        }
+
+        console.log(`[DELETE] Recording audit log for deletion by ${user.username} (${user.role})`);
+        // 1. Audit Log first (using the general system audit_logs table to ensure persistence after payroll_run deletion)
+        try {
+            await query(`
+                INSERT INTO audit_logs(user_id, action, details, created_at)
+                VALUES($1, $2, $3, CURRENT_TIMESTAMP)
+            `, [user.id || 0, 'DELETE_PAYROLL', JSON.stringify({ 
+                payroll_run_id: payrollRunId,
+                run_number: payrollRun.run_number, 
+                previous_status: payrollRun.status,
+                branch: payrollRun.branch,
+                was_processed: wasProcessed 
+            })]);
+        } catch (auditError: any) {
+            console.error(`[DELETE] Failed to record audit log: ${auditError.message}`);
+            // We don't throw here, deletion can proceed if audit fails?
+            // Actually, better to throw if audit is required
+            throw new Error(`Failed to record audit log: ${auditError.message}`);
+        }
+
+        console.log(`[DELETE] Deleting payslips for run ${payrollRunId}`);
+        // 2. Delete payslips
         await query(`DELETE FROM payslips WHERE payroll_run_id = $1`, [payrollRunId]);
 
-        // Delete payroll run
+        console.log(`[DELETE] Deleting payroll run ${payrollRunId}`);
+        // 3. Delete payroll run
         await query(`DELETE FROM payroll_runs WHERE id = $1`, [payrollRunId]);
 
-        // Log action
-        await query(`
-            INSERT INTO payroll_audit_log(payroll_run_id, action, performed_by, details, performed_at)
-            VALUES($1, $2, $3, $4, $5)
-                `, [payrollRunId, 'DELETED', user.id, JSON.stringify({ run_number: payrollRun.run_number }), new Date().toISOString()]);
-
-        return NextResponse.json({ success: true, message: 'Payroll run deleted' });
+        console.log(`[DELETE] Deletion completed successfully for ${payrollRun.run_number}`);
+        return NextResponse.json({ success: true, message: 'Payroll run deleted successfully' });
 
     } catch (error: any) {
         console.error('Error deleting payroll run:', error);
         return NextResponse.json(
-            { error: 'Failed to delete payroll run', details: error.message },
+            { error: 'Failed to delete payroll run', details: error.message, stack: error.stack },
             { status: 500 }
         );
     }

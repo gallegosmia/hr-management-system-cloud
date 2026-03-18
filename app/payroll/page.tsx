@@ -41,6 +41,7 @@ export default function PayrollListPage() {
 
     const [permissions, setPermissions] = useState({
         canCreate: false,
+        canDelete: false,
         accessibleBranches: [] as string[]
     });
 
@@ -67,7 +68,8 @@ export default function PayrollListPage() {
                     ? ['All', 'Ormoc', 'Naval']
                     : [assignedBranch];
 
-                setPermissions({ canCreate, accessibleBranches });
+                const canDelete = ['Super Admin', 'Admin', 'President', 'Vice President', 'HR', 'Finance'].includes(data.user.role);
+                setPermissions({ canCreate, canDelete, accessibleBranches });
 
                 if (!['Super Admin', 'Admin', 'President', 'Vice President', 'Finance', 'Operations Manager'].includes(data.user.role)) {
                     setFilters(prev => ({ ...prev, branch: assignedBranch }));
@@ -425,27 +427,40 @@ export default function PayrollListPage() {
                                                         )}
                                                     </Link>
 
-                                                    {/* Delete button - Only show for Draft */}
-                                                    {(s === 'draft' || s === 'Draft') && (
+                                                    {/* Delete button - Show for Draft OR if user has canDelete permission (Executives/HR) */}
+                                                    {(s === 'draft' || s.includes('returned') || permissions.canDelete) && (
                                                         <button
                                                             onClick={(e) => {
                                                                 e.preventDefault();
-                                                                if (confirm(`Are you sure you want to delete payroll ${run.run_number}? This action cannot be undone.`)) {
+                                                                const msg = s === 'released' || s === 'approved' || s === 'for release'
+                                                                    ? `WARNING: You are about to delete a ${s.toUpperCase()} payroll. This will also REVERT any loan deductions applied. Are you absolutely sure?`
+                                                                    : `Are you sure you want to delete payroll ${run.run_number}? This action cannot be undone.`;
+                                                                
+                                                                if (confirm(msg)) {
                                                                     handleDeletePayroll(run.id);
                                                                 }
                                                             }}
                                                             style={{
-                                                                background: '#ef4444',
-                                                                border: 'none',
+                                                                background: '#fee2e2',
+                                                                border: '1px solid #fecaca',
                                                                 cursor: 'pointer',
-                                                                color: 'white',
+                                                                color: '#dc2626',
                                                                 fontSize: '13px',
                                                                 fontWeight: '600',
                                                                 padding: '6px 12px',
-                                                                borderRadius: '6px'
+                                                                borderRadius: '6px',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '6px'
                                                             }}
                                                             title="Delete payroll"
                                                         >
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                            </svg>
                                                             Delete
                                                         </button>
                                                     )}

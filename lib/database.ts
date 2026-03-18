@@ -331,35 +331,75 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
       const colsMatch = normalizedSql.match(/\((.+?)\)\s*VALUES/i);
       const columns = colsMatch![1].split(',').map(s => s.trim());
 
-      // Find the VALUES part to extract literals vs params (greedy match to handle NOW())
-      const valuesMatch = normalizedSql.match(/VALUES\s*\((.+)\)/i);
-      const valParts = valuesMatch![1].split(',').map(s => s.trim());
+      // Find the VALUES part to extract literals vs params
+      // Support multiple tuples: VALUES (a, b), (c, d)
+      const valuesStrMatch = normalizedSql.match(/VALUES\s+(.+)$/i);
+      const valuesStr = valuesStrMatch![1];
 
-      const newItem: any = {};
-      columns.forEach((col, idx) => {
-        const valPart = valParts[idx];
-        if (valPart.startsWith('$')) {
-          const paramIdx = parseInt(valPart.substring(1)) - 1;
-          newItem[col] = params[paramIdx];
-        } else if (valPart.match(/CURRENT_TIMESTAMP/i)) {
-          newItem[col] = new Date().toISOString();
-        } else if (valPart.startsWith("'") && valPart.endsWith("'")) {
-          newItem[col] = valPart.substring(1, valPart.length - 1);
-        } else {
-          // Fallback if it's a number or something else
-          newItem[col] = isNaN(Number(valPart)) ? valPart : Number(valPart);
+      // Match each (...) tuple exactly
+      const tupleMatches = [...valuesStr.matchAll(/\(([^()]+)\)/g)];
+
+      const newItems: any[] = [];
+      let maxId = db[table].reduce((max: number, item: any) => Math.max(max, item.id || 0), 0);
+
+      for (const tuple of tupleMatches) {
+        // Smarter split that handles commas inside quotes (like JSON strings)
+        const valRaw = tuple[1];
+        const valParts: string[] = [];
+        let currentPart = '';
+        let inQuote = false;
+        let quoteChar = '';
+        
+        for (let i = 0; i < valRaw.length; i++) {
+          const char = valRaw[i];
+          if ((char === "'" || char === '"') && valRaw[i-1] !== '\\') {
+            if (!inQuote) {
+              inQuote = true;
+              quoteChar = char;
+            } else if (char === quoteChar) {
+              inQuote = false;
+            }
+          }
+          
+          if (char === ',' && !inQuote) {
+            valParts.push(currentPart.trim());
+            currentPart = '';
+          } else {
+            currentPart += char;
+          }
         }
-      });
+        valParts.push(currentPart.trim());
 
-      if (!newItem.id) {
-        const maxId = db[table].reduce((max: number, item: any) => Math.max(max, item.id || 0), 0);
-        newItem.id = maxId + 1;
+        const newItem: any = {};
+        columns.forEach((col, idx) => {
+          const valPart = valParts[idx];
+          if (!valPart) {
+            newItem[col] = null;
+            return;
+          }
+          if (valPart.startsWith('$')) {
+            const paramIdx = parseInt(valPart.substring(1)) - 1;
+            newItem[col] = params[paramIdx];
+          } else if (valPart.match(/CURRENT_TIMESTAMP/i)) {
+            newItem[col] = new Date().toISOString();
+          } else if (valPart.startsWith("'") && valPart.endsWith("'")) {
+            newItem[col] = valPart.substring(1, valPart.length - 1);
+          } else {
+            newItem[col] = isNaN(Number(valPart)) ? valPart : Number(valPart);
+          }
+        });
+
+        if (!newItem.id) {
+          maxId++;
+          newItem.id = maxId;
+        }
+
+        newItems.push(newItem);
       }
 
-      db[table].push(newItem);
+      db[table].push(...newItems);
       saveDB(db);
-      // Return full item to simulate RETURNING *
-      return { rows: safeJson([newItem]), rowCount: 1 };
+      return { rows: safeJson(newItems), rowCount: newItems.length };
     }
 
     if (normalizedSql.match(/^UPDATE/i)) {

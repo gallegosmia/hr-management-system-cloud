@@ -668,21 +668,28 @@ export default function AttendancePage() {
 
         let updates: any = { [field]: value };
 
-        // Auto-detect Status based on Time
-        // Rule: 8:01+ = Late, 12:00+ = Half-Day
-        if (field === 'morning_in') {
-            if (value) {
-                if (value >= '12:00') {
+        let newMorningIn = field === 'morning_in' ? value : editingRecord.morning_in;
+        let newMorningOut = field === 'morning_out' ? value : editingRecord.morning_out;
+        let newAfternoonIn = field === 'afternoon_in' ? value : editingRecord.afternoon_in;
+        let newAfternoonOut = field === 'afternoon_out' ? value : editingRecord.afternoon_out;
+
+        // Auto-detect Status based on Time ONLY if a time field was changed
+        if (['morning_in', 'morning_out', 'afternoon_in', 'afternoon_out'].includes(field)) {
+            // Rule: 8:01+ = Late, 12:00+ = Half-Day
+            if (newMorningIn) {
+                if (newMorningIn >= '12:00') {
                     updates.status = 'Half-Day';
-                } else if (value >= '08:01') {
+                } else if (newMorningIn >= '08:01') {
                     updates.status = 'Late';
                 } else {
                     updates.status = 'Present';
                 }
             } else {
-                // If Morning In is cleared
-                // If Afternoon In is also empty (checking current state), set Absent
-                if (!editingRecord.afternoon_in) {
+                // No Morning In
+                if (!newMorningOut && (newAfternoonIn || newAfternoonOut)) {
+                    // Inputted PM checkpoints and no AM checkpoints
+                    updates.status = 'Half-Day';
+                } else if (!newAfternoonIn && !newAfternoonOut && !newMorningOut) {
                     updates.status = 'Absent';
                 }
             }

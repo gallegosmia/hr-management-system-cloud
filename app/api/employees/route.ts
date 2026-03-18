@@ -48,6 +48,15 @@ export async function GET(request: NextRequest) {
                 return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
             }
 
+            // Ensure salary_info is parsed if it is a string from the DB
+            if (typeof employee.salary_info === 'string') {
+                try {
+                    employee.salary_info = JSON.parse(employee.salary_info);
+                } catch (e) {
+                    // Ignored parsing errors
+                }
+            }
+
             // BRANCH ACCESS CONTROL
             if (!isSuperAdmin(user!.role)) {
                 if (employee.branch && user!.assigned_branch) {
@@ -68,6 +77,7 @@ export async function GET(request: NextRequest) {
                 const now = new Date();
                 const used = await getEmployeeLeaveCount(employee.id, now.getFullYear());
                 employee.leave_balance = Math.max(0, 5 - used);
+                employee.leave_used = used;
 
                 const lates = await getEmployeeLateCount(employee.id, now.getMonth(), now.getFullYear());
                 employee.lates_this_month = lates;
@@ -164,6 +174,16 @@ export async function GET(request: NextRequest) {
 
         // BRANCH FILTERING
         const filteredEmployees = filterByBranch(employees, user!.role, targetBranch);
+
+        filteredEmployees.forEach(emp => {
+            if (typeof emp.salary_info === 'string') {
+                try {
+                    emp.salary_info = JSON.parse(emp.salary_info);
+                } catch (e) {
+                    // Ignore JSON parsing errors
+                }
+            }
+        });
 
         return NextResponse.json(serialize(filteredEmployees));
     } catch (error) {

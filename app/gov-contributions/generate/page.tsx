@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -10,9 +10,27 @@ export default function GenerateGovContribution() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [existingReportId, setExistingReportId] = useState<number | null>(null);
 
     const [branchId, setBranchId] = useState('All');
     const [contributionType, setContributionType] = useState('SSS');
+    const [userBranch, setUserBranch] = useState<string | null>(null);
+
+    // Branch-locked users (Ormoc, Naval) cannot change the target branch
+    const branchLockedBranches = ['Ormoc', 'Naval'];
+    const isBranchLocked = userBranch !== null && branchLockedBranches.includes(userBranch);
+
+    useEffect(() => {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            const parsed = JSON.parse(userData);
+            const branch = parsed.assigned_branch || null;
+            setUserBranch(branch);
+            if (branch && branchLockedBranches.includes(branch)) {
+                setBranchId(branch); // locked to their own branch
+            }
+        }
+    }, []);
 
     // Default to previous month
     const now = new Date();
@@ -57,8 +75,10 @@ export default function GenerateGovContribution() {
             const data = await res.json();
 
             if (!res.ok) {
+                setExistingReportId(data.existing_report_id || null);
                 throw new Error(data.error || 'Failed to generate contribution report');
             }
+            setExistingReportId(null);
 
             setSuccess(true);
             setTimeout(() => {
@@ -87,6 +107,16 @@ export default function GenerateGovContribution() {
                     {error && (
                         <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm">
                             <strong>Generation Failed: </strong> {error}
+                            {existingReportId && (
+                                <div className="mt-3">
+                                    <Link
+                                        href={`/gov-contributions/${existingReportId}`}
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition"
+                                    >
+                                        → Open Existing Report
+                                    </Link>
+                                </div>
+                            )}
                         </div>
                     )}
                     {success && (
@@ -98,11 +128,17 @@ export default function GenerateGovContribution() {
                     <form onSubmit={handleGenerate} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">Target Branch</label>
+                                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                    Target Branch
+                                    {isBranchLocked && (
+                                        <span className="ml-2 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">🔒 Locked</span>
+                                    )}
+                                </label>
                                 <select
-                                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 ${isBranchLocked ? 'bg-slate-100 border-slate-300 text-slate-500 cursor-not-allowed' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
                                     value={branchId}
                                     onChange={(e) => setBranchId(e.target.value)}
+                                    disabled={isBranchLocked}
                                     required
                                 >
                                     <option value="All">All Branches</option>
@@ -110,6 +146,9 @@ export default function GenerateGovContribution() {
                                     <option value="Naval">Naval</option>
                                     <option value="Ormoc">Ormoc</option>
                                 </select>
+                                {isBranchLocked && (
+                                    <p className="mt-1.5 text-xs text-slate-400">Branch-specific users can only generate reports for their own branch.</p>
+                                )}
                             </div>
 
                             <div>
@@ -125,12 +164,6 @@ export default function GenerateGovContribution() {
                                     <option value="PhilHealth">PhilHealth</option>
                                 </select>
                             </div>
-
-                            {error && (
-                                <div className="md:col-span-2 mb-0 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium flex items-center gap-2">
-                                    <span>❌</span> {error}
-                                </div>
-                            )}
 
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-semibold text-slate-700 mb-2">Payroll Period</label>

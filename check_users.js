@@ -1,12 +1,9 @@
-
 const fs = require('fs');
-const path = require('path');
+const db = JSON.parse(fs.readFileSync('./data/database.json'));
 
-const dbPath = path.join(__dirname, 'data', 'database.json');
-const dbContent = fs.readFileSync(dbPath, 'utf8');
-const db = JSON.parse(dbContent);
+const usernames = db.users.map(u => u.username);
+const duplicates = usernames.filter((item, index) => usernames.indexOf(item) !== index);
+console.log("Duplicate usernames:", [...new Set(duplicates)]);
 
-console.log('--- Users ---');
-db.users.forEach(u => {
-    console.log(`Username: ${u.username}, Role: ${u.role}, Branch: ${u.assigned_branch}`);
-});
+const targetUser = db.users.find(u => u.username === 'superadmin');
+console.log("superadmin user:", targetUser);

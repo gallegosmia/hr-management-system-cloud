@@ -119,7 +119,7 @@ export default function LeavePage() {
         }
         try {
             const sessionId = localStorage.getItem('sessionId');
-            const start = '2020-01-01';
+            const start = `${new Date().getFullYear()}-01-01`;
             const end = new Date().toISOString().split('T')[0];
             const res = await fetch(`/api/attendance/report/individual?employeeId=${employeeId}&start=${start}&end=${end}`, {
                 headers: { 'x-session-id': sessionId || '' }

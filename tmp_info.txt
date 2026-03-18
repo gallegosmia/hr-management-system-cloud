@@ -1,0 +1,270 @@
+{
+  "users": [
+    {
+      "id": 12,
+      "username": "shahanie1",
+      "email": "shahaniemaelerio1@gmail.com",
+      "role": "Employee",
+      "emp_id": null
+    },
+    {
+      "id": 5,
+      "username": "mia",
+      "email": "gmia0519@gmail.com",
+      "role": "HR",
+      "emp_id": 9
+    },
+    {
+      "id": 13,
+      "username": "lhyn",
+      "email": "relobamarilyn81.mlic@gmail.com",
+      "role": "HR",
+      "emp_id": null
+    },
+    {
+      "id": 14,
+      "username": "shan",
+      "email": "shahaniemaelerio1@gmail.com",
+      "role": "Employee",
+      "emp_id": null
+    },
+    {
+      "id": 15,
+      "username": "shanie",
+      "email": "shahaniemaelerio1@gmail.com",
+      "role": "Employee"
+    },
+    {
+      "id": 16,
+      "username": "superadmin",
+      "email": "superadmin@melanninvestor.com",
+      "role": "President",
+      "emp_id": null
+    },
+    {
+      "id": 17,
+      "username": "mia19",
+      "email": "gmia0519@gmail.com",
+      "role": "HR"
+    },
+    {
+      "id": 18,
+      "username": "marissa",
+      "email": "marissaentero3@gmail.com",
+      "role": "HR",
+      "emp_id": "7"
+    },
+    {
+      "id": 19,
+      "username": "mariz",
+      "email": "marissaentero3@gmail.com",
+      "role": "HR",
+      "emp_id": "7"
+    },
+    {
+      "id": 20,
+      "username": "lhynn",
+      "email": "relobamarilyn81.mlic@gmail.com",
+      "role": "HR",
+      "emp_id": "21"
+    },
+    {
+      "id": 21,
+      "username": "aim19",
+      "email": "gmia0519@gmail.com",
+      "role": "HR",
+      "emp_id": "9"
+    },
+    {
+      "id": 22,
+      "username": "tata",
+      "email": "tatalaude.mlic@gmail.com",
+      "role": "Employee",
+      "emp_id": "14"
+    },
+    {
+      "id": 23,
+      "username": "ann",
+      "email": "annrodrigz.mlic2016@gmail.com",
+      "role": "Vice President",
+      "emp_id": "2026-0004"
+    },
+    {
+      "id": 24,
+      "username": "jhun",
+      "email": "victoriojr.reloba@gmail.com",
+      "role": "Operations Manager",
+      "emp_id": "20"
+    },
+    {
+      "id": 25,
+      "username": "ops_manager",
+      "email": "ops_manager@example.com",
+      "role": "Operations Manager",
+      "emp_id": "20"
+    },
+    {
+      "id": 26,
+      "username": "marilyn",
+      "email": "relobamarilyn81.mlic@gmail.com",
+      "role": "Manager",
+      "emp_id": "21"
+    },
+    {
+      "id": 27,
+      "username": "tester",
+      "email": "tester@example.com",
+      "role": "President"
+    },
+    {
+      "id": 28,
+      "username": "employee1employee_test",
+      "email": "employee_test@example.com",
+      "role": "Employee"
+    }
+  ],
+  "emps": [
+    {
+      "id": 1,
+      "first": "JOSEPHINE",
+      "last": "ARRADAZA",
+      "dept": "Operations"
+    },
+    {
+      "id": 2,
+      "first": "BERNARDITO",
+      "last": "BAÑEZ",
+      "dept": "Operations"
+    },
+    {
+      "id": 3,
+      "first": "ALBERTO",
+      "last": "BORINAGA",
+      "dept": "Operations"
+    },
+    {
+      "id": 4,
+      "first": "RENATO",
+      "last": "DOMINGONO",
+      "dept": "Operations"
+    },
+    {
+      "id": 6,
+      "first": "EDDIE JR.",
+      "last": "CABALLES",
+      "dept": "Operations"
+    },
+    {
+      "id": 7,
+      "first": "MARISSA",
+      "last": "ENTERO",
+      "dept": "Operations"
+    },
+    {
+      "id": 8,
+      "first": "MA. VICTORIA",
+      "last": "FELICIA",
+      "dept": "Operations"
+    },
+    {
+      "id": 9,
+      "first": "MIA",
+      "last": "YBAÑEZ",
+      "dept": "Information Technology"
+    },
+    {
+      "id": 10,
+      "first": "GERARD",
+      "last": "ITONA",
+      "dept": "Operations"
+    },
+    {
+      "id": 11,
+      "first": "NOEL",
+      "last": "JUGAR",
+      "dept": "Operations"
+    },
+    {
+      "id": 12,
+      "first": "WILFREDO JR.",
+      "last": "LAHOYLAHOY",
+      "dept": "Operations"
+    },
+    {
+      "id": 13,
+      "first": "RAMIL",
+      "last": "LANGRES",
+      "dept": "Operations"
+    },
+    {
+      "id": 14,
+      "first": "REYNALDO JR.",
+      "last": "LAUDE",
+      "dept": "Operations"
+    },
+    {
+      "id": 15,
+      "first": "SHAHANIE MAE",
+      "last": "LERIO",
+      "dept": "Information Technology"
+    },
+    {
+      "id": 16,
+      "first": "ALDIE",
+      "last": "ROSAL",
+      "dept": "Operations"
+    },
+    {
+      "id": 17,
+      "first": "ANGELITO",
+      "last": "TORRETA",
+      "dept": "Operations"
+    },
+    {
+      "id": 18,
+      "first": "RAYMUND",
+      "last": "OMEGA",
+      "dept": "Operations"
+    },
+    {
+      "id": 19,
+      "first": "JOHNNY",
+      "last": "AGCANG",
+      "dept": "Operations"
+    },
+    {
+      "id": 20,
+      "first": "VICTORIO JR.",
+      "last": "RELOBA",
+      "dept": "Operations"
+    },
+    {
+      "id": 21,
+      "first": "MARILYN",
+      "last": "RELOBA",
+      "dept": "Operations"
+    },
+    {
+      "id": 22,
+      "first": "ROMMEL",
+      "last": "RODRIGUEZ",
+      "dept": "Operations"
+    },
+    {
+      "id": 23,
+      "first": "DARWIN",
+      "last": "CASTILLANO",
+      "dept": "Operations"
+    },
+    {
+      "id": 24,
+      "first": "MA. DARLENE",
+      "last": "MACHETE",
+      "dept": "Operations"
+    }
+  ]
+}
+
+MONTHS:
+2026-01
+2026-02

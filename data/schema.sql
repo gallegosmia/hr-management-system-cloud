@@ -265,6 +265,7 @@ CREATE TABLE IF NOT EXISTS "gov_contribution_reports" (
     "total_ee" DECIMAL(10, 2) NOT NULL DEFAULT 0,
     "total_ec" DECIMAL(10, 2) NOT NULL DEFAULT 0,
     "total_loan" DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    "service_charge" DECIMAL(10, 2) NOT NULL DEFAULT 0,
     "status" VARCHAR(50) NOT NULL DEFAULT 'Draft', -- Draft, Pending, Approved, Rejected
     "created_by" INTEGER REFERENCES "users"("id"),
     "approved_by" INTEGER REFERENCES "users"("id"),

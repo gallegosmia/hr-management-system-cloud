@@ -81,7 +81,7 @@ export function canEditPayrollDays(user: User): boolean {
  * Check if user can delete payroll
  */
 export function canDeletePayroll(user: User): boolean {
-    return ['Super Admin', 'Admin', 'HR', 'Operations Manager', 'President', 'Vice President'].includes(user.role);
+    return ['Super Admin', 'Admin', 'HR', 'Operations Manager', 'President', 'Vice President', 'Finance'].includes(user.role);
 }
 
 /**

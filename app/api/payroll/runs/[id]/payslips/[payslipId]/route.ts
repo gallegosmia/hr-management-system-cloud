@@ -82,6 +82,7 @@ export async function PATCH(
             if (allowances.regular !== undefined) updates.regular_allowance = allowances.regular;
             if (allowances.special !== undefined) updates.special_allowance = allowances.special;
             if (allowances.holiday !== undefined) updates.holiday_pay = allowances.holiday;
+            if (allowances.holiday_days !== undefined) updates.holiday_days = allowances.holiday_days;
         }
 
         // Update deductions if provided
@@ -133,6 +134,7 @@ export async function PATCH(
                 regular_allowance = $3,
                 special_allowance = $4,
                 holiday_pay = $5,
+                holiday_days = $18,
                 gross_pay = $6,
                 phic = $7,
                 pagibig = $8,
@@ -145,7 +147,7 @@ export async function PATCH(
                 other_deductions = $15,
                 total_deductions = $16,
                 net_pay = $17
-            WHERE id = $18
+            WHERE id = $19
             RETURNING *
         `, [
             updatedPayslip.payroll_days,
@@ -165,6 +167,7 @@ export async function PATCH(
             computed.breakdown.deductions.other || 0,
             computed.totalDeductions,
             computed.netPay,
+            updatedPayslip.holiday_days || 0,
             payslipId
         ]);
 

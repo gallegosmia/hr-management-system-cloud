@@ -28,7 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         // Fetch Details with Employee Names
         const detailsRes = await query(`
             SELECT d.*, 
-                   e.last_name, e.first_name, e.middle_name
+                   e.last_name, e.first_name, e.middle_name, e.salary_info
             FROM gov_contribution_details d
             JOIN employees e ON d.employee_id = e.id
             WHERE d.report_id = $1
@@ -66,17 +66,51 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         const { status } = body;
         const reportId = params.id;
 
-        // Validation Rules
-        // HR can only Submit (Draft -> Pending)
-        // Branch Manager (or higher) can Approve or Reject
+        // Fetch the report to check its branch_id
+        const reportRes = await query("SELECT branch_id FROM gov_contribution_reports WHERE id = $1", [reportId]);
+        if (reportRes.rowCount === 0) {
+            return NextResponse.json({ error: 'Report not found' }, { status: 404 });
+        }
+        const reportBranch = reportRes.rows[0].branch_id;
 
+        // Validation Rules
         if (status === 'Pending') {
             await query("UPDATE gov_contribution_reports SET status = 'Pending', updated_at = CURRENT_TIMESTAMP WHERE id = $1", [reportId]);
+
+            try {
+                // Create a notification for the branch managers
+                const reportTypeRes = await query("SELECT contribution_type, payroll_period FROM gov_contribution_reports WHERE id = $1", [reportId]);
+                const cType = reportTypeRes.rows[0]?.contribution_type;
+                const cPeriod = reportTypeRes.rows[0]?.payroll_period;
+
+                const branchManagers = await query(`SELECT id FROM users WHERE (role = 'Manager' OR role = 'Operations Manager') AND (branch = $1 OR branch = 'All')`, [reportBranch]);
+
+                if (branchManagers.rowCount > 0) {
+                    await query(`
+                        INSERT INTO notifications (user_id, message, type, link)
+                        SELECT id, $1, 'System', $2
+                        FROM users 
+                        WHERE (role = 'Manager' OR role = 'Operations Manager') AND (branch = $3 OR branch = 'All')
+                    `, [`HR submitted ${cType} Contributions for ${cPeriod} for your review.`, `/gov-contributions/${reportId}`, reportBranch]);
+                }
+            } catch (notifyErr) {
+                console.warn('Failed to send notification (manager might not exist):', notifyErr);
+            }
         }
         else if (status === 'Approved' || status === 'Rejected') {
             if (role !== 'President' && role !== 'Vice President' && role !== 'Operations Manager' && role !== 'Manager') {
                 return NextResponse.json({ error: 'Only Managers can approve or reject reports' }, { status: 403 });
             }
+
+            // Strictly enforce Branch Manager rule
+            if (role === 'Operations Manager' || role === 'Manager') {
+                const sessionBranchRes = await query("SELECT selected_branch FROM sessions WHERE id = $1", [sessionId]);
+                const managerBranch = sessionBranchRes.rows[0]?.selected_branch;
+                if (managerBranch !== reportBranch) {
+                    return NextResponse.json({ error: `Unauthorized: You can only approve reports for ${managerBranch}` }, { status: 403 });
+                }
+            }
+
             await query("UPDATE gov_contribution_reports SET status = $1, approved_by = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3", [status, userId, reportId]);
         }
         else {
@@ -105,20 +139,17 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
         const userId = sessionRes.rows[0].user_id;
         const userRes = await query("SELECT role FROM users WHERE id = $1", [userId]);
-        const role = userRes.rows[0].role;
+        const role = String(userRes.rows[0].role || '').trim().toUpperCase();
 
-        if (role !== 'HR' && role !== 'Admin' && role !== 'President') {
+        if (role !== 'HR' && role !== 'ADMIN' && role !== 'PRESIDENT') {
             return NextResponse.json({ error: 'Forbidden. Only HR and Admins can delete reports.' }, { status: 403 });
         }
 
         const reportId = params.id;
 
-        // Check Status - Prevent deleting approved reports
+        // Check existence
         const reportCheck = await query(`SELECT status FROM gov_contribution_reports WHERE id = $1`, [reportId]);
         if (reportCheck.rowCount === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-        if (reportCheck.rows[0].status === 'Approved') {
-            return NextResponse.json({ error: 'Cannot delete an Approved report.' }, { status: 400 });
-        }
 
         await query(`DELETE FROM gov_contribution_details WHERE report_id = $1`, [reportId]);
         await query(`DELETE FROM gov_contribution_reports WHERE id = $1`, [reportId]);
