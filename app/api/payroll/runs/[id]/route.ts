@@ -685,7 +685,7 @@ export async function DELETE(
             return NextResponse.json({ error: 'Cannot delete locked payroll' }, { status: 400 });
         }
 
-        if (payrollRun.status !== 'Draft' && payrollRun.status !== 'draft') {
+        if (!payrollRun.status || payrollRun.status.toLowerCase() !== 'draft') {
             return NextResponse.json({ error: 'Only Draft payroll can be deleted.' }, { status: 400 });
         }
 

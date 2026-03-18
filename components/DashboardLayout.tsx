@@ -199,6 +199,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
         { name: 'Emergency Loans', href: '/loans', icon: '💰', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Employee Bonuses', href: '/bonuses', icon: '🎁', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Payroll', href: '/payroll', icon: '💰', roles: ['HR', 'President', 'Vice President', 'Admin', 'Finance', 'Operations Manager'] },
+        { name: 'Gov Contributions', href: '/gov-contributions', icon: '🏛️', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Transportation Allowance', href: '/transportation', icon: '🚗', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Reports', href: '/reports', icon: '📈', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Memos & Announcements', href: '/announcements', icon: '📢', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },

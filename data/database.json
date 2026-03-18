@@ -143,7 +143,7 @@
       "hr_approval_status": null,
       "created_at": "2026-01-30T08:27:26.065Z",
       "id": 20,
-      "last_login": "2026-02-20T08:18:11.340Z",
+      "last_login": "2026-02-21T05:52:20.830Z",
       "employee_id": "21"
     },
     {
@@ -157,7 +157,7 @@
       "hr_approval_status": null,
       "created_at": "2026-01-31T03:34:09.637Z",
       "id": 21,
-      "last_login": "2026-02-21T00:25:06.927Z",
+      "last_login": "2026-02-26T05:07:49.782Z",
       "employee_id": "9"
     },
     {
@@ -185,7 +185,7 @@
       "hr_approval_status": null,
       "created_at": "2026-02-12T08:40:32.016Z",
       "id": 23,
-      "last_login": "2026-02-20T08:22:10.382Z",
+      "last_login": "2026-02-21T06:21:24.945Z",
       "employee_id": "2026-0004"
     },
     {
@@ -228,7 +228,31 @@
       "created_at": "2026-02-20T08:21:16.255Z",
       "id": 26,
       "employee_id": "21",
-      "last_login": "2026-02-20T08:21:53.924Z"
+      "last_login": "2026-02-21T07:35:30.325Z"
+    },
+    {
+      "username": "tester",
+      "email": "tester@example.com",
+      "password": "$2a$10$IR7mFfAHIXqBXwnk0SnC0eTebhxGXwZV1coFqDu6aPKDrjwAncPqy",
+      "role": "President",
+      "is_active": 0,
+      "status": "PENDING_APPROVAL",
+      "assigned_branch": null,
+      "hr_approval_status": null,
+      "created_at": "2026-02-23T04:21:26.730Z",
+      "id": 27
+    },
+    {
+      "username": "employee1employee_test",
+      "email": "employee_test@example.com",
+      "password": "$2a$10$KKQswFJNvRh9qDa3cXaOcO3o5YzaRBhqrm3UQ266B9EVPhOZz9Aa.",
+      "role": "Employee",
+      "is_active": 0,
+      "status": "PENDING_APPROVAL",
+      "assigned_branch": null,
+      "hr_approval_status": null,
+      "created_at": "2026-02-23T04:22:45.995Z",
+      "id": 28
     }
   ],
   "employees": [
@@ -1176,7 +1200,7 @@
           "other_deductions": []
         }
       },
-      "leave_credits": 5,
+      "leave_credits": 4,
       "loan_balance": 0
     },
     {
@@ -10863,6 +10887,370 @@
       "status": "Present",
       "remarks": null,
       "id": 597
+    },
+    {
+      "employee_id": 1,
+      "date": "2026-02-21",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:59",
+      "morning_out": "12:00",
+      "afternoon_in": "13:00",
+      "afternoon_out": "18:22",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 598
+    },
+    {
+      "employee_id": 6,
+      "date": "2026-02-21",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:59",
+      "morning_out": "08:32",
+      "afternoon_in": "16:30",
+      "afternoon_out": "18:07",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 599
+    },
+    {
+      "employee_id": 4,
+      "date": "2026-02-21",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:47",
+      "morning_out": "08:32",
+      "afternoon_in": "17:30",
+      "afternoon_out": "17:59",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 600
+    },
+    {
+      "employee_id": 11,
+      "date": "2026-02-21",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:30",
+      "morning_out": "08:32",
+      "afternoon_in": "17:21",
+      "afternoon_out": "18:03",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 601
+    },
+    {
+      "employee_id": 12,
+      "date": "2026-02-21",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:24",
+      "morning_out": "08:28",
+      "afternoon_in": null,
+      "afternoon_out": "17:47",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": "Collection Calubian",
+      "id": 602
+    },
+    {
+      "employee_id": 13,
+      "date": "2026-02-21",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:56",
+      "morning_out": "08:29",
+      "afternoon_in": "16:50",
+      "afternoon_out": "17:33",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 603
+    },
+    {
+      "employee_id": 14,
+      "date": "2026-02-21",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": null,
+      "morning_out": null,
+      "afternoon_in": null,
+      "afternoon_out": null,
+      "total_hours": 0,
+      "status": "Vacation Leave",
+      "remarks": null,
+      "id": 604
+    },
+    {
+      "employee_id": 15,
+      "date": "2026-02-21",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:57",
+      "morning_out": "12:00",
+      "afternoon_in": "13:00",
+      "afternoon_out": null,
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 605
+    },
+    {
+      "employee_id": 21,
+      "date": "2026-02-21",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:55",
+      "morning_out": "12:00",
+      "afternoon_in": "13:00",
+      "afternoon_out": null,
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 606
+    },
+    {
+      "employee_id": 20,
+      "date": "2026-02-21",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:54",
+      "morning_out": "12:00",
+      "afternoon_in": "13:00",
+      "afternoon_out": null,
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 607
+    },
+    {
+      "employee_id": 16,
+      "date": "2026-02-21",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:56",
+      "morning_out": "08:27",
+      "afternoon_in": "17:00",
+      "afternoon_out": "17:29",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 608
+    },
+    {
+      "employee_id": 17,
+      "date": "2026-02-21",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "08:00",
+      "morning_out": "08:27",
+      "afternoon_in": null,
+      "afternoon_out": null,
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 609
+    },
+    {
+      "employee_id": 9,
+      "date": "2026-02-21",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:55",
+      "morning_out": "12:00",
+      "afternoon_in": "13:00",
+      "afternoon_out": "17:50",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 610
+    },
+    {
+      "employee_id": 1,
+      "date": "2026-02-23",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "08:00",
+      "morning_out": "12:00",
+      "afternoon_in": "13:00",
+      "afternoon_out": "19:56",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 611
+    },
+    {
+      "employee_id": 6,
+      "date": "2026-02-23",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:57",
+      "morning_out": "08:28",
+      "afternoon_in": "17:10",
+      "afternoon_out": "17:51",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 612
+    },
+    {
+      "employee_id": 4,
+      "date": "2026-02-23",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "08:01",
+      "morning_out": "08:32",
+      "afternoon_in": "17:05",
+      "afternoon_out": "17:57",
+      "total_hours": 0,
+      "status": "Late",
+      "remarks": null,
+      "id": 613
+    },
+    {
+      "employee_id": 11,
+      "date": "2026-02-23",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:44",
+      "morning_out": "08:27",
+      "afternoon_in": "17:49",
+      "afternoon_out": "18:20",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 614
+    },
+    {
+      "employee_id": 12,
+      "date": "2026-02-23",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:42",
+      "morning_out": null,
+      "afternoon_in": null,
+      "afternoon_out": "17:45",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 615
+    },
+    {
+      "employee_id": 13,
+      "date": "2026-02-23",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:55",
+      "morning_out": "08:28",
+      "afternoon_in": "16:40",
+      "afternoon_out": "17:38",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 616
+    },
+    {
+      "employee_id": 14,
+      "date": "2026-02-23",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:44",
+      "morning_out": "08:28",
+      "afternoon_in": "16:57",
+      "afternoon_out": "18:05",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 617
+    },
+    {
+      "employee_id": 15,
+      "date": "2026-02-23",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:59",
+      "morning_out": "12:00",
+      "afternoon_in": "13:00",
+      "afternoon_out": null,
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 618
+    },
+    {
+      "employee_id": 21,
+      "date": "2026-02-23",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:46",
+      "morning_out": "12:00",
+      "afternoon_in": "13:00",
+      "afternoon_out": null,
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 619
+    },
+    {
+      "employee_id": 20,
+      "date": "2026-02-23",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": null,
+      "morning_out": null,
+      "afternoon_in": null,
+      "afternoon_out": null,
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 620
+    },
+    {
+      "employee_id": 16,
+      "date": "2026-02-23",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "08:00",
+      "morning_out": "08:25",
+      "afternoon_in": "17:15",
+      "afternoon_out": "18:11",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 621
+    },
+    {
+      "employee_id": 17,
+      "date": "2026-02-23",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "08:00",
+      "morning_out": "08:25",
+      "afternoon_in": "17:30",
+      "afternoon_out": "18:42",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 622
+    },
+    {
+      "employee_id": 9,
+      "date": "2026-02-23",
+      "time_in": null,
+      "time_out": null,
+      "morning_in": "07:10",
+      "morning_out": "12:00",
+      "afternoon_in": "13:00",
+      "afternoon_out": "18:57",
+      "total_hours": 0,
+      "status": "Present",
+      "remarks": null,
+      "id": 623
     }
   ],
   "leave_requests": [
@@ -10907,6 +11295,27 @@
       "evp_approved_by": 23,
       "evp_remarks": "Approved",
       "final_approved_at": "2026-02-20T08:22:15.795Z"
+    },
+    {
+      "employee_id": 15,
+      "leave_type": "Birthday Leave",
+      "start_date": "2026-05-18",
+      "end_date": "2026-05-18",
+      "reason": "",
+      "days_count": 1,
+      "status": "Approved",
+      "approvals": "[]",
+      "current_approval_level": 1,
+      "id": 4,
+      "branch_manager_approved_at": "2026-02-21T06:07:42.430Z",
+      "branch_manager_approved_by": 26,
+      "branch_manager_remarks": "Approved",
+      "remarks": "Approved by Branch Manager | Approved by Executive Vice President",
+      "updated_at": "2026-02-21T06:28:11.882Z",
+      "evp_approved_at": "2026-02-21T06:28:11.882Z",
+      "evp_approved_by": 23,
+      "evp_remarks": "Approved",
+      "final_approved_at": "2026-02-21T06:28:11.882Z"
     }
   ],
   "disciplinary_records": [],
@@ -15873,6 +16282,45 @@
       "action": "Deleted Emergency Loan #5",
       "details": "{\"table_name\":\"emergency_loans\",\"record_id\":5}",
       "id": 699
+    },
+    {
+      "user_id": 16,
+      "action": "Filed Emergency Loan Request #6",
+      "details": "{\"table_name\":\"emergency_loans\",\"record_id\":6}",
+      "id": 700
+    },
+    {
+      "user_id": 16,
+      "action": "Updated Emergency Loan #6 to status: Submitted",
+      "details": "{\"table_name\":\"emergency_loans\",\"record_id\":6}",
+      "id": 701
+    },
+    {
+      "user_id": 26,
+      "action": "Updated Emergency Loan #6 to status: Under Review - Vice President",
+      "details": "{\"table_name\":\"emergency_loans\",\"record_id\":6}",
+      "id": 702
+    },
+    {
+      "user_id": 23,
+      "action": "Updated Emergency Loan #6 to status: Approved",
+      "details": "{\"table_name\":\"emergency_loans\",\"record_id\":6}",
+      "id": 703
+    },
+    {
+      "user_id": 23,
+      "action": "RELEASED FUNDS (STAGGERED): 3000. Status: Fully Released",
+      "details": "{\"table_name\":\"emergency_loans\",\"record_id\":6}",
+      "id": 704
+    },
+    {
+      "hr_user": "HR Session [16b54687]",
+      "employee_id": 14,
+      "action": "LEAVE_CREDIT_DEDUCTION",
+      "details": "Deducted 1 credit for Vacation Leave on 2026-02-21",
+      "previous_credits": 5,
+      "new_credits": 4,
+      "id": 705
     }
   ],
   "settings": [
@@ -16537,10 +16985,40 @@
       "selected_branch": "Ormoc"
     },
     {
-      "id": "53892b9224cc95d527f959745cff14e6",
-      "user_id": 16,
-      "expires_at": "2026-02-22T03:04:17.530Z",
-      "selected_branch": "All"
+      "id": "56c9e0851aa6e301bc8ca22de100323c",
+      "user_id": 26,
+      "expires_at": "2026-02-22T07:35:30.356Z",
+      "selected_branch": "Ormoc"
+    },
+    {
+      "id": "d0d0b7ef3d0434980e89bee8ce8dbe71",
+      "user_id": 21,
+      "expires_at": "2026-02-23T23:30:54.266Z",
+      "selected_branch": "Ormoc"
+    },
+    {
+      "id": "67123eb5743160143275ca4120844dcb",
+      "user_id": 21,
+      "expires_at": "2026-02-24T05:07:46.776Z",
+      "selected_branch": "Ormoc"
+    },
+    {
+      "id": "16b5468712c9aa21b803bd70b31435c3",
+      "user_id": 21,
+      "expires_at": "2026-02-25T06:49:21.368Z",
+      "selected_branch": "Ormoc"
+    },
+    {
+      "id": "95e9e360d1c816a8bc83f59fdafedb95",
+      "user_id": 21,
+      "expires_at": "2026-02-27T03:43:45.690Z",
+      "selected_branch": "Ormoc"
+    },
+    {
+      "id": "ecf32774fe9c5b6e86c44237bdb34d4e",
+      "user_id": 21,
+      "expires_at": "2026-02-27T05:07:49.815Z",
+      "selected_branch": "Ormoc"
     }
   ],
   "education": [
@@ -16861,6 +17339,24 @@
       "created_at": "2026-02-20T08:21:16.296Z",
       "id": 11,
       "processed_at": "2026-02-20T08:21:45.267Z"
+    },
+    {
+      "user_id": 27,
+      "full_name": "tester",
+      "email": "tester@example.com",
+      "role": "President",
+      "status": "PENDING",
+      "created_at": "2026-02-23T04:21:26.785Z",
+      "id": 12
+    },
+    {
+      "user_id": 28,
+      "full_name": "employee1employee_test",
+      "email": "employee_test@example.com",
+      "role": "Employee",
+      "status": "PENDING",
+      "created_at": "2026-02-23T04:22:46.049Z",
+      "id": 13
     }
   ],
   "employee_certificates": [
@@ -17125,6 +17621,32 @@
       "updated_at": "2026-02-21T02:31:07.337Z",
       "id": 5,
       "approved_amount": 1000
+    },
+    {
+      "employee_id": 15,
+      "category": "Medical – Spouse/Children",
+      "requested_amount": 3000,
+      "reason": "For my child's medication",
+      "filing_date": "2026-02-21",
+      "deduction_amount": 0,
+      "status": "Fully Released",
+      "current_approval_level": 3,
+      "approvals": "[{\"level\":1,\"status\":\"Approved\",\"actor_id\":26,\"actor_name\":\"marilyn\",\"remarks\":\"\",\"timestamp\":\"2026-02-21T05:55:59.889Z\"},{\"level\":2,\"status\":\"Approved\",\"actor_id\":23,\"actor_name\":\"ann\",\"remarks\":\"\",\"timestamp\":\"2026-02-21T05:58:31.857Z\"}]",
+      "attachments": "[]",
+      "metadata": "{\"ip\":\"127.0.0.1\",\"device\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36\"}",
+      "created_at": "2026-02-21T05:34:21.796Z",
+      "updated_at": "2026-02-21T05:58:46.219Z",
+      "id": 6,
+      "approved_amount": 3000,
+      "action": "Release",
+      "release_type": "STAGGERED",
+      "first_release_amount": 1000,
+      "second_release_amount": 1000,
+      "last_release_amount": 1000,
+      "released_amount": 3000,
+      "total_released_amount": 3000,
+      "remaining_balance": 0,
+      "tracker_status": "Fully Released"
     }
   ],
   "employee_loans": [
@@ -17309,7 +17831,22 @@
       "updated_at": "2026-02-02T07:44:18.607Z"
     }
   ],
-  "announcements": [],
+  "announcements": [
+    {
+      "title": "Office Meeting",
+      "content": "Office meeting after lunch",
+      "category": "Announcement",
+      "priority": "Normal",
+      "target_branch": "Ormoc",
+      "target_department": "All",
+      "target_employee_id": null,
+      "is_active": true,
+      "author_id": 21,
+      "created_at": "2026-02-21T07:34:54.767Z",
+      "updated_at": "2026-02-21T07:34:54.767Z",
+      "id": 1
+    }
+  ],
   "payroll_audit_log": [
     {
       "payroll_run_id": 1,
@@ -17998,6 +18535,54 @@
       "details": "{\"run_number\":\"ORMOC-202602-30-001\"}",
       "performed_at": "2026-02-21T02:20:38.769Z",
       "id": 86
+    },
+    {
+      "payroll_run_id": "2",
+      "action": "DELETED",
+      "performed_by": 21,
+      "details": "{\"run_number\":\"ORMOC-202602-30-002\"}",
+      "performed_at": "2026-02-23T08:46:49.697Z",
+      "id": 87
+    },
+    {
+      "payroll_run_id": "3",
+      "action": "DELETED",
+      "performed_by": 21,
+      "details": "{\"run_number\":\"ORMOC-202602-30-003\"}",
+      "performed_at": "2026-02-23T08:46:54.363Z",
+      "id": 88
+    },
+    {
+      "payroll_run_id": "4",
+      "action": "DELETED",
+      "performed_by": 21,
+      "details": "{\"run_number\":\"ORMOC-202602-30-004\"}",
+      "performed_at": "2026-02-23T08:46:56.973Z",
+      "id": 89
+    },
+    {
+      "payroll_run_id": "5",
+      "action": "DELETED",
+      "performed_by": 21,
+      "details": "{\"run_number\":\"ORMOC-202602-30-005\"}",
+      "performed_at": "2026-02-23T08:46:59.339Z",
+      "id": 90
+    },
+    {
+      "payroll_run_id": "6",
+      "action": "DELETED",
+      "performed_by": 21,
+      "details": "{\"run_number\":\"ORMOC-202602-30-006\"}",
+      "performed_at": "2026-02-23T08:47:01.476Z",
+      "id": 91
+    },
+    {
+      "payroll_run_id": "7",
+      "action": "DELETED",
+      "performed_by": 21,
+      "details": "{\"run_number\":\"ORMOC-202602-30-007\"}",
+      "performed_at": "2026-02-23T08:47:04.508Z",
+      "id": 92
     }
   ],
   "notifications": [
@@ -18335,8 +18920,8 @@
       "severity": "high",
       "link": "/employees/9",
       "reference_id": "lates-9-1",
-      "is_read": true,
-      "read_at": "2026-02-16T03:43:04.764Z",
+      "is_read": "TRUE",
+      "read_at": "2026-02-21T07:08:23.571Z",
       "id": 1
     },
     {
@@ -18347,8 +18932,8 @@
       "severity": "high",
       "link": "/employees/1",
       "reference_id": "lates-1-1",
-      "is_read": true,
-      "read_at": "2026-02-16T03:43:05.106Z",
+      "is_read": "TRUE",
+      "read_at": "2026-02-21T07:08:23.571Z",
       "id": 2
     },
     {
@@ -18383,8 +18968,8 @@
       "severity": "high",
       "link": "/employees/4",
       "reference_id": "lates-4-1",
-      "is_read": true,
-      "read_at": "2026-02-18T07:33:08.526Z",
+      "is_read": "TRUE",
+      "read_at": "2026-02-21T07:08:23.571Z",
       "id": 5
     },
     {
@@ -18395,8 +18980,8 @@
       "severity": "high",
       "link": "/employees/17",
       "reference_id": "lates-17-1",
-      "is_read": true,
-      "read_at": "2026-02-18T07:33:08.801Z",
+      "is_read": "TRUE",
+      "read_at": "2026-02-21T07:08:23.571Z",
       "id": 6
     },
     {
@@ -18407,8 +18992,8 @@
       "severity": "medium",
       "link": "/leave",
       "reference_id": "leave-2",
-      "is_read": true,
-      "read_at": "2026-02-20T08:11:20.995Z",
+      "is_read": "TRUE",
+      "read_at": "2026-02-21T07:08:23.571Z",
       "id": 7
     },
     {
@@ -18431,8 +19016,8 @@
       "severity": "medium",
       "link": "/leave",
       "reference_id": "leave-3",
-      "is_read": true,
-      "read_at": "2026-02-20T08:21:58.320Z",
+      "is_read": "TRUE",
+      "read_at": "2026-02-21T07:35:43.540Z",
       "id": 9
     },
     {
@@ -18443,9 +19028,117 @@
       "severity": "medium",
       "link": "/leave",
       "reference_id": "leave-3",
-      "is_read": true,
-      "read_at": "2026-02-20T08:22:13.871Z",
+      "is_read": "TRUE",
+      "read_at": "2026-02-21T06:28:14.868Z",
       "id": 10
+    },
+    {
+      "user_id": 26,
+      "title": "Leave Request Pending",
+      "message": "SHAHANIE MAE LERIO requested Birthday Leave leave.",
+      "type": "leave",
+      "severity": "medium",
+      "link": "/leave",
+      "reference_id": "leave-4",
+      "is_read": "TRUE",
+      "read_at": "2026-02-21T07:35:43.540Z",
+      "id": 11
+    },
+    {
+      "user_id": 23,
+      "title": "Leave Request Pending",
+      "message": "SHAHANIE MAE LERIO requested Birthday Leave leave.",
+      "type": "leave",
+      "severity": "medium",
+      "link": "/leave",
+      "reference_id": "leave-4",
+      "is_read": "TRUE",
+      "read_at": "2026-02-21T06:28:14.868Z",
+      "id": 12
+    },
+    {
+      "user_id": 21,
+      "title": "Leave Request Approved",
+      "message": "SHAHANIE MAE LERIO's Birthday Leave was approved.",
+      "type": "info",
+      "severity": "medium",
+      "link": "/leave",
+      "reference_id": "leave-approved-hr-4",
+      "is_read": "TRUE",
+      "read_at": "2026-02-21T07:08:23.571Z",
+      "id": 13
+    },
+    {
+      "user_id": 21,
+      "title": "Leave Request Approved",
+      "message": "MIA YBAÑEZ's Vacation Leave was approved.",
+      "type": "info",
+      "severity": "medium",
+      "link": "/leave",
+      "reference_id": "leave-approved-hr-3",
+      "is_read": "TRUE",
+      "read_at": "2026-02-21T07:08:23.571Z",
+      "id": 14
+    },
+    {
+      "user_id": 21,
+      "title": "Leave Request Approved",
+      "message": "REYNALDO JR. LAUDE's Vacation Leave was approved.",
+      "type": "info",
+      "severity": "medium",
+      "link": "/leave",
+      "reference_id": "leave-approved-hr-1",
+      "is_read": "TRUE",
+      "read_at": "2026-02-21T07:08:23.571Z",
+      "id": 15
+    },
+    {
+      "user_id": 21,
+      "title": "Office Meeting",
+      "message": "Office meeting after lunch",
+      "type": "system",
+      "severity": "low",
+      "link": "/announcements",
+      "reference_id": "ann-1",
+      "is_read": true,
+      "read_at": "2026-02-21T07:35:09.491Z",
+      "id": 16
+    },
+    {
+      "user_id": 26,
+      "title": "Office Meeting",
+      "message": "Office meeting after lunch",
+      "type": "system",
+      "severity": "low",
+      "link": "/announcements",
+      "reference_id": "ann-1",
+      "is_read": "TRUE",
+      "read_at": "2026-02-21T07:35:43.540Z",
+      "id": 17
+    },
+    {
+      "user_id": 21,
+      "title": "NEW USER REGISTRATION",
+      "message": "New user registration pending approval: employee1employee_test (employee_test@example.com)",
+      "type": "alert",
+      "severity": "high",
+      "link": "/users",
+      "reference_id": "reg-13",
+      "is_read": true,
+      "read_at": "2026-02-23T05:09:02.944Z",
+      "id": 18
+    },
+    {
+      "user_id": 21,
+      "title": "NEW USER REGISTRATION",
+      "message": "New user registration pending approval: tester (tester@example.com)",
+      "type": "alert",
+      "severity": "high",
+      "link": "/users",
+      "reference_id": "reg-12",
+      "is_read": true,
+      "read_at": "2026-02-23T05:09:03.316Z",
+      "id": 19
     }
   ],
   "employee_warnings": [
@@ -18503,6 +19196,36 @@
       "issued_by": null,
       "status": "Active",
       "id": 5
+    },
+    {
+      "employee_id": 17,
+      "violation_id": null,
+      "warning_type": "Warning Violation",
+      "warning_date": "2026-02-24",
+      "reason": "Excessive tardiness (5 lates accumulation).",
+      "duration_days": null,
+      "issued_by": null,
+      "status": "Active",
+      "id": 6
+    }
+  ],
+  "gov_contribution_reports": [],
+  "gov_contribution_details": [],
+  "gov_contribution_configs": [
+    {
+      "id": 1,
+      "type": "PhilHealth",
+      "year_effective": 2026,
+      "config_data": {
+        "rate": 0.05,
+        "min_salary": 10000,
+        "max_salary": 100000,
+        "ee_split": 0.5,
+        "er_split": 0.5
+      },
+      "created_at": "2026-02-24T10:29:59.041Z",
+      "updated_at": "2026-02-24T10:29:59.042Z",
+      "updated_by": 1
     }
   ]
 }

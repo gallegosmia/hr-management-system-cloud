@@ -78,17 +78,9 @@ export default function CriticalAttendance({ employees: initialEmployees, attend
                     (a.status === 'Late' || a.status === 'late');
             }).length;
 
-            const employeeLeaves = Array.isArray(lvs) ? lvs.filter((l: any) => l.employee_id === emp.id && l.status === 'Approved') : [];
-            const leavesCount = employeeLeaves.reduce((acc: number, curr: any) => {
-                let days = curr.total_days;
-                if (!days && curr.start_date && curr.end_date) {
-                    const start = new Date(curr.start_date);
-                    const end = new Date(curr.end_date);
-                    const diffTime = Math.abs(end.getTime() - start.getTime());
-                    days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                }
-                return acc + (Number(days) || 1);
-            }, 0);
+            const baseCredits = emp.leave_credits !== undefined && emp.leave_credits !== null ? Number(emp.leave_credits) : 5;
+            const currentBalance = emp.leave_balance !== undefined && emp.leave_balance !== null ? Number(emp.leave_balance) : baseCredits;
+            const leavesCount = Math.max(0, baseCredits - currentBalance);
 
             return {
                 ...emp,
@@ -230,7 +222,7 @@ export default function CriticalAttendance({ employees: initialEmployees, attend
     };
 
     return (
-        <div className={`space-y-6 ${className || ''}`}>
+        <div className={`flex flex-col h-full space-y-4 ${className || ''}`}>
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
@@ -263,205 +255,207 @@ export default function CriticalAttendance({ employees: initialEmployees, attend
             </div>
 
             {/* Content Grid */}
-            {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="bg-white rounded-[20px] p-6 border border-slate-100 shadow-sm animate-pulse h-96"></div>
-                    ))}
-                </div>
-            ) : filteredEmployees.length === 0 ? (
-                <div className="text-center py-20 bg-white rounded-[20px] border border-dashed border-slate-200">
-                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div className="flex-1 overflow-y-auto min-h-0 pr-2 pb-4 scrollbar-thin">
+                {loading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="bg-white rounded-[16px] p-6 border border-slate-100 shadow-sm animate-pulse h-80"></div>
+                        ))}
                     </div>
-                    <h3 className="text-lg font-bold text-slate-800">All Good!</h3>
-                    <p className="text-slate-500">No employees have reached critical attendance levels.</p>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 pb-20">
-                    {filteredEmployees.map(emp => {
-                        const isLateCritical = emp.lates >= 5;
-                        const isLeaveCritical = emp.leaves >= 5;
-                        const isHighRisk = isLateCritical || isLeaveCritical;
+                ) : filteredEmployees.length === 0 ? (
+                    <div className="text-center py-16 bg-white rounded-[16px] border border-dashed border-slate-200">
+                        <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <svg className="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                        <h3 className="text-base font-bold text-slate-800">All Good!</h3>
+                        <p className="text-sm text-slate-500">No employees have reached critical attendance levels.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {filteredEmployees.map(emp => {
+                            const isLateCritical = emp.lates >= 5;
+                            const isLeaveCritical = emp.leaves >= 5;
+                            const isHighRisk = isLateCritical || isLeaveCritical;
 
-                        return (
-                            <div key={emp.id} className="bg-white rounded-[16px] shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] relative group hover:-translate-y-1 transition-all duration-300">
-                                {/* Red Accent Line */}
-                                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#FF4D4F] rounded-l-[16px]"></div>
+                            return (
+                                <div key={emp.id} className="bg-white rounded-[16px] shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] relative group hover:-translate-y-1 transition-all duration-300">
+                                    {/* Red Accent Line */}
+                                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#FF4D4F] rounded-l-[16px]"></div>
 
-                                <div className="p-6 pl-8">
-                                    {/* Card Header with Checkbox & Menu */}
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="flex items-center gap-3">
-                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-[#FFF1F0] text-[#FF4D4F]">
-                                                • ACTION REQUIRED
-                                            </span>
-                                            {/* Selection Checkbox */}
-                                            <button
-                                                onClick={() => toggleSelection(emp.id)}
-                                                className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedEmployees.includes(emp.id) ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 text-transparent hover:border-blue-400'}`}
-                                            >
-                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                            </button>
-                                        </div>
-                                        <div className="relative z-20">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    setOpenMenuId(openMenuId === emp.id ? null : emp.id);
-                                                }}
-                                                className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded relative z-10"
-                                            >
-                                                <svg className="w-6 h-6 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" /></svg>
-                                            </button>
+                                    <div className="p-4 pl-6">
+                                        {/* Card Header with Checkbox & Menu */}
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-[#FFF1F0] text-[#FF4D4F]">
+                                                    • ACTION REQUIRED
+                                                </span>
+                                                {/* Selection Checkbox */}
+                                                <button
+                                                    onClick={() => toggleSelection(emp.id)}
+                                                    className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedEmployees.includes(emp.id) ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 text-transparent hover:border-blue-400'}`}
+                                                >
+                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                </button>
+                                            </div>
+                                            <div className="relative z-20">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setOpenMenuId(openMenuId === emp.id ? null : emp.id);
+                                                    }}
+                                                    className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded relative z-10"
+                                                >
+                                                    <svg className="w-6 h-6 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" /></svg>
+                                                </button>
 
-                                            {openMenuId === emp.id && (
-                                                <>
-                                                    {/* Invisible overlay to catch outside clicks */}
-                                                    <div
-                                                        className="fixed inset-0 z-40"
-                                                        onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }}
-                                                    />
+                                                {openMenuId === emp.id && (
+                                                    <>
+                                                        {/* Invisible overlay to catch outside clicks */}
+                                                        <div
+                                                            className="fixed inset-0 z-40"
+                                                            onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }}
+                                                        />
 
-                                                    {/* Menu items */}
-                                                    <div
-                                                        className="absolute right-0 top-8 mt-1 w-56 bg-white rounded-lg shadow-2xl py-1 z-[100] border border-slate-200"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    >
-                                                        <div className="px-3 py-2 border-b border-slate-100 mb-1">
-                                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Disciplinary Actions</span>
+                                                        {/* Menu items */}
+                                                        <div
+                                                            className="absolute right-0 top-8 mt-1 w-56 bg-white rounded-lg shadow-2xl py-1 z-[100] border border-slate-200"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <div className="px-3 py-2 border-b border-slate-100 mb-1">
+                                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Disciplinary Actions</span>
+                                                            </div>
+
+                                                            <button
+                                                                onClick={() => handleIssueViolation(emp, 'Warning Violation')}
+                                                                className="w-full text-left px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-slate-700"
+                                                                disabled={emp.lates < 5}
+                                                                title={emp.lates < 5 ? "Requires at least 5 lates" : ""}
+                                                            >
+                                                                <span className="flex items-center gap-2">
+                                                                    <div className={`w-2 h-2 rounded-full ${emp.lates >= 5 ? 'bg-yellow-400' : 'bg-slate-300'}`}></div>
+                                                                    Warning Violation
+                                                                </span>
+                                                                <span className={`text-[10px] px-1.5 py-0.5 rounded ${emp.lates >= 5 ? 'text-blue-600 bg-blue-50' : 'text-slate-400 bg-slate-100'}`}>5+ Lates</span>
+                                                            </button>
+
+                                                            <button
+                                                                onClick={() => handleIssueViolation(emp, 'Verbal Warning')}
+                                                                className="w-full text-left px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-slate-700"
+                                                                disabled={emp.lates < 10}
+                                                                title={emp.lates < 10 ? "Requires at least 10 lates" : ""}
+                                                            >
+                                                                <span className="flex items-center gap-2">
+                                                                    <div className={`w-2 h-2 rounded-full ${emp.lates >= 10 ? 'bg-orange-400' : 'bg-slate-300'}`}></div>
+                                                                    Verbal Warning
+                                                                </span>
+                                                                <span className={`text-[10px] px-1.5 py-0.5 rounded ${emp.lates >= 10 ? 'text-orange-600 bg-orange-50' : 'text-slate-400 bg-slate-100'}`}>10+ Lates</span>
+                                                            </button>
+
+                                                            <button
+                                                                onClick={() => handleIssueViolation(emp, 'Letter of Violation')}
+                                                                className="w-full text-left px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-red-600 flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-slate-700"
+                                                                disabled={emp.lates <= 10}
+                                                                title={emp.lates <= 10 ? "Requires more than 10 lates" : ""}
+                                                            >
+                                                                <span className="flex items-center gap-2">
+                                                                    <div className={`w-2 h-2 rounded-full ${emp.lates > 10 ? 'bg-red-500' : 'bg-slate-300'}`}></div>
+                                                                    Letter of Violation
+                                                                </span>
+                                                                <span className={`text-[10px] px-1.5 py-0.5 rounded ${emp.lates > 10 ? 'text-red-600 bg-red-50' : 'text-slate-400 bg-slate-100'}`}>&gt;10 Lates</span>
+                                                            </button>
                                                         </div>
-
-                                                        <button
-                                                            onClick={() => handleIssueViolation(emp, 'Warning Violation')}
-                                                            className="w-full text-left px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-slate-700"
-                                                            disabled={emp.lates < 5}
-                                                            title={emp.lates < 5 ? "Requires at least 5 lates" : ""}
-                                                        >
-                                                            <span className="flex items-center gap-2">
-                                                                <div className={`w-2 h-2 rounded-full ${emp.lates >= 5 ? 'bg-yellow-400' : 'bg-slate-300'}`}></div>
-                                                                Warning Violation
-                                                            </span>
-                                                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${emp.lates >= 5 ? 'text-blue-600 bg-blue-50' : 'text-slate-400 bg-slate-100'}`}>5+ Lates</span>
-                                                        </button>
-
-                                                        <button
-                                                            onClick={() => handleIssueViolation(emp, 'Verbal Warning')}
-                                                            className="w-full text-left px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-slate-700"
-                                                            disabled={emp.lates < 10}
-                                                            title={emp.lates < 10 ? "Requires at least 10 lates" : ""}
-                                                        >
-                                                            <span className="flex items-center gap-2">
-                                                                <div className={`w-2 h-2 rounded-full ${emp.lates >= 10 ? 'bg-orange-400' : 'bg-slate-300'}`}></div>
-                                                                Verbal Warning
-                                                            </span>
-                                                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${emp.lates >= 10 ? 'text-orange-600 bg-orange-50' : 'text-slate-400 bg-slate-100'}`}>10+ Lates</span>
-                                                        </button>
-
-                                                        <button
-                                                            onClick={() => handleIssueViolation(emp, 'Letter of Violation')}
-                                                            className="w-full text-left px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-red-600 flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-slate-700"
-                                                            disabled={emp.lates <= 10}
-                                                            title={emp.lates <= 10 ? "Requires more than 10 lates" : ""}
-                                                        >
-                                                            <span className="flex items-center gap-2">
-                                                                <div className={`w-2 h-2 rounded-full ${emp.lates > 10 ? 'bg-red-500' : 'bg-slate-300'}`}></div>
-                                                                Letter of Violation
-                                                            </span>
-                                                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${emp.lates > 10 ? 'text-red-600 bg-red-50' : 'text-slate-400 bg-slate-100'}`}>&gt;10 Lates</span>
-                                                        </button>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* User Profile */}
-                                    <div className="flex items-center gap-4 mb-8">
-                                        <div className="relative">
-                                            <div className="w-14 h-14 rounded-full bg-slate-100 overflow-hidden border-2 border-white shadow-sm ring-1 ring-slate-100">
-                                                <img
-                                                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${emp.first_name} ${emp.last_name}`}
-                                                    alt="avatar"
-                                                    className="w-full h-full object-cover"
-                                                />
+                                                    </>
+                                                )}
                                             </div>
-                                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#FF4D4F] rounded-full border-2 border-white flex items-center justify-center text-white text-[10px] font-bold shadow-sm">!</div>
                                         </div>
-                                        <div>
-                                            <h3 className="font-bold text-slate-800 text-lg leading-tight">{emp.first_name} {emp.last_name}</h3>
-                                            <p className="text-slate-500 text-xs font-medium mt-1 uppercase tracking-wide opacity-80">{emp.role} • {emp.department}</p>
-                                        </div>
-                                    </div>
 
-                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-50 pb-2">Attendance Thresholds</h4>
-
-                                    {/* Donut Charts */}
-                                    <div className="flex justify-around items-center mb-8">
-                                        <AttendanceDonut
-                                            value={emp.lates}
-                                            max={5}
-                                            color="#FF4D4F" // Red
-                                            label="Late Arrivals"
-                                        />
-                                        <AttendanceDonut
-                                            value={emp.leaves}
-                                            max={5}
-                                            color="#FAAD14" // Amber/Yellow
-                                            label="Total Leaves"
-                                        />
-                                    </div>
-
-                                    {/* Critical Warning Box */}
-                                    {isHighRisk && (
-                                        <div className="bg-[#FFF1F0] rounded-xl p-4 flex gap-3 mb-6 relative overflow-hidden">
-                                            <div className="text-[#FF4D4F] mt-0.5 shrink-0 z-10">
-                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                        {/* User Profile */}
+                                        <div className="flex items-center gap-3 mb-5">
+                                            <div className="relative">
+                                                <div className="w-14 h-14 rounded-full bg-slate-100 overflow-hidden border-2 border-white shadow-sm ring-1 ring-slate-100">
+                                                    <img
+                                                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${emp.first_name} ${emp.last_name}`}
+                                                        alt="avatar"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#FF4D4F] rounded-full border-2 border-white flex items-center justify-center text-white text-[10px] font-bold shadow-sm">!</div>
                                             </div>
-                                            <div className="z-10">
-                                                <h5 className="text-sm font-bold text-[#cf1322]">Critical Threshold Reached</h5>
-                                                <p className="text-xs text-[#cf1322]/80 mt-1 leading-relaxed font-medium">
-                                                    This employee has exceeded the allowed attendance policy limits. A formal warning is now mandatory per HR policy.
-                                                </p>
+                                            <div>
+                                                <h3 className="font-bold text-slate-800 text-lg leading-tight">{emp.first_name} {emp.last_name}</h3>
+                                                <p className="text-slate-500 text-xs font-medium mt-1 uppercase tracking-wide opacity-80">{emp.role} • {emp.department}</p>
                                             </div>
-                                            {/* Decorative Background Icon */}
-                                            <svg className="absolute -right-4 -bottom-4 w-24 h-24 text-[#ffccc7] opacity-20 transform rotate-12" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                            </svg>
                                         </div>
-                                    )}
 
-                                    {/* Use Full Width Buttons */}
-                                    <div className="flex gap-3 mb-4">
-                                        <button
-                                            onClick={() => alert(`Warning sent to ${emp.first_name}`)}
-                                            className="flex-1 py-2.5 bg-[#1890FF] hover:bg-[#096dd9] text-white text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm shadow-blue-100"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-                                            Send Warning
-                                        </button>
-                                        <button
-                                            onClick={() => alert(`Manager notified for ${emp.first_name}`)}
-                                            className="flex-1 py-2.5 bg-[#13C2C2] hover:bg-[#08979c] text-white text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm shadow-teal-100"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                                            Notify Manager
-                                        </button>
-                                    </div>
+                                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-50 pb-2">Attendance Thresholds</h4>
 
-                                    <div className="text-center">
-                                        <Link href={`/employees/${emp.id}`} className="text-[11px] text-slate-400 font-bold hover:text-blue-600 flex items-center justify-center gap-1.5 transition-colors group-hover:text-blue-500">
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                            View Full Employee Records
-                                        </Link>
+                                        {/* Donut Charts */}
+                                        <div className="flex justify-around items-center mb-5">
+                                            <AttendanceDonut
+                                                value={emp.lates}
+                                                max={5}
+                                                color="#FF4D4F" // Red
+                                                label="Late Arrivals"
+                                            />
+                                            <AttendanceDonut
+                                                value={emp.leaves}
+                                                max={5}
+                                                color="#FAAD14" // Amber/Yellow
+                                                label="Total Leaves"
+                                            />
+                                        </div>
+
+                                        {/* Critical Warning Box */}
+                                        {isHighRisk && (
+                                            <div className="bg-[#FFF1F0] rounded-lg p-3 flex gap-2 mb-4 relative overflow-hidden">
+                                                <div className="text-[#FF4D4F] mt-0.5 shrink-0 z-10">
+                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                                </div>
+                                                <div className="z-10">
+                                                    <h5 className="text-sm font-bold text-[#cf1322]">Critical Threshold Reached</h5>
+                                                    <p className="text-xs text-[#cf1322]/80 mt-1 leading-relaxed font-medium">
+                                                        This employee has exceeded the allowed attendance policy limits. A formal warning is now mandatory per HR policy.
+                                                    </p>
+                                                </div>
+                                                {/* Decorative Background Icon */}
+                                                <svg className="absolute -right-4 -bottom-4 w-24 h-24 text-[#ffccc7] opacity-20 transform rotate-12" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                </svg>
+                                            </div>
+                                        )}
+
+                                        {/* Use Full Width Buttons */}
+                                        <div className="flex gap-3 mb-4">
+                                            <button
+                                                onClick={() => alert(`Warning sent to ${emp.first_name}`)}
+                                                className="flex-1 py-2.5 bg-[#1890FF] hover:bg-[#096dd9] text-white text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm shadow-blue-100"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                                                Send Warning
+                                            </button>
+                                            <button
+                                                onClick={() => alert(`Manager notified for ${emp.first_name}`)}
+                                                className="flex-1 py-2.5 bg-[#13C2C2] hover:bg-[#08979c] text-white text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm shadow-teal-100"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                                Notify Manager
+                                            </button>
+                                        </div>
+
+                                        <div className="text-center">
+                                            <Link href={`/employees/${emp.id}`} className="text-[11px] text-slate-400 font-bold hover:text-blue-600 flex items-center justify-center gap-1.5 transition-colors group-hover:text-blue-500">
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                View Full Employee Records
+                                            </Link>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
 
             {/* Batch Action Bar */}
             {selectedEmployees.length > 0 && (

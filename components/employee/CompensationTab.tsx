@@ -48,7 +48,9 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
             },
             deductions: {
                 phic: info.deductions?.phic || 0,
+                phic_er: info.deductions?.phic_er || 0,
                 pagibig: info.deductions?.pagibig || 0,
+                pagibig_er: info.deductions?.pagibig_er || 0,
                 pagibig_loan_15th: pagibig_loan_15th,
                 pagibig_loan_30th: pagibig_loan_30th,
                 company_funds: 300, // Fixed at 300
@@ -362,8 +364,10 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
                         </h3>
 
                         {[
-                            { key: 'phic', label: 'PhilHealth (PHIC)' },
-                            { key: 'pagibig', label: 'Pag-IBIG' },
+                            { key: 'phic', label: 'PhilHealth (PHIC) - EE' },
+                            { key: 'phic_er', label: 'PhilHealth (PHIC) - ER' },
+                            { key: 'pagibig', label: 'Pag-IBIG - EE' },
+                            { key: 'pagibig_er', label: 'Pag-IBIG - ER' },
                             { key: 'pagibig_loan_15th', label: 'Pag-IBIG Loan' },
                             { key: 'company_funds', label: 'Company Funds' }
                         ].map(({ key, label }) => (

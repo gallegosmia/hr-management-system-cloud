@@ -204,8 +204,7 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
     const isFinance = user?.role === 'Admin' || user?.role === 'Vice President' || user?.role === 'Finance';
     const canApprove = user && (
         user.role === 'Admin' ||
-        user.role === 'President' ||
-        (loan.current_approval_level === 1 && user.role === 'Branch Manager') ||
+        (loan.current_approval_level === 1 && user.role === 'Manager') ||
         (loan.current_approval_level === 2 && user.role === 'Vice President')
     );
     const canRelease = (user?.role === 'Admin' || user?.role === 'HR' || user?.role === 'President' || user?.role === 'Vice President' || user?.role === 'Finance');
@@ -219,13 +218,13 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
     const steps = [
         { label: 'HR Submitted', status: 'done', date: loan.created_at },
         {
-            label: 'Branch Manager Review',
+            label: (loan.current_approval_level > 1 || loan.status === 'Approved' || loan.status.includes('Released') || (loan.status === 'Disapproved' && loan.current_approval_level === 1)) ? 'Branch Manager Reviewed' : 'Branch Manager Review',
             status: loan.status === 'Disapproved' && loan.current_approval_level === 1
                 ? 'error'
                 : (loan.current_approval_level > 1 || loan.status === 'Approved' || loan.status.includes('Released') ? 'done' : 'active') // Change to active since this is the immediate next step after HR submits
         },
         {
-            label: 'Vice President Approved',
+            label: (loan.current_approval_level > 2 || loan.status === 'Approved' || loan.status.includes('Released') || (loan.status === 'Disapproved' && loan.current_approval_level === 2)) ? 'Vice President Approved' : 'Vice President Review',
             status: loan.status === 'Disapproved' && loan.current_approval_level === 2
                 ? 'error'
                 : (loan.current_approval_level > 2 || loan.status === 'Approved' || loan.status.includes('Released') ? 'done' : (loan.current_approval_level === 2 ? 'active' : 'pending'))

@@ -340,14 +340,25 @@ export default function LeavePage() {
         doc.setFont('helvetica', 'bold');
         doc.text('Type of Leave:', 20, yPos);
 
-        const leaveTypes = ['VACATION', 'SICK', 'EMERGENCY'];
-        let xPos = 60;
+        const leaveTypes = ['VACATION', 'SICK', 'EMERGENCY', 'BIRTHDAY'];
+        let xPos = 45;
         leaveTypes.forEach(type => {
-            const isChecked = req.leave_type.toUpperCase().includes(type);
-            doc.rect(xPos, yPos - 3, 4, 4, isChecked ? 'F' : 'S');
+            let isChecked = req.leave_type.toUpperCase().includes(type);
+            // Draw checkbox outline
+            doc.rect(xPos, yPos - 3, 4, 4, 'S');
+
+            // Draw checkmark if checked
+            if (isChecked) {
+                doc.setDrawColor(0);
+                doc.setLineWidth(0.5);
+                doc.line(xPos + 0.5, yPos - 1, xPos + 1.5, yPos + 0.5);
+                doc.line(xPos + 1.5, yPos + 0.5, xPos + 3.5, yPos - 2.5);
+                doc.setLineWidth(0.2); // reset
+            }
+
             doc.setFont('helvetica', 'normal');
             doc.text(type, xPos + 6, yPos);
-            xPos += 45;
+            xPos += 35;
         });
 
         // If VACATION, Please Check
@@ -366,8 +377,24 @@ export default function LeavePage() {
 
         yPos += 5;
         vacationReasons.forEach(reason => {
-            const isChecked = req.reason && req.reason.includes(reason.value);
-            doc.rect(25, yPos - 3, 4, 4, isChecked ? 'F' : 'S');
+            let isChecked = req.reason && req.reason.includes(reason.value);
+            // If leave_type is inherently "Birthday Leave", auto-check the Birthday option
+            if (req.leave_type === 'Birthday Leave' && reason.value === 'Birthday') {
+                isChecked = true;
+            }
+
+            // Draw checkbox outline
+            doc.rect(25, yPos - 3, 4, 4, 'S');
+
+            // Draw checkmark if checked
+            if (isChecked) {
+                doc.setDrawColor(0);
+                doc.setLineWidth(0.5);
+                doc.line(25 + 0.5, yPos - 1, 25 + 1.5, yPos + 0.5);
+                doc.line(25 + 1.5, yPos + 0.5, 25 + 3.5, yPos - 2.5);
+                doc.setLineWidth(0.2); // reset
+            }
+
             doc.setFont('helvetica', 'normal');
             doc.text(reason.label, 31, yPos);
             yPos += 5;
@@ -899,14 +926,16 @@ export default function LeavePage() {
                                                             >
                                                                 ✕
                                                             </button>
-                                                            <button
-                                                                onClick={() => handleEdit(req)}
-                                                                style={{ width: '30px', height: '30px', background: '#ebf5ff', color: '#2563eb', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                                title="Edit"
-                                                            >
-                                                                ✏️
-                                                            </button>
                                                         </>
+                                                    )}
+                                                    {req.status.toLowerCase().includes('pending') && (user?.employee_id === req.employee_id || user?.role === 'HR' || user?.role === 'Admin') && (
+                                                        <button
+                                                            onClick={() => handleEdit(req)}
+                                                            style={{ width: '30px', height: '30px', background: '#ebf5ff', color: '#2563eb', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                            title="Edit"
+                                                        >
+                                                            ✏️
+                                                        </button>
                                                     )}
                                                     <button
                                                         onClick={() => handleDownloadPDF(req)}

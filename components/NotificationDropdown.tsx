@@ -71,11 +71,12 @@ export default function NotificationDropdown() {
 
             const announcementUrl = `/api/announcements?is_active=true&branch=${encodeURIComponent(userBranch)}${user?.employee_id ? `&employee_id=${user.employee_id}` : ''}`;
 
-            const [alertsData, leavesData, annData, notifData] = await Promise.all([
+            const [alertsData, leavesData, annData, notifData, loansData] = await Promise.all([
                 fetchSource('/api/alerts'),
-                fetchSource('/api/leave?status=Pending'),
+                fetchSource('/api/leave?limit=50'),
                 fetchSource(announcementUrl),
-                fetchSource('/api/notifications?limit=50')
+                fetchSource('/api/notifications?limit=50'),
+                fetchSource('/api/loans')
             ]);
 
             const combined: Notification[] = [];
@@ -109,21 +110,49 @@ export default function NotificationDropdown() {
                 });
             }
 
-            // 2. Add Pending Leaves (Dynamic)
+            // 2. Add Leaves (Dynamic)
             if (Array.isArray(leavesData)) {
                 leavesData.forEach((leave: any) => {
-                    const refId = `leave-${leave.id}`;
+                    const isOwner = user?.employee_id === leave.employee_id;
+                    const canApprove = user?.role === 'Admin' || user?.role === 'HR' || user?.role === 'Manager' || user?.role === 'President' || user?.role === 'Vice President';
+                    const isHR = user?.role === 'Admin' || user?.role === 'HR';
+
+                    let notifTitle = '';
+                    let notifMsg = '';
+                    let actionLabel = '';
+                    let refId = '';
+                    let type = 'leave';
+
+                    if (leave.status.toLowerCase().includes('pending') && canApprove) {
+                        refId = `leave-pending-${leave.id}`;
+                        notifTitle = 'Leave Request Pending';
+                        notifMsg = `${leave.employee_name} requested ${leave.leave_type} leave.`;
+                        actionLabel = 'Review Request';
+                    } else if (leave.status === 'Approved' && isOwner) {
+                        refId = `leave-approved-owner-${leave.id}`;
+                        notifTitle = 'Leave Approved';
+                        notifMsg = `Your ${leave.leave_type} request has been approved.`;
+                        actionLabel = 'View Leave';
+                        type = 'info';
+                    } else if (leave.status === 'Approved' && isHR) {
+                        refId = `leave-approved-hr-${leave.id}`;
+                        notifTitle = 'Leave Request Approved';
+                        notifMsg = `${leave.employee_name}'s ${leave.leave_type} was approved.`;
+                        actionLabel = 'View Leave';
+                        type = 'info';
+                    }
+
                     // Only add if not already in DB notifications (persisted)
-                    if (!readReferenceIds.has(refId)) {
+                    if (notifTitle && refId && !readReferenceIds.has(refId)) {
                         combined.push({
                             id: refId,
-                            title: 'Leave Request Pending',
-                            message: `${leave.employee_name} requested ${leave.leave_type} leave.`,
-                            type: 'leave',
+                            title: notifTitle,
+                            message: notifMsg,
+                            type: type,
                             severity: 'medium',
                             url: '/leave',
-                            timestamp: leave.created_at || new Date().toISOString(),
-                            actionLabel: 'Review Request',
+                            timestamp: leave.updated_at || leave.created_at || new Date().toISOString(),
+                            actionLabel: actionLabel,
                             is_read: false
                         });
                     }
@@ -171,6 +200,74 @@ export default function NotificationDropdown() {
                         });
                     }
                 });
+            }
+
+            // 5. Add Emergency Loans (Dynamic)
+            if (Array.isArray(loansData)) {
+                loansData.forEach((loan: any) => {
+                    // Check if current user needs to act on this
+                    const isOwner = user?.employee_id === loan.employee_id;
+                    const canApproveLvl1 = (user?.role === 'Manager' || user?.role === 'Admin') && loan.current_approval_level === 1 && (loan.status === 'Submitted' || loan.status === 'Under Review');
+                    const canApproveLvl2 = (user?.role === 'Vice President' || user?.role === 'Admin') && loan.current_approval_level === 2 && loan.status === 'Under Review - Vice President';
+                    const canRelease = (user?.role === 'Admin' || user?.role === 'Finance' || user?.role === 'HR') && loan.status === 'Approved';
+
+                    let notifTitle = '';
+                    let notifMsg = '';
+                    let actionLabel = '';
+                    let refId = '';
+
+                    if (canApproveLvl1 || canApproveLvl2) {
+                        refId = `loan-review-${loan.id}-${loan.current_approval_level}`;
+                        notifTitle = 'Loan Request Pending Approval';
+                        notifMsg = `A new emergency loan request is waiting for your review.`;
+                        actionLabel = 'Review Loan';
+                    } else if (canRelease) {
+                        refId = `loan-release-${loan.id}`;
+                        notifTitle = 'Loan Ready for Release';
+                        notifMsg = `An approved loan request is ready for fund release.`;
+                        actionLabel = 'Release Funds';
+                    } else if (isOwner && loan.status !== 'Draft' && loan.status !== 'Submitted' && loan.status !== 'Under Review' && !loan.status.includes('Vice President')) {
+                        refId = `loan-update-${loan.id}-${loan.status}`;
+                        notifTitle = `Loan Status: ${loan.status}`;
+                        notifMsg = `Your emergency loan request has been marked as ${loan.status}.`;
+                        actionLabel = 'View Loan';
+                    }
+
+                    if (notifTitle && refId && !readReferenceIds.has(refId)) {
+                        combined.push({
+                            id: refId,
+                            title: notifTitle,
+                            message: notifMsg,
+                            type: 'info',
+                            severity: 'medium',
+                            url: `/loans/${loan.id}`,
+                            timestamp: loan.updated_at || loan.created_at || new Date().toISOString(),
+                            actionLabel: actionLabel,
+                            is_read: false
+                        });
+                    }
+                });
+            }
+
+            // 6. Transportation Allowance Reminder
+            const today = new Date();
+            if (today.getDate() === 10 && (user?.role === 'Admin' || user?.role === 'HR')) {
+                const monthYear = `${today.getFullYear()}-${today.getMonth() + 1}`;
+                const refId = `transpo-allowance-${monthYear}`;
+
+                if (!readReferenceIds.has(refId)) {
+                    combined.push({
+                        id: refId,
+                        title: 'Transportation Allowance Due',
+                        message: `Today is the 10th. It's time to process and release the Monthly Transportation Allowance.`,
+                        type: 'info',
+                        severity: 'medium',
+                        url: `/transportation`,
+                        timestamp: new Date().toISOString(),
+                        actionLabel: 'Process Allowance',
+                        is_read: false
+                    });
+                }
             }
 
             // Sort by timestamp
@@ -292,6 +389,9 @@ export default function NotificationDropdown() {
     };
 
     const markAllAsRead = async () => {
+        // Collect all currently unread notifications (including dynamic ones)
+        const unreadNotifs = notifications.filter(n => !n.is_read);
+
         // Optimistic update
         setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
         setUnreadCount(0);
@@ -300,7 +400,11 @@ export default function NotificationDropdown() {
             const sessionId = localStorage.getItem('sessionId');
             await fetch('/api/notifications/mark-all-read', {
                 method: 'POST',
-                headers: { 'x-session-id': sessionId || '' }
+                headers: {
+                    'x-session-id': sessionId || '',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ dynamicNotifs: unreadNotifs })
             });
         } catch (error) {
             console.error('Failed to mark all as read:', error);

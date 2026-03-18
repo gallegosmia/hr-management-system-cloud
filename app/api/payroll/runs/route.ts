@@ -11,6 +11,8 @@ import { query, isPostgres } from '@/lib/database';
 import { requireBranchAuth } from '@/lib/middleware/branch-auth';
 import { canAccessPayroll, canCreatePayroll, validatePayrollAccess, getAccessibleBranches } from '@/lib/payroll-access';
 import { generateRunNumber, validatePayrollDays } from '@/lib/payroll-calculations';
+import { normalizeBranchName } from '@/lib/branch-access';
+import { getAllEmployees } from '@/lib/data';
 
 // GET /api/payroll/runs - List payroll runs
 export async function GET(request: NextRequest) {
@@ -251,48 +253,58 @@ export async function POST(request: NextRequest) {
 
         const payrollRun = runResult.rows[0];
 
-        // Get employees for this branch
-        // Update SQL to allow multiple active statuses
-        let employeeSql = `
-            SELECT 
-                id,
-                employee_id,
-                first_name,
-                last_name,
-                department,
-                position,
-                branch,
-                salary_info,
-                date_separated,
-                employment_status
-            FROM employees
-            WHERE (
-                UPPER(TRIM(REPLACE(branch, 'Branch', ''))) = UPPER(TRIM(REPLACE($1, 'Branch', '')))
-                OR branch = $1
-            )
-            AND employment_status NOT IN ('Resigned', 'Terminated', 'AWOL')
-        `;
+        // Fetch ACTIVE SSS config for the payroll year
+        const year = startDate.getFullYear();
+        const sssConfigRes = await query(
+            `SELECT * FROM gov_contribution_configs WHERE type = 'SSS' AND year_effective = $1`,
+            [year]
+        );
+        const sssConfig = sssConfigRes.rows.length > 0 ? sssConfigRes.rows[0].config_data : null;
 
-        const employeeParams: any[] = [branch];
+
+        // Use getAllEmployees() — the SAME function as the employee list page (Step 2 in wizard)
+        // This guarantees we see the same employees regardless of DB backend
+        const allEmployeesRaw = await getAllEmployees();
 
         // Filter by specific employee IDs if provided
+        let allEmployeesFiltered = allEmployeesRaw;
         if (employeeIds && employeeIds.length > 0) {
-            employeeSql += ` AND id = ANY($2)`;
-            employeeParams.push(employeeIds);
+            const idSet = new Set(employeeIds.map(Number));
+            allEmployeesFiltered = allEmployeesRaw.filter((e: any) => idSet.has(Number(e.id)));
         }
 
-        const employeesResult = await query(employeeSql, employeeParams);
+        // Step-by-step debug logging
+        const totalFromDB = allEmployeesFiltered.length;
+        console.log(`[Payroll] getAllEmployees returned ${totalFromDB} employees (all branches). Using DB: ${isPostgres() ? 'PostgreSQL' : 'LocalJSON'}`);
+        if (totalFromDB > 0) {
+            console.log(`[Payroll] Sample branches:`, [...new Set(allEmployeesFiltered.map((e: any) => e.branch))].slice(0, 10));
+        }
 
-        // STRICT ELIGIBILITY FILTER
-        // Filter out employees without valid salary info or who resigned before period start
-        const employees = employeesResult.rows.filter((emp: any) => {
-            // 1. Check Status (Already filtered in SQL for explicit excludes, but ensure we keep valid ones)
+        // JS-based branch normalization (same as employees API)
+        // Handles 'Ormoc', 'Ormoc Branch', 'ormoc branch', 'ORMOC' all as equal
+        const normalizedTargetBranch = normalizeBranchName(branch);
+        console.log(`[Payroll] Looking for branch: '${branch}' normalized: '${normalizedTargetBranch}'`);
+
+        const branchFiltered = allEmployeesFiltered.filter((emp: any) =>
+            normalizeBranchName(emp.branch) === normalizedTargetBranch
+        );
+        console.log(`[Payroll] After branch filter: ${branchFiltered.length} employees`);
+
+        // ELIGIBILITY FILTER
+        const employees = branchFiltered.filter((emp: any) => {
+            // 1. Check Status (SQL already filters Resigned/Terminated/AWOL, but double-check)
             const inactiveStatuses = ['Resigned', 'Terminated', 'AWOL'];
-            if (inactiveStatuses.includes(emp.employment_status)) return false;
+            if (inactiveStatuses.includes(emp.employment_status)) {
+                console.log(`[Payroll] Dropped ${emp.first_name} ${emp.last_name}: inactive status ${emp.employment_status}`);
+                return false;
+            }
 
             // 2. Must have valid salary info
             let s = emp.salary_info;
-            if (!s) return false;
+            if (!s) {
+                console.log(`[Payroll] Dropped ${emp.first_name} ${emp.last_name}: no salary_info`);
+                return false;
+            }
 
             // Parse if string
             if (typeof s === 'string') {
@@ -300,36 +312,47 @@ export async function POST(request: NextRequest) {
                     s = JSON.parse(s);
                     emp.salary_info = s; // Update object reference for later use
                 } catch (e) {
+                    console.log(`[Payroll] Dropped ${emp.first_name} ${emp.last_name}: salary_info JSON parse error`);
                     return false;
                 }
             }
 
-            // Check numeric values
+            // Check numeric values — accept any of daily_rate, monthly_salary, or basic_salary
             const daily = parseFloat(s.daily_rate) || 0;
             const monthly = parseFloat(s.monthly_salary) || parseFloat(s.basic_salary) || 0;
 
-            if (daily <= 0 && monthly <= 0) return false;
+            if (daily <= 0 && monthly <= 0) {
+                console.log(`[Payroll] Dropped ${emp.first_name} ${emp.last_name}: no salary values (daily=${daily}, monthly=${monthly})`);
+                return false;
+            }
 
-            // 3. Not resigned effective before period end
-            // If periodEnd is provided in body
-            if (emp.date_separated && periodEnd) {
+            // 3. Only exclude if the employee's separation date is BEFORE the payroll period START
+            //    (they had already left before this period began).
+            //    Employees who separated during or after the period should still be paid.
+            if (emp.date_separated && periodStart) {
                 const separationDate = new Date(emp.date_separated);
-                const pEnd = new Date(periodEnd);
+                const pStart = new Date(periodStart);
 
-                // If separation date is ON or BEFORE period end, they are excluded logic
-                if (separationDate <= pEnd) {
+                if (separationDate < pStart) {
+                    console.log(`[Payroll] Dropped ${emp.first_name} ${emp.last_name}: separated before period start`);
                     return false;
                 }
             }
             return true;
         });
 
+        // Summary log
+        console.log(`[Payroll] Final eligible employees: ${employees.length} (from ${totalFromDB} DB rows, ${branchFiltered.length} in branch)`);
+
         if (employees.length === 0) {
-            // Detailed error for debugging
-            const firstEmp = employeesResult.rows[0];
             let debugInfo = '';
-            if (firstEmp) {
-                debugInfo = `Found ${employeesResult.rows.length} raw employees. Sample: ${firstEmp.employment_status}, hasSalary: ${!!firstEmp.salary_info}`;
+            if (branchFiltered.length > 0) {
+                debugInfo = `Found ${branchFiltered.length} employees in branch "${branch}" but none passed eligibility. Check server logs for details.`;
+            } else if (totalFromDB > 0) {
+                const allBranches = [...new Set(allEmployeesFiltered.map((e: any) => e.branch))].join(', ');
+                debugInfo = `Found ${totalFromDB} total employees but none matched branch "${branch}". Branches in DB: ${allBranches}`;
+            } else {
+                debugInfo = `No employees found in the database at all.`;
             }
             return NextResponse.json({ error: `No eligible employees found for this payroll run. ${debugInfo}` }, { status: 400 });
         }
@@ -357,6 +380,12 @@ export async function POST(request: NextRequest) {
             const specialAllowance = getSalaryVal(sInfo.allowances?.special) / 2;
 
             const grossPay = basicPay + regularAllowance + specialAllowance;
+            const fullMonthGross = monthlySalary + (regularAllowance * 2) + (specialAllowance * 2);
+
+            // Strict Validation Rule: Missing data check
+            if (basicPay <= 0) {
+                return NextResponse.json({ error: `Employee ${employee.first_name} ${employee.last_name} has invalid or missing basic salary.` }, { status: 400 });
+            }
 
             // Deductions Calculation
             let phic = 0;
@@ -365,6 +394,11 @@ export async function POST(request: NextRequest) {
             let companyFunds = 0;
             let sss = 0;
             let sssLoan = 0;
+
+            // ER Shares Storage
+            let sss_er = 0;
+            let phic_er = 0;
+            let pagibig_er = 0;
 
             // Common Deductions
             let companyLoan = getSalaryVal(deductionsInfo.company_loan?.amortization || deductionsInfo.company_loan);
@@ -387,9 +421,11 @@ export async function POST(request: NextRequest) {
                 // 1st Cutoff: PHIC, Pag-IBIG, Pag-IBIG Loan, Company Funds
                 phic = getSalaryVal(deductionsInfo.phic); // Legacy name
                 if (!phic) phic = getSalaryVal(deductionsInfo.philhealth_contribution);
+                phic_er = getSalaryVal(deductionsInfo.phic_er);
 
                 pagibig = getSalaryVal(deductionsInfo.pagibig); // Legacy name
                 if (!pagibig) pagibig = getSalaryVal(deductionsInfo.pagibig_contribution);
+                pagibig_er = getSalaryVal(deductionsInfo.pagibig_er);
 
                 pagibigLoan = getSalaryVal(deductionsInfo.pagibig_loan_15th);
                 if (!pagibigLoan && deductionsInfo.pagibig_loan && !deductionsInfo.pagibig_loan_30th) {
@@ -418,8 +454,39 @@ export async function POST(request: NextRequest) {
             // Ensure we are not double-deducting if using monthly values.
             // Usually these fields in salary_info represent the "Deduction per Cutoff".
 
+            // SSS ER Strict Validation & Computation (Applies to both cutoffs for reporting but only deduced on 30th)
+            // We calculate the SSS ER based on the SSS Config brackets for this run.
+            if (cutoffDay === 30 || cutoffDay === 31) {
+                if (!sssConfig) {
+                    return NextResponse.json({ error: `SSS configuration for year ${year} is not set up. Please configure it in Compensation & Benefits.` }, { status: 400 });
+                }
+
+                const brackets = Array.isArray(sssConfig) ? sssConfig : [];
+                // Compare using monthly salary instead of total estimated gross pay (common practice). Using fullMonthGross
+                const matchingBracket = brackets.find((b: any) => fullMonthGross >= Number(b.range_start) && fullMonthGross <= Number(b.range_end)) || brackets[brackets.length - 1];
+
+                if (!matchingBracket) {
+                    return NextResponse.json({ error: `Salary for ${employee.first_name} ${employee.last_name} (${fullMonthGross}) does not match any SSS bracket in the 2025 configuration.` }, { status: 400 });
+                }
+
+                sss_er = Number(matchingBracket.er_share) + Number(matchingBracket.ec);
+            }
+
             const totalDeductions = phic + pagibig + pagibigLoan + companyFunds + sss + sssLoan + companyLoan + cashAdvance + otherDeductions;
             const netPay = grossPay - totalDeductions;
+
+            // Store ER shares separately
+            let expandedBreakdown = deductionsInfo.other_deductions_breakdown ? JSON.parse(deductionsInfo.other_deductions_breakdown) : (otherDeductionsBreakdown ? JSON.parse(otherDeductionsBreakdown) : []);
+
+            // Format and stringify back into other_deductions_breakdown
+            const storedBreakdown = JSON.stringify({
+                custom_deductions: expandedBreakdown,
+                employer_shares: {
+                    sss_er,
+                    phic_er,
+                    pagibig_er
+                }
+            });
 
             const payslipResult = await query(`
                 INSERT INTO payslips (
@@ -467,7 +534,7 @@ export async function POST(request: NextRequest) {
                 companyLoan,
                 cashAdvance,
                 otherDeductions,
-                otherDeductionsBreakdown
+                storedBreakdown
             ]);
 
             payslips.push(payslipResult.rows[0]);

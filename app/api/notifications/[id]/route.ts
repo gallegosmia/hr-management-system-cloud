@@ -17,68 +17,72 @@ export async function PATCH(
 
         const notificationId = params.id;
         const body = await request.json();
-        const { is_read } = body;
+        const { is_read, title, message, type, severity, link } = body;
 
-        // Check if notification exists
-        // If ID is numeric strings, it's likely a DB ID. If it contains dashes generally it's a dynamic ID or generated string
+        // Check if the notificationId exists strictly as a DB primary key (numeric)
+        // AND check if the request explicitly flagged this as a DB ID vs Reference ID.
+        // Actually, safer approach:
+        // 1. Try to find the exact ID in `user_notifications.id`.
+        // 2. If not found, fall back to checking `reference_id`.
+        // BUT `id` is integer. If notificationId is a non-numeric string, parseInt fails and throws.
 
-        // Try to update existing
-        // We use a flexible query to handle both string and int IDs if DB allows. 
-        // But our schema says ID is SERIAL (int). 
-        // Dynamic alerts have string IDs (e.g. '201-105').
-        // So we need to handle "upsert" logic for dynamic alerts.
+        let dbId = Number(notificationId);
 
-        let dbId = parseInt(notificationId);
-        if (isNaN(dbId)) {
-            // It's a dynamic alert ID (e.g. '201-123')
-            // We should check if we already have a record for this "reference_id" for this user
-            // Actually, we can just treat the dynamic ID as the 'reference_id'
+        let existingRecord = null;
+        let isDbId = false;
 
-            const existing = await query(
-                `SELECT * FROM user_notifications WHERE user_id = $1 AND reference_id = $2`,
-                [session.user.id, notificationId]
+        if (!isNaN(dbId)) {
+            // It's strictly numeric. Try to find it as a Primary Key first.
+            const pkCheck = await query(
+                `SELECT * FROM user_notifications WHERE id = $1 AND user_id = $2`,
+                [dbId, session.user.id]
             );
-
-            if (existing.rows.length > 0) {
-                // Update existing
-                await query(
-                    `UPDATE user_notifications 
-                     SET is_read = $1, read_at = CURRENT_TIMESTAMP 
-                     WHERE id = $2`,
-                    [is_read, existing.rows[0].id]
-                );
-                return NextResponse.json({ success: true, id: existing.rows[0].id });
-            } else {
-                // Insert new "read" record for this dynamic alert
-                // We need details from the body to create it properly, or at least a stub
-                const { title, message, type, severity, link } = body;
-
-                await query(
-                    `INSERT INTO user_notifications 
-                     (user_id, title, message, type, severity, link, reference_id, is_read, read_at) 
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
-                    [
-                        session.user.id,
-                        title || 'Notification',
-                        message || '',
-                        type || 'system',
-                        severity || 'low',
-                        link || '#',
-                        notificationId, // Use the dynamic ID as reference_id
-                        true
-                    ]
-                );
-                return NextResponse.json({ success: true, created: true });
+            if (pkCheck.rows.length > 0) {
+                existingRecord = pkCheck.rows[0];
+                isDbId = true;
             }
-        } else {
-            // Normal DB Update
+        }
+
+        // If not found by primary key, or if it's a non-numeric string (like "loan-review-1")
+        if (!existingRecord) {
+            const refCheck = await query(
+                `SELECT * FROM user_notifications WHERE reference_id = $1 AND user_id = $2`,
+                [notificationId, session.user.id]
+            );
+            if (refCheck.rows.length > 0) {
+                existingRecord = refCheck.rows[0];
+            }
+        }
+
+        if (existingRecord) {
+            // Update existing record (read/unread toggling)
             await query(
                 `UPDATE user_notifications 
                  SET is_read = $1, read_at = CURRENT_TIMESTAMP 
                  WHERE id = $2 AND user_id = $3`,
-                [is_read, dbId, session.user.id]
+                [is_read, existingRecord.id, session.user.id]
             );
-            return NextResponse.json({ success: true });
+            return NextResponse.json({ success: true, id: existingRecord.id });
+        } else {
+            // Record does not exist in DB yet.
+            // This happens when front-end passes a dynamic notification (Leaves, Loans) that hasn't been saved yet.
+            // We must insert it into the DB marked as read.
+            await query(
+                `INSERT INTO user_notifications 
+                 (user_id, title, message, type, severity, link, reference_id, is_read, read_at) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
+                [
+                    session.user.id,
+                    title || 'Notification',
+                    message || '',
+                    type || 'system',
+                    severity || 'low',
+                    link || '#',
+                    notificationId, // Use the dynamic ID as reference_id
+                    is_read // true or false
+                ]
+            );
+            return NextResponse.json({ success: true, created: true });
         }
 
     } catch (error) {

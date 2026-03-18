@@ -4,9 +4,13 @@ import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
 
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+
 export default function BonusesPage() {
     const [employees, setEmployees] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isExporting, setIsExporting] = useState(false);
     const [bonusType, setBonusType] = useState<'Midyear' | '13th Month'>('Midyear');
     const [selectedYear, setSelectedYear] = useState('');
     const [selectedBranch, setSelectedBranch] = useState('All');
@@ -83,12 +87,58 @@ export default function BonusesPage() {
         return (annualBonus * months) / 12;
     };
 
-    const generatePDF = () => {
-        const printContainer = document.querySelector('.bonus-print-container');
-        if (printContainer) {
-            (printContainer as HTMLElement).style.display = 'block';
-            window.print();
-            (printContainer as HTMLElement).style.display = 'none';
+    const generatePDF = async () => {
+        const printContainer = document.querySelector('.bonus-print-container') as HTMLElement;
+        if (!printContainer) return;
+
+        try {
+            setIsExporting(true);
+
+            // Temporarily show the container to render it
+            printContainer.style.display = 'block';
+            printContainer.style.width = '215.9mm'; // Force exactly Long Bond Paper width for render
+            printContainer.style.padding = '15mm';
+            printContainer.style.boxSizing = 'border-box';
+            printContainer.style.background = 'white';
+
+            // Ensure children are visible for canvas capture
+            const elements = printContainer.querySelectorAll('*');
+            elements.forEach((el: any) => {
+                if (el.style) el.style.visibility = 'visible';
+            });
+
+            const canvas = await html2canvas(printContainer, {
+                scale: 2, // Higher density for crisp text
+                useCORS: true,
+                logging: false,
+                windowWidth: 1200 // Ensure layout doesn't squish
+            });
+
+            // Hide the container again
+            printContainer.style.display = 'none';
+            printContainer.style.width = '100%';
+
+            const imgData = canvas.toDataURL('image/png');
+
+            // Create PDF with exact Long Bond Paper dimensions: 8.5in x 13in (215.9mm x 330.2mm)
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: [215.9, 330.2]
+            });
+
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`${bonusType}_Acknowledgment_Receipt_${selectedYear}.pdf`);
+
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            alert('Failed to generate PDF. Please try again.');
+        } finally {
+            setIsExporting(false);
+            if (printContainer) printContainer.style.display = 'none';
         }
     };
 
@@ -135,9 +185,10 @@ export default function BonusesPage() {
                                 onClick={generatePDF}
                                 className="btn btn-primary"
                                 style={{ borderRadius: '10px', padding: '0.625rem 1.25rem', fontSize: '0.875rem', boxShadow: '0 4px 10px rgba(37, 99, 235, 0.2)' }}
-                                disabled={!selectedYear || employees.length === 0}
+                                disabled={!selectedYear || employees.length === 0 || isExporting}
                             >
-                                <span style={{ marginRight: '0.5rem' }}>📄</span> Export PDF Receipt
+                                <span style={{ marginRight: '0.5rem' }}>{isExporting ? '⏳' : '📄'}</span>
+                                {isExporting ? 'Generating PDF...' : 'Export PDF Receipt'}
                             </button>
                         </div>
                     </div>
@@ -318,12 +369,15 @@ export default function BonusesPage() {
                         </button>
 
                         <div className="payroll-register-page">
-                            <div className="payslip-header">
-                                <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>Melann Lending Investor Corporation</h2>
-                                <p style={{ fontSize: '1.125rem', fontWeight: 700 }}>{bonusType.toUpperCase()} ACKNOWLEDGMENT RECEIPT</p>
-                                <p style={{ fontSize: '0.875rem' }}>
-                                    For the Year: <strong>{selectedYear}</strong>
-                                </p>
+                            <div className="payslip-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem', marginBottom: '2rem', borderBottom: '2px solid #333', paddingBottom: '1rem' }}>
+                                <img src="/images/logo.jpg" alt="Melann Logo" style={{ width: '80px', height: 'auto', borderRadius: '4px' }} />
+                                <div style={{ textAlign: 'left' }}>
+                                    <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem', margin: 0 }}>Melann Lending Investor Corporation</h2>
+                                    <p style={{ fontSize: '1.125rem', fontWeight: 700, margin: '0.25rem 0' }}>{bonusType.toUpperCase()} ACKNOWLEDGMENT RECEIPT</p>
+                                    <div style={{ display: 'flex', gap: '2rem', fontSize: '0.875rem', margin: 0 }}>
+                                        <p style={{ margin: 0 }}>For the Year: <strong>{selectedYear}</strong></p>
+                                    </div>
+                                </div>
                             </div>
 
                             <table className="payroll-register-table">
@@ -405,12 +459,15 @@ export default function BonusesPage() {
             {/* Print Container (Hidden on screen) */}
             <div className="bonus-print-container" style={{ display: 'none' }}>
                 <div className="payroll-register-page">
-                    <div className="payslip-header">
-                        <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>Melann Lending Investor Corporation</h2>
-                        <p style={{ fontSize: '1.125rem', fontWeight: 700 }}>{bonusType.toUpperCase()} ACKNOWLEDGMENT RECEIPT</p>
-                        <p style={{ fontSize: '0.875rem' }}>
-                            For the Year: <strong>{selectedYear}</strong>
-                        </p>
+                    <div className="payslip-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem', marginBottom: '2rem', borderBottom: '2px solid #333', paddingBottom: '1rem' }}>
+                        <img src="/images/logo.jpg" alt="Melann Logo" style={{ width: '80px', height: 'auto', borderRadius: '4px' }} />
+                        <div style={{ textAlign: 'left' }}>
+                            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem', margin: 0 }}>Melann Lending Investor Corporation</h2>
+                            <p style={{ fontSize: '1.125rem', fontWeight: 700, margin: '0.25rem 0' }}>{bonusType.toUpperCase()} ACKNOWLEDGMENT RECEIPT</p>
+                            <div style={{ display: 'flex', gap: '2rem', fontSize: '0.875rem', margin: 0 }}>
+                                <p style={{ margin: 0 }}>For the Year: <strong>{selectedYear}</strong></p>
+                            </div>
+                        </div>
                     </div>
 
                     <table className="payroll-register-table">
@@ -477,8 +534,8 @@ export default function BonusesPage() {
             <style jsx global>{`
                 @media print {
                     @page {
-                        size: portrait;
-                        margin: 10mm;
+                        size: 8.5in 13in;
+                        margin: 15mm;
                     }
                     body * {
                         visibility: hidden;
@@ -495,26 +552,29 @@ export default function BonusesPage() {
                     }
                     .payroll-register-page {
                         page-break-after: always;
-                        padding: 2rem;
+                        padding: 10mm 15mm;
+                        width: 100%;
+                        max-width: 100%;
+                        box-sizing: border-box;
                     }
                     .payslip-header {
-                        text-align: center;
-                        margin-bottom: 2rem;
-                        border-bottom: 2px solid #333;
-                        padding-bottom: 1rem;
+                        /* Styles handled inline for pdf generation compatibility */
                     }
                     .payroll-register-table {
                         width: 100%;
                         border-collapse: collapse;
                         font-size: 0.75rem;
+                        table-layout: fixed;
                     }
                     .payroll-register-table th,
                     .payroll-register-table td {
                         border: 1px solid #333;
                         padding: 0.5rem;
+                        word-wrap: break-word;
                     }
                     .payroll-register-table th {
-                        background: #f0f0f0;
+                        background: #f0f0f0 !important;
+                        -webkit-print-color-adjust: exact;
                         font-weight: 700;
                     }
                     .signature-col {

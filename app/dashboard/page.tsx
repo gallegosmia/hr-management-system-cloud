@@ -102,6 +102,22 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
+                {user?.role === 'HR' && new Date().getDate() >= 10 && new Date().getDate() <= 15 && (
+                    <div style={{ background: '#fdfbc8', border: '1px solid #fde047', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', color: '#854d0e', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                        <div style={{ fontSize: '1.2rem' }}>🏛️</div>
+                        <div>
+                            <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600 }}>Government Contributions Due</h3>
+                            <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>It is between the 10th and 15th of the month. Please remember to generate the SSS, Pag-IBIG, and PhilHealth contributions.</p>
+                        </div>
+                        <button
+                            onClick={() => router.push('/gov-contributions/generate')}
+                            style={{ marginLeft: 'auto', background: '#ca8a04', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        >
+                            Generate Now
+                        </button>
+                    </div>
+                )}
+
                 <div className="dashboard-content">
 
                     {/* Metrics Row */}

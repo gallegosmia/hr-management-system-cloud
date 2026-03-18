@@ -658,7 +658,11 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
     const start = dateRange?.start ? new Date(dateRange.start) : new Date(now.getFullYear(), now.getMonth(), 1);
     const end = dateRange?.end ? new Date(dateRange.end) : now;
 
-    const attRes = await query("SELECT * FROM attendance WHERE date >= $1 AND date <= $2", [start, end]);
+    // Use ISO strings for safer DB queries (fixes local JSON date comparisons)
+    const startStr = start.toISOString().split('T')[0];
+    const endStr = end.toISOString().split('T')[0];
+
+    const attRes = await query("SELECT * FROM attendance WHERE date >= $1 AND date <= $2", [startStr, endStr]);
     const attendance = attRes.rows;
 
     const leaveRes = await query("SELECT * FROM leave_requests WHERE status = 'Approved'");
@@ -711,14 +715,15 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
 
     // 2. Leave - Computation based primarily on Attendance 'On Leave' status
     const currentYearStart = new Date(now.getFullYear(), 0, 1);
+    const currentYearStartStr = currentYearStart.toISOString().split('T')[0];
     const yearlyLeaveRes = await query(
         "SELECT employee_id, COUNT(*) as count FROM attendance WHERE (LOWER(status) = 'sick leave' OR LOWER(status) = 'vacation leave' OR LOWER(status) = 'emergency leave' OR LOWER(status) = 'on leave' OR LOWER(status) = 'leave without pay') AND date >= $1 GROUP BY employee_id",
-        [currentYearStart]
+        [currentYearStartStr]
     );
     const yearlyAttendanceLeaveMap = new Map(yearlyLeaveRes.rows.map((r: any) => [Number(r.employee_id), parseInt(r.count)]));
     const yearlyBirthdayRes = await query(
         "SELECT employee_id, COUNT(*) as count FROM attendance WHERE LOWER(status) = 'birthday leave' AND date >= $1 GROUP BY employee_id",
-        [currentYearStart]
+        [currentYearStartStr]
     );
     const yearlyAttendanceBirthdayMap = new Map(yearlyBirthdayRes.rows.map((r: any) => [Number(r.employee_id), parseInt(r.count)]));
 

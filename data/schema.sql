@@ -254,3 +254,57 @@ CREATE TABLE IF NOT EXISTS notifications (
     link VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 13. Government Contribution Reports table
+CREATE TABLE IF NOT EXISTS "gov_contribution_reports" (
+    "id" SERIAL PRIMARY KEY,
+    "branch_id" VARCHAR(255) NOT NULL,
+    "payroll_period" VARCHAR(255) NOT NULL,
+    "contribution_type" VARCHAR(255) NOT NULL, -- SSS, Pag-IBIG, PhilHealth
+    "total_er" DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    "total_ee" DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    "total_ec" DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    "total_loan" DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    "status" VARCHAR(50) NOT NULL DEFAULT 'Draft', -- Draft, Pending, Approved, Rejected
+    "created_by" INTEGER REFERENCES "users"("id"),
+    "approved_by" INTEGER REFERENCES "users"("id"),
+    "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "gov_contribution_configs" (
+    "id" SERIAL PRIMARY KEY,
+    "type" VARCHAR(50) NOT NULL, -- SSS, Pag-IBIG, PhilHealth
+    "year_effective" INTEGER NOT NULL,
+    "config_data" JSONB NOT NULL,
+    "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    "updated_by" INTEGER REFERENCES "users"("id"),
+    UNIQUE("type", "year_effective")
+);
+
+CREATE TABLE "gov_contribution_config_logs" (
+    "id" SERIAL PRIMARY KEY,
+    "config_id" INTEGER REFERENCES "gov_contribution_configs"("id") ON DELETE CASCADE,
+    "action" VARCHAR(50) NOT NULL, -- CREATE, UPDATE, DELETE
+    "old_data" JSONB,
+    "new_data" JSONB,
+    "changed_by" INTEGER REFERENCES "users"("id"),
+    "changed_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 14. Government Contribution Details table
+CREATE TABLE "gov_contribution_details" (
+    "id" SERIAL PRIMARY KEY,
+    "report_id" INTEGER REFERENCES "gov_contribution_reports"("id") ON DELETE CASCADE,
+    "employee_id" INTEGER REFERENCES "employees"("id"),
+    "government_number" VARCHAR(255),
+    "salary" DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    "er_share" DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    "ee_share" DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    "ec" DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    "loan_deduction" DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    "config_id_used" INTEGER REFERENCES "gov_contribution_configs"("id"),
+    "rate_used" JSONB,
+    "computation_date" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

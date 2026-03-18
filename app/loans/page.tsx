@@ -219,7 +219,7 @@ export default function LoansPage() {
                                     <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
 
                                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                            {(loan.status === 'Draft' || loan.status === 'Submitted') && (
+                                            {(loan.status === 'Draft' || loan.status === 'Submitted') && (user?.employee_id === loan.employee_id || user?.role === 'HR' || user?.role === 'Admin') && (
                                                 <Link href={`/loans/${loan.id}/edit`} style={{
                                                     color: '#0f172a',
                                                     background: '#f1f5f9',

@@ -68,7 +68,11 @@ function loadDB() {
     payroll_runs: [],
     payslips: [],
     payroll_audit_log: [],
-    employee_loans: []
+    employee_loans: [],
+    gov_contribution_reports: [],
+    gov_contribution_details: [],
+    gov_contribution_configs: [],
+    gov_contribution_config_logs: []
   };
 }
 
