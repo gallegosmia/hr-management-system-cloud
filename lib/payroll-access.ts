@@ -12,6 +12,15 @@ export interface User {
 }
 
 /**
+ * Normalize branch name for comparison
+ * Strips trailing "Branch" word, trims whitespace, uppercases
+ */
+function normalizeBranch(branch: string | undefined | null): string {
+    if (!branch) return '';
+    return branch.replace(/\s*branch\s*$/i, '').trim().toUpperCase();
+}
+
+/**
  * Check if user can access payroll for a specific branch
  * Rules:
  * - Super Admin: All branches
@@ -20,7 +29,7 @@ export interface User {
  * - HR: Only assigned branch
  * - Others: No access
  */
-export function canAccessPayroll(user: User, branch: string): boolean {
+export function canAccessPayroll(user: User, branch: string | null | undefined): boolean {
     // Super Admin can access all branches
     if (user.role === 'Super Admin' || user.role === 'Admin' || user.role === 'Operations Manager') {
         return true;
@@ -36,14 +45,23 @@ export function canAccessPayroll(user: User, branch: string): boolean {
         return true;
     }
 
-    // HR can only access their assigned branch
-    if (user.role === 'HR') {
-        return user.assigned_branch === branch || branch === 'All';
+    // Normalize the payroll run's branch value
+    const normalizedPayrollBranch = normalizeBranch(branch);
+
+    // If payroll run has no branch (null/empty) or is marked 'All', allow privileged roles
+    if (!normalizedPayrollBranch || normalizedPayrollBranch === 'ALL') {
+        return ['HR', 'Manager', 'Super Admin', 'Admin', 'Operations Manager', 'Finance',
+                'President', 'Vice President'].includes(user.role);
     }
 
-    // Manager can view their branch
+    // HR can only access their assigned branch (normalized comparison)
+    if (user.role === 'HR') {
+        return normalizeBranch(user.assigned_branch) === normalizedPayrollBranch;
+    }
+
+    // Manager can view their branch (normalized comparison)
     if (user.role === 'Manager') {
-        return user.assigned_branch === branch;
+        return normalizeBranch(user.assigned_branch) === normalizedPayrollBranch;
     }
 
     return false;
@@ -53,7 +71,7 @@ export function canAccessPayroll(user: User, branch: string): boolean {
  * Check if user can create payroll
  */
 export function canCreatePayroll(user: User): boolean {
-    return ['Super Admin', 'Admin', 'HR', 'President', 'Vice President', 'Operations Manager'].includes(user.role);
+    return ['Super Admin', 'Admin', 'HR', 'Manager', 'President', 'Vice President', 'Operations Manager'].includes(user.role);
 }
 
 /**
@@ -74,14 +92,14 @@ export function canLockPayroll(user: User): boolean {
  * Check if user can edit payroll days
  */
 export function canEditPayrollDays(user: User): boolean {
-    return ['Super Admin', 'Admin', 'HR', 'President', 'Vice President', 'Operations Manager'].includes(user.role);
+    return ['Super Admin', 'Admin', 'HR', 'Manager', 'President', 'Vice President', 'Operations Manager'].includes(user.role);
 }
 
 /**
  * Check if user can delete payroll
  */
 export function canDeletePayroll(user: User): boolean {
-    return ['Super Admin', 'Admin', 'HR', 'Operations Manager', 'President', 'Vice President', 'Finance'].includes(user.role);
+    return ['Super Admin', 'Admin', 'HR', 'Manager', 'Operations Manager', 'President', 'Vice President', 'Finance'].includes(user.role);
 }
 
 /**

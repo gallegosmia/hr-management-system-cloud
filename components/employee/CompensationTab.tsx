@@ -433,6 +433,8 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
                                     <input
                                         type="number"
                                         value={(salaryInfo.deductions as any)?.[key] || 0}
+                                        disabled={key === 'company_loan_balance'}
+                                        readOnly={key === 'company_loan_balance'}
                                         onChange={(e) => setSalaryInfo({
                                             ...salaryInfo,
                                             deductions: {
@@ -475,25 +477,33 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
                                 {editing ? (
                                     <input
                                         type="number"
-                                        value={(salaryInfo.deductions as any)?.[key] || 0}
-                                        onChange={(e) => setSalaryInfo({
-                                            ...salaryInfo,
-                                            deductions: {
-                                                ...salaryInfo.deductions,
-                                                [key]: parseFloat(e.target.value) || 0
-                                            }
-                                        })}
+                                        value={key === 'company_loan_balance' ? (employee?.ledger_balance || 0) : ((salaryInfo.deductions as any)?.[key] || 0)}
+                                        disabled={key === 'company_loan_balance'}
+                                        readOnly={key === 'company_loan_balance'}
+                                        onChange={(e) => {
+                                            if (key === 'company_loan_balance') return;
+                                            setSalaryInfo({
+                                                ...salaryInfo,
+                                                deductions: {
+                                                    ...salaryInfo.deductions,
+                                                    [key]: parseFloat(e.target.value) || 0
+                                                }
+                                            });
+                                        }}
                                         style={{
                                             width: '100%',
                                             padding: '8px 12px',
                                             border: '1px solid #d1d5db',
                                             borderRadius: '6px',
-                                            fontSize: '14px'
+                                            fontSize: '14px',
+                                            backgroundColor: key === 'company_loan_balance' ? '#f3f4f6' : 'white',
+                                            color: key === 'company_loan_balance' ? '#9ca3af' : 'inherit',
+                                            cursor: key === 'company_loan_balance' ? 'not-allowed' : 'text'
                                         }}
                                     />
                                 ) : (
                                     <div style={{ fontSize: '15px', fontWeight: 500, color: '#ef4444' }}>
-                                        {formatCurrency((salaryInfo.deductions as any)?.[key] || 0)}
+                                        {formatCurrency(key === 'company_loan_balance' ? (employee?.ledger_balance || 0) : ((salaryInfo.deductions as any)?.[key] || 0))}
                                     </div>
                                 )}
                             </div>

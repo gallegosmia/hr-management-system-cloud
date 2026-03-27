@@ -168,6 +168,10 @@ export default function PayslipViewModal({ payslip, onClose, payrollRun }: Paysl
                                 <span className="label">Emergency Loan</span>
                                 <span className="amount">{payslip.company_loan && payslip.company_loan > 0 ? formatCurrency(payslip.company_loan).replace('₱', '') : '-'}</span>
                             </div>
+                            <div className="row">
+                                <span className="label">Other Deductions</span>
+                                <span className="amount">{payslip.other_deductions && payslip.other_deductions > 0 ? formatCurrency(payslip.other_deductions).replace('₱', '') : '-'}</span>
+                            </div>
                             <div className="row total-row">
                                 <span className="label">Total Deduction</span>
                                 <span className="amount">{formatCurrency(payslip.total_deductions).replace('₱', '')}</span>

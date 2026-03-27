@@ -426,10 +426,6 @@ export async function POST(request: NextRequest) {
                 pagibig_er = pagibig; // ER strictly matches EE
 
                 pagibigLoan = getSalaryVal(deductionsInfo.pagibig_loan_15th);
-                if (!pagibigLoan && deductionsInfo.pagibig_loan && !deductionsInfo.pagibig_loan_30th) {
-                    // Fallback for legacy single loan field (assume 1st cutoff if not split)
-                    pagibigLoan = getSalaryVal(deductionsInfo.pagibig_loan?.amortization || deductionsInfo.pagibig_loan);
-                }
 
                 companyFunds = getSalaryVal(deductionsInfo.company_funds || deductionsInfo.company_cash_fund);
             } else {
@@ -437,9 +433,10 @@ export async function POST(request: NextRequest) {
                 sssLoan = getSalaryVal(deductionsInfo.sss_loan?.amortization || deductionsInfo.sss_loan);
 
                 // Add Pag-IBIG Loan 30th support
-                const pbLoan30 = getSalaryVal(deductionsInfo.pagibig_loan_30th);
-                if (pbLoan30 > 0) {
-                    pagibigLoan = pbLoan30;
+                pagibigLoan = getSalaryVal(deductionsInfo.pagibig_loan_30th);
+                if (!pagibigLoan) {
+                    // Fallback for legacy single loan field (moved to 2nd cutoff by user request)
+                    pagibigLoan = getSalaryVal(deductionsInfo.pagibig_loan?.amortization || deductionsInfo.pagibig_loan);
                 }
 
                 // 2nd Cutoff (30/31): 1️⃣ SSS Source of Truth Rule

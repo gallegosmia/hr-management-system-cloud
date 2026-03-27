@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useRef, useMemo } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -999,12 +999,24 @@ export default function AttendancePage() {
                                                 </span>
                                             </td>
                                             <td style={{ padding: '8px 12px', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
-                                                <button
-                                                    onClick={() => { setEditingRecord({ ...record }); setIsEditModalOpen(true); }}
-                                                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: '4px' }}
-                                                >
-                                                    ✏️
-                                                </button>
+                                                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                                    <button
+                                                        onClick={() => { setEditingRecord({ ...record }); setIsEditModalOpen(true); }}
+                                                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: '4px' }}
+                                                        title="Edit"
+                                                    >
+                                                        ✏️
+                                                    </button>
+                                                    {user?.role !== 'Employee' && (
+                                                        <button
+                                                            onClick={() => handleDelete(record.id)}
+                                                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '4px' }}
+                                                            title="Delete"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
@@ -1029,7 +1041,12 @@ export default function AttendancePage() {
                                         }}>
                                             {record.status}
                                         </span>
-                                        <button onClick={() => { setEditingRecord({ ...record }); setIsEditModalOpen(true); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#9ca3af' }}>⋮</button>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button onClick={() => { setEditingRecord({ ...record }); setIsEditModalOpen(true); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#9ca3af' }} title="Edit">✏️</button>
+                                            {user?.role !== 'Employee' && (
+                                                <button onClick={() => handleDelete(record.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ef4444' }} title="Delete">🗑️</button>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

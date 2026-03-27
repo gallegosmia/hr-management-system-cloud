@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAll, getById, update, remove } from '@/lib/database';
+import { getAll, getById, update, remove, query } from '@/lib/database';
 import { createLeaveRequest, getLeaveRequests, getLeaveSettings } from '@/lib/data';
 import { validateBranchRequest } from '@/lib/middleware/branch-auth';
 import { filterByBranch } from '@/lib/branch-access';
+import { createNotification } from '@/lib/notifications';
 
 export async function GET(request: NextRequest) {
     try {
@@ -158,11 +159,33 @@ export async function PATCH(request: NextRequest) {
                 remarks,
                 updated_at: new Date().toISOString()
             });
+
+            try {
+                const userRes = await query(`SELECT id FROM users WHERE employee_id = $1 LIMIT 1`, [leaveRequest.employee_id]);
+                if (userRes.rows.length > 0) {
+                    await createNotification({
+                        userId: userRes.rows[0].id,
+                        type: 'LEAVE_REJECTED',
+                        title: 'Leave Request Rejected',
+                        message: `Your ${leaveRequest.leave_type} request has been rejected. Remarks: ${remarks || 'None'}`,
+                        link: '/leave',
+                        referenceId: `leave-${id}`,
+                        severity: 'high'
+                    });
+                }
+            } catch (e) { console.error('Failed to notify leave rejection:', e); }
+
             return NextResponse.json({ success: true });
         }
 
         if (status === 'Approved') {
             const currentStatus = leaveRequest.status;
+            let targetUserId: number | null = null;
+            
+            try {
+                const userRes = await query(`SELECT id FROM users WHERE employee_id = $1 LIMIT 1`, [leaveRequest.employee_id]);
+                if (userRes.rows.length > 0) targetUserId = userRes.rows[0].id;
+            } catch (e) {}
 
             if (currentStatus === 'Pending Branch Manager' || currentStatus === 'Pending') {
                 await update('leave_requests', id, {
@@ -173,6 +196,19 @@ export async function PATCH(request: NextRequest) {
                     remarks: 'Approved by Branch Manager',
                     updated_at: new Date().toISOString()
                 });
+                
+                if (targetUserId) {
+                    await createNotification({
+                        userId: targetUserId,
+                        type: 'LEAVE_APPROVED',
+                        title: 'Leave Request Initial Approval',
+                        message: `Your ${leaveRequest.leave_type} request was approved by the Branch Manager and is pending EVP approval.`,
+                        link: '/leave',
+                        referenceId: `leave-${id}`,
+                        severity: 'medium'
+                    });
+                }
+
                 return NextResponse.json({
                     success: true,
                     message: 'Approved by Branch Manager. Pending EVP approval.'
@@ -192,6 +228,19 @@ export async function PATCH(request: NextRequest) {
                     final_approved_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 });
+
+                if (targetUserId) {
+                    await createNotification({
+                        userId: targetUserId,
+                        type: 'LEAVE_APPROVED',
+                        title: 'Leave Request Fully Approved',
+                        message: `Your ${leaveRequest.leave_type} request has been fully approved by the EVP.`,
+                        link: '/leave',
+                        referenceId: `leave-${id}`,
+                        severity: 'medium'
+                    });
+                }
+
                 return NextResponse.json({
                     success: true,
                     message: 'Fully approved by Executive Vice President.'

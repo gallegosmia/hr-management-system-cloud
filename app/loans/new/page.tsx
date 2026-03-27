@@ -73,7 +73,7 @@ export default function NewLoanPage() {
                 headers: { 'x-session-id': sessionId || '' }
             });
             const data = await res.json();
-            setEmployees(Array.isArray(data) ? data : []);
+            setEmployees(Array.isArray(data) ? data.filter((emp: any) => !['Resigned', 'Terminated', 'AWOL'].includes(emp.employment_status)) : []);
         } catch (error) {
             console.error('Fetch employees error:', error);
         } finally {
@@ -98,7 +98,7 @@ export default function NewLoanPage() {
     };
 
     const getDeduction = (amount: number) => {
-        if (amount < 5000) return 0;
+        if (amount < 1000) return 0;
         if (amount <= 10000) return 500;
         if (amount <= 15000) return 600;
         if (amount <= 20000) return 800;
@@ -288,7 +288,7 @@ export default function NewLoanPage() {
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                                     <span style={{ fontSize: '0.7rem', color: '#0369a1', fontWeight: 700, textTransform: 'uppercase' }}>Current Balance</span>
-                                    <span style={{ fontSize: '0.875rem', fontWeight: 800, color: '#ef4444' }}>- ₱{eligibility.currentBalance.toLocaleString()}</span>
+                                    <span style={{ fontSize: '0.875rem', fontWeight: 800, color: '#64748b' }}>₱{eligibility.currentBalance.toLocaleString()}</span>
                                 </div>
                                 <div style={{ height: '1px', background: '#bae6fd', margin: '8px 0' }}></div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>

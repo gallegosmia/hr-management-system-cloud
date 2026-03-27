@@ -61,18 +61,22 @@ export default function PayrollListPage() {
             });
             const data = await response.json();
             if (data.user) {
-                const canCreate = ['Super Admin', 'Admin', 'HR', 'President', 'Vice President'].includes(data.user.role);
+                const canCreate = ['Super Admin', 'Admin', 'HR', 'Manager', 'President', 'Vice President'].includes(data.user.role);
                 const assignedBranch = data.user.assigned_branch ? data.user.assigned_branch.replace(/\s+Branch$/i, '').trim() : '';
 
                 const accessibleBranches = ['Super Admin', 'Admin', 'President', 'Vice President', 'Finance', 'Operations Manager'].includes(data.user.role)
                     ? ['All', 'Ormoc', 'Naval']
                     : [assignedBranch];
 
-                const canDelete = ['Super Admin', 'Admin', 'President', 'Vice President', 'HR', 'Finance'].includes(data.user.role);
+                const canDelete = ['Super Admin', 'Admin', 'President', 'Vice President', 'HR', 'Manager', 'Finance'].includes(data.user.role);
                 setPermissions({ canCreate, canDelete, accessibleBranches });
 
                 if (!['Super Admin', 'Admin', 'President', 'Vice President', 'Finance', 'Operations Manager'].includes(data.user.role)) {
                     setFilters(prev => ({ ...prev, branch: assignedBranch }));
+                }
+
+                if (data.user.role === 'Manager') {
+                    setFilters(prev => ({ ...prev, status: 'Under Review - Branch Manager' }));
                 }
 
                 if (data.user.role === 'Operations Manager') {
@@ -164,6 +168,7 @@ export default function PayrollListPage() {
         if (s === 'released') return { bg: '#dcfce7', text: '#166534', dot: '#22c55e' }; // Green
         if (s === 'for release') return { bg: '#dbeafe', text: '#1e40af', dot: '#3b82f6' }; // Blue
         if (s.includes('vice president')) return { bg: '#fef9c3', text: '#854d0e', dot: '#eab308' }; // Yellow (VP)
+        if (s.includes('branch manager')) return { bg: '#e0e7ff', text: '#4338ca', dot: '#6366f1' }; // Indigo (Branch Manager)
         if (s.includes('operations')) return { bg: '#ffedd5', text: '#9a3412', dot: '#f97316' }; // Orange (Ops)
         if (s.includes('draft')) return { bg: '#f3f4f6', text: '#4b5563', dot: '#9ca3af' }; // Gray
         if (s.includes('returned')) return { bg: '#fee2e2', text: '#991b1b', dot: '#ef4444' }; // Red
@@ -276,6 +281,7 @@ export default function PayrollListPage() {
                                     <option value="approved">Approved</option>
                                     <option value="all">All Statuses</option>
                                     <option value="Draft">Draft</option>
+                                    <option value="Under Review - Branch Manager">For Branch Manager Review</option>
                                     <option value="Under Review - Operations Manager">For Ops Review</option>
                                     <option value="Under Review - Vice President">For VP Approval</option>
                                     <option value="Approved">Approved</option>
@@ -355,6 +361,7 @@ export default function PayrollListPage() {
 
                                     // STRICT STATUS DISPLAY NAMES
                                     if (s === 'draft') displayStatus = 'Draft';
+                                    else if (s === 'under review - branch manager') displayStatus = 'For Branch Manager Approval';
                                     else if (s === 'under review - operations manager') displayStatus = 'For Operations Manager Approval';
                                     else if (s === 'under review - vice president') displayStatus = 'For Executive Vice President Approval';
                                     else if (s === 'for release') displayStatus = 'FOR RELEASE';
@@ -400,7 +407,7 @@ export default function PayrollListPage() {
                                                             }}>
                                                                 Edit
                                                             </button>
-                                                        ) : s.includes('review') || s.includes('operations') || s.includes('vice president') || s === 'for release' ? (
+                                                        ) : s.includes('review') || s.includes('operations') || s.includes('branch manager') || s.includes('vice president') || s === 'for release' ? (
                                                             <button style={{
                                                                 background: '#6366f1', border: 'none', cursor: 'pointer',
                                                                 color: 'white', fontSize: '13px', fontWeight: '600',

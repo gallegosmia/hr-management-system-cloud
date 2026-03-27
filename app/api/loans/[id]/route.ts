@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateBranchRequest } from '@/lib/middleware/branch-auth';
 import { getEmergencyLoanById, updateEmergencyLoan, logAudit, updateEmployee, getEmployeeById, addLoanToLedger } from '@/lib/data';
+import { query } from '@/lib/database';
+import { createNotification } from '@/lib/notifications';
 
 export async function GET(
     request: NextRequest,
@@ -113,6 +115,38 @@ export async function PATCH(
                     })
                 });
             }
+
+            try {
+                const userRes = await query(`SELECT id FROM users WHERE employee_id = $1 LIMIT 1`, [currentLoan.employee_id]);
+                if (userRes.rows.length > 0) {
+                    await createNotification({
+                        userId: userRes.rows[0].id,
+                        type: 'LOAN_APPROVED',
+                        title: 'Loan Request Approved',
+                        message: `Your emergency loan request for ${currentLoan.category} has been approved.`,
+                        link: `/loans/${loanId}`,
+                        referenceId: `loan-${loanId}-approved`,
+                        severity: 'high'
+                    });
+                }
+            } catch (e) { console.error('Failed to notify loan approval:', e); }
+        }
+
+        if (body.status === 'Rejected' && currentLoan.status !== 'Rejected') {
+            try {
+                const userRes = await query(`SELECT id FROM users WHERE employee_id = $1 LIMIT 1`, [currentLoan.employee_id]);
+                if (userRes.rows.length > 0) {
+                    await createNotification({
+                        userId: userRes.rows[0].id,
+                        type: 'LOAN_REJECTED',
+                        title: 'Loan Request Rejected',
+                        message: `Your emergency loan request for ${currentLoan.category} has been rejected.`,
+                        link: `/loans/${loanId}`,
+                        referenceId: `loan-${loanId}-rejected`,
+                        severity: 'high'
+                    });
+                }
+            } catch (e) { console.error('Failed to notify loan rejection:', e); }
         }
 
         // Release Action
@@ -149,8 +183,11 @@ export async function PATCH(
                 }
 
                 updates.first_release_amount = first;
+                updates.first_release_date = body.first_release_date || null;
                 updates.second_release_amount = second;
+                updates.second_release_date = body.second_release_date || null;
                 updates.last_release_amount = last;
+                updates.last_release_date = body.last_release_date || null;
                 updates.released_amount = totalReleased;
                 updates.total_released_amount = totalReleased;
                 updates.remaining_balance = approvedAmount - totalReleased;

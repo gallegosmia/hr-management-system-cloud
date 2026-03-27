@@ -154,8 +154,11 @@ export interface EmergencyLoan {
     remaining_balance?: number;
     tracker_status?: string;
     first_release_amount?: number;
+    first_release_date?: string | null;
     second_release_amount?: number;
+    second_release_date?: string | null;
     last_release_amount?: number;
+    last_release_date?: string | null;
 
     metadata: any;
     created_at: string;
@@ -713,37 +716,38 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
         };
     });
 
-    // 2. Leave - Computation based primarily on Attendance 'On Leave' status
+    // 2. Leave - Computation based strictly on Attendance records
     const currentYearStart = new Date(now.getFullYear(), 0, 1);
     const currentYearStartStr = currentYearStart.toISOString().split('T')[0];
     const yearlyLeaveRes = await query(
-        "SELECT employee_id, COUNT(*) as count FROM attendance WHERE (LOWER(status) = 'sick leave' OR LOWER(status) = 'vacation leave' OR LOWER(status) = 'emergency leave' OR LOWER(status) = 'on leave' OR LOWER(status) = 'leave without pay') AND date >= $1 GROUP BY employee_id",
+        "SELECT employee_id, status as leave_type, COUNT(*) as count FROM attendance WHERE (LOWER(status) = 'sick leave' OR LOWER(status) = 'vacation leave' OR LOWER(status) = 'emergency leave' OR LOWER(status) = 'on leave' OR LOWER(status) = 'birthday leave' OR LOWER(status) = 'leave without pay') AND date >= $1 GROUP BY employee_id, status",
         [currentYearStartStr]
     );
-    const yearlyAttendanceLeaveMap = new Map(yearlyLeaveRes.rows.map((r: any) => [Number(r.employee_id), parseInt(r.count)]));
-    const yearlyBirthdayRes = await query(
-        "SELECT employee_id, COUNT(*) as count FROM attendance WHERE LOWER(status) = 'birthday leave' AND date >= $1 GROUP BY employee_id",
-        [currentYearStartStr]
-    );
-    const yearlyAttendanceBirthdayMap = new Map(yearlyBirthdayRes.rows.map((r: any) => [Number(r.employee_id), parseInt(r.count)]));
+
+    const attendanceLeaveMap = new Map();
+    for (const r of yearlyLeaveRes.rows) {
+        const empId = Number(r.employee_id);
+        if (!attendanceLeaveMap.has(empId)) {
+            attendanceLeaveMap.set(empId, { totalUsed: 0, details: {} });
+        }
+        
+        const type = r.leave_type;
+        const count = parseInt(r.count);
+        const entry = attendanceLeaveMap.get(empId);
+        
+        // Ensure "Sick Leave", "Vacation Leave" keys fit exactly into details based on status string matches
+        entry.details[type] = count;
+        
+        if (type.toLowerCase() !== 'birthday leave' && type.toLowerCase() !== 'leave without pay') {
+            entry.totalUsed += count;
+        }
+    }
 
     const leaveUsage = activeEmployees.map((emp: any) => {
-        const empLeavesFiled = leaves.filter((l: any) => l.employee_id === emp.id);
-
-        // Attendance records are the primary truth for usage
-        const used = yearlyAttendanceLeaveMap.get(emp.id) || 0;
-        const attendanceBirthdayUsed = yearlyAttendanceBirthdayMap.get(emp.id) || 0;
-
-        // Validation: We can compare filed vs logs if needed, but 'used' is attendance-based
-        const filedCount = empLeavesFiled.reduce((acc: number, curr: any) => acc + Number(curr.days_count), 0);
-
-        const byType = empLeavesFiled.reduce((acc: any, curr: any) => {
-            acc[curr.leave_type] = (acc[curr.leave_type] || 0) + Number(curr.days_count);
-            return acc;
-        }, {});
-
-        // Specific count for Birthday Leave - preferring attendance if available
-        const birthdayLeaveCount = Math.max(byType['Birthday Leave'] || 0, attendanceBirthdayUsed);
+        const attendanceData = attendanceLeaveMap.get(emp.id) || { totalUsed: 0, details: {} };
+        const used = attendanceData.totalUsed;
+        const byType = attendanceData.details;
+        const birthdayLeaveCount = byType['Birthday Leave'] || 0;
 
         const entitlement = Number(emp.leave_credits) || 5;
         return {
@@ -752,11 +756,11 @@ export async function getDetailedReportsData(dateRange?: { start: string, end: s
             department: emp.department,
             branch: emp.branch,
             entitlement,
-            used,           // Counts 'On Leave', 'Sick Leave', etc. in attendance for the current year
+            used,           // Counts deductible leaves strictly from attendance
             remaining: entitlement - used,
-            details: byType,
+            details: byType, // Purely attendance-based breakdown
             birthdayLeaveUsed: birthdayLeaveCount,
-            filedValidation: filedCount // Retained for background validation
+            filedValidation: 0 // Interface retained but fully disconnected from filed leaves
         };
     });
 

@@ -2,42 +2,19 @@ import { Pool } from 'pg';
 import fs from 'fs';
 import path from 'path';
 
-async function test() {
-    let url = null;
-    if (fs.existsSync(path.join(process.cwd(), '.env'))) {
-        const env = fs.readFileSync(path.join(process.cwd(), '.env'), 'utf-8');
-        const match = env.match(/^DATABASE_URL=(.+)$/m);
-        if (match) url = match[1].trim();
-    }
+const pool = new Pool({
+    connectionString: "postgresql://postgres.kxwevzvztrdcksuvkwqf:HR-System-Cloud-2026!@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true",
+    ssl: { rejectUnauthorized: false }
+});
 
-    if (!url) {
-        console.log('No DB URL');
-        return;
-    }
-
-    const pool = new Pool({
-        connectionString: url,
-        ssl: { rejectUnauthorized: false }
-    });
-
+async function run() {
     try {
-        await pool.query(`
-                INSERT INTO audit_logs(user_id, action, details, created_at)
-                VALUES($1, $2, $3, CURRENT_TIMESTAMP)
-            `, [1, 'DELETE_PAYROLL', '{}']);
-        console.log('Audit log insert successful');
+        const res = await pool.query(`SELECT id, run_number, status, workflow_stage FROM payroll_runs ORDER BY id DESC LIMIT 5`);
+        console.log(res.rows);
     } catch (e: any) {
-        console.log('Audit log insert error:', e.message);
+        console.error(e.message);
+    } finally {
+        await pool.end();
     }
-    
-    try {
-        const res = await pool.query(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'audit_logs'`);
-        console.log('audit_logs columns:', res.rows);
-    } catch (e: any) {
-        console.log('Schema check error:', e.message);
-    }
-
-    pool.end();
 }
-
-test();
+run();

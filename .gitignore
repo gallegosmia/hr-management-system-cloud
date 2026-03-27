@@ -48,3 +48,30 @@ next-env.d.ts
 *.swp
 *.swo
 *~
+
+# Local database data (sensitive - do not push)
+data/database.json
+data/database.json.bak*
+data/*.backup.*.json
+
+# Temporary migration/patch/debug scripts
+fix-*.js
+patch-*.js
+debug-*.js
+clear-*.js
+delete-*.js
+add-*.js
+update-*.js
+remove-*.js
+restore-*.js
+migrate-*.js
+migrate_*.js
+verify-*.js
+check-*.js
+test-api.js
+test-api.ts
+test-delete.ts
+
+# Mobile kiosk backup (old version)
+mobile-kiosk-old/
+

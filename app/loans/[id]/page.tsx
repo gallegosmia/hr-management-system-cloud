@@ -35,8 +35,11 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
 
     // Staggered Release State
     const [firstRelease, setFirstRelease] = useState<number | ''>('');
+    const [firstReleaseDate, setFirstReleaseDate] = useState<string>('');
     const [secondRelease, setSecondRelease] = useState<number | ''>('');
+    const [secondReleaseDate, setSecondReleaseDate] = useState<string>('');
     const [lastRelease, setLastRelease] = useState<number | ''>('');
+    const [lastReleaseDate, setLastReleaseDate] = useState<string>('');
     const [staggeredTotal, setStaggeredTotal] = useState(0);
 
     useEffect(() => {
@@ -160,8 +163,11 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
 
             if (releaseType === 'STAGGERED') {
                 body.first_release_amount = Number(firstRelease) || 0;
+                body.first_release_date = firstReleaseDate || null;
                 body.second_release_amount = Number(secondRelease) || 0;
+                body.second_release_date = secondReleaseDate || null;
                 body.last_release_amount = Number(lastRelease) || 0;
+                body.last_release_date = lastReleaseDate || null;
             }
 
             const res = await fetch(`/api/loans/${params.id}`, {
@@ -439,34 +445,67 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
 
                             <div className="staggered-form" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                 <div className="input-group">
-                                    <label>1st Released Amount (Required)</label>
-                                    <input
-                                        type="number"
-                                        className="form-input"
-                                        value={firstRelease}
-                                        onChange={e => setFirstRelease(e.target.value ? Number(e.target.value) : '')}
-                                        placeholder="0.00"
-                                    />
+                                    <label>1st Released Amount & Date (Required)</label>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <input
+                                            type="number"
+                                            className="form-input"
+                                            style={{ flex: 1 }}
+                                            value={firstRelease}
+                                            onChange={e => setFirstRelease(e.target.value ? Number(e.target.value) : '')}
+                                            placeholder="0.00"
+                                        />
+                                        <input
+                                            type="date"
+                                            className="form-input"
+                                            style={{ flex: 1 }}
+                                            value={firstReleaseDate}
+                                            onChange={e => setFirstReleaseDate(e.target.value)}
+                                            required={!!firstRelease}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="input-group">
-                                    <label>2nd Released Amount (Optional)</label>
-                                    <input
-                                        type="number"
-                                        className="form-input"
-                                        value={secondRelease}
-                                        onChange={e => setSecondRelease(e.target.value ? Number(e.target.value) : '')}
-                                        placeholder="0.00"
-                                    />
+                                    <label>2nd Released Amount & Date (Optional)</label>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <input
+                                            type="number"
+                                            className="form-input"
+                                            style={{ flex: 1 }}
+                                            value={secondRelease}
+                                            onChange={e => setSecondRelease(e.target.value ? Number(e.target.value) : '')}
+                                            placeholder="0.00"
+                                        />
+                                        <input
+                                            type="date"
+                                            className="form-input"
+                                            style={{ flex: 1 }}
+                                            value={secondReleaseDate}
+                                            onChange={e => setSecondReleaseDate(e.target.value)}
+                                            required={!!secondRelease}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="input-group">
-                                    <label>Last Released Amount (Optional)</label>
-                                    <input
-                                        type="number"
-                                        className="form-input"
-                                        value={lastRelease}
-                                        onChange={e => setLastRelease(e.target.value ? Number(e.target.value) : '')}
-                                        placeholder="0.00"
-                                    />
+                                    <label>Last Released Amount & Date (Optional)</label>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <input
+                                            type="number"
+                                            className="form-input"
+                                            style={{ flex: 1 }}
+                                            value={lastRelease}
+                                            onChange={e => setLastRelease(e.target.value ? Number(e.target.value) : '')}
+                                            placeholder="0.00"
+                                        />
+                                        <input
+                                            type="date"
+                                            className="form-input"
+                                            style={{ flex: 1 }}
+                                            value={lastReleaseDate}
+                                            onChange={e => setLastReleaseDate(e.target.value)}
+                                            required={!!lastRelease}
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="summary-box" style={{ background: '#f8fafc', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>

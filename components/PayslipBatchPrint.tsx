@@ -181,6 +181,10 @@ export default function PayslipBatchPrint({ payslips }: PayslipBatchPrintProps) 
                                         <span className="label">SSS Loan</span>
                                         <span className="amount">{safeVal(payslip.sss_loan) > 0 ? formatCurrency(safeVal(payslip.sss_loan)).replace('₱', '') : '-'}</span>
                                     </div>
+                                    <div className="line-item">
+                                        <span className="label">Other Deductions</span>
+                                        <span className="amount">{safeVal(payslip.other_deductions) > 0 ? formatCurrency(safeVal(payslip.other_deductions)).replace('₱', '') : '-'}</span>
+                                    </div>
                                     <div className="line-item total-line">
                                         <span className="label">Total Deduction</span>
                                         <span className="amount font-bold">{formatCurrency(safeVal(payslip.total_deductions)).replace('₱', '')}</span>

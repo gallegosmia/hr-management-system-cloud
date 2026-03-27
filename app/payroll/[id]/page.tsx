@@ -180,7 +180,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
             if (data.user) {
                 setUser(data.user);
                 const canEdit = ['Super Admin', 'Admin', 'HR', 'President', 'Vice President', 'Operations Manager'].includes(data.user.role);
-                const canApprove = ['Super Admin', 'President', 'Vice President', 'Operations Manager'].includes(data.user.role);
+                const canApprove = ['Super Admin', 'President', 'Vice President', 'Operations Manager', 'Manager'].includes(data.user.role);
                 const canLock = ['Super Admin', 'President', 'Vice President', 'Operations Manager'].includes(data.user.role);
                 const canDelete = data.user.role === 'Super Admin';
 
@@ -816,7 +816,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                             </div>
                         </div>
 
-                        {/* Operations Manager Step */}
+                                                {/* Branch Manager Step */}
                         <div className="step-item">
                             <div className="step-left">
                                 <div className={`step-icon ${(payrollRun.workflow_stage || 0) >= 3 ? 'completed' :
@@ -835,13 +835,13 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                             <div className="step-content">
                                 <div className={`step-main card-style ${(payrollRun.workflow_stage || 0) === 2 && !payrollRun.status.includes('Returned') ? 'active-card' : ''}`}>
                                     <div className="step-header">
-                                        <span className="step-name">Operations Manager</span>
+                                        <span className="step-name">Branch Manager</span>
                                         <span className={`status-badge ${(payrollRun.workflow_stage || 0) >= 3 ? 'completed' :
-                                            payrollRun.status.includes('Returned') ? 'returned' :
+                                            payrollRun.status.includes('Returned') && payrollRun.status.includes('Branch Manager') ? 'returned' :
                                                 (payrollRun.workflow_stage || 0) === 2 ? 'in-review' : 'pending'
                                             }`}>
                                             {(payrollRun.workflow_stage || 0) >= 3 ? 'Approved' :
-                                                payrollRun.status.includes('Returned') ? 'Returned' :
+                                                payrollRun.status.includes('Returned') && payrollRun.status.includes('Branch Manager') ? 'Returned' :
                                                     (payrollRun.workflow_stage || 0) === 2 ? 'In Review' : 'Pending'}
                                         </span>
                                     </div>
@@ -852,19 +852,75 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                             </div>
                                             <div className="detail-text">
                                                 <label>APPROVER</label>
-                                                <span>{(payrollRun.workflow_stage || 0) >= 3 ? (auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.username || 'Victorio Reloba Jr.') : '-'}</span>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 3 ? (auditLogs.find(l => l.action === 'APPROVED_BY_BRANCH_MANAGER')?.username || 'Branch Manager') : '-'}</span>
                                             </div>
                                         </div>
                                         <div className="detail-group">
                                             <div className="detail-text">
                                                 <label>DATE</label>
-                                                <span>{(payrollRun.workflow_stage || 0) >= 3 && auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.performed_at ? new Date(auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.performed_at as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : <span className="italic text-gray-400">-</span>}</span>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 3 && auditLogs.find(l => l.action === 'APPROVED_BY_BRANCH_MANAGER')?.performed_at ? new Date(auditLogs.find(l => l.action === 'APPROVED_BY_BRANCH_MANAGER')?.performed_at as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : <span className="italic text-gray-400">-</span>}</span>
                                             </div>
                                         </div>
                                         <div className="detail-group">
                                             <div className="detail-text">
                                                 <label>TIME</label>
-                                                <span>{(payrollRun.workflow_stage || 0) >= 3 && auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.performed_at ? new Date(auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.performed_at as string).toLocaleTimeString() : <span className="italic text-gray-400">-</span>}</span>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 3 && auditLogs.find(l => l.action === 'APPROVED_BY_BRANCH_MANAGER')?.performed_at ? new Date(auditLogs.find(l => l.action === 'APPROVED_BY_BRANCH_MANAGER')?.performed_at as string).toLocaleTimeString() : <span className="italic text-gray-400">-</span>}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Operations Manager Step */}
+                        <div className="step-item">
+                            <div className="step-left">
+                                <div className={`step-icon ${(payrollRun.workflow_stage || 0) >= 4 ? 'completed' :
+                                    (payrollRun.workflow_stage || 0) === 3 && !payrollRun.status.includes('Returned') ? 'active-blue' : 'upcoming'
+                                    }`}>
+                                    {(payrollRun.workflow_stage || 0) >= 4 ? (
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                                    ) : (payrollRun.workflow_stage || 0) === 3 && !payrollRun.status.includes('Returned') ? (
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
+                                    ) : (
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                    )}
+                                </div>
+                                <div className="step-line"></div>
+                            </div>
+                            <div className="step-content">
+                                <div className={`step-main card-style ${(payrollRun.workflow_stage || 0) === 3 && !payrollRun.status.includes('Returned') ? 'active-card' : ''}`}>
+                                    <div className="step-header">
+                                        <span className="step-name">Operations Manager</span>
+                                        <span className={`status-badge ${(payrollRun.workflow_stage || 0) >= 4 ? 'completed' :
+                                            payrollRun.status.includes('Returned') ? 'returned' :
+                                                (payrollRun.workflow_stage || 0) === 3 ? 'in-review' : 'pending'
+                                            }`}>
+                                            {(payrollRun.workflow_stage || 0) >= 4 ? 'Approved' :
+                                                payrollRun.status.includes('Returned') ? 'Returned' :
+                                                    (payrollRun.workflow_stage || 0) === 3 ? 'In Review' : 'Pending'}
+                                        </span>
+                                    </div>
+                                    <div className="step-details-grid">
+                                        <div className="detail-group">
+                                            <div className="user-icon-small">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                            </div>
+                                            <div className="detail-text">
+                                                <label>APPROVER</label>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 4 ? (auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.username || 'Victorio Reloba Jr.') : '-'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="detail-group">
+                                            <div className="detail-text">
+                                                <label>DATE</label>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 4 && auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.performed_at ? new Date(auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.performed_at as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : <span className="italic text-gray-400">-</span>}</span>
+                                            </div>
+                                        </div>
+                                        <div className="detail-group">
+                                            <div className="detail-text">
+                                                <label>TIME</label>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 4 && auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.performed_at ? new Date(auditLogs.find(l => l.action === 'APPROVED_BY_OPS')?.performed_at as string).toLocaleTimeString() : <span className="italic text-gray-400">-</span>}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -875,10 +931,10 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                         {/* Vice President Step */}
                         <div className="step-item">
                             <div className="step-left">
-                                <div className={`step-icon ${(payrollRun.workflow_stage || 0) >= 4 ? 'completed' :
-                                    (payrollRun.workflow_stage || 0) === 3 ? 'active-blue' : 'upcoming'
+                                <div className={`step-icon ${(payrollRun.workflow_stage || 0) >= 5 ? 'completed' :
+                                    (payrollRun.workflow_stage || 0) === 4 ? 'active-blue' : 'upcoming'
                                     }`}>
-                                    {(payrollRun.workflow_stage || 0) >= 4 ? (
+                                    {(payrollRun.workflow_stage || 0) >= 5 ? (
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                                     ) : (
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
@@ -886,14 +942,14 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                 </div>
                             </div>
                             <div className="step-content">
-                                <div className={`step-main ${(payrollRun.workflow_stage || 0) === 3 ? 'active-card' : ''}`}>
+                                <div className={`step-main ${(payrollRun.workflow_stage || 0) === 4 ? 'active-card' : ''}`}>
                                     <div className="step-header">
                                         <span className="step-name">Vice President</span>
-                                        <span className={`status-badge ${(payrollRun.workflow_stage || 0) >= 4 ? 'completed' :
-                                            (payrollRun.workflow_stage || 0) === 3 ? 'in-review' : 'pending'
+                                        <span className={`status-badge ${(payrollRun.workflow_stage || 0) >= 5 ? 'completed' :
+                                            (payrollRun.workflow_stage || 0) === 4 ? 'in-review' : 'pending'
                                             }`}>
-                                            {(payrollRun.workflow_stage || 0) >= 4 ? 'Approved' :
-                                                (payrollRun.workflow_stage || 0) === 3 ? 'In Review' : 'Pending'}
+                                            {(payrollRun.workflow_stage || 0) >= 5 ? 'Approved' :
+                                                (payrollRun.workflow_stage || 0) === 4 ? 'In Review' : 'Pending'}
                                         </span>
                                     </div>
                                     <div className="step-details-grid">
@@ -903,19 +959,19 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                             </div>
                                             <div className="detail-text">
                                                 <label>APPROVER</label>
-                                                <span>{(payrollRun.workflow_stage || 0) >= 4 ? (auditLogs.find(l => l.action === 'APPROVED_BY_VP')?.username || payrollRun.approved_by_name || 'Anna Liza Rodriguez') : '-'}</span>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 5 ? (auditLogs.find(l => l.action === 'APPROVED_BY_VP')?.username || payrollRun.approved_by_name || 'Anna Liza Rodriguez') : '-'}</span>
                                             </div>
                                         </div>
                                         <div className="detail-group">
                                             <div className="detail-text">
                                                 <label>DATE</label>
-                                                <span>{(payrollRun.workflow_stage || 0) >= 4 ? new Date(auditLogs.find(l => l.action === 'APPROVED_BY_VP')?.performed_at || payrollRun.approved_at || (payrollRun as any).evp_review_date || new Date().toISOString()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}</span>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 5 ? new Date(auditLogs.find(l => l.action === 'APPROVED_BY_VP')?.performed_at || payrollRun.approved_at || (payrollRun as any).evp_review_date || new Date().toISOString()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}</span>
                                             </div>
                                         </div>
                                         <div className="detail-group">
                                             <div className="detail-text">
                                                 <label>TIME</label>
-                                                <span>{(payrollRun.workflow_stage || 0) >= 4 ? new Date(auditLogs.find(l => l.action === 'APPROVED_BY_VP')?.performed_at || payrollRun.approved_at || (payrollRun as any).evp_review_date || new Date().toISOString()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
+                                                <span>{(payrollRun.workflow_stage || 0) >= 5 ? new Date(auditLogs.find(l => l.action === 'APPROVED_BY_VP')?.performed_at || payrollRun.approved_at || (payrollRun as any).evp_review_date || new Date().toISOString()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1250,6 +1306,20 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                         {/* HR Finalize Button Removed (Moved to bottom) */}
 
                                         {/* Operations Manager Approve/Return */}
+                                        {payrollRun.status === 'Under Review - Branch Manager' &&
+                                            (user?.role === 'Manager' || user?.role === 'Admin' || user?.role === 'Super Admin' || user?.role === 'President') && (
+                                                <>
+                                                    <button onClick={handleApprove} className="approve-btn" disabled={processing}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                        APPROVE PAYROLL
+                                                    </button>
+                                                    <button onClick={() => setShowReturnModal(true)} className="return-btn" disabled={processing}>
+                                                        Return to Branch Manager
+                                                    </button>
+                                                </>
+                                            )}
+                                        
+                                        {/* Operations Manager Approve/Return */}
                                         {payrollRun.status === 'Under Review - Operations Manager' &&
                                             (user?.role === 'Admin' || user?.role === 'Operations Manager' || user?.role === 'Super Admin') && (
                                                 <>
@@ -1258,14 +1328,14 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                                         APPROVE PAYROLL
                                                     </button>
                                                     <button onClick={() => setShowReturnModal(true)} className="return-btn" disabled={processing}>
-                                                        Return to HR
+                                                        Return to Branch Manager
                                                     </button>
                                                 </>
                                             )}
 
                                         {/* VP Final Approve/Return */}
-                                        {payrollRun.status === 'Under Review - Vice President' &&
-                                            (user?.role === 'Vice President' || user?.role === 'Super Admin') && (
+                                        {(payrollRun.status === 'Under Review - Executive Vice President' || payrollRun.workflow_stage === 4) &&
+                                            (user?.role === 'Vice President' || user?.role === 'Executive Vice President' || user?.role === 'Super Admin') && (
                                                 <>
                                                     <button onClick={handleFinalApprove} className="approve-btn" disabled={processing}>
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -1827,7 +1897,25 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                 }
                 .th-center, .td-center { text-align: center; }
                 .th-right, .td-right { text-align: right; }
-                .th-employee, .td-employee { text-align: left; }
+                .th-employee, .td-employee { 
+                    text-align: left; 
+                    position: sticky;
+                    left: 0;
+                    z-index: 11;
+                    background: white;
+                    box-shadow: 2px 0 5px -2px rgba(0,0,0,0.05); /* Optional subtle shadow to distinguish sticky column */
+                }
+                .payroll-table thead .th-employee {
+                    z-index: 12;
+                    background: #f9fafb;
+                }
+                .payroll-table tfoot .td-employee {
+                    z-index: 12;
+                    background: #f9fafb;
+                }
+                .payroll-table tbody tr:hover .td-employee {
+                    background-color: #f8fafc;
+                }
                 
                 .employee-info {
                     display: flex;

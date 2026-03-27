@@ -333,7 +333,7 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
 
       // Find the VALUES part to extract literals vs params
       // Support multiple tuples: VALUES (a, b), (c, d)
-      const valuesStrMatch = normalizedSql.match(/VALUES\s+(.+)$/i);
+      const valuesStrMatch = normalizedSql.match(/VALUES\s*(.+)$/i);
       const valuesStr = valuesStrMatch![1];
 
       // Match each (...) tuple exactly
@@ -463,6 +463,9 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
     if (normalizedSql.match(/^DELETE/i)) {
       const tableMatch = normalizedSql.match(/FROM\s+([a-z_]+)/i);
       const table = tableMatch![1];
+      
+      if (!db[table]) return { rows: [], rowCount: 0 };
+
       const whereMatch = normalizedSql.match(/WHERE\s+(.+)$/i);
       if (whereMatch) {
         const initialLen = db[table].length;

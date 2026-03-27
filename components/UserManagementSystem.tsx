@@ -415,14 +415,13 @@ export default function UserManagementSystem() {
                 <table className="um-dark-table">
                     <thead>
                         <tr>
-                            <th>Full Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Joined Date</th>
-                            <th>2FA Status</th>
-                            <th>Password</th>
-                            <th>Actions</th>
+                            <th style={{width:'200px'}}>Full Name</th>
+                            <th style={{width:'180px'}}>Email</th>
+                            <th style={{width:'130px'}}>Role</th>
+                            <th style={{width:'110px'}}>Status</th>
+                            <th style={{width:'110px'}}>Joined Date</th>
+                            <th style={{width:'90px'}}>2FA Status</th>
+                            <th style={{width:'100px'}}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -437,7 +436,7 @@ export default function UserManagementSystem() {
                                         </div>
                                     </div>
                                 </td>
-                                <td>{user.email || '—'}</td>
+                                <td style={{maxWidth:'180px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{user.email || '—'}</td>
                                 <td>
                                     <span className={`um-role-badge ${user.role.toLowerCase()}`}>
                                         {user.role}
@@ -461,20 +460,6 @@ export default function UserManagementSystem() {
                                     </span>
                                 </td>
                                 <td>
-                                    <div className="um-password-field">
-                                        <span className={`um-password-masked ${showPasswordMap[user.id] ? 'unmasked' : ''}`}>
-                                            {showPasswordMap[user.id] ? user.password : '••••••••'}
-                                        </span>
-                                        <button
-                                            className="um-eye-btn"
-                                            onClick={() => togglePasswordVisibility(user.id)}
-                                            title={showPasswordMap[user.id] ? "Mask Password" : "View Password Hash"}
-                                        >
-                                            {showPasswordMap[user.id] ? '👁️‍🗨️' : '👁️'}
-                                        </button>
-                                    </div>
-                                </td>
-                                <td>
                                     <div className="um-row-actions">
                                         {user.is_active === 0 && (
                                             <>
@@ -494,7 +479,6 @@ export default function UserManagementSystem() {
                                             });
                                             setIsEditModalOpen(true);
                                         }}>✏️</button>
-                                        {/* Hide delete button for protected system accounts */}
                                         {user.username !== 'admin' && user.username !== 'superadmin' ? (
                                             <button className="um-action-btn delete" onClick={() => handleDeleteUser(user.id)} title="Soft Delete">🗑️</button>
                                         ) : (
@@ -505,7 +489,7 @@ export default function UserManagementSystem() {
                             </tr>
                         )) : (
                             <tr>
-                                <td colSpan={8} className="um-empty-state">No users found matching your criteria.</td>
+                                <td colSpan={7} className="um-empty-state">No users found matching your criteria.</td>
                             </tr>
                         )}
                     </tbody>
@@ -773,13 +757,15 @@ export default function UserManagementSystem() {
 
                 .um-filters-card {
                     background: white;
-                    padding: 16px;
-                    border-radius: 16px;
+                    padding: 14px 16px;
+                    border-radius: 14px;
                     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                     display: flex;
                     justify-content: space-between;
-                    margin-bottom: 24px;
-                    gap: 20px;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    gap: 12px;
+                    flex-wrap: wrap;
                 }
 
                 .um-search-wrapper {
@@ -827,10 +813,11 @@ export default function UserManagementSystem() {
                 }
 
                 .um-table-wrapper {
-                    background: #1e293b; /* Dark theme for table */
-                    border-radius: 20px;
-                    overflow: hidden;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+                    background: #1e293b;
+                    border-radius: 16px;
+                    overflow-x: auto;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                    width: 100%;
                 }
 
                 .um-dark-table {
@@ -841,20 +828,22 @@ export default function UserManagementSystem() {
 
                 .um-dark-table th {
                     text-align: left;
-                    padding: 18px 20px;
-                    font-size: 12px;
+                    padding: 12px 14px;
+                    font-size: 11px;
                     font-weight: 700;
                     text-transform: uppercase;
-                    letter-spacing: 0.05em;
+                    letter-spacing: 0.04em;
                     color: #94a3b8;
                     border-bottom: 1px solid #334155;
                     background: #0f172a;
+                    white-space: nowrap;
                 }
 
                 .um-dark-table td {
-                    padding: 16px 20px;
+                    padding: 12px 14px;
                     border-bottom: 1px solid #334155;
-                    font-size: 14px;
+                    font-size: 13px;
+                    white-space: nowrap;
                 }
 
                 .um-dark-table tbody tr:hover {
@@ -956,9 +945,9 @@ export default function UserManagementSystem() {
                 .um-password-masked.unmasked {
                     color: #e2e8f0;
                     letter-spacing: normal;
-                    font-size: 11px;
+                    font-size: 10px;
                     word-break: break-all;
-                    max-width: 200px;
+                    max-width: 120px;
                     display: inline-block;
                 }
 

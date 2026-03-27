@@ -127,12 +127,21 @@ export async function downloadExcelExport(data: {
     sheet.mergeCells('L9:L10'); sheet.getCell('L9').value = 'TOTAL\nINCOME';
 
     sheet.mergeCells('M9:S9'); sheet.getCell('M9').value = 'DEDUCTIONS';
-    sheet.getCell('M10').value = 'PHIC';
-    sheet.getCell('N10').value = 'Pag-ibig';
-    sheet.getCell('O10').value = 'Cash\nFund';
-    sheet.getCell('P10').value = 'PAG-\nIBIG';
-    sheet.getCell('Q10').value = 'Cash\nAdvance';
-    sheet.getCell('R10').value = 'Emergency\nLoan';
+    if (String(data.cutoff) === '15') {
+        sheet.getCell('M10').value = 'PHIC';
+        sheet.getCell('N10').value = 'Pag-ibig';
+        sheet.getCell('O10').value = 'Cash\nFund';
+        sheet.getCell('P10').value = 'PAG-\nIBIG';
+        sheet.getCell('Q10').value = 'Cash\nAdvance';
+        sheet.getCell('R10').value = 'Emergency\nLoan';
+    } else {
+        sheet.getCell('M10').value = 'SSS';
+        sheet.getCell('N10').value = 'SSS\nLoan';
+        sheet.getCell('O10').value = 'PAG-\nIBIG';
+        sheet.getCell('P10').value = 'Cash\nAdvance';
+        sheet.getCell('Q10').value = 'Emergency\nLoan';
+        sheet.getCell('R10').value = 'Other\nDed.';
+    }
     sheet.getCell('S10').value = 'TOTAL';
 
     sheet.mergeCells('T9:T10'); sheet.getCell('T9').value = 'NET PAY';
@@ -153,7 +162,7 @@ export async function downloadExcelExport(data: {
     let currentRow = 11;
     let totals = {
         days: 0, regPay: 0, holAmt: 0, allReg: 0, allSpec: 0, allTot: 0,
-        gross: 0, phic: 0, pagibig: 0, cashFund: 0, pagLoan: 0, cashAdv: 0, emLoan: 0, dedTot: 0, net: 0
+        gross: 0, c1: 0, c2: 0, c3: 0, c4: 0, c5: 0, c6: 0, dedTot: 0, net: 0
     };
 
     // Sort alphabetically by last name before processing as per standard
@@ -175,13 +184,29 @@ export async function downloadExcelExport(data: {
         const totDays = days; // Assumed equal for now
         const gross = ps.grossPay || ps.gross_pay || 0;
 
-        const phic = ps.phic || 0;
-        const pagibig = ps.pagibig || 0;
-        const cashFund = ps.companyFunds || ps.company_funds || 0;
         const pagLoan = ps.pagibigLoan || ps.pagibig_loan || 0;
         const cashAdv = ps.cashAdvance || ps.cash_advance || 0;
         const emLoan = ps.companyLoan || ps.company_loan || 0; // Emergency Loan
-        const dedTot = phic + pagibig + cashFund + pagLoan + cashAdv + emLoan;
+        
+        let c1, c2, c3, c4, c5, c6;
+
+        if (String(data.cutoff) === '15') {
+            c1 = ps.phic || 0;
+            c2 = ps.pagibig || 0;
+            c3 = ps.companyFunds || ps.company_funds || 0;
+            c4 = pagLoan;
+            c5 = cashAdv;
+            c6 = emLoan;
+        } else {
+            c1 = ps.sss || 0;
+            c2 = ps.sssLoan || ps.sss_loan || 0;
+            c3 = pagLoan;
+            c4 = cashAdv;
+            c5 = emLoan;
+            c6 = ps.otherDeductions || ps.other_deductions || 0;
+        }
+
+        const dedTot = c1 + c2 + c3 + c4 + c5 + c6;
         const net = ps.netPay || ps.net_pay || 0;
 
         // Add to totals
@@ -192,19 +217,19 @@ export async function downloadExcelExport(data: {
         totals.allSpec += allSpec;
         totals.allTot += allTot;
         totals.gross += gross;
-        totals.phic += phic;
-        totals.pagibig += pagibig;
-        totals.cashFund += cashFund;
-        totals.pagLoan += pagLoan;
-        totals.cashAdv += cashAdv;
-        totals.emLoan += emLoan;
+        totals.c1 += c1;
+        totals.c2 += c2;
+        totals.c3 += c3;
+        totals.c4 += c4;
+        totals.c5 += c5;
+        totals.c6 += c6;
         totals.dedTot += dedTot;
         totals.net += net;
 
         const row = sheet.getRow(currentRow);
         row.values = [
             index + 1, name, daily, days, regPay, holNo, holAmt || '-', allReg || '-', allSpec || '-', allTot || '-',
-            totDays, gross, phic || '-', pagibig || '-', cashFund || '-', pagLoan || '-', cashAdv || '-', emLoan || '-', dedTot || '-', net, ''
+            totDays, gross, c1 || '-', c2 || '-', c3 || '-', c4 || '-', c5 || '-', c6 || '-', dedTot || '-', net, ''
         ];
 
         // Style the data row
@@ -228,7 +253,7 @@ export async function downloadExcelExport(data: {
     const tRow = sheet.getRow(currentRow);
     tRow.values = [
         'TOTAL', '', '', '', totals.regPay, '', totals.holAmt || '-', totals.allReg || '-', totals.allSpec || '-', totals.allTot || '-',
-        '', totals.gross, totals.phic || '-', totals.pagibig || '-', totals.cashFund || '-', totals.pagLoan || '-', totals.cashAdv || '-', totals.emLoan || '-', totals.dedTot, 0.00, totals.net, '', 0.00
+        '', totals.gross, totals.c1 || '-', totals.c2 || '-', totals.c3 || '-', totals.c4 || '-', totals.c5 || '-', totals.c6 || '-', totals.dedTot, 0.00, totals.net, '', 0.00
     ];
 
     sheet.mergeCells(`A${currentRow}:D${currentRow}`);
@@ -352,7 +377,7 @@ function generateRegisterPDFHTML(data: any): string {
 
     const sortedPayslips = [...data.payslips].sort((a, b) => (a.lastName || a.last_name || '').localeCompare(b.lastName || b.last_name || ''));
 
-    let totals = { days: 0, regPay: 0, holAmt: 0, allReg: 0, allSpec: 0, allTot: 0, gross: 0, phic: 0, pagibig: 0, cashFund: 0, pagLoan: 0, cashAdv: 0, emLoan: 0, dedTot: 0, net: 0 };
+    let totals = { days: 0, regPay: 0, holAmt: 0, allReg: 0, allSpec: 0, allTot: 0, gross: 0, c1: 0, c2: 0, c3: 0, c4: 0, c5: 0, c6: 0, dedTot: 0, net: 0 };
 
     const rowsHtml = sortedPayslips.map((ps, index) => {
         const lastName = ps.lastName || ps.last_name || '';
@@ -370,17 +395,32 @@ function generateRegisterPDFHTML(data: any): string {
         const totDays = days;
         const gross = ps.grossPay || ps.gross_pay || 0;
 
-        const phic = ps.phic || 0;
-        const pagibig = ps.pagibig || 0;
-        const cashFund = ps.companyFunds || ps.company_funds || 0;
         const pagLoan = ps.pagibigLoan || ps.pagibig_loan || 0;
         const cashAdv = ps.cashAdvance || ps.cash_advance || 0;
         const emLoan = ps.companyLoan || ps.company_loan || 0;
-        const dedTot = phic + pagibig + cashFund + pagLoan + cashAdv + emLoan;
+        
+        let c1, c2, c3, c4, c5, c6;
+        if (String(data.cutoff) === '15') {
+            c1 = ps.phic || 0;
+            c2 = ps.pagibig || 0;
+            c3 = ps.companyFunds || ps.company_funds || 0;
+            c4 = pagLoan;
+            c5 = cashAdv;
+            c6 = emLoan;
+        } else {
+            c1 = ps.sss || 0;
+            c2 = ps.sssLoan || ps.sss_loan || 0;
+            c3 = pagLoan;
+            c4 = cashAdv;
+            c5 = emLoan;
+            c6 = ps.otherDeductions || ps.other_deductions || 0;
+        }
+
+        const dedTot = c1 + c2 + c3 + c4 + c5 + c6;
         const net = ps.netPay || ps.net_pay || 0;
 
         totals.regPay += regPay; totals.holAmt += holAmt; totals.allReg += allReg; totals.allSpec += allSpec; totals.allTot += allTot;
-        totals.gross += gross; totals.phic += phic; totals.pagibig += pagibig; totals.cashFund += cashFund; totals.pagLoan += pagLoan; totals.cashAdv += cashAdv; totals.emLoan += emLoan; totals.dedTot += dedTot; totals.net += net;
+        totals.gross += gross; totals.c1 += c1; totals.c2 += c2; totals.c3 += c3; totals.c4 += c4; totals.c5 += c5; totals.c6 += c6; totals.dedTot += dedTot; totals.net += net;
 
         return `<tr>
             <td>${index + 1}</td>
@@ -395,12 +435,12 @@ function generateRegisterPDFHTML(data: any): string {
             <td class="text-right">${formatNumber(allTot)}</td>
             <td>${totDays}</td>
             <td class="text-right text-bold" style="background: #e5e7eb;">${formatNumber(gross)}</td>
-            <td class="text-right">${formatNumber(phic)}</td>
-            <td class="text-right">${formatNumber(pagibig)}</td>
-            <td class="text-right">${formatNumber(cashFund)}</td>
-            <td class="text-right">${formatNumber(pagLoan)}</td>
-            <td class="text-right">${formatNumber(cashAdv)}</td>
-            <td class="text-right">${formatNumber(emLoan)}</td>
+            <td class="text-right">${formatNumber(c1)}</td>
+            <td class="text-right">${formatNumber(c2)}</td>
+            <td class="text-right">${formatNumber(c3)}</td>
+            <td class="text-right">${formatNumber(c4)}</td>
+            <td class="text-right">${formatNumber(c5)}</td>
+            <td class="text-right">${formatNumber(c6)}</td>
             <td class="text-right text-bold" style="background: #e5e7eb;">${formatNumber(dedTot)}</td>
             <td class="text-right"></td>
             <td class="text-right text-bold">${formatNumber(net)}</td>
@@ -534,12 +574,21 @@ function generateRegisterPDFHTML(data: any): string {
                 <th>Regula<br>r</th>
                 <th>Special</th>
                 <th>Total</th>
+                ${String(data.cutoff) === '15' ? `
                 <th>PHIC</th>
                 <th>Pag-ibig</th>
                 <th>Cash<br>Fund</th>
                 <th>PAG-<br>IBIG</th>
                 <th>Cash<br>Advanc</th>
                 <th>Emergenc<br>y Loan</th>
+                ` : `
+                <th>SSS</th>
+                <th>SSS<br>Loan</th>
+                <th>PAG-<br>IBIG</th>
+                <th>Cash<br>Advanc</th>
+                <th>Emergenc<br>y Loan</th>
+                <th>Other<br>Ded.</th>
+                `}
                 <th style="background: #e5e7eb;">TOTAL</th>
             </tr>
         </thead>
@@ -556,12 +605,12 @@ function generateRegisterPDFHTML(data: any): string {
                 <td class="text-right">${formatNumber(totals.allTot)}</td>
                 <td></td>
                 <td class="text-right" style="background: #e5e7eb;">${formatNumber(totals.gross)}</td>
-                <td class="text-right">${formatNumber(totals.phic)}</td>
-                <td class="text-right">${formatNumber(totals.pagibig)}</td>
-                <td class="text-right">${formatNumber(totals.cashFund)}</td>
-                <td class="text-right">${formatNumber(totals.pagLoan)}</td>
-                <td class="text-right">${formatNumber(totals.cashAdv)}</td>
-                <td class="text-right">${formatNumber(totals.emLoan)}</td>
+                <td class="text-right">${formatNumber(totals.c1)}</td>
+                <td class="text-right">${formatNumber(totals.c2)}</td>
+                <td class="text-right">${formatNumber(totals.c3)}</td>
+                <td class="text-right">${formatNumber(totals.c4)}</td>
+                <td class="text-right">${formatNumber(totals.c5)}</td>
+                <td class="text-right">${formatNumber(totals.c6)}</td>
                 <td class="text-right" style="background: #e5e7eb;">${formatNumber(totals.dedTot)}</td>
                 <td class="text-right">0.00</td>
                 <td class="text-right">${formatNumber(totals.net)}</td>

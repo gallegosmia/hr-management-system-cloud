@@ -28,6 +28,11 @@ export async function GET(request: NextRequest) {
             finalSelectedBranch = branchParam;
         }
 
+        if (startDate === '' || endDate === '') {
+            // Explicitly requested with empty dates (e.g. invalid date entered in frontend)
+            return NextResponse.json([]);
+        }
+
         if (date) {
             results = await getAttendanceByDate(date);
         } else if (employeeId && startDate && endDate) {
@@ -82,6 +87,30 @@ export async function DELETE(request: NextRequest) {
 
         if (!id) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+        }
+
+        
+        const recordRes = await query("SELECT * FROM attendance WHERE id = $1", [parseInt(id)]);
+        const record = recordRes.rows[0];
+
+        if (record) {
+            let hrUser = 'System';
+            try {
+                // Try grabbing session data using auth middleware natively to get real user if possible
+                const authResult = await requireBranchAuth(request);
+                if (!(authResult instanceof NextResponse)) {
+                     hrUser = authResult[0].username;
+                }
+            } catch(e) {}
+
+            try {
+                await query(`
+                    INSERT INTO audit_logs (hr_user, employee_id, action, details, previous_credits, new_credits)
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                `, [hrUser, record.employee_id, 'ATTENDANCE_DELETED', `Deleted ${record.status} record for ${new Date(record.date).toISOString().split('T')[0]}`, 0, 0]);
+            } catch (auditError) {
+                console.warn("Audit Log insert failed, table might not exist:", auditError);
+            }
         }
 
         await query("DELETE FROM attendance WHERE id = $1", [parseInt(id)]);

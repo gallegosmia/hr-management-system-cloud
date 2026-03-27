@@ -372,7 +372,7 @@ export default function CriticalAttendance({ employees: initialEmployees, attend
 
                                         {/* User Profile */}
                                         <div className="flex items-center gap-3 mb-5">
-                                            <div className="relative">
+                                            <div className="relative shrink-0">
                                                 <div className="w-14 h-14 rounded-full bg-slate-100 overflow-hidden border-2 border-white shadow-sm ring-1 ring-slate-100">
                                                     <img
                                                         src={`https://api.dicebear.com/7.x/initials/svg?seed=${emp.first_name} ${emp.last_name}`}
@@ -382,9 +382,9 @@ export default function CriticalAttendance({ employees: initialEmployees, attend
                                                 </div>
                                                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#FF4D4F] rounded-full border-2 border-white flex items-center justify-center text-white text-[10px] font-bold shadow-sm">!</div>
                                             </div>
-                                            <div>
-                                                <h3 className="font-bold text-slate-800 text-lg leading-tight">{emp.first_name} {emp.last_name}</h3>
-                                                <p className="text-slate-500 text-xs font-medium mt-1 uppercase tracking-wide opacity-80">{emp.role} • {emp.department}</p>
+                                            <div className="min-w-0 flex-1">
+                                                <h3 className="font-bold text-slate-800 text-lg leading-tight truncate">{emp.first_name} {emp.last_name}</h3>
+                                                <p className="text-slate-500 text-xs font-medium mt-1 uppercase tracking-wide opacity-80 truncate">{emp.role} • {emp.department}</p>
                                             </div>
                                         </div>
 

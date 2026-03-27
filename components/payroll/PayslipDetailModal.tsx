@@ -73,7 +73,9 @@ export default function PayslipDetailModal({ isOpen, onClose, payslip, employee,
                     label: d.note || d.name || 'Other',
                     amount: safeVal(d.amount)
                 }))
-                : []
+                : safeVal(payslip.other_deductions) > 0
+                    ? [{ label: 'Other Deductions', amount: safeVal(payslip.other_deductions) }]
+                    : []
         )
     ].filter(d => d.amount > 0);
 

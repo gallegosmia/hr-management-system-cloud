@@ -42,6 +42,7 @@ export default function LeavePage() {
     const [showForm, setShowForm] = useState(false);
     const [filterStatus, setFilterStatus] = useState('All');
     const [user, setUser] = useState<any>(null);
+    const [viewingRequest, setViewingRequest] = useState<LeaveRequest | null>(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -910,6 +911,13 @@ export default function LeavePage() {
                                             </td>
                                             <td style={{ padding: '1.25rem 1.5rem' }}>
                                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                    <button
+                                                        onClick={() => setViewingRequest(req)}
+                                                        style={{ width: '30px', height: '30px', background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                        title="View Details"
+                                                    >
+                                                        👁️
+                                                    </button>
                                                     {req.status.toLowerCase().includes('pending') && canApproveRequest(req) && (
                                                         <>
                                                             <button
@@ -972,6 +980,87 @@ export default function LeavePage() {
                     </table>
                 </div>
             </div>
+
+            {/* View Modal */}
+            {viewingRequest && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.5)', zIndex: 9999,
+                    display: 'flex', alignItems: 'flex-start', paddingTop: '5rem', justifyContent: 'center',
+                    padding: '1rem', animation: 'fadeIn 0.2s ease'
+                }}>
+                    <div style={{
+                        background: 'white', borderRadius: '16px', width: '100%', maxWidth: '600px',
+                        maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
+                    }}>
+                        {/* Removed header */}
+                        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Employee</label>
+                                    <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '1rem' }}>{viewingRequest.employee_name}</div>
+                                    <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{viewingRequest.department}</div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Status</label>
+                                    <div style={{ marginTop: '4px' }}>
+                                        <span style={{ ...getStatusStyles(viewingRequest.status), padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', display: 'inline-block' }}>
+                                            {viewingRequest.status}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: '#f8fafc', padding: '1.25rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                <div>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Leave Type</label>
+                                    <div style={{ fontWeight: 600, color: '#334155' }}>{viewingRequest.leave_type}</div>
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Duration</label>
+                                    <div style={{ fontWeight: 600, color: '#334155' }}>{viewingRequest.days_count} Day(s)</div>
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Start Date</label>
+                                    <div style={{ fontWeight: 600, color: '#334155' }}>{safeDate(viewingRequest.start_date, 'MMM d, yyyy')}</div>
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>End Date</label>
+                                    <div style={{ fontWeight: 600, color: '#334155' }}>{safeDate(viewingRequest.end_date, 'MMM d, yyyy')}</div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>Reason / Description</label>
+                                <div style={{ background: '#f1f5f9', padding: '1.25rem', borderRadius: '12px', fontSize: '0.9rem', color: '#334155', minHeight: '80px', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+                                    {viewingRequest.reason || 'No specific reason provided.'}
+                                </div>
+                            </div>
+                            
+                            {(viewingRequest as any).remarks && (
+                                <div>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#ef4444', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>Approver Remarks</label>
+                                    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '1.25rem', borderRadius: '12px', fontSize: '0.9rem', color: '#991b1b', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+                                        {(viewingRequest as any).remarks}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem', marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>
+                                    Request ID: #{viewingRequest.id} &nbsp;|&nbsp; Filed on {safeDate(viewingRequest.created_at, 'MMM d, yyyy')}
+                                </div>
+                                <button 
+                                    onClick={() => setViewingRequest(null)}
+                                    style={{ background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </DashboardLayout>
     );
 }

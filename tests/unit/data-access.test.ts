@@ -166,14 +166,14 @@ describe('Data Access Layer', () => {
         it('getLeaveSettings should return default if not found', async () => {
             (query as jest.Mock).mockResolvedValue({ rows: [] });
             const result = await getLeaveSettings();
-            expect(result.payroll_cutoff_day).toBe(15);
+            expect((result as any).payroll_cutoff_day).toBe(15);
         });
 
         it('getLeaveSettings should return stored settings', async () => {
             const stored = { payroll_cutoff_day: 20, filing_cutoff_days: 5, approval_levels: { level1_enabled: true } };
             (query as jest.Mock).mockResolvedValue({ rows: [{ value: stored }] });
             const result = await getLeaveSettings();
-            expect(result.payroll_cutoff_day).toBe(20);
+            expect((result as any).payroll_cutoff_day).toBe(20);
         });
     });
 });

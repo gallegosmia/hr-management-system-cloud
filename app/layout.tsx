@@ -8,6 +8,10 @@ export const metadata: Metadata = {
     keywords: 'HR, 201 File, Employee Management, Philippine HR, DOLE Compliance',
 }
 
+export const viewport = {
+    themeColor: '#0f172a',
+}
+
 export default function RootLayout({
     children,
 }: {

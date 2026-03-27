@@ -198,12 +198,13 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
         { name: 'Leave Requests', href: '/leave', icon: '🏖️', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Emergency Loans', href: '/loans', icon: '💰', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Employee Bonuses', href: '/bonuses', icon: '🎁', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
-        { name: 'Payroll', href: '/payroll', icon: '💰', roles: ['HR', 'President', 'Vice President', 'Admin', 'Finance', 'Operations Manager'] },
+        { name: 'Payroll', href: '/payroll', icon: '💰', roles: ['HR', 'President', 'Vice President', 'Admin', 'Finance', 'Operations Manager', 'Manager'] },
         { name: 'Gov Contributions', href: '/gov-contributions', icon: '🏛️', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Transportation Allowance', href: '/transportation', icon: '🚗', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Reports', href: '/reports', icon: '📈', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Memos & Announcements', href: '/announcements', icon: '📢', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Kiosk Scanner', href: '/attendance/kiosk', icon: '📱', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
+        { name: 'Settings', href: '/settings', icon: '⚙️', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'User Management', href: '/users', icon: '👥', roles: ['President', 'Vice President', 'Admin'] },
     ];
 

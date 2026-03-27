@@ -242,6 +242,14 @@ export default function CreatePayrollPage() {
         // 15th/30th Cutoff Logic
         const cutoff = formData.cutoffDay; // 15 or 30/31
 
+        const getSafeValue = (val: any): number => {
+            if (!val) return 0;
+            if (typeof val === 'number') return val;
+            if (typeof val === 'string') return parseFloat(val) || 0;
+            if (typeof val === 'object') return parseFloat(val.amortization || val.amount || 0) || 0;
+            return 0;
+        };
+
         let totalGross = 0;
         let totalDeductions = 0;
         let totalNet = 0;
@@ -253,14 +261,6 @@ export default function CreatePayrollPage() {
                 try { sInfo = JSON.parse(sInfo); } catch (e) { sInfo = {}; }
             }
             if (!sInfo) sInfo = {};
-
-            const getSafeValue = (val: any) => {
-                if (!val) return 0;
-                if (typeof val === 'number') return val;
-                if (typeof val === 'string') return parseFloat(val) || 0;
-                if (typeof val === 'object') return parseFloat(val.amortization || val.amount || 0);
-                return 0;
-            };
 
             const monthlySalary = parseFloat(sInfo.monthly_salary || sInfo.basic_salary) || 0;
 
@@ -312,7 +312,15 @@ export default function CreatePayrollPage() {
             totalGross,
             totalDeductions,
             totalNet,
-            count: selectedEmps.length
+            count: selectedEmps.length,
+            totalSSS: selectedEmps.reduce((sum, e) => {
+                const sInfo = (typeof e.salary_info === 'string' ? JSON.parse(e.salary_info) : e.salary_info) || {};
+                return sum + getSafeValue(sInfo.deductions?.sss);
+            }, 0),
+            totalPHIC: selectedEmps.reduce((sum, e) => {
+                const sInfo = (typeof e.salary_info === 'string' ? JSON.parse(e.salary_info) : e.salary_info) || {};
+                return sum + getSafeValue(sInfo.deductions?.phic);
+            }, 0),
         };
 
     }, [step, employees, formData.employeeSelection, formData.selectedEmployees, formData.cutoffDay]);
@@ -553,13 +561,28 @@ export default function CreatePayrollPage() {
                                                     const allowances = parseFloat(sInfo?.allowances?.regular || 0) + parseFloat(sInfo?.allowances?.special || 0);
                                                     const gross = basic + allowances;
 
+                                                    const getLoanAmort = (val: any) => typeof val === 'object' && val !== null ? (parseFloat(val.amortization || val.amount) || 0) : (parseFloat(val) || 0);
+                                                    const mappedDeductions = {
+                                                        phic: getLoanAmort(sInfo?.deductions?.phic || sInfo?.deductions?.philhealth_contribution),
+                                                        pagibig: getLoanAmort(sInfo?.deductions?.pagibig || sInfo?.deductions?.pagibig_contribution),
+                                                        companyFunds: getLoanAmort(sInfo?.deductions?.company_funds || sInfo?.deductions?.company_cash_fund),
+                                                        pagibigLoan: getLoanAmort(sInfo?.deductions?.pagibig_loan_15th || sInfo?.deductions?.pagibig_loan),
+                                                        sss: getLoanAmort(sInfo?.deductions?.sss || sInfo?.deductions?.sss_contribution),
+                                                        sssLoan: getLoanAmort(sInfo?.deductions?.sss_loan),
+                                                        companyLoan: getLoanAmort(sInfo?.deductions?.company_loan),
+                                                        cashAdvance: getLoanAmort(sInfo?.deductions?.cash_advance),
+                                                        other: Array.isArray(sInfo?.deductions?.other_deductions) 
+                                                                ? sInfo.deductions.other_deductions.reduce((sum: number, d: any) => sum + (parseFloat(d.amount) || 0), 0)
+                                                                : 0
+                                                    };
+
                                                     // Re-use compute logic for consistency if possible, but for now simple calc
                                                     // To be accurate we should call computePayslip properly
                                                     const computation = computePayslip({
                                                         payrollDays: payrollDays,
                                                         monthlySalary: monthly,
                                                         allowances: sInfo?.allowances,
-                                                        deductions: sInfo?.deductions
+                                                        deductions: mappedDeductions
                                                     }, formData.cutoffDay as 15 | 30 | 31);
 
                                                     return (
@@ -599,23 +622,28 @@ export default function CreatePayrollPage() {
                                     <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 20px' }}>Total Company-side Costs (Est)</p>
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                                            <span style={{ color: '#64748b' }}>ER SSS Contrib</span>
-                                            <span style={{ color: '#334155', fontWeight: '500' }}>{formatCurrency(estimates.totalDeductions * 1.5)}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                                            <span style={{ color: '#64748b' }}>ER PhilHealth</span>
-                                            <span style={{ color: '#334155', fontWeight: '500' }}>{formatCurrency(estimates.totalDeductions * 0.5)}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                                            <span style={{ color: '#64748b' }}>ER Pag-IBIG</span>
-                                            <span style={{ color: '#334155', fontWeight: '500' }}>{formatCurrency(estimates.count * 100)}</span>
-                                        </div>
+                                        {formData.cutoffDay !== 15 ? (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                                                <span style={{ color: '#64748b' }}>ER SSS Contrib</span>
+                                                <span style={{ color: '#334155', fontWeight: '500' }}>{formatCurrency((estimates.totalSSS || 0) * 2)}</span>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                                                    <span style={{ color: '#64748b' }}>ER PhilHealth</span>
+                                                    <span style={{ color: '#334155', fontWeight: '500' }}>{formatCurrency(estimates.totalPHIC || 0)}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                                                    <span style={{ color: '#64748b' }}>ER Pag-IBIG</span>
+                                                    <span style={{ color: '#334155', fontWeight: '500' }}>{formatCurrency((estimates.count || 0) * 100)}</span>
+                                                </div>
+                                            </>
+                                        )}
                                         <div style={{ borderTop: '1px dashed #e2e8f0', margin: '4px 0' }}></div>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '2px solid #f1f5f9' }}>
                                         <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>Total ER Cost</span>
-                                        <span style={{ fontSize: '16px', fontWeight: '700', color: '#2563eb' }}>{formatCurrency((estimates.totalDeductions * 2) + (estimates.count * 100))}</span>
+                                        <span style={{ fontSize: '16px', fontWeight: '700', color: '#2563eb' }}>{formatCurrency(formData.cutoffDay !== 15 ? ((estimates.totalSSS || 0) * 2) : ((estimates.totalPHIC || 0) + ((estimates.count || 0) * 100)))}</span>
                                     </div>
                                 </div>
 

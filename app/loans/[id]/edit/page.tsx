@@ -103,7 +103,7 @@ export default function EditLoanPage({ params }: { params: { id: string } }) {
     };
 
     const getDeduction = (amount: number) => {
-        if (amount < 5000) return 0;
+        if (amount < 1000) return 0;
         if (amount <= 10000) return 500;
         if (amount <= 15000) return 600;
         if (amount <= 20000) return 800;
