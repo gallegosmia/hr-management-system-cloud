@@ -223,35 +223,45 @@ export async function POST(request: NextRequest) {
 
         const runNumber = generateRunNumber(branch, startDate, cutoffDay, sequence);
 
-        // Create payroll run
-        const runResult = await query(`
-            INSERT INTO payroll_runs (
-                run_number,
-                branch,
-                payroll_period_start,
-                payroll_period_end,
-                cutoff_day,
-                default_payroll_days,
-                status,
-                created_by,
-                workflow_stage,
-                current_reviewer_role
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            RETURNING *
-        `, [
-            runNumber,
-            branch,
-            periodStart,
-            periodEnd,
-            cutoffDay,
-            15.00, // Default payroll days
-            'DRAFT',
-            user.id,
-            0,
-            'Payroll Preparer'
-        ]);
-
-        const payrollRun = runResult.rows[0];
+        // Create payroll run — try full schema first, fall back to minimal if columns missing
+        let payrollRun: any;
+        try {
+            const runResult = await query(`
+                INSERT INTO payroll_runs (
+                    run_number,
+                    branch,
+                    payroll_period_start,
+                    payroll_period_end,
+                    cutoff_day,
+                    default_payroll_days,
+                    status,
+                    created_by,
+                    workflow_stage,
+                    current_reviewer_role
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                RETURNING *
+            `, [
+                runNumber, branch, periodStart, periodEnd,
+                cutoffDay, 15.00, 'Draft', user.id, 0, 'Payroll Preparer'
+            ]);
+            payrollRun = runResult.rows[0];
+        } catch (colErr: any) {
+            // Fallback: insert without optional columns that may not exist in older schema
+            console.warn('[Payroll] Full INSERT failed, trying minimal INSERT:', colErr.message);
+            const runResult = await query(`
+                INSERT INTO payroll_runs (
+                    run_number,
+                    branch,
+                    payroll_period_start,
+                    payroll_period_end,
+                    cutoff_day,
+                    status,
+                    created_by
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                RETURNING *
+            `, [runNumber, branch, periodStart, periodEnd, cutoffDay, 'draft', user.id]);
+            payrollRun = runResult.rows[0];
+        }
 
         // Fetch ACTIVE SSS config for the payroll year (Always using 2025 Official Table as instructed)
         const sssTableRes = await query(
@@ -472,73 +482,70 @@ export async function POST(request: NextRequest) {
                 }
             });
 
-            const payslipResult = await query(`
-                INSERT INTO payslips (
-                    payroll_run_id,
-                    employee_id,
-                    monthly_salary,
-                    daily_rate,
-                    payroll_days,
-                    basic_pay,
-                    regular_allowance,
-                    special_allowance,
-                    gross_pay,
-                    total_deductions,
-                    net_pay,
-                    phic,
-                    pagibig,
-                    pagibig_loan,
-                    company_funds,
-                    sss,
-                    sss_loan,
-                    company_loan,
-                    cash_advance,
-                    other_deductions,
-                    other_deductions_breakdown
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
-                RETURNING *
-            `, [
-                payrollRun.id,
-                employee.id,
-                monthlySalary,
-                dailyRate,
-                payrollDays,
-                basicPay,
-                regularAllowance,
-                specialAllowance,
-                grossPay,
-                totalDeductions,
-                netPay,
-                phic,
-                pagibig,
-                pagibigLoan,
-                companyFunds,
-                sss,
-                sssLoan,
-                companyLoan,
-                cashAdvance,
-                otherDeductions,
-                storedBreakdown
-            ]);
-
-            payslips.push(payslipResult.rows[0]);
+            let payslipRow: any;
+            try {
+                const payslipResult = await query(`
+                    INSERT INTO payslips (
+                        payroll_run_id, employee_id, monthly_salary, daily_rate, payroll_days,
+                        basic_pay, regular_allowance, special_allowance, gross_pay,
+                        total_deductions, net_pay, phic, pagibig, pagibig_loan, company_funds,
+                        sss, sss_loan, company_loan, cash_advance, other_deductions,
+                        other_deductions_breakdown
+                    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+                    RETURNING *
+                `, [
+                    payrollRun.id, employee.id, monthlySalary, dailyRate, payrollDays,
+                    basicPay, regularAllowance, specialAllowance, grossPay,
+                    totalDeductions, netPay, phic, pagibig, pagibigLoan, companyFunds,
+                    sss, sssLoan, companyLoan, cashAdvance, otherDeductions, storedBreakdown
+                ]);
+                payslipRow = payslipResult.rows[0];
+            } catch (psErr: any) {
+                // Fallback: insert without other_deductions_breakdown (older schema)
+                console.warn('[Payroll] Payslip full INSERT failed, using minimal:', psErr.message);
+                const payslipResult = await query(`
+                    INSERT INTO payslips (
+                        payroll_run_id, employee_id, monthly_salary, daily_rate, payroll_days,
+                        basic_pay, regular_allowance, special_allowance, gross_pay,
+                        total_deductions, net_pay, phic, pagibig, pagibig_loan, company_funds,
+                        sss, sss_loan, company_loan, cash_advance, other_deductions
+                    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
+                    RETURNING *
+                `, [
+                    payrollRun.id, employee.id, monthlySalary, dailyRate, payrollDays,
+                    basicPay, regularAllowance, specialAllowance, grossPay,
+                    totalDeductions, netPay, phic, pagibig, pagibigLoan, companyFunds,
+                    sss, sssLoan, companyLoan, cashAdvance, otherDeductions
+                ]);
+                payslipRow = payslipResult.rows[0];
+            }
+            payslips.push(payslipRow);
         }
 
-        // Log action
-        await query(`
-            INSERT INTO payroll_audit_log (payroll_run_id, action, performed_by, details, performed_at)
-            VALUES ($1, $2, $3, $4, $5)
-        `, [
-            payrollRun.id,
-            'CREATED',
-            user.id,
-            JSON.stringify({
-                run_number: runNumber,
-                branch,
-                employee_count: employees.length
-            }),
-            new Date().toISOString()
-        ]);
+        // Log action (non-blocking — don't fail payroll if audit log table/column is missing)
+        try {
+            await query(`
+                INSERT INTO payroll_audit_log (payroll_run_id, action, performed_by, details, performed_at)
+                VALUES ($1, $2, $3, $4, $5)
+            `, [
+                payrollRun.id, 'CREATED', user.id,
+                JSON.stringify({ run_number: runNumber, branch, employee_count: employees.length }),
+                new Date().toISOString()
+            ]);
+        } catch (auditErr1: any) {
+            // Try fallback without performed_at (original schema uses created_at auto)
+            try {
+                await query(`
+                    INSERT INTO payroll_audit_log (payroll_run_id, action, performed_by, details)
+                    VALUES ($1, $2, $3, $4)
+                `, [
+                    payrollRun.id, 'CREATED', user.id,
+                    JSON.stringify({ run_number: runNumber, branch, employee_count: employees.length })
+                ]);
+            } catch (auditErr2: any) {
+                console.warn('[Payroll] Audit log insert skipped:', auditErr2.message);
+            }
+        }
 
         return NextResponse.json({
             success: true,

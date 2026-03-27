@@ -204,7 +204,8 @@ export default function CreatePayrollPage() {
             const createData = await createResponse.json();
 
             if (!createResponse.ok) {
-                throw new Error(createData.error || 'Failed to create payroll');
+                const detail = createData.details ? ` (${createData.details})` : '';
+                throw new Error((createData.error || 'Failed to create payroll') + detail);
             }
 
             const runId = createData.payrollRun.id;
