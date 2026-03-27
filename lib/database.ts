@@ -9,8 +9,7 @@ let pool: Pool | null = null;
 function getPool(): Pool | null {
   if (pool) return pool;
 
-  // let url = process.env.DATABASE_URL; // Ignore cached env
-  let url = null;
+  let url = process.env.DATABASE_URL;
   if (!url && fs.existsSync(path.join(process.cwd(), '.env'))) {
     const env = fs.readFileSync(path.join(process.cwd(), '.env'), 'utf-8');
     const match = env.match(/^DATABASE_URL=(.+)$/m);
