@@ -30,6 +30,7 @@ export default function PayrollListPage() {
     const router = useRouter();
     const [payrollRuns, setPayrollRuns] = useState<PayrollRun[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isMobile, setIsMobile] = useState(false);
 
     // Filters
     const [filters, setFilters] = useState({
@@ -47,6 +48,10 @@ export default function PayrollListPage() {
 
     useEffect(() => {
         fetchPermissions();
+        const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
     useEffect(() => {
@@ -312,21 +317,23 @@ export default function PayrollListPage() {
                             </div>
                         </div>
 
-                        {/* Action Box */}
-                        <div style={{ textAlign: 'right' }}>
-                            {permissions.canCreate && (
-                                <Link href="/payroll/create">
-                                    <button style={{
-                                        background: '#2563eb', color: 'white', border: 'none',
-                                        padding: '10px 20px', borderRadius: '8px', fontWeight: '600',
-                                        fontSize: '14px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px',
-                                        boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)', width: '100%', justifyContent: 'center'
-                                    }}>
-                                        <span>+</span> Run New Payroll
-                                    </button>
-                                </Link>
-                            )}
-                        </div>
+                        {/* Action Box - hidden on mobile (view-only mode) */}
+                        {!isMobile && (
+                            <div style={{ textAlign: 'right' }}>
+                                {permissions.canCreate && (
+                                    <Link href="/payroll/create">
+                                        <button style={{
+                                            background: '#2563eb', color: 'white', border: 'none',
+                                            padding: '10px 20px', borderRadius: '8px', fontWeight: '600',
+                                            fontSize: '14px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                            boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)', width: '100%', justifyContent: 'center'
+                                        }}>
+                                            <span>+</span> Run New Payroll
+                                        </button>
+                                    </Link>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -400,6 +407,7 @@ export default function PayrollListPage() {
                                                     <Link href={`/payroll/${run.id}`} style={{ textDecoration: 'none' }}>
                                                         {/* STRICT ACTION BUTTON LOGIC */}
                                                         {s === 'draft' || s.includes('returned') ? (
+                                                            !isMobile ? (
                                                             <button style={{
                                                                 background: '#4f46e5', border: 'none', cursor: 'pointer',
                                                                 color: 'white', fontSize: '13px', fontWeight: '600',
@@ -407,6 +415,7 @@ export default function PayrollListPage() {
                                                             }}>
                                                                 Edit
                                                             </button>
+                                                            ) : <span style={{ fontSize: '12px', color: '#9ca3af' }}>View Only</span>
                                                         ) : s.includes('review') || s.includes('operations') || s.includes('branch manager') || s.includes('vice president') || s === 'for release' ? (
                                                             <button style={{
                                                                 background: '#6366f1', border: 'none', cursor: 'pointer',
@@ -434,8 +443,8 @@ export default function PayrollListPage() {
                                                         )}
                                                     </Link>
 
-                                                    {/* Delete button - Show for Draft OR if user has canDelete permission (Executives/HR) */}
-                                                    {(s === 'draft' || s.includes('returned') || permissions.canDelete) && (
+                                                    {/* Delete button - hidden on mobile (view-only mode) */}
+                                                    {!isMobile && (s === 'draft' || s.includes('returned') || permissions.canDelete) && (
                                                         <button
                                                             onClick={(e) => {
                                                                 e.preventDefault();

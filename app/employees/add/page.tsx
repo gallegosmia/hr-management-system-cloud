@@ -534,12 +534,13 @@ export default function AddEmployeePage() {
 
                             <div className="form-row">
                                 <div className="form-group">
-                                    <label className="form-label">Contact Number</label>
+                                    <label className="form-label form-label-required">Contact Number</label>
                                     <input
                                         type="tel"
                                         name="contact_number"
                                         value={formData.contact_number}
                                         onChange={handleChange}
+                                        required
                                         className="form-input"
                                         placeholder="+63 912 345 6789"
                                     />

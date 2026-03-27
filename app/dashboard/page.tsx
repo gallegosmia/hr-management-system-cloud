@@ -102,6 +102,20 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
+                {/* Mobile Quick Actions - visible only on phones */}
+                <div className="mobile-quick-actions">
+                    {(user?.role === 'HR' || user?.role === 'Admin' || user?.username === 'superadmin') && (
+                        <button onClick={() => router.push('/employees/add')} className="m-quick-btn add-emp">
+                            <span className="icon">+</span>
+                            <span>Add Employee</span>
+                        </button>
+                    )}
+                    <button onClick={() => router.push('/attendance/kiosk')} className="m-quick-btn scan-att">
+                        <span className="icon">📷</span>
+                        <span>Open Scanner</span>
+                    </button>
+                </div>
+
                 {user?.role === 'HR' && new Date().getDate() >= 10 && new Date().getDate() <= 15 && (
                     <div style={{ background: '#fdfbc8', border: '1px solid #fde047', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', color: '#854d0e', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
                         <div style={{ fontSize: '1.2rem' }}>🏛️</div>
@@ -547,6 +561,88 @@ export default function DashboardPage() {
                     color: #94a3b8;
                     font-size: 0.75rem;
                     font-style: italic;
+                }
+
+                .mobile-quick-actions {
+                    display: none; /* Hide on desktop by default */
+                }
+
+                /* Mobile Layout Upgrades */
+                @media (max-width: 1024px) {
+                    .metrics-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .dashboard-container {
+                        padding: 0 0 16px 0;
+                        height: auto;
+                        min-height: calc(100vh - 80px);
+                        overflow-y: auto;
+                    }
+                    .mobile-quick-actions {
+                        display: flex;
+                        gap: 12px;
+                        margin-bottom: 16px;
+                    }
+                    .m-quick-btn {
+                        flex: 1;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                        padding: 12px;
+                        border-radius: 12px;
+                        border: none;
+                        font-family: 'Inter', sans-serif;
+                        font-weight: 700;
+                        font-size: 0.8rem;
+                        color: white;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    }
+                    .m-quick-btn .icon {
+                        font-size: 1.5rem;
+                    }
+                    .m-quick-btn.add-emp {
+                        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                    }
+                    .m-quick-btn.scan-att {
+                        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                    }
+                    .main-grid {
+                        grid-template-columns: 1fr;
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    .left-column {
+                        height: auto;
+                    }
+                    .right-column {
+                        height: auto;
+                    }
+                    .card {
+                        overflow: visible;
+                    }
+                    .hires-list, .announcements-list, .birthdays-list {
+                        overflow: visible;
+                    }
+                    .tracker-card {
+                        min-height: 400px;
+                    }
+                }
+
+                @media (max-width: 480px) {
+                    .metrics-grid {
+                        grid-template-columns: 1fr;
+                    }
+                    .actions-grid {
+                        grid-template-columns: 1fr;
+                    }
+                    .dashboard-header h1 {
+                        font-size: 1.1rem;
+                    }
                 }
             `}</style>
         </DashboardLayout>

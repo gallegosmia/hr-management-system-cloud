@@ -162,11 +162,6 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({ employee }) => {
                         {employee.email_address || 'N/A'}
                     </span>
                 </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ opacity: 0.6 }}>☏</span>
-                    <span>{employee.contact_number || 'N/A'}</span>
-                </div>
             </div>
 
             {/* Action Footer */}

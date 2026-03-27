@@ -48,7 +48,11 @@ export default function App() {
       }
     } catch (err) {
       setScanStatus('error');
-      setResultMessage('Network Error. Check server connection.');
+      if (err.response && err.response.data && err.response.data.error) {
+        setResultMessage(err.response.data.error);
+      } else {
+        setResultMessage('Network Error. Check server connection.');
+      }
     } finally {
       setTimeout(() => {
         setScanStatus('idle');

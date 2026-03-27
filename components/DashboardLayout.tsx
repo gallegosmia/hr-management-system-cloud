@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useRef } from 'react';
 import NotificationDropdown from './NotificationDropdown';
+import MobileBottomNav from './MobileBottomNav';
 
 interface LayoutProps {
     children: ReactNode;
@@ -600,6 +601,87 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     width: 100%;
                 }
 
+                /* Mobile Layout Upgrades */
+                .mobile-hamburger-btn {
+                    display: none;
+                    background: transparent;
+                    border: none;
+                    cursor: pointer;
+                    padding: 8px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                }
+                .mobile-hamburger-btn span {
+                    display: block;
+                    width: 24px;
+                    height: 2px;
+                    background-color: #1e293b;
+                    border-radius: 2px;
+                }
+                .mobile-sidebar-backdrop {
+                    display: none;
+                    position: fixed;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.5);
+                    z-index: 900;
+                    backdrop-filter: blur(2px);
+                }
+
+                @media (max-width: 1024px) {
+                    .mobile-hamburger-btn {
+                        display: flex;
+                    }
+                    .main-sidebar {
+                        position: fixed;
+                        top: 0;
+                        left: -260px;
+                        height: 100vh;
+                        z-index: 1000;
+                        transition: left 0.3s ease;
+                    }
+                    .sidebar-mobile-open {
+                        left: 0 !important;
+                    }
+                    .mobile-sidebar-backdrop {
+                        display: block;
+                    }
+                    .main-viewport {
+                        padding: 10px 10px 80px 10px !important; /* Extra bottom padding for BottomNav */
+                    }
+                    .premium-header {
+                        padding: 8px;
+                        border-radius: 12px;
+                    }
+                    .header-left {
+                        gap: 10px;
+                    }
+                    .branch-context-selector, .team-avatars {
+                        display: none !important;
+                    }
+                    .add-employee-btn {
+                        padding: 8px;
+                        font-size: 0;
+                    }
+                    .add-employee-btn .plus {
+                        font-size: 1.2rem;
+                    }
+                    .search-wrapper.open {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: calc(100vw - 40px);
+                        z-index: 2001;
+                    }
+                    .u-name {
+                        display: none;
+                    }
+                    .user-profile-widget {
+                        padding-left: 10px;
+                        gap: 10px;
+                    }
+                }
+
                 .header-left {
                     display: flex;
                     align-items: center;
@@ -1001,6 +1083,9 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     color: var(--text-secondary);
                 }
             `}</style>
+            {!hideNavbar && user && (
+                <MobileBottomNav user={user} />
+            )}
         </div >
     );
 }
