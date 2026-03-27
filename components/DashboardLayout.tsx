@@ -227,9 +227,17 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
 
     return (
         <div className="premium-dashboard-container">
-            {/* Fully Restored Original Sidebar */}
+            {/* Mobile Sidebar Backdrop */}
+            {!hideSidebar && sidebarOpen && (
+                <div
+                    className="mobile-sidebar-backdrop"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
             {!hideSidebar && (
-                <aside className="main-sidebar hr-pulse-sidebar" style={{ width: '260px', background: '#022c22', borderRight: '1px solid #064e3b', display: 'flex', flexDirection: 'column', padding: '24px 16px' }}>
+                <aside className={`main-sidebar hr-pulse-sidebar${sidebarOpen ? ' sidebar-mobile-open' : ''}`} style={{ width: '260px', background: '#022c22', borderRight: '1px solid #064e3b', display: 'flex', flexDirection: 'column', padding: '24px 16px' }}>
 
                     {/* Branding */}
                     <div className="sidebar-branding" style={{ marginBottom: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '0 8px' }}>
@@ -286,6 +294,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                                             }} />
                                         )}
                                         <Link href={item.href} className={`nav-link ${isActive ? 'active' : ''}`}
+                                            onClick={() => setSidebarOpen(false)}
                                             style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
@@ -296,7 +305,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                                                 color: isActive ? 'white' : '#d1fae5',
                                                 fontWeight: isActive ? 600 : 500,
                                                 marginBottom: '2px',
-                                                borderLeft: isActive ? '4px solid transparent' : 'none' // Spacer for layout consistency if needed, but absolute bar is better
+                                                borderLeft: isActive ? '4px solid transparent' : 'none'
                                             }}
                                         >
                                             <span className="nav-icon" style={{ marginRight: '12px', fontSize: '1.1rem', opacity: isActive ? 1 : 0.8 }}>{item.icon}</span>
@@ -358,6 +367,16 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     <header className="premium-header glass-effect">
                         <div className="header-top-row">
                             <div className="header-left">
+                                {/* Hamburger button - only visible on mobile */}
+                                {!hideSidebar && (
+                                    <button
+                                        className="mobile-hamburger-btn"
+                                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                                        aria-label="Toggle menu"
+                                    >
+                                        <span /><span /><span />
+                                    </button>
+                                )}
                                 <div className="header-search-container" ref={searchRef}>
                                     <div className={`search-wrapper ${isSearchOpen ? 'open' : ''}`}>
                                         <button className="search-trigger" onClick={() => setIsSearchOpen(!isSearchOpen)}>

@@ -4,8 +4,13 @@ import { Pool } from 'pg';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-    const url = process.env.DATABASE_URL;
+    let url = process.env.DATABASE_URL;
     
+    // Cloud Fail-Safe
+    if (url && url.includes('supabase.com')) {
+        url = 'postgresql://neondb_owner:npg_PslbEZF85iOH@ep-cold-dew-a1pzda3q.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
+    }
+
     if (!url) {
         return NextResponse.json({ error: 'DATABASE_URL is not set in environment' });
     }

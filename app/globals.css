@@ -1803,6 +1803,250 @@ a:hover {
 }
 
 
+
+/* =============================================
+   MOBILE RESPONSIVE — PORTRAIT PHONE (≤480px)
+   ============================================= */
+
+/* Hamburger button — hidden on desktop */
+.mobile-hamburger-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  background: rgba(2, 44, 34, 0.08);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.mobile-hamburger-btn span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: #022c22;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+/* Sidebar backdrop overlay — hidden on desktop */
+.mobile-sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 480px) {
+
+  /* ── Hamburger button ── */
+  .mobile-hamburger-btn {
+    display: flex;
+    margin-right: 8px;
+  }
+
+  /* ── Backdrop ── */
+  .mobile-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* ── Sidebar: hidden off-screen by default ── */
+  .main-sidebar.hr-pulse-sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 999;
+    transform: translateX(-110%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+    width: 260px !important;
+  }
+
+  /* ── Sidebar: open state ── */
+  .main-sidebar.hr-pulse-sidebar.sidebar-mobile-open {
+    transform: translateX(0);
+  }
+
+  /* ── Main container: no sidebar margin ── */
+  .premium-dashboard-container {
+    flex-direction: column;
+  }
+
+  .main-viewport {
+    width: 100% !important;
+    padding: 10px !important;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .premium-header {
+    padding: 8px 10px !important;
+    border-radius: 12px !important;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-top-row {
+    gap: 6px;
+  }
+
+  .header-left {
+    flex: 1;
+    gap: 6px !important;
+  }
+
+  .header-right {
+    gap: 6px !important;
+  }
+
+  /* Hide non-essential header elements on mobile */
+  .branch-context-selector,
+  .team-avatars,
+  .add-employee-btn {
+    display: none !important;
+  }
+
+  /* Shrink search */
+  .search-wrapper {
+    width: 34px !important;
+    min-width: 34px;
+  }
+
+  .search-wrapper.open {
+    width: calc(100vw - 130px) !important;
+    max-width: calc(100vw - 130px) !important;
+  }
+
+  /* ── Stats grid: 2-column on phone portrait ── */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .stat-card {
+    padding: 14px !important;
+  }
+
+  .stat-card-value {
+    font-size: 1.4rem !important;
+  }
+
+  .stat-card-icon {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1.1rem !important;
+  }
+
+  /* ── Form rows: single column ── */
+  .form-row {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* ── Tables: horizontal scroll ── */
+  .table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 10px !important;
+    font-size: 0.78rem !important;
+    white-space: nowrap;
+  }
+
+  /* ── Cards ── */
+  .card {
+    border-radius: 12px !important;
+  }
+
+  .card-header {
+    padding: 12px 14px !important;
+  }
+
+  .card-body {
+    padding: 12px !important;
+  }
+
+  .card-title {
+    font-size: 1rem !important;
+  }
+
+  /* ── Buttons: bigger touch targets ── */
+  .btn {
+    min-height: 40px;
+    padding: 8px 14px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .btn-sm {
+    min-height: 34px;
+    padding: 6px 10px !important;
+  }
+
+  /* ── Page titles ── */
+  h1 { font-size: 1.4rem !important; }
+  h2 { font-size: 1.2rem !important; }
+  h3 { font-size: 1.05rem !important; }
+
+  /* ── Content padding ── */
+  .content-area,
+  .dashboard-content {
+    padding: 10px !important;
+  }
+
+  /* ── Scroll area ── */
+  .scroll-content {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── User profile widget in header ── */
+  .user-profile-widget .user-text {
+    display: none;
+  }
+
+  /* ── Notification ── */
+  .u-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* ── Utility helpers ── */
+  .hide-on-mobile { display: none !important; }
+  .mobile-full-width { width: 100% !important; }
+  .mobile-stack {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  /* ── Fix modal/dialog widths ── */
+  .modal-content,
+  [role="dialog"] > div {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 10px !important;
+    border-radius: 16px !important;
+  }
+}
+
 @media print {
   @page {
     size: 14in 8.5in;
@@ -1863,4 +2107,4 @@ a:hover {
     height: 100%;
     /* Fill the grid cell height */
   }
-}
+}

@@ -10,6 +10,13 @@ function getPool(): Pool | null {
   if (pool) return pool;
 
   let url = process.env.DATABASE_URL;
+
+  // Cloud Fail-Safe: Force Neon connection if Vercel still has broken Supabase
+  if (url && url.includes('supabase.com')) {
+      console.log('🔄 Overriding broken Supabase URL with verified Neon Cloud URL');
+      url = 'postgresql://neondb_owner:npg_PslbEZF85iOH@ep-cold-dew-a1pzda3q.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
+  }
+
   if (!url && fs.existsSync(path.join(process.cwd(), '.env'))) {
     const env = fs.readFileSync(path.join(process.cwd(), '.env'), 'utf-8');
     const match = env.match(/^DATABASE_URL=(.+)$/m);
