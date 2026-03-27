@@ -54,6 +54,9 @@ data/database.json
 data/database.json.bak*
 data/*.backup.*.json
 
+# Local backup files (too large for GitHub)
+bckup/
+
 # Temporary migration/patch/debug scripts
 fix-*.js
 patch-*.js
