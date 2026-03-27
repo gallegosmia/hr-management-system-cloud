@@ -220,6 +220,46 @@ const PATCHES = [
         name: 'payroll_runs: normalize draft status case',
         sql: `UPDATE payroll_runs SET status = 'Draft' WHERE LOWER(status) = 'draft'`
     },
+
+    // ─── STEP 7: sss_contribution_table ─────────────────────────
+    {
+        name: 'sss_contribution_table: create if not exists',
+        sql: `
+            CREATE TABLE IF NOT EXISTS sss_contribution_table (
+                id SERIAL PRIMARY KEY,
+                effectivity_year INTEGER NOT NULL,
+                min_salary DECIMAL(10,2) NOT NULL,
+                max_salary DECIMAL(10,2),
+                monthly_salary_credit DECIMAL(10,2) NOT NULL,
+                regular_ee DECIMAL(10,2) NOT NULL,
+                regular_er DECIMAL(10,2) NOT NULL,
+                regular_total DECIMAL(10,2) NOT NULL,
+                mpf_ee DECIMAL(10,2) NOT NULL,
+                mpf_er DECIMAL(10,2) NOT NULL,
+                mpf_total DECIMAL(10,2) NOT NULL,
+                total_ee DECIMAL(10,2) NOT NULL,
+                total_er DECIMAL(10,2) NOT NULL,
+                total_contribution DECIMAL(10,2) NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+        `
+    },
+    {
+        name: 'sss_contribution_table: seed 2025 default row if empty',
+        sql: `
+            INSERT INTO sss_contribution_table (
+                effectivity_year, min_salary, max_salary, monthly_salary_credit,
+                regular_ee, regular_er, regular_total,
+                mpf_ee, mpf_er, mpf_total,
+                total_ee, total_er, total_contribution
+            )
+            SELECT 2025, 0, 999999, 30000, 
+                   1350, 2850, 4200, 
+                   0, 0, 0, 
+                   1350, 2850, 4200
+            WHERE NOT EXISTS (SELECT 1 FROM sss_contribution_table WHERE effectivity_year = 2025)
+        `
+    }
 ];
 
 export async function GET(request: NextRequest) {
