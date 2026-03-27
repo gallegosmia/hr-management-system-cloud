@@ -19,8 +19,17 @@ export async function PATCH(
         if (auth instanceof NextResponse) return auth;
         const [user, selectedBranch] = auth;
 
-        const payrollRunId = params.id;
-        const payslipId = params.payslipId;
+        const payrollRunIdStr = params.id;
+        const payrollRunId = Number(payrollRunIdStr);
+        if (!Number.isInteger(payrollRunId) || isNaN(payrollRunId)) {
+            return NextResponse.json({ error: 'Invalid payroll run ID' }, { status: 400 });
+        }
+
+        const payslipIdStr = params.payslipId;
+        const payslipId = Number(payslipIdStr);
+        if (!Number.isInteger(payslipId) || isNaN(payslipId)) {
+            return NextResponse.json({ error: 'Invalid payslip ID' }, { status: 400 });
+        }
 
         const body = await request.json();
         const { payrollDays, allowances, deductions } = body;

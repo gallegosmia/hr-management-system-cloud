@@ -19,7 +19,16 @@ export async function POST(
         if (auth instanceof NextResponse) return auth;
         const [user, selectedBranch] = auth;
 
-        const payrollRunId = params.id;
+        if (!params.id) {
+            return NextResponse.json({ error: 'Missing ID parameter' }, { status: 400 });
+        }
+
+        const payrollRunIdStr = params.id;
+        const payrollRunId = Number(payrollRunIdStr);
+        if (!Number.isInteger(payrollRunId) || isNaN(payrollRunId)) {
+            return NextResponse.json({ error: 'Invalid payroll run ID' }, { status: 400 });
+        }
+
         const body = await request.json();
         const { format } = body; // 'pdf' or 'excel'
 

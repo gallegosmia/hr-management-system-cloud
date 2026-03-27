@@ -23,6 +23,13 @@ export async function GET(
             return NextResponse.json({ error: 'Missing ID parameter' }, { status: 400 });
         }
 
+        const payrollRunIdStr = params.id;
+        const payrollRunId = Number(payrollRunIdStr);
+        if (!Number.isInteger(payrollRunId) || isNaN(payrollRunId)) {
+            console.error(`[GET] Invalid payroll run ID: ${payrollRunIdStr}`);
+            return NextResponse.json({ error: 'Invalid payroll run ID' }, { status: 400 });
+        }
+
         const auth = await requireBranchAuth(request);
         if (auth instanceof NextResponse) {
             console.warn('[GET] Auth failed:', auth.status);
@@ -30,8 +37,6 @@ export async function GET(
         }
         const [user, selectedBranch] = auth;
         console.log(`[GET] User: ${user.username}, Role: ${user.role}, Branch: ${selectedBranch}`);
-
-        const payrollRunId = params.id;
 
         // Get payroll run
         let payrollRun: any = null;
@@ -77,6 +82,7 @@ export async function GET(
             console.warn(`[GET] Security Alert: Payroll ${payrollRun.run_number} is 'Released' but lacks VP Approval. Reverting...`);
 
             await query(`
+                UPDATE payroll_runs
                 SET status = 'Under Review - Vice President', 
                     workflow_stage = 4
                 WHERE id = $1
@@ -268,11 +274,20 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
+        if (!params.id) {
+            return NextResponse.json({ error: 'Missing ID parameter' }, { status: 400 });
+        }
+
+        const payrollRunIdStr = params.id;
+        const payrollRunId = Number(payrollRunIdStr);
+        if (!Number.isInteger(payrollRunId) || isNaN(payrollRunId)) {
+            return NextResponse.json({ error: 'Invalid payroll run ID' }, { status: 400 });
+        }
+
         const auth = await requireBranchAuth(request);
         if (auth instanceof NextResponse) return auth;
         const [user, selectedBranch] = auth;
 
-        const payrollRunId = params.id;
         const body = await request.json();
         const { action } = body;
 
@@ -379,7 +394,7 @@ export async function PATCH(
                 `, [payrollRunId, 'FINALIZED_BY_HR', user.id, JSON.stringify({ run_number: payrollRun.run_number, stage: 'DRAFT -> OPS REVIEW' }), new Date().toISOString()]);
 
                 // Update Company Loan Balances
-                await updateCompanyLoanBalances(payrollRunId, true);
+                await updateCompanyLoanBalances(payrollRunId.toString(), true);
 
                 return NextResponse.json({ success: true, message: 'Payroll finalized and submitted for Operations Manager Review' });
             } catch (innerError: any) {
@@ -599,7 +614,7 @@ export async function PATCH(
 
             // If returning to HR, revert loan deductions
             if (newStatus === 'Returned to HR') {
-                await updateCompanyLoanBalances(payrollRunId, false);
+                await updateCompanyLoanBalances(payrollRunId.toString(), false);
             }
 
             return NextResponse.json({ success: true, message: `Payroll returned to ${targetRole}.` });
@@ -657,8 +672,8 @@ export async function DELETE(
         const [user, selectedBranch] = auth;
 
         const payrollRunIdStr = params.id;
-        const payrollRunId = parseInt(payrollRunIdStr);
-        if (isNaN(payrollRunId)) {
+        const payrollRunId = Number(payrollRunIdStr);
+        if (!Number.isInteger(payrollRunId) || isNaN(payrollRunId)) {
             return NextResponse.json({ error: 'Invalid payroll run ID' }, { status: 400 });
         }
 
@@ -726,6 +741,9 @@ export async function DELETE(
             // Actually, better to throw if audit is required
             throw new Error(`Failed to record audit log: ${auditError.message}`);
         }
+
+        console.log(`[DELETE] Deleting payroll audit logs for run ${payrollRunId}`);
+        await query(`DELETE FROM payroll_audit_log WHERE payroll_run_id = $1`, [payrollRunId]);
 
         console.log(`[DELETE] Deleting payslips for run ${payrollRunId}`);
         // 2. Delete payslips

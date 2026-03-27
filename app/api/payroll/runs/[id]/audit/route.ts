@@ -10,7 +10,11 @@ export async function GET(
         const auth = await requireBranchAuth(request);
         if (auth instanceof NextResponse) return auth;
 
-        const payrollRunId = params.id;
+        const payrollRunIdStr = params.id;
+        const payrollRunId = Number(payrollRunIdStr);
+        if (!Number.isInteger(payrollRunId) || isNaN(payrollRunId)) {
+            return NextResponse.json({ error: 'Invalid payroll run ID' }, { status: 400 });
+        }
 
         const result = await query(`
             SELECT pal.*, u.username as username, u.role as user_role

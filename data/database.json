@@ -17679,7 +17679,7 @@
       "employee_id": 4,
       "loan_type": "Existing Company Loan",
       "principal": 22000,
-      "balance": 38500,
+      "balance": 43000,
       "status": "Active",
       "created_at": "2026-02-02T07:44:18.606Z",
       "updated_at": "2026-02-02T07:44:18.606Z"
@@ -17689,7 +17689,7 @@
       "employee_id": 6,
       "loan_type": "Existing Company Loan",
       "principal": 16345,
-      "balance": 27345,
+      "balance": 30345,
       "status": "Active",
       "created_at": "2026-02-02T07:44:18.607Z",
       "updated_at": "2026-02-02T07:44:18.607Z"
@@ -17719,7 +17719,7 @@
       "employee_id": 9,
       "loan_type": "Existing Company Loan",
       "principal": 18500,
-      "balance": 27300,
+      "balance": 29700,
       "status": "Active",
       "created_at": "2026-02-02T07:44:18.607Z",
       "updated_at": "2026-02-02T07:44:18.607Z"
@@ -17739,7 +17739,7 @@
       "employee_id": 11,
       "loan_type": "Existing Company Loan",
       "principal": 17000,
-      "balance": 28000,
+      "balance": 31000,
       "status": "Active",
       "created_at": "2026-02-02T07:44:18.607Z",
       "updated_at": "2026-02-02T07:44:18.607Z"
@@ -17749,7 +17749,7 @@
       "employee_id": 12,
       "loan_type": "Existing Company Loan",
       "principal": 29520,
-      "balance": 40520,
+      "balance": 43520,
       "status": "Active",
       "created_at": "2026-02-02T07:44:18.607Z",
       "updated_at": "2026-02-02T07:44:18.607Z"
@@ -17759,7 +17759,7 @@
       "employee_id": 13,
       "loan_type": "Existing Company Loan",
       "principal": 6000,
-      "balance": 22500,
+      "balance": 27000,
       "status": "Active",
       "created_at": "2026-02-02T07:44:18.607Z",
       "updated_at": "2026-02-02T07:44:18.607Z"
@@ -17769,7 +17769,7 @@
       "employee_id": 14,
       "loan_type": "Existing Company Loan",
       "principal": 8000,
-      "balance": 19000,
+      "balance": 22000,
       "status": "Active",
       "created_at": "2026-02-02T07:44:18.607Z",
       "updated_at": "2026-02-02T07:44:18.607Z"
@@ -17779,7 +17779,7 @@
       "employee_id": 15,
       "loan_type": "Existing Company Loan",
       "principal": 18500,
-      "balance": 27300,
+      "balance": 29700,
       "status": "Active",
       "created_at": "2026-02-02T07:44:18.607Z",
       "updated_at": "2026-02-02T07:44:18.607Z"
@@ -17789,7 +17789,7 @@
       "employee_id": 16,
       "loan_type": "Existing Company Loan",
       "principal": 8000,
-      "balance": 16800,
+      "balance": 19200,
       "status": "Active",
       "created_at": "2026-02-02T07:44:18.607Z",
       "updated_at": "2026-02-02T07:44:18.607Z"
@@ -17799,7 +17799,7 @@
       "employee_id": 17,
       "loan_type": "Existing Company Loan",
       "principal": 17600,
-      "balance": 26400,
+      "balance": 28800,
       "status": "Active",
       "created_at": "2026-02-02T07:44:18.607Z",
       "updated_at": "2026-02-02T07:44:18.607Z"
@@ -17839,7 +17839,7 @@
       "employee_id": 22,
       "loan_type": "Cash Advance",
       "principal": 4500,
-      "balance": 11500,
+      "balance": 13000,
       "status": "Active",
       "created_at": "2026-02-02T07:44:18.607Z",
       "updated_at": "2026-02-02T07:44:18.607Z"
