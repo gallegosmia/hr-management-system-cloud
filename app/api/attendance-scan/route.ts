@@ -4,6 +4,17 @@ import { query } from '@/lib/database';
 // Allowed kiosk device IDs for security
 const ALLOWED_DEVICES = ['KIOSK-1', 'KIOSK-2', 'KIOSK-3', 'MOBILE-NATIVE-KIOSK'];
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export async function OPTIONS() {
+    return NextResponse.json({}, { headers: corsHeaders });
+}
+
+
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
@@ -13,7 +24,7 @@ export async function POST(request: NextRequest) {
         if (!device_id || !ALLOWED_DEVICES.includes(device_id)) {
             return NextResponse.json(
                 { error: 'Unauthorized device', status: 'UNAUTHORIZED' },
-                { status: 403 }
+                { status: 403, headers: corsHeaders }
             );
         }
 
@@ -21,7 +32,7 @@ export async function POST(request: NextRequest) {
         if (!employee_id || String(employee_id).trim() === '') {
             return NextResponse.json(
                 { error: 'Employee ID is required', status: 'INVALID_SCAN' },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
@@ -39,7 +50,7 @@ export async function POST(request: NextRequest) {
         if (empRes.rowCount === 0) {
             return NextResponse.json(
                 { error: 'Employee not found', status: 'NOT_FOUND' },
-                { status: 404 }
+                { status: 404, headers: corsHeaders }
             );
         }
 
@@ -50,7 +61,7 @@ export async function POST(request: NextRequest) {
         if (inactiveStatuses.includes(employee.employment_status)) {
             return NextResponse.json(
                 { error: 'Employee is no longer active', status: 'INACTIVE' },
-                { status: 403 }
+                { status: 403, headers: corsHeaders }
             );
         }
 
@@ -105,7 +116,7 @@ export async function POST(request: NextRequest) {
                 if (nowMs - inMs < 60000) {
                     return NextResponse.json(
                         { error: 'Please wait at least 1 minute before timing out', status: 'TOO_SOON' },
-                        { status: 429 }
+                        { status: 429, headers: corsHeaders }
                     );
                 }
             }
@@ -178,13 +189,13 @@ export async function POST(request: NextRequest) {
                 profile_picture: employee.profile_picture || null,
                 branch: employee.branch || ''
             }
-        });
+        }, { headers: corsHeaders });
 
     } catch (error: any) {
         console.error('Attendance Scan API Error:', error);
         return NextResponse.json(
             { error: 'Internal server error', status: 'SERVER_ERROR', message: error.message },
-            { status: 500 }
+            { status: 500, headers: corsHeaders }
         );
     }
 }

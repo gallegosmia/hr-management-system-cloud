@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Button, Dimensions, ActivityIndicator, Touchabl
 import { CameraView, Camera } from 'expo-camera';
 import axios from 'axios';
 
-const DEFAULT_API_URL = 'http://192.168.254.196:3001';
+const DEFAULT_API_URL = 'https://hr-management-system-cloud.vercel.app';
 
 export default function App() {
   const [hasPermission, setHasPermission] = useState(null);
