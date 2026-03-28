@@ -16,7 +16,6 @@ import AttendanceTab from '@/components/employee/AttendanceTab';
 import LeaveHistoryTab from '@/components/employee/LeaveHistoryTab';
 import TrainingsTab from '@/components/employee/TrainingsTab';
 import ViolationsTab from '@/components/employee/ViolationsTab';
-import CompensationTab from '@/components/employee/CompensationTab';
 import AttendanceAndLeaveTab from '@/components/employee/AttendanceAndLeaveTab';
 
 interface Employee {
@@ -68,7 +67,7 @@ export default function EmployeeProfileDashboard() {
     const [onConfirm, setOnConfirm] = useState<() => void>(() => { });
 
     // Tabs Configuration
-    const tabs = ['Overview', 'Performance', 'Payroll & Benefits', 'Attendance & Leaves'];
+    const tabs = ['Overview', 'Performance', 'Attendance & Leaves'];
 
     // --- Data Fetching ---
     useEffect(() => {
@@ -335,6 +334,13 @@ export default function EmployeeProfileDashboard() {
                                 </div>
                                 <div className="h-8 w-px bg-slate-200 hidden md:block"></div>
                                 <div className="flex items-center gap-2">
+                                    <Link
+                                        href={`/compensation/${employee.id}`}
+                                        className="h-10 px-4 bg-emerald-500 rounded-lg border border-emerald-600 shadow-md shadow-emerald-500/30 flex items-center justify-center text-white hover:bg-emerald-600 transition-colors gap-2 text-xs font-bold"
+                                        title="Manage Compensation"
+                                    >
+                                        <span>💳</span> Manage Pay
+                                    </Link>
                                     <button
                                         onClick={() => { setEditSection('basic'); setEditModalOpen(true); }}
                                         className="w-10 h-10 bg-[#1D4ED8] rounded-lg border border-blue-700 shadow-md shadow-blue-500/30 flex items-center justify-center text-white hover:bg-blue-600 transition-colors"
@@ -532,11 +538,7 @@ export default function EmployeeProfileDashboard() {
                                 </div>
                             )}
 
-                            {activeTab === 'Payroll & Benefits' && (
-                                <div className="bg-white rounded-[20px] shadow-sm border border-gray-100 p-6">
-                                    <CompensationTab employeeId={employee.id} employee={employee} onUpdate={() => window.location.reload()} />
-                                </div>
-                            )}
+
 
                             {activeTab === 'Attendance & Leaves' && (
                                 <AttendanceAndLeaveTab employeeId={employee.id} />

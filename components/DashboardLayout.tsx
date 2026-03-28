@@ -195,6 +195,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
         { name: 'My Profile', href: '/profile', icon: '👤', roles: ['Employee', 'HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'TRACKER', href: '/tracker', icon: '🛰️', roles: ['Employee'] },
         { name: '201 Files', href: '/employees', icon: '📋', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
+        { name: 'Compensation & Benefits', href: '/compensation', icon: '💳', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Attendance', href: '/attendance', icon: '⏰', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Leave Requests', href: '/leave', icon: '🏖️', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Emergency Loans', href: '/loans', icon: '💰', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
