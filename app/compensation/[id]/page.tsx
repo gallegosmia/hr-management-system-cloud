@@ -1,15 +1,14 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import CompensationTab from '@/components/employee/CompensationTab';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-export default function EmployeeCompensationPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EmployeeCompensationPage({ params }: { params: { id: string } }) {
     const router = useRouter();
-    const resolvedParams = use(params);
-    const employeeId = parseInt(resolvedParams.id);
+    const employeeId = parseInt(params.id);
     
     const [employee, setEmployee] = useState<any>(null);
     const [loading, setLoading] = useState(true);

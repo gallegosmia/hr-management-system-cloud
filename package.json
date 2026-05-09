@@ -4,10 +4,10 @@
     "description": "Digital 201 File HR Management System for Philippine Companies",
     "private": true,
     "scripts": {
-        "dev": "next dev -H 0.0.0.0 -p 3001",
+        "dev": "next dev -H 0.0.0.0 -p 3005",
         "build": "next build",
-        "start": "next start -p 3001",
-        "lint": "next lint",
+        "start": "next start -p 3005",
+        "lint": "tsc --noEmit",
         "test": "jest",
         "test:watch": "jest --watch",
         "test:e2e": "playwright test"
@@ -30,6 +30,8 @@
         "qrcode.react": "^4.2.0",
         "react": "^18.3.0",
         "react-dom": "^18.3.0",
+        "sqlite": "^5.1.1",
+        "sqlite3": "^6.0.1",
         "xlsx": "^0.18.5"
     },
     "devDependencies": {

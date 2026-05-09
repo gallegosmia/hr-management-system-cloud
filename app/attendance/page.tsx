@@ -25,7 +25,7 @@ interface AttendanceRecord {
     morning_hours?: number;
     afternoon_hours?: number;
     total_hours?: number;
-    status: 'Present' | 'Late' | 'Absent' | 'Half-Day' | 'Training / Seminar' | 'No Work' | 'Sick Leave' | 'Vacation Leave' | 'Birthday Leave' | 'Official Business' | 'Leave Without Pay' | 'Holiday';
+    status: 'Present' | 'Late' | 'Absent' | 'Half-Day' | 'Training / Seminar' | 'No Work' | 'Sick Leave' | 'Vacation Leave' | 'Birthday Leave' | 'Official Business' | 'Holiday';
     remarks?: string;
     is_locked?: boolean;
 }
@@ -215,7 +215,6 @@ const CheckpointCell = ({ time, label }: { time?: string, label: string }) => {
                     dot: 'bg-blue-500'
                 };
             case 'Absent':
-            case 'Leave Without Pay':
                 return {
                     bg: 'bg-red-50',
                     text: 'text-red-700',
@@ -581,35 +580,71 @@ export default function AttendancePage() {
 
         try {
             const sessionId = localStorage.getItem('sessionId');
-            const res = await fetch('/api/attendance', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-session-id': sessionId || ''
-                },
-                body: JSON.stringify({
-                    date: editingRecord.date,
-                    records: [{
-                        ...editingRecord,
-                        // Include 4-checkpoint fields
-                        morning_in: editingRecord.morning_in,
-                        morning_out: editingRecord.morning_out,
-                        afternoon_in: editingRecord.afternoon_in,
-                        afternoon_out: editingRecord.afternoon_out
-                    }]
-                })
-            });
 
-            if (res.ok) {
-                alert('Record updated successfully');
-                setIsEditModalOpen(false);
-                fetchAttendance();
+            if (editingRecord.id) {
+                // USE PUT for existing records - update by ID directly
+                const res = await fetch(`/api/attendance?id=${editingRecord.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-session-id': sessionId || ''
+                    },
+                    body: JSON.stringify({
+                        status: editingRecord.status,
+                        remarks: editingRecord.remarks,
+                        morning_in: editingRecord.morning_in || null,
+                        morning_out: editingRecord.morning_out || null,
+                        afternoon_in: editingRecord.afternoon_in || null,
+                        afternoon_out: editingRecord.afternoon_out || null,
+                        time_in: editingRecord.time_in || null,
+                        time_out: editingRecord.time_out || null
+                    })
+                });
+
+                if (res.ok) {
+                    alert('Record updated successfully');
+                    setIsEditModalOpen(false);
+                    fetchAttendance();
+                } else {
+                    const errData = await res.json().catch(() => ({}));
+                    alert(errData.error || 'Failed to update record');
+                }
             } else {
-                alert('Failed to update record');
+                // USE POST for new records
+                // Normalize date to YYYY-MM-DD to avoid timezone issues
+                const normalizedDate = editingRecord.date?.includes('T')
+                    ? format(new Date(editingRecord.date), 'yyyy-MM-dd')
+                    : editingRecord.date;
+
+                const res = await fetch('/api/attendance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-session-id': sessionId || ''
+                    },
+                    body: JSON.stringify({
+                        date: normalizedDate,
+                        records: [{
+                            ...editingRecord,
+                            morning_in: editingRecord.morning_in,
+                            morning_out: editingRecord.morning_out,
+                            afternoon_in: editingRecord.afternoon_in,
+                            afternoon_out: editingRecord.afternoon_out
+                        }]
+                    })
+                });
+
+                if (res.ok) {
+                    alert('Record saved successfully');
+                    setIsEditModalOpen(false);
+                    fetchAttendance();
+                } else {
+                    alert('Failed to save record');
+                }
             }
         } catch (err) {
             console.error(err);
-            alert('Error updating record');
+            alert('Error saving record');
         }
     };
 
@@ -741,7 +776,6 @@ export default function AttendancePage() {
                 case 'Birthday Leave':
                 case 'Official Business':
                 case 'Training / Seminar':
-                case 'Leave Without Pay':
                     acc.onLeave++;
                     break;
                 default:
@@ -753,170 +787,192 @@ export default function AttendancePage() {
 
     return (
         <DashboardLayout>
-            <div style={{ padding: '16px', fontFamily: "'Inter', sans-serif" }}>
+            <div style={{ padding: '24px', fontFamily: "'Inter', sans-serif", background: '#f8fafc', minHeight: '100vh' }}>
                 {/* Header Section */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <div>
-                        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1f2937', margin: 0, letterSpacing: '-0.025em' }}>Attendance</h1>
-                        <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '4px' }}>View and manage daily attendance records.</p>
+                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.025em' }}>Attendance</h1>
+                        <p style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px' }}>View and manage daily attendance records.</p>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '12px' }}>
+                    <div>
                         <button
                             onClick={handleAdd}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: '8px',
-                                background: '#f97316', color: 'white', border: 'none', // Orange accent from image
+                                background: '#f59e0b', color: 'white', border: 'none', 
                                 padding: '10px 20px', borderRadius: '8px', cursor: 'pointer',
-                                fontSize: '0.875rem', fontWeight: 600, boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                fontSize: '0.875rem', fontWeight: 600, boxShadow: '0 4px 6px -1px rgba(245, 158, 11, 0.2)'
                             }}
                         >
-                            <span>+</span> Add Record
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                            Add Record
                         </button>
                     </div>
                 </div>
 
-                {/* Metrics Section - Kept as is, but styled cleaner */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-                    {/* Helper for Metric Cards */}
+                {/* Metrics Section */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '24px' }}>
                     {[
-                        { title: "Total Employees", value: stats.total, color: "#f97316", icon: "👥" },
-                        { title: "Present", value: stats.present, color: "#10b981", icon: "✅" },
-                        { title: "Absent", value: stats.absent, color: "#ef4444", icon: "❌" },
-                        { title: "Late", value: stats.late, color: "#f59e0b", icon: "⏰" },
-                        { title: "Half-Day", value: stats.halfDay, color: "#a855f7", icon: "🌓" },
-                        { title: "On Leave", value: stats.onLeave, color: "#3b82f6", icon: "🏖️" }
+                        { title: "TOTAL\nEMPLOYEES", value: stats.total, color: "#3b82f6", bg: "#eff6ff", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> },
+                        { title: "PRESENT", value: stats.present, color: "#10b981", bg: "#ecfdf5", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> },
+                        { title: "ABSENT", value: stats.absent, color: "#ef4444", bg: "#fef2f2", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg> },
+                        { title: "LATE", value: stats.late, color: "#f97316", bg: "#fff7ed", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> },
+                        { title: "HALF-\nDAY", value: stats.halfDay, color: "#eab308", bg: "#fefce8", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 22h14"></path><path d="M5 2h14"></path><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path></svg> },
+                        { title: "ON\nLEAVE", value: stats.onLeave, color: "#a855f7", bg: "#faf5ff", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M12 6h.01"></path><path d="M12 10h.01"></path><path d="M12 14h.01"></path><path d="M16 10h.01"></path><path d="M16 14h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path></svg> }
                     ].map((m, i) => (
-                        <div key={i} style={{ background: 'white', padding: '12px', borderRadius: '12px', border: '1px solid #f3f4f6', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1f2937' }}>{m.value}</span>
-                                <span style={{ fontSize: '1.25rem', opacity: 0.8 }}>{m.icon}</span>
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #f1f5f9', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
+                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: m.bg, color: m.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                {m.icon}
                             </div>
-                            <div style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: 500 }}>{m.title}</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, letterSpacing: '0.05em', whiteSpace: 'pre-line', lineHeight: 1.2 }}>{m.title}</div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{m.value}</div>
+                            </div>
                         </div>
                     ))}
                 </div>
 
                 {/* Main Content Card (Toolbar + Table) */}
-                <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
 
                     {/* Toolbar Styled to match image */}
                     <div style={{
-                        padding: '12px 16px',
-                        borderBottom: '1px solid #f3f4f6',
+                        padding: '20px',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         flexWrap: 'wrap',
                         gap: '16px'
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f97316' }}>
-                            <span style={{ background: '#fff7ed', padding: '8px', borderRadius: '8px' }}>👤</span>
-                            <span style={{ fontWeight: 600, color: '#1f2937' }}>Attendance List</span>
-                        </div>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Attendance List</h2>
 
                         <div style={{ display: 'flex', gap: '12px', flex: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
-
-
                             {/* Search */}
-                            <div style={{ position: 'relative', width: '240px' }}>
+                            <div style={{ position: 'relative', width: '280px' }}>
                                 <input
                                     type="text"
-                                    placeholder="Search..."
+                                    placeholder="Search by name or employee"
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
                                     style={{
                                         width: '100%',
-                                        padding: '10px 12px 10px 40px',
-                                        borderRadius: '8px',
-                                        border: '1px solid #e5e7eb',
+                                        padding: '8px 12px 8px 36px',
+                                        borderRadius: '6px',
+                                        border: '1px solid #e2e8f0',
                                         fontSize: '0.875rem',
-                                        background: '#f9fafb'
+                                        color: '#334155',
+                                        outline: 'none'
                                     }}
                                 />
-                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }}>🔍</span>
+                                <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', display: 'flex' }}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                </span>
                             </div>
 
                             {/* Filter Button */}
                             <button style={{
                                 display: 'flex', alignItems: 'center', gap: '8px',
-                                padding: '10px 16px', borderRadius: '8px',
-                                border: '1px solid #e5e7eb', background: 'white',
-                                fontSize: '0.875rem', fontWeight: 600, color: '#4b5563',
+                                padding: '8px 16px', borderRadius: '6px',
+                                border: '1px solid #e2e8f0', background: 'white',
+                                fontSize: '0.875rem', fontWeight: 500, color: '#334155',
                                 cursor: 'pointer'
                             }}>
-                                <span>⚙️</span> Filter
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg> Filter
                             </button>
 
                             {/* Sort Button */}
                             <button style={{
                                 display: 'flex', alignItems: 'center', gap: '8px',
-                                padding: '10px 16px', borderRadius: '8px',
-                                border: '1px solid #e5e7eb', background: 'white',
-                                fontSize: '0.875rem', fontWeight: 600, color: '#4b5563',
+                                padding: '8px 16px', borderRadius: '6px',
+                                border: '1px solid #e2e8f0', background: 'white',
+                                fontSize: '0.875rem', fontWeight: 500, color: '#334155',
                                 cursor: 'pointer'
                             }}>
-                                <span>⇅</span> Sort
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg> Sort
                             </button>
 
                             <button
                                 onClick={handleGenerateReport}
                                 style={{
-                                    padding: '10px 16px', borderRadius: '8px',
-                                    border: '1px solid #e5e7eb', background: 'white',
-                                    fontSize: '0.875rem', fontWeight: 600, color: '#4b5563',
+                                    padding: '8px 16px', borderRadius: '6px',
+                                    border: '1px solid #e2e8f0', background: 'white',
+                                    fontSize: '0.875rem', fontWeight: 500, color: '#334155',
                                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'
                                 }}
                             >
-                                <DownloadIcon /> Export
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Export
                             </button>
                         </div>
                     </div>
 
-
-                    {/* Secondary Filters for functionality (Keeping functional "arrangement") */}
-                    <div style={{ padding: '8px 16px', background: '#fcfcfc', borderBottom: '1px solid #f3f4f6', display: 'flex', gap: '12px', overflowX: 'auto' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'white', padding: '4px 12px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                            <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Date:</span>
-                            <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setEndDate(e.target.value) }} style={{ border: 'none', fontSize: '0.875rem' }} />
+                    {/* Secondary Filters */}
+                    <div style={{ padding: '0 20px 20px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', marginBottom: '6px' }}>Date</label>
+                            <div style={{ position: 'relative' }}>
+                                <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setEndDate(e.target.value) }} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '0.875rem', color: '#334155', outline: 'none' }} />
+                            </div>
                         </div>
-                        {user?.role !== 'Employee' && (
+                        {user?.role !== 'Employee' ? (
                             <>
-                                <select value={filterBranch} onChange={(e) => setFilterBranch(e.target.value)} disabled={user?.role === 'HR'}
-                                    style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '0.875rem', background: 'white' }}>
-                                    {user?.role !== 'HR' && <option value="">All Branches</option>}
-                                    {branches.map(b => <option key={b} value={b}>{b}</option>)}
-                                </select>
-                                <select value={filterDepartment} onChange={(e) => setFilterDepartment(e.target.value)}
-                                    style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '0.875rem', background: 'white' }}>
-                                    <option value="">All Departments</option>
-                                    {departments.map(d => <option key={d} value={d}>{d}</option>)}
-                                </select>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', marginBottom: '6px' }}>Branch</label>
+                                    <select value={filterBranch} onChange={(e) => setFilterBranch(e.target.value)} disabled={user?.role === 'HR'}
+                                        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '0.875rem', color: '#334155', outline: 'none', appearance: 'none', background: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center/16px' }}>
+                                        {user?.role !== 'HR' && <option value="">All Branches</option>}
+                                        {branches.map(b => <option key={b} value={b}>{b}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', marginBottom: '6px' }}>Department</label>
+                                    <select value={filterDepartment} onChange={(e) => setFilterDepartment(e.target.value)}
+                                        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '0.875rem', color: '#334155', outline: 'none', appearance: 'none', background: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center/16px' }}>
+                                        <option value="">All Departments</option>
+                                        {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                                    </select>
+                                </div>
                             </>
+                        ) : (
+                            <div style={{ gridColumn: 'span 2' }}></div>
                         )}
-                        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                            style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '0.875rem', background: 'white' }}>
-                            <option value="">All Status</option>
-                            <option value="Present">Present</option>
-                            <option value="Late">Late</option>
-                            <option value="Absent">Absent</option>
-                            <option value="Half-Day">Half-Day</option>
-                            <option value="Training / Seminar">Training / Seminar</option>
-                            <option value="No Work">No Work</option>
-                            <option value="Sick Leave">Sick Leave</option>
-                            <option value="Vacation Leave">Vacation Leave</option>
-                            <option value="Birthday Leave">Birthday Leave</option>
-                            <option value="Official Business">Official Business</option>
-                            <option value="Leave Without Pay">Leave Without Pay</option>
-                            <option value="Holiday">Holiday</option>
-                        </select>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#64748b', marginBottom: '6px' }}>Status</label>
+                            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+                                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '0.875rem', color: '#334155', outline: 'none', appearance: 'none', background: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center/16px' }}>
+                                <option value="">All Statuses</option>
+                                <option value="Present">Present</option>
+                                <option value="Late">Late</option>
+                                <option value="Absent">Absent</option>
+                                <option value="Half-Day">Half-Day</option>
+                                <option value="Training / Seminar">Training / Seminar</option>
+                                <option value="No Work">No Work</option>
+                                <option value="Sick Leave">Sick Leave</option>
+                                <option value="Vacation Leave">Vacation Leave</option>
+                                <option value="Birthday Leave">Birthday Leave</option>
+                                <option value="Official Business">Official Business</option>
+                                <option value="Holiday">Holiday</option>
+                            </select>
+                        </div>
                     </div>
 
                     {/* Content Area */}
                     {loading ? (
-                        <div style={{ padding: '32px', textAlign: 'center', color: '#6b7280' }}>Loading...</div>
+                        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#64748b' }}>Loading...</div>
                     ) : paginatedRecords.length === 0 ? (
-                        <div style={{ padding: '32px', textAlign: 'center', color: '#6b7280' }}>No records found.</div>
+                        <div style={{ padding: '80px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{ position: 'relative', width: '160px', height: '160px', borderRadius: '50%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+                                <div style={{ position: 'absolute', width: '110px', height: '110px', borderRadius: '50%', background: '#e2e8f0', opacity: 0.5 }}></div>
+                                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'relative', zIndex: 1 }}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <div style={{ position: 'absolute', bottom: '45px', right: '45px', background: '#818cf8', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2, border: '3px solid #f8fafc' }}>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                </div>
+                            </div>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>No records found</h3>
+                            <p style={{ color: '#64748b', fontSize: '0.875rem', maxWidth: '400px', lineHeight: 1.5 }}>
+                                We couldn't find any attendance records matching your current filters. Try adjusting your search criteria.
+                            </p>
+                        </div>
                     ) : viewMode === 'list' ? (
                         /* LIST VIEW TABLE */
                         <div style={{ overflowX: 'auto' }}>
@@ -1095,39 +1151,52 @@ export default function AttendancePage() {
 
                     {/* Footer / Pagination matching image */}
                     <div style={{
-                        padding: '12px 16px',
+                        padding: '24px',
                         display: 'flex',
-                        justifyContent: 'space-between',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
                         alignItems: 'center',
-                        color: '#6b7280',
-                        fontSize: '0.875rem',
-                        borderTop: '1px solid #f3f4f6'
+                        gap: '16px',
+                        color: '#64748b',
+                        fontSize: '0.875rem'
                     }}>
                         <div>
-                            Showing {Math.min(startIndex + 1, filteredAttendance.length)} to {Math.min(startIndex + rowsPerPage, filteredAttendance.length)} of {filteredAttendance.length} entries
+                            Showing <span style={{ fontWeight: 600, color: '#0f172a' }}>{Math.min(startIndex + 1, filteredAttendance.length)}</span> to <span style={{ fontWeight: 600, color: '#0f172a' }}>{Math.min(startIndex + rowsPerPage, filteredAttendance.length)}</span> of <span style={{ fontWeight: 600, color: '#0f172a' }}>{filteredAttendance.length}</span> entries
                         </div>
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                            <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} style={{ padding: '6px 12px', border: '1px solid #e5e7eb', borderRadius: '6px', background: 'white', cursor: 'pointer' }}>{"<"}</button>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', color: '#94a3b8' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
+                            </button>
+                            <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', color: '#94a3b8' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                            </button>
+                            
                             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                                 const p = i + 1;
                                 return (
                                     <button key={p}
                                         onClick={() => setCurrentPage(p)}
                                         style={{
-                                            width: '32px', height: '32px',
-                                            border: p === currentPage ? '1px solid #f97316' : '1px solid #e5e7eb',
-                                            background: p === currentPage ? '#fff7ed' : 'white',
-                                            color: p === currentPage ? '#f97316' : '#6b7280',
-                                            borderRadius: '6px',
+                                            width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            border: p === currentPage ? '1px solid #1d4ed8' : '1px solid #e2e8f0',
+                                            background: p === currentPage ? '#1d4ed8' : 'white',
+                                            color: p === currentPage ? 'white' : '#64748b',
+                                            borderRadius: '8px',
                                             cursor: 'pointer',
-                                            fontWeight: p === currentPage ? 700 : 400
+                                            fontWeight: p === currentPage ? 600 : 400
                                         }}
                                     >
                                         {p}
                                     </button>
                                 );
                             })}
-                            <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} style={{ padding: '6px 12px', border: '1px solid #e5e7eb', borderRadius: '6px', background: 'white', cursor: 'pointer' }}>{">"}</button>
+
+                            <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', color: '#94a3b8' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                            <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', color: '#94a3b8' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1172,7 +1241,19 @@ export default function AttendancePage() {
                                     >
                                         <option value="">Select Employee</option>
                                         {employees
-                                            .filter(emp => emp.employment_status !== 'Resigned' && emp.employment_status !== 'Terminated')
+                                            .filter(emp => {
+                                                // Remove resigned/terminated employees
+                                                if (emp.employment_status === 'Resigned' || emp.employment_status === 'Terminated') return false;
+
+                                                // Hide employee if they already have ANY record for the selected date
+                                                const selectedDate = editingRecord.date?.split('T')[0];
+                                                const alreadyHasRecord = attendance.some(a =>
+                                                    String(a.employee_id) === String(emp.id) &&
+                                                    a.date?.split('T')[0] === selectedDate
+                                                );
+
+                                                return !alreadyHasRecord; // Hide if already has any record
+                                            })
                                             .map(emp => (
                                                 <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
                                             ))}
@@ -1268,7 +1349,6 @@ export default function AttendancePage() {
                                     <option value="Vacation Leave">Vacation Leave</option>
                                     <option value="Birthday Leave">Birthday Leave</option>
                                     <option value="Official Business">Official Business</option>
-                                    <option value="Leave Without Pay">Leave Without Pay</option>
                                     <option value="Holiday">Holiday</option>
                                     <option value="No Work">No Work</option>
                                 </select>

@@ -42,6 +42,10 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
     const [lastReleaseDate, setLastReleaseDate] = useState<string>('');
     const [staggeredTotal, setStaggeredTotal] = useState(0);
 
+    // Loan history for this employee
+    const [loanHistory, setLoanHistory] = useState<any[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
+
     useEffect(() => {
         const userData = localStorage.getItem('user');
         if (userData) setUser(JSON.parse(userData));
@@ -57,6 +61,8 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
             if (res.ok) {
                 const data = await res.json();
                 setLoan(data);
+                // Fetch loan history for this employee
+                fetchLoanHistory(data.employee_id);
 
             } else {
                 router.push('/loans');
@@ -65,6 +71,25 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
             console.error('Fetch loan error:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchLoanHistory = async (employeeId: number) => {
+        if (!employeeId) return;
+        setLoadingHistory(true);
+        try {
+            const sessionId = localStorage.getItem('sessionId');
+            const res = await fetch(`/api/loans?employee_id=${employeeId}`, {
+                headers: { 'x-session-id': sessionId || '' }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setLoanHistory(Array.isArray(data) ? data : []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch loan history:', err);
+        } finally {
+            setLoadingHistory(false);
         }
     };
 
@@ -241,413 +266,272 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
         }
     ];
 
+    const approvalsList: any[] = Array.isArray(loan.approvals) ? loan.approvals : (() => { try { return JSON.parse(loan.approvals || '[]'); } catch { return []; } })();
+    const allowable = Math.max(0, 30000 - (Number(loan.loan_balance) || 0));
+
     return (
         <DashboardLayout>
-            <div className="loan-details-container">
-                {/* Modal/Card */}
-                <div className="loan-card">
-                    {/* Header */}
-                    <div className="card-header">
-                        <div className="header-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        </div>
-                        <div className="header-text">
-                            <h1>Loan Request Details</h1>
-                            <span className="reference-id">Reference: #LR-{loan.id}-{new Date(loan.created_at).getFullYear()}</span>
-                        </div>
-                        <button className="close-btn" onClick={() => router.push('/loans')}>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                        </button>
-                    </div>
+        <div style={{maxWidth:'1100px',margin:'0 auto',padding:'24px',fontFamily:'Inter,system-ui,sans-serif'}}>
+            {/* Header */}
+            <div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'22px'}}>
+                <button onClick={()=>router.push('/loans')} style={{background:'white',border:'1px solid #e2e8f0',borderRadius:'8px',padding:'8px 14px',cursor:'pointer',color:'#334155',fontWeight:600,fontSize:'13px',display:'flex',alignItems:'center',gap:'6px'}}><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Back</button>
+                <div style={{flex:1}}>
+                    <h1 style={{margin:0,fontSize:'18px',fontWeight:800,color:'#0f172a'}}>Emergency Loan Review</h1>
+                    <div style={{fontSize:'12px',color:'#64748b',marginTop:'2px'}}>#LR-{loan.id}-{new Date(loan.created_at).getFullYear()} &bull; {loan.employee_name} &bull; {loan.department}</div>
+                </div>
+                <span style={{background:loan.status==='Approved'?'#dbeafe':loan.status.includes('Released')?'#dcfce7':loan.status==='Disapproved'?'#fee2e2':'#fef9c3',color:loan.status==='Approved'?'#1e40af':loan.status.includes('Released')?'#166534':loan.status==='Disapproved'?'#991b1b':'#854d0e',padding:'4px 14px',borderRadius:'20px',fontSize:'12px',fontWeight:700}}>{loan.status}</span>
+            </div>
 
-                    <div className="card-body">
-                        {/* Employee Section */}
-                        <div className="employee-section">
-                            <div className="employee-avatar">
-                                {loan.employee_name?.charAt(0)}
+            <div style={{display:'grid',gridTemplateColumns:'minmax(0,2fr) minmax(0,1fr)',gap:'20px',alignItems:'start'}}>
+                {/* LEFT */}
+                <div style={{display:'flex',flexDirection:'column',gap:'16px'}}>
+
+                    {/* Amount hero */}
+                    <div style={{background:'white',borderRadius:'12px',border:'1px solid #e2e8f0',padding:'22px'}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'12px'}}>
+                            <div>
+                                <div style={{fontSize:'11px',fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:'4px'}}>Requested Amount</div>
+                                <div style={{fontSize:'30px',fontWeight:800,color:'#2563eb',lineHeight:1}}>{formatCurrency(loan.requested_amount)}</div>
+                                {loan.approved_amount && <div style={{fontSize:'13px',color:'#16a34a',fontWeight:600,marginTop:'4px'}}>Approved: {formatCurrency(loan.approved_amount)}</div>}
+                                <div style={{fontSize:'13px',color:'#64748b',marginTop:'6px'}}>{(loan.reason||'').substring(0,80)}{(loan.reason||'').length>80?'...':''}</div>
                             </div>
-                            <div className="employee-info">
-                                <h2>{loan.employee_name}</h2>
-                                <div className="employee-meta">
-                                    <span>ID: {loan.employee_id}</span>
-                                    <span className="badge">{loan.department}</span>
-                                </div>
-                            </div>
+                            <span style={{background:'#dbeafe',color:'#1e40af',padding:'5px 14px',borderRadius:'20px',fontSize:'12px',fontWeight:700,whiteSpace:'nowrap',flexShrink:0}}>{loan.category}</span>
                         </div>
-
-                        {/* Loan Overview */}
-                        <div className="section-title">LOAN OVERVIEW</div>
-                        <div className="overview-grid">
-                            <div className="overview-card big-amount">
-                                <label>Requested Amount</label>
-                                <div className="amount">{formatCurrency(loan.requested_amount)}</div>
-                            </div>
-                            {loan.approved_amount && (
-                                <div className="overview-card" style={{ borderColor: '#22c55e', background: '#f0fdf4' }}>
-                                    <label>Approved Amount</label>
-                                    <div className="amount" style={{ color: '#16a34a' }}>{formatCurrency(loan.approved_amount)}</div>
-                                </div>
-                            )}
-                            <div className="overview-card">
-                                <label>Category</label>
-                                <div className="value">{loan.category}</div>
-                            </div>
-                            <div className="overview-card">
-                                <label>Filing Date</label>
-                                <div className="value">{safeDate(loan.created_at)}</div>
-                            </div>
-                            {loan.total_released_amount > 0 && (
-                                <div className="overview-card">
-                                    <label>Released So Far</label>
-                                    <div className="value" style={{ color: '#2563eb', fontWeight: 'bold' }}>{formatCurrency(loan.total_released_amount)}</div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Reason */}
-                        <div className="section-title">REASON FOR REQUEST</div>
-                        <div className="reason-box">
-                            {loan.reason}
-                        </div>
-
-                        {/* Attachments */}
-                        <div className="section-title">UPLOADED DOCUMENTS</div>
-                        <div className="attachments-list">
-                            {(() => {
-                                let attachments: any[] = [];
-                                try {
-                                    if (Array.isArray(loan.attachments)) attachments = loan.attachments;
-                                    else if (typeof loan.attachments === 'string') attachments = JSON.parse(loan.attachments);
-                                } catch (e) { console.error('Error parsing attachments', e); }
-
-                                if (!attachments || attachments.length === 0) {
-                                    return <div className="no-attachments">No documents attached.</div>;
-                                }
-
-                                return attachments.map((file, idx) => (
-                                    <div key={idx} className="attachment-item">
-                                        <div className="file-icon pdf">
-                                            {file.type?.split('/')[1]?.toUpperCase() || 'FILE'}
-                                        </div>
-                                        <div className="file-info">
-                                            <span className="filename">{file.name}</span>
-                                            <span className="filesize">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                                        </div>
-                                        <button
-                                            className="view-btn"
-                                            onClick={() => window.open(file.url, '_blank')}
-                                            title="View Document"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                        </button>
-                                    </div>
-                                ));
-                            })()}
-                        </div>
-
-                        {/* Workflow */}
-                        <div className="section-title">APPROVAL WORKFLOW</div>
-                        <div className="workflow-stepper">
-                            {steps.map((step, i) => (
-                                <div key={i} className={`step ${step.status}`}>
-                                    <div className="step-circle">
-                                        {step.status === 'done' ? '✓' : (step.status === 'active' ? '●' : (step.status === 'error' ? '✕' : i + 1))}
-                                    </div>
-                                    <div className="step-label">{step.label}</div>
-                                    {i < steps.length - 1 && <div className="step-line"></div>}
-                                </div>
-                            ))}
+                        <div style={{marginTop:'14px',paddingTop:'14px',borderTop:'1px solid #f1f5f9',display:'flex',gap:'20px',fontSize:'12px',color:'#64748b'}}>
+                            <span style={{display:'flex',alignItems:'center',gap:'5px'}}><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Filed on {safeDate(loan.created_at)}</span>
+                            <span># ID: LR-{loan.id}-{new Date(loan.created_at).getFullYear()}</span>
                         </div>
                     </div>
 
-                    <div className="card-footer">
-                        <button className="btn-close" onClick={() => router.push('/loans')}>Close</button>
+                    {/* Requester Standing */}
+                    {(canApprove||isHR)&&(
+                    <div style={{background:'white',borderRadius:'12px',border:'1px solid #e2e8f0',padding:'22px'}}>
+                        <div style={{fontSize:'14px',fontWeight:700,color:'#0f172a',marginBottom:'14px'}}>Requester Standing</div>
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'12px'}}>
+                            <div style={{padding:'14px',borderRadius:'10px',border:'1px solid #e2e8f0',background:'#fff7ed'}}>
+                                <div style={{fontSize:'11px',color:'#9a3412',marginBottom:'6px',fontWeight:600}}>Current Balance</div>
+                                <div style={{fontSize:'22px',fontWeight:800,color:'#7c2d12'}}>{formatCurrency(Number(loan.loan_balance)||0)}</div>
+                                <div style={{fontSize:'11px',color:'#c2410c',marginTop:'4px'}}>Outstanding balance</div>
+                            </div>
+                            <div style={{padding:'14px',borderRadius:'10px',border:'1px solid #e2e8f0',background:'#eff6ff'}}>
+                                <div style={{fontSize:'11px',color:'#1e40af',marginBottom:'6px',fontWeight:600}}>Allowable Limit</div>
+                                <div style={{fontSize:'22px',fontWeight:800,color:'#1e3a8a'}}>{formatCurrency(allowable)}</div>
+                                <div style={{fontSize:'11px',color:'#2563eb',marginTop:'4px'}}>Max &asymp;30,000</div>
+                            </div>
+                            <div style={{padding:'14px',borderRadius:'10px',border:'1px solid #e2e8f0',background:loan.requested_amount<=allowable?'#f0fdf4':'#fef2f2'}}>
+                                <div style={{fontSize:'11px',color:loan.requested_amount<=allowable?'#166534':'#991b1b',marginBottom:'6px',fontWeight:600}}>Status</div>
+                                <div style={{display:'flex',alignItems:'center',gap:'6px',margin:'4px 0'}}>
+                                    <span style={{width:'8px',height:'8px',borderRadius:'50%',background:loan.requested_amount<=allowable?'#22c55e':'#ef4444',display:'inline-block',flexShrink:0}}/>
+                                    <span style={{fontSize:'13px',fontWeight:700,color:loan.requested_amount<=allowable?'#16a34a':'#dc2626'}}>{loan.requested_amount<=allowable?'In Good Standing':'Exceeds Limit'}</span>
+                                </div>
+                                <div style={{fontSize:'11px',color:loan.requested_amount<=allowable?'#15803d':'#b91c1c'}}>Requested: {formatCurrency(loan.requested_amount)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    )}
 
-                        {/* Approve/Reject Buttons */}
-                        {canApprove && isPending ? (
-                            <>
-                                <button className="btn-reject" onClick={() => setShowDisapproveModal(true)}>Reject Request</button>
-                                <button className="btn-approve" onClick={() => handleAction('Approved')}>
-                                    {approving ? 'Processing...' : 'Approve Request'}
-                                </button>
-                            </>
-                        ) : null}
+                    {/* Case Details */}
+                    <div style={{background:'white',borderRadius:'12px',border:'1px solid #e2e8f0',padding:'22px'}}>
+                        <div style={{fontSize:'14px',fontWeight:700,color:'#0f172a',marginBottom:'14px'}}>Case Details</div>
+                        <table style={{width:'100%',borderCollapse:'collapse'}}>
+                            <tbody>
+                                <tr style={{borderBottom:'1px solid #f1f5f9'}}>
+                                    <td style={{padding:'10px 0',fontSize:'13px',color:'#94a3b8',width:'140px',fontWeight:500,verticalAlign:'top'}}>Filing Date</td>
+                                    <td style={{padding:'10px 0',fontSize:'13px',fontWeight:700,color:'#0f172a'}}>{safeDate(loan.created_at,'MMMM dd, yyyy')}</td>
+                                </tr>
+                                <tr style={{borderBottom:'1px solid #f1f5f9'}}>
+                                    <td style={{padding:'10px 0',fontSize:'13px',color:'#94a3b8',fontWeight:500,verticalAlign:'top'}}>Request Reason</td>
+                                    <td style={{padding:'10px 0',fontSize:'13px',color:'#334155',lineHeight:'1.6'}}>{loan.reason}</td>
+                                </tr>
+                                {loan.deduction_amount&&(
+                                <tr>
+                                    <td style={{padding:'10px 0',fontSize:'13px',color:'#94a3b8',fontWeight:500}}>Repayment Plan</td>
+                                    <td style={{padding:'10px 0',fontSize:'13px',fontWeight:600,color:'#0f172a'}}>&asymp;{Number(loan.deduction_amount).toLocaleString()} &bull; Salary Deduction</td>
+                                </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
 
-                        {/* Enhanced Release Buttons */}
-                        {canRelease && isApproved && (
-                            <>
-                                <button
-                                    className="btn-release-full"
-                                    style={{ background: '#22c55e', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
-                                    onClick={() => {
-                                        setReleaseType('FULL');
-                                        if (confirm('Are you sure you want to fully release this loan?')) {
-                                            handleRelease(); // Immediate full release trigger per confirm dialog logic requirement? 
-                                            // Requirements said: Click Fully Released -> Confirm Dialog -> If Yes, Update.
-                                            // Just calling handleRelease which has confirm logic inside.
-                                            // Wait, handleRelease checks releaseType state, which might not be updated yet if I call it immediately.
-                                            // Better to just set type and open a confirmation or handling logic.
-                                            // Actually, the requirements say "System Behavior: Confirm dialog...".
-                                            // So I can't just call handleRelease() immediately because setReleaseType is async.
-                                            // I will modify handleRelease to accept type optionally, OR just assume state is set.
-                                            // React batching might fail me here. 
-                                            // Safer approach: 
-                                        }
-                                    }}
-                                >
-                                    Fully Released
-                                </button>
-                                <button
-                                    className="btn-release-staggered"
-                                    style={{ background: 'transparent', color: '#64748b', border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
-                                    onClick={() => {
-                                        setReleaseType('STAGGERED');
-                                        setShowReleaseModal(true);
-                                    }}
-                                >
-                                    Staggered
-                                </button>
-                            </>
-                        )}
+                    {/* Attachments */}
+                    <div style={{background:'white',borderRadius:'12px',border:'1px solid #e2e8f0',padding:'22px'}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'14px'}}>
+                            <div style={{fontSize:'14px',fontWeight:700,color:'#0f172a'}}>Attachments</div>
+                            <button style={{fontSize:'12px',color:'#2563eb',background:'none',border:'none',cursor:'pointer',fontWeight:600,display:'flex',alignItems:'center',gap:'4px'}}><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg> Add Documents</button>
+                        </div>
+                        {(()=>{
+                            let atts:any[]=[];
+                            try{if(Array.isArray(loan.attachments))atts=loan.attachments;else if(typeof loan.attachments==='string')atts=JSON.parse(loan.attachments);}catch{}
+                            if(!atts||atts.length===0)return(
+                                <div style={{border:'2px dashed #e2e8f0',borderRadius:'10px',padding:'36px',textAlign:'center'}}>
+                                    <div style={{marginBottom:'10px',display:'flex',justifyContent:'center'}}><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+                                    <div style={{fontSize:'13px',fontWeight:600,color:'#334155'}}>No files attached yet</div>
+                                    <div style={{fontSize:'12px',color:'#94a3b8',marginTop:'4px'}}>Upload supporting documents here</div>
+                                </div>
+                            );
+                            return atts.map((f:any,i:number)=>(
+                                <div key={i} style={{display:'flex',alignItems:'center',gap:'12px',padding:'10px',border:'1px solid #e2e8f0',borderRadius:'8px',marginBottom:'8px'}}>
+                                    <div style={{background:'#fee2e2',color:'#ef4444',padding:'6px 10px',borderRadius:'6px',fontSize:'11px',fontWeight:700}}>{f.type?.split('/')[1]?.toUpperCase()||'FILE'}</div>
+                                    <div style={{flex:1}}>
+                                        <div style={{fontSize:'13px',fontWeight:600,color:'#334155'}}>{f.name}</div>
+                                        <div style={{fontSize:'11px',color:'#94a3b8'}}>{(f.size/1024/1024).toFixed(2)} MB</div>
+                                    </div>
+                                    <button onClick={()=>window.open(f.url,'_blank')} style={{background:'#eff6ff',color:'#2563eb',border:'none',padding:'6px 12px',borderRadius:'6px',cursor:'pointer',fontSize:'12px',fontWeight:600}}>View</button>
+                                </div>
+                            ));
+                        })()}
+                    </div>
 
-                        {/* Cancel for owner */}
-                        {isOwner && isPending && !canApprove && (
-                            <button className="btn-reject" onClick={() => {
-                                if (confirm('Cancel this request?')) handleAction('Cancelled', 'User Cancelled');
-                            }}>Cancel Request</button>
+                    {/* Loan History */}
+                    {(canApprove||isHR)&&(
+                    <div style={{background:'white',borderRadius:'12px',border:'1px solid #e2e8f0',padding:'22px'}}>
+                        <div style={{fontSize:'14px',fontWeight:700,color:'#0f172a',marginBottom:'14px'}}>Loan History</div>
+                        {loadingHistory?(<div style={{color:'#94a3b8',fontSize:'13px'}}>Loading...</div>):
+                        loanHistory.filter(h=>h.status!=='Deleted').length===0?(<div style={{color:'#94a3b8',fontSize:'13px',fontStyle:'italic'}}>No prior loan records.</div>):(
+                        <div style={{overflowX:'auto'}}>
+                        <table style={{width:'100%',borderCollapse:'collapse',fontSize:'13px'}}>
+                            <thead><tr style={{background:'#f8fafc'}}>
+                                {['Ref #','Category','Amount','Filed','Status'].map(h=>(
+                                    <th key={h} style={{padding:'8px 10px',textAlign:'left',fontSize:'11px',fontWeight:700,color:'#64748b',textTransform:'uppercase',borderBottom:'1px solid #e2e8f0'}}>{h}</th>
+                                ))}
+                            </tr></thead>
+                            <tbody>
+                                {loanHistory.filter(h=>h.status!=='Deleted').map((h:any,i:number)=>{
+                                    const isCur=h.id===loan.id;
+                                    const sc=(()=>{if(h.status==='Fully Released')return{bg:'#ecfdf5',c:'#065f46'};if(h.status==='Approved')return{bg:'#eff6ff',c:'#1e40af'};if(h.status==='Disapproved')return{bg:'#fef2f2',c:'#991b1b'};if(h.status==='Closed')return{bg:'#f1f5f9',c:'#475569'};return{bg:'#fff7ed',c:'#9a3412'};})();
+                                    return(
+                                        <tr key={h.id} style={{background:isCur?'#eff6ff':i%2===0?'white':'#f8fafc',borderBottom:'1px solid #f1f5f9'}}>
+                                            <td style={{padding:'8px 10px',fontWeight:isCur?700:400,color:isCur?'#2563eb':'#334155'}}>
+                                                #LR-{h.id}
+                                                {isCur&&<span style={{marginLeft:'5px',fontSize:'10px',background:'#2563eb',color:'white',padding:'1px 5px',borderRadius:'3px'}}>This</span>}
+                                            </td>
+                                            <td style={{padding:'8px 10px',color:'#334155'}}>{h.category}</td>
+                                            <td style={{padding:'8px 10px',fontWeight:600,color:'#0f172a'}}>{formatCurrency(Number(h.requested_amount))}</td>
+                                            <td style={{padding:'8px 10px',color:'#64748b'}}>{safeDate(h.created_at)}</td>
+                                            <td style={{padding:'8px 10px'}}><span style={{padding:'2px 8px',borderRadius:'4px',fontSize:'10px',fontWeight:700,textTransform:'uppercase',background:sc.bg,color:sc.c}}>{h.status}</span></td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                        </div>)}
+                    </div>
+                    )}
+
+                    {/* Actions for owner / bottom nav */}
+                    <div style={{display:'flex',gap:'10px'}}>
+                        <button onClick={()=>router.push('/loans')} style={{padding:'10px 20px',borderRadius:'8px',border:'1px solid #e2e8f0',background:'white',color:'#334155',fontWeight:600,cursor:'pointer',fontSize:'14px'}}>Back to Loans</button>
+                        {isOwner&&isPending&&!canApprove&&(
+                            <button onClick={()=>{if(confirm('Cancel this request?'))handleAction('Cancelled','User Cancelled');}} style={{padding:'10px 20px',borderRadius:'8px',border:'1px solid #ef4444',background:'white',color:'#ef4444',fontWeight:600,cursor:'pointer',fontSize:'14px'}}>Cancel Request</button>
                         )}
                     </div>
                 </div>
 
-                {/* Disapprove Modal Overlay */}
-                {showDisapproveModal && (
-                    <div className="modal-overlay">
-                        <div className="modal-content">
-                            <h3>Disapprove Request</h3>
-                            <textarea
-                                placeholder="Reason for rejection..."
-                                value={disapprovalReason}
-                                onChange={e => setDisapprovalReason(e.target.value)}
-                            ></textarea>
-                            <div className="modal-actions">
-                                <button onClick={() => setShowDisapproveModal(false)}>Cancel</button>
-                                <button className="confirm-reject" onClick={() => handleAction('Disapproved', disapprovalReason)}>Confirm Rejection</button>
-                            </div>
+                {/* RIGHT */}
+                <div style={{display:'flex',flexDirection:'column',gap:'16px'}}>
+
+                    {/* Approval Progress */}
+                    <div style={{background:'white',borderRadius:'12px',border:'1px solid #e2e8f0',padding:'22px'}}>
+                        <div style={{fontSize:'14px',fontWeight:700,color:'#0f172a',marginBottom:'18px'}}>Approval Progress</div>
+                        {steps.map((step,i)=>{
+                            const entry=approvalsList.find((a:any)=>Number(a.level)===i);
+                            const isDone=step.status==='done';
+                            const isActive=step.status==='active';
+                            const isError=step.status==='error';
+                            const circleColor=isError?'#ef4444':isDone?'#1e40af':isActive?'#2563eb':'#cbd5e1';
+                            const circleBg=isError?'#fee2e2':isDone?'#1e40af':isActive?'#eff6ff':'#f1f5f9';
+                            const circleText=isError?'#ef4444':isDone?'white':isActive?'#2563eb':'#94a3b8';
+                            return(
+                                <div key={i} style={{display:'flex',gap:'12px',position:'relative'}}>
+                                    <div style={{display:'flex',flexDirection:'column',alignItems:'center',flexShrink:0}}>
+                                        <div style={{width:'34px',height:'34px',borderRadius:'50%',background:circleBg,border:`2px solid ${circleColor}`,display:'flex',alignItems:'center',justifyContent:'center',color:circleText,fontWeight:700,fontSize:'13px',flexShrink:0}}>
+                                            {isDone ? <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> : isError ? <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> : isActive ? <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="#2563eb"/></svg> : i+1}
+                                        </div>
+                                        {i<steps.length-1&&<div style={{width:'2px',flex:1,background:isDone?'#2563eb':'#e2e8f0',minHeight:'24px',margin:'3px 0'}}/>}
+                                    </div>
+                                    <div style={{paddingBottom:'20px',flex:1,minWidth:0}}>
+                                        <div style={{fontSize:'13px',fontWeight:700,color:isActive?'#2563eb':isDone?'#0f172a':'#94a3b8'}}>{step.label}</div>
+                                        {entry&&(<>
+                                            <div style={{fontSize:'11px',color:'#64748b',marginTop:'2px'}}>{safeDate(entry.timestamp,'MMM dd, yyyy')}</div>
+                                            <div style={{fontSize:'11px',color:'#64748b'}}>{entry.actor_name}</div>
+                                            {entry.remarks&&<div style={{fontSize:'11px',color:'#475569',background:'#f8fafc',padding:'6px 8px',borderRadius:'6px',marginTop:'6px',fontStyle:'italic',wordBreak:'break-word'}}>"{entry.remarks}"</div>}
+                                        </>)}
+                                        {!entry&&i===0&&<div style={{fontSize:'11px',color:'#64748b',marginTop:'2px'}}>{safeDate(loan.created_at)}</div>}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Decision Card */}
+                    {canApprove&&isPending&&(
+                    <div style={{background:'white',borderRadius:'12px',border:'1px solid #e2e8f0',padding:'22px'}}>
+                        <div style={{fontSize:'14px',fontWeight:700,color:'#0f172a',marginBottom:'4px'}}>Decision</div>
+                        <div style={{fontSize:'12px',color:'#64748b',marginBottom:'10px'}}>Reviewer Comment</div>
+                        <textarea
+                            value={disapprovalReason}
+                            onChange={e=>setDisapprovalReason(e.target.value)}
+                            placeholder="Add a note about this decision..."
+                            style={{width:'100%',padding:'10px',border:'1px solid #e2e8f0',borderRadius:'8px',fontSize:'13px',resize:'vertical',minHeight:'80px',fontFamily:'inherit',boxSizing:'border-box',outline:'none'}}
+                        />
+                        <div style={{display:'flex',gap:'10px',marginTop:'12px'}}>
+                            <button onClick={()=>handleAction('Approved',disapprovalReason)} disabled={approving} style={{flex:1,background:'#16a34a',display:'flex',alignItems:'center',justifyContent:'center',gap:'6px',color:'white',border:'none',padding:'11px 0',borderRadius:'8px',fontWeight:700,fontSize:'14px',cursor:'pointer',opacity:approving?0.7:1}}>
+                                {approving?'Processing...':'Approve'}
+                            </button>
+                            <button onClick={()=>{if(!disapprovalReason.trim()){alert('Please enter a reason for rejection.');return;}handleAction('Disapproved',disapprovalReason);}} disabled={approving} style={{flex:1,background:'#ef4444',color:'white',border:'none',padding:'11px 0',borderRadius:'8px',fontWeight:700,fontSize:'14px',cursor:'pointer',opacity:approving?0.7:1,display:'flex',alignItems:'center',justifyContent:'center',gap:'6px'}}>
+                                Reject
+                            </button>
+                        </div>
+                        <button style={{width:'100%',marginTop:'8px',background:'none',border:'none',color:'#64748b',fontSize:'12px',cursor:'pointer',padding:'6px 0',fontWeight:500}}>Request More Info</button>
+                    </div>
+                    )}
+
+                    {/* Release Card */}
+                    {canRelease&&(isApproved||isPartiallyReleased)&&(
+                    <div style={{background:'white',borderRadius:'12px',border:'1px solid #e2e8f0',padding:'22px'}}>
+                        <div style={{fontSize:'14px',fontWeight:700,color:'#0f172a',marginBottom:'6px'}}>Release Funds</div>
+                        <div style={{fontSize:'12px',color:'#64748b',marginBottom:'14px'}}>
+                            Approved: {formatCurrency(loan.approved_amount||loan.requested_amount)}
+                            {(loan.total_released_amount||0)>0&&<span> &bull; Released: {formatCurrency(loan.total_released_amount)}</span>}
+                        </div>
+                        <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+                            <button onClick={()=>{setReleaseType('FULL');if(confirm('Fully release this loan? This cannot be undone.')){handleRelease();}}} style={{background:'#16a34a',color:'white',border:'none',padding:'11px',borderRadius:'8px',fontWeight:700,cursor:'pointer',fontSize:'14px'}}>Fully Release</button>
+                            <button onClick={()=>{setReleaseType('STAGGERED');setShowReleaseModal(true);}} style={{background:'white',color:'#475569',border:'1px solid #e2e8f0',padding:'11px',borderRadius:'8px',fontWeight:600,cursor:'pointer',fontSize:'14px'}}>Staggered Release</button>
                         </div>
                     </div>
-                )}
-
-                {/* Staggered Release Modal Overlay */}
-                {showReleaseModal && releaseType === 'STAGGERED' && (
-                    <div className="modal-overlay">
-                        <div className="modal-content">
-                            <h3 style={{ marginBottom: '15px' }}>Staggered Release Form</h3>
-
-                            <div className="staggered-form" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                <div className="input-group">
-                                    <label>1st Released Amount & Date (Required)</label>
-                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                        <input
-                                            type="number"
-                                            className="form-input"
-                                            style={{ flex: 1 }}
-                                            value={firstRelease}
-                                            onChange={e => setFirstRelease(e.target.value ? Number(e.target.value) : '')}
-                                            placeholder="0.00"
-                                        />
-                                        <input
-                                            type="date"
-                                            className="form-input"
-                                            style={{ flex: 1 }}
-                                            value={firstReleaseDate}
-                                            onChange={e => setFirstReleaseDate(e.target.value)}
-                                            required={!!firstRelease}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="input-group">
-                                    <label>2nd Released Amount & Date (Optional)</label>
-                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                        <input
-                                            type="number"
-                                            className="form-input"
-                                            style={{ flex: 1 }}
-                                            value={secondRelease}
-                                            onChange={e => setSecondRelease(e.target.value ? Number(e.target.value) : '')}
-                                            placeholder="0.00"
-                                        />
-                                        <input
-                                            type="date"
-                                            className="form-input"
-                                            style={{ flex: 1 }}
-                                            value={secondReleaseDate}
-                                            onChange={e => setSecondReleaseDate(e.target.value)}
-                                            required={!!secondRelease}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="input-group">
-                                    <label>Last Released Amount & Date (Optional)</label>
-                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                        <input
-                                            type="number"
-                                            className="form-input"
-                                            style={{ flex: 1 }}
-                                            value={lastRelease}
-                                            onChange={e => setLastRelease(e.target.value ? Number(e.target.value) : '')}
-                                            placeholder="0.00"
-                                        />
-                                        <input
-                                            type="date"
-                                            className="form-input"
-                                            style={{ flex: 1 }}
-                                            value={lastReleaseDate}
-                                            onChange={e => setLastReleaseDate(e.target.value)}
-                                            required={!!lastRelease}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="summary-box" style={{ background: '#f8fafc', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                                        <span>Total Released:</span>
-                                        <span style={{ fontWeight: 'bold' }}>{formatCurrency(staggeredTotal)}</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', color: staggeredTotal > (loan.approved_amount || 0) ? '#ef4444' : '#64748b' }}>
-                                        <span>Approved Limit:</span>
-                                        <span>{formatCurrency(loan.approved_amount || loan.requested_amount)}</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px', paddingTop: '5px', borderTop: '1px dashed #cbd5e1' }}>
-                                        <span>Remaining Balance:</span>
-                                        <span>{formatCurrency((loan.approved_amount || loan.requested_amount) - staggeredTotal)}</span>
-                                    </div>
-                                </div>
-
-                                <div className="modal-actions">
-                                    <button onClick={() => setShowReleaseModal(false)}>Cancel</button>
-                                    <button
-                                        className="confirm-release"
-                                        style={{ background: '#22c55e', color: 'white' }}
-                                        onClick={handleRelease}
-                                        disabled={staggeredTotal > (loan.approved_amount || 0) || !firstRelease}
-                                    >
-                                        Save Release
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
+        </div>
 
-            <style jsx>{`
-                /* ... (keeping previous styles) ... */
-                .loan-details-container {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    min-height: calc(100vh - 100px);
-                    padding: 20px;
-                    background-color: transparent; 
-                }
-                /* ... (previous styles) ... */
-                
-                .step.active .step-circle {
-                    background: #3b82f6; 
-                    color: white;
-                    border: 2px solid #2563eb;
-                }
-                .step.active .step-label {
-                    color: #2563eb;
-                    font-weight: 700;
-                }
-
-                .btn-release {
-                    background: #10b981;
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 8px;
-                    font-weight: 600;
-                    border: none;
-                    cursor: pointer;
-                }
-                .btn-release:hover { background: #059669; }
-
-                .radio-label {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    font-size: 14px;
-                    margin-bottom: 8px;
-                    cursor: pointer;
-                }
-
-                .confirm-release {
-                    background: #10b981;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 6px;
-                    cursor: pointer;
-                }
-                .confirm-release:hover { background: #059669; }
-                .confirm-release:disabled { opacity: 0.7; cursor: not-allowed; }
-
-                /* Reuse previous styles */
-                .loan-card { background: white; width: 100%; max-width: 800px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; }
-                .card-header { padding: 20px 30px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; }
-                .header-icon { background: #eff6ff; padding: 10px; border-radius: 10px; color: #2563eb; }
-                .header-text h1 { font-size: 18px; font-weight: 700; margin: 0; color: #1e293b; }
-                .reference-id { font-size: 13px; color: #64748b; }
-                .close-btn { margin-left: auto; background: none; border: none; cursor: pointer; color: #94a3b8; }
-                .card-body { padding: 30px; }
-                .employee-section { display: flex; align-items: center; gap: 15px; background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 25px; }
-                .employee-avatar { width: 50px; height: 50px; background: #e2e8f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600; color: #64748b; overflow: hidden; }
-                .employee-info h2 { font-size: 16px; font-weight: 700; margin: 0; color: #0f172a; }
-                .employee-meta { font-size: 13px; color: #64748b; margin-top: 4px; display: flex; align-items: center; gap: 10px; }
-                .badge { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-                .section-title { font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 0.05em; margin-bottom: 15px; text-transform: uppercase; }
-                .overview-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-                .overview-card { border: 1px solid #e2e8f0; padding: 15px; border-radius: 10px; }
-                .overview-card label { display: block; font-size: 12px; color: #64748b; margin-bottom: 5px; }
-                .overview-card .amount { font-size: 24px; font-weight: 700; color: #2563eb; }
-                .overview-card .value { font-size: 16px; font-weight: 600; color: #0f172a; }
-                .big-amount { border-color: #bfdbfe; background: #eff6ff; }
-                .reason-box { background: #f8fafc; padding: 20px; border-radius: 10px; color: #334155; font-size: 14px; line-height: 1.6; margin-bottom: 25px; }
-                .attachments-list { margin-bottom: 25px; }
-                .attachment-item { display: flex; align-items: center; padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px; gap: 15px; }
-                .file-icon { width: 40px; height: 40px; background: #fee2e2; color: #ef4444; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
-                .file-info { flex: 1; display: flex; flex-direction: column; }
-                .filename { font-weight: 600; font-size: 14px; color: #334155; }
-                .filesize { font-size: 12px; color: #94a3b8; }
-                .no-attachments { color: #94a3b8; font-style: italic; font-size: 13px; }
-                .view-btn { padding: 8px; color: #2563eb; background: #eff6ff; border-radius: 50%; cursor: pointer; border: none; }
-                .workflow-stepper { display: flex; justify-content: space-between; align-items: center; padding: 0 10px; }
-                .step { display: flex; flex-direction: column; align-items: center; position: relative; flex: 1; }
-                .step-circle { width: 30px; height: 30px; border-radius: 50%; background: #e2e8f0; color: #64748b; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; margin-bottom: 8px; z-index: 2; }
-                .step.done .step-circle { background: #2563eb; color: white; }
-                .step.error .step-circle { background: #ef4444; color: white; }
-                .step-label { font-size: 12px; font-weight: 600; color: #64748b; text-align: center; }
-                .step.done .step-label { color: #2563eb; }
-                .step-line { position: absolute; top: 15px; left: 50%; width: 100%; height: 2px; background: #e2e8f0; z-index: 1; }
-                .step:last-child .step-line { display: none; }
-                .step.done .step-line { background: #2563eb; }
-                .card-footer { padding: 20px 30px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; background: #f8fafc; }
-                .btn-close, .btn-reject, .btn-approve { padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; border: none; }
-                .btn-close { background: white; border: 1px solid #e2e8f0; color: #334155; }
-                .btn-close:hover { background: #f1f5f9; }
-                .btn-reject { background: white; border: 1px solid #ef4444; color: #ef4444; }
-                .btn-reject:hover { background: #fef2f2; }
-                .btn-approve { background: #2563eb; color: white; }
-                .btn-approve:hover { background: #1d4ed8; }
-                .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
-                .modal-content { background: white; padding: 20px; border-radius: 12px; width: 400px; }
-                .modal-content textarea { width: 100%; height: 100px; margin: 15px 0; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; }
-                .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
-                .confirm-reject { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
-
-            `}</style>
-        </DashboardLayout >
+        {/* Staggered Release Modal */}
+        {showReleaseModal&&releaseType==='STAGGERED'&&(
+            <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:100}}>
+                <div style={{background:'white',padding:'24px',borderRadius:'14px',width:'460px',maxWidth:'90vw'}}>
+                    <h3 style={{margin:'0 0 16px',fontSize:'16px',fontWeight:700}}>Staggered Release Form</h3>
+                    {[{label:'1st Release (Required)',val:firstRelease,setVal:setFirstRelease,date:firstReleaseDate,setDate:setFirstReleaseDate},{label:'2nd Release (Optional)',val:secondRelease,setVal:setSecondRelease,date:secondReleaseDate,setDate:setSecondReleaseDate},{label:'Last Release (Optional)',val:lastRelease,setVal:setLastRelease,date:lastReleaseDate,setDate:setLastReleaseDate}].map((row,i)=>(
+                        <div key={i} style={{marginBottom:'12px'}}>
+                            <label style={{fontSize:'12px',fontWeight:600,color:'#334155',display:'block',marginBottom:'6px'}}>{row.label}</label>
+                            <div style={{display:'flex',gap:'8px'}}>
+                                <input type="number" value={row.val} onChange={e=>row.setVal(e.target.value?Number(e.target.value):'')} placeholder="0.00" style={{flex:1,padding:'8px 10px',border:'1px solid #e2e8f0',borderRadius:'6px',fontSize:'13px'}}/>
+                                <input type="date" value={row.date} onChange={e=>row.setDate(e.target.value)} style={{flex:1,padding:'8px 10px',border:'1px solid #e2e8f0',borderRadius:'6px',fontSize:'13px'}}/>
+                            </div>
+                        </div>
+                    ))}
+                    <div style={{background:'#f8fafc',padding:'10px 14px',borderRadius:'8px',border:'1px solid #e2e8f0',fontSize:'13px',marginBottom:'16px'}}>
+                        <div style={{display:'flex',justifyContent:'space-between',marginBottom:'4px'}}><span>Total:</span><span style={{fontWeight:700}}>{formatCurrency(staggeredTotal)}</span></div>
+                        <div style={{display:'flex',justifyContent:'space-between',color:staggeredTotal>(loan.approved_amount||0)?'#ef4444':'#64748b'}}><span>Approved Limit:</span><span>{formatCurrency(loan.approved_amount||loan.requested_amount)}</span></div>
+                        <div style={{display:'flex',justifyContent:'space-between',marginTop:'6px',paddingTop:'6px',borderTop:'1px dashed #cbd5e1'}}><span>Remaining:</span><span>{formatCurrency((loan.approved_amount||loan.requested_amount)-staggeredTotal)}</span></div>
+                    </div>
+                    <div style={{display:'flex',gap:'10px',justifyContent:'flex-end'}}>
+                        <button onClick={()=>setShowReleaseModal(false)} style={{padding:'9px 18px',borderRadius:'8px',border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontWeight:600}}>Cancel</button>
+                        <button onClick={handleRelease} disabled={staggeredTotal>(loan.approved_amount||0)||!firstRelease} style={{padding:'9px 18px',borderRadius:'8px',background:'#16a34a',color:'white',border:'none',cursor:'pointer',fontWeight:700,opacity:staggeredTotal>(loan.approved_amount||0)||!firstRelease?0.6:1}}>Save Release</button>
+                    </div>
+                </div>
+            </div>
+        )}
+        </DashboardLayout>
     );
 }
+
 

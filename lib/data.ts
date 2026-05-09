@@ -168,6 +168,7 @@ export interface EmergencyLoan {
     branch?: string;
     department?: string;
     salary_info?: any;
+    loan_balance?: number;
 }
 
 export interface AuditLog {
@@ -456,13 +457,15 @@ export async function getDashboardStats(branch?: string) {
 
     const deptMap = new Map<string, number>();
     activeEmployees.forEach((emp: any) => {
-        deptMap.set(emp.department, (deptMap.get(emp.department) || 0) + 1);
+        const department = emp.department || 'Unassigned';
+        deptMap.set(department, (deptMap.get(department) || 0) + 1);
     });
     const byDepartment = Array.from(deptMap.entries()).map(([department, count]) => ({ department, count }));
 
     const statusMap = new Map<string, number>();
     employees.forEach((emp: any) => {
-        statusMap.set(emp.employment_status, (statusMap.get(emp.employment_status) || 0) + 1);
+        const employmentStatus = emp.employment_status || 'Unknown';
+        statusMap.set(employmentStatus, (statusMap.get(employmentStatus) || 0) + 1);
     });
     const byStatus = Array.from(statusMap.entries()).map(([employment_status, count]) => ({ employment_status, count }));
 
@@ -490,13 +493,15 @@ export async function getDashboardStats(branch?: string) {
     const attendanceRes = await query(attendanceSql, attendanceParams);
     const todayRecords = attendanceRes.rows;
 
-    const todayPresents = todayRecords.filter((r: any) =>
-        ['present', 'late', 'on time', 'official business', 'training / seminar'].includes(r.status.toLowerCase())
-    ).length;
+    const todayPresents = todayRecords.filter((r: any) => {
+        const status = (r.status || '').toString().trim().toLowerCase();
+        return ['present', 'late', 'on time', 'official business', 'training / seminar'].includes(status);
+    }).length;
 
-    const todayAbsents = todayRecords.filter((r: any) =>
-        ['absent', 'walk-in', 'leave without pay'].includes(r.status.toLowerCase())
-    ).length;
+    const todayAbsents = todayRecords.filter((r: any) => {
+        const status = (r.status || '').toString().trim().toLowerCase();
+        return ['absent', 'walk-in', 'leave without pay'].includes(status);
+    }).length;
 
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const currentMonth = today.getMonth();
@@ -508,6 +513,7 @@ export async function getDashboardStats(branch?: string) {
             if (!emp.date_of_birth) return false;
             // Handle both string and Date objects from Postgres
             const bday = new Date(emp.date_of_birth);
+            if (Number.isNaN(bday.getTime())) return false;
             const bdayMonth = bday.getMonth();
             const bdayDay = bday.getDate();
 
@@ -1074,25 +1080,33 @@ export async function batchRecordAttendance(records: {
         const placeholders: string[] = [];
 
         records.forEach((record, index) => {
-            const i = index * 6;
-            placeholders.push(`($${i + 1}, $${i + 2}, $${i + 3}, $${i + 4}, $${i + 5}, $${i + 6})`);
+            const i = index * 10;
+            placeholders.push(`($${i + 1}, $${i + 2}, $${i + 3}, $${i + 4}, $${i + 5}, $${i + 6}, $${i + 7}, $${i + 8}, $${i + 9}, $${i + 10})`);
             values.push(
                 record.employee_id,
                 record.date,
                 record.time_in || null,
                 record.time_out || null,
+                record.morning_in || null,
+                record.morning_out || null,
+                record.afternoon_in || null,
+                record.afternoon_out || null,
                 record.status,
                 record.remarks || null
             );
         });
 
         const sql = `
-            INSERT INTO attendance (employee_id, date, time_in, time_out, status, remarks)
+            INSERT INTO attendance (employee_id, date, time_in, time_out, morning_in, morning_out, afternoon_in, afternoon_out, status, remarks)
             VALUES ${placeholders.join(', ')}
             ON CONFLICT (employee_id, date) 
             DO UPDATE SET 
                 time_in = EXCLUDED.time_in,
                 time_out = EXCLUDED.time_out,
+                morning_in = EXCLUDED.morning_in,
+                morning_out = EXCLUDED.morning_out,
+                afternoon_in = EXCLUDED.afternoon_in,
+                afternoon_out = EXCLUDED.afternoon_out,
                 status = EXCLUDED.status,
                 remarks = EXCLUDED.remarks,
                 updated_at = CURRENT_TIMESTAMP
@@ -1292,21 +1306,33 @@ export async function getEmergencyLoanById(id: number): Promise<EmergencyLoan | 
     const activePool = isPostgres();
     if (activePool) {
         const res = await query(
-            "SELECT l.*, (e.first_name || ' ' || e.last_name) as employee_name, e.position, e.branch, e.department, e.salary_info FROM emergency_loans l JOIN employees e ON l.employee_id = e.id WHERE l.id = $1",
+            "SELECT l.*, (e.first_name || ' ' || e.last_name) as employee_name, e.position, e.branch, e.department, e.salary_info, e.loan_balance FROM emergency_loans l JOIN employees e ON l.employee_id = e.id WHERE l.id = $1",
             [id]
         );
-        return (res.rows[0] as EmergencyLoan) || null;
+        const loan = res.rows[0] as EmergencyLoan;
+        if (!loan) return null;
+
+        // Fetch LIVE balance from ledger to ensure it's up to date
+        const liveBalance = await getEmployeeLoanBalance(loan.employee_id);
+        loan.loan_balance = liveBalance;
+
+        return loan;
     } else {
         const loan = await getById('emergency_loans', id);
         if (!loan) return null;
         const emp = await getById('employees', loan.employee_id);
+        
+        // Fetch LIVE balance from ledger for local fallback too
+        const liveBalance = await getEmployeeLoanBalance(loan.employee_id);
+        
         return {
             ...loan,
             employee_name: emp ? `${emp.first_name} ${emp.last_name}` : 'Unknown',
             position: emp?.position,
             branch: emp?.branch,
             department: emp?.department,
-            salary_info: emp?.salary_info
+            salary_info: emp?.salary_info,
+            loan_balance: liveBalance
         };
     }
 }
@@ -1332,7 +1358,16 @@ export async function getLoanConfig() {
 export async function getEmployeeLoanBalance(employeeId: number): Promise<number> {
     if (isPostgres()) {
         const res = await query(
-            "SELECT SUM(balance) as total FROM employee_loans WHERE employee_id = $1 AND status IN ('Active', 'Ongoing', 'Approved') AND balance > 0",
+            `SELECT SUM(
+                CASE
+                    WHEN COALESCE(principal, 0) > 0 AND balance > principal THEN principal
+                    ELSE balance
+                END
+            ) as total
+            FROM employee_loans
+            WHERE employee_id = $1
+              AND status IN ('Active', 'Ongoing', 'Approved')
+              AND balance > 0`,
             [employeeId]
         );
         return Number(res.rows[0]?.total || 0);
@@ -1341,7 +1376,11 @@ export async function getEmployeeLoanBalance(employeeId: number): Promise<number
         const loans = await getAll('employee_loans');
         return loans
             .filter(l => l.employee_id === employeeId && ['Active', 'Ongoing', 'Approved'].includes(l.status) && Number(l.balance) > 0)
-            .reduce((sum, l) => sum + Number(l.balance || 0), 0);
+            .reduce((sum, l) => {
+                const principal = Number(l.principal || 0);
+                const balance = Number(l.balance || 0);
+                return sum + (principal > 0 && balance > principal ? principal : balance);
+            }, 0);
     }
 }
 

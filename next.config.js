@@ -10,6 +10,8 @@ const withPWA = require('@ducanh2912/next-pwa').default({
         disableDevLogs: true,
     },
 });
+const enableChromeDevtoolsManifest =
+    process.env.ENABLE_CHROME_DEVTOOLS_MANIFEST === 'true';
 
 const nextConfig = {
     reactStrictMode: true,
@@ -20,6 +22,44 @@ const nextConfig = {
     },
     eslint: {
         ignoreDuringBuilds: true,
+    },
+    async headers() {
+        if (!enableChromeDevtoolsManifest) {
+            return [];
+        }
+
+        return [
+            {
+                source: '/.well-known/appspecific/com.chrome.devtools.json',
+                headers: [
+                    { key: 'Access-Control-Allow-Origin', value: '*' },
+                    { key: 'Content-Type', value: 'application/json' },
+                ],
+            },
+            {
+                source: '/api/devtools',
+                headers: [
+                    { key: 'Access-Control-Allow-Origin', value: '*' },
+                    { key: 'Content-Type', value: 'application/json' },
+                ],
+            }
+        ];
+    },
+    async rewrites() {
+        if (!enableChromeDevtoolsManifest) {
+            return {
+                beforeFiles: [],
+            };
+        }
+
+        return {
+            beforeFiles: [
+                {
+                    source: '/.well-known/appspecific/com.chrome.devtools.json',
+                    destination: '/api/devtools',
+                },
+            ]
+        };
     },
 }
 

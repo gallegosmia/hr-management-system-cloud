@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS user_notifications (
     title VARCHAR(255) NOT NULL,
     message TEXT,
     is_read BOOLEAN DEFAULT FALSE,
-    reference_id INTEGER,
+    reference_id VARCHAR(255),
     reference_type VARCHAR(50),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

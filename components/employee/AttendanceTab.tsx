@@ -18,6 +18,7 @@ interface AttendanceRecord {
 
 interface AttendanceTabProps {
     employeeId: number;
+    employeeName: string;
 }
 
 // --- Icons / Components ---
@@ -83,7 +84,7 @@ const TimeCell = ({ time }: { time?: string }) => {
     }
 };
 
-export default function AttendanceTab({ employeeId }: AttendanceTabProps) {
+export default function AttendanceTab({ employeeId, employeeName }: AttendanceTabProps) {
     const [records, setRecords] = useState<AttendanceRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [startDate, setStartDate] = useState(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd'));
@@ -144,8 +145,9 @@ export default function AttendanceTab({ employeeId }: AttendanceTabProps) {
         doc.setFontSize(18);
         doc.text(`Employee Attendance Report`, 14, 20);
         doc.setFontSize(11);
-        doc.text(`Employee ID: ${employeeId}`, 14, 28);
-        doc.text(`Period: ${format(parseISO(startDate), 'MMMM dd, yyyy')} - ${format(parseISO(endDate), 'MMMM dd, yyyy')}`, 14, 34);
+        doc.text(`Employee: ${employeeName}`, 14, 28);
+        doc.text(`Employee ID: ${employeeId}`, 14, 34);
+        doc.text(`Period: ${format(parseISO(startDate), 'MMMM dd, yyyy')} - ${format(parseISO(endDate), 'MMMM dd, yyyy')}`, 14, 40);
 
         const tableBody = records.map(r => [
             format(parseISO(r.date), 'MMM dd, yyyy'),
@@ -160,12 +162,12 @@ export default function AttendanceTab({ employeeId }: AttendanceTabProps) {
         autoTable(doc, {
             head: [['Date', 'AM In', 'AM Out', 'PM In', 'PM Out', 'Status', 'Remarks']],
             body: tableBody,
-            startY: 40,
+            startY: 46,
             styles: { fontSize: 8, cellPadding: 3 },
             headStyles: { fillColor: [46, 204, 113], textColor: [255, 255, 255] }
         });
 
-        doc.save(`Attendance_Report_${employeeId}_${startDate}_to_${endDate}.pdf`);
+        doc.save(`Attendance_Report_${employeeName.replace(/\s+/g, '_')}_${startDate}_to_${endDate}.pdf`);
     };
 
     return (

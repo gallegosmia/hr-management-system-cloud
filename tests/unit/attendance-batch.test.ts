@@ -39,11 +39,11 @@ describe('Attendance Batch Saving Performance Optimization', () => {
         expect(sql).toContain('DO UPDATE SET');
         expect(sql).toContain('EXCLUDED.status');
 
-        // Verify we have the correct number of placeholders ($1 to $18 for 3 records with 6 cols each)
-        expect(params).toHaveLength(mockRecords.length * 6);
+        // Each batch row includes 10 values in the current attendance schema.
+        expect(params).toHaveLength(mockRecords.length * 10);
         expect(params[0]).toBe(1); // First employee_id
-        expect(params[5]).toBe(null); // First remarks
-        expect(params[6]).toBe(2); // Second employee_id
+        expect(params[9]).toBe(null); // First remarks
+        expect(params[10]).toBe(2); // Second employee_id
     });
 
     it('should not call database.query if the records array is empty', async () => {

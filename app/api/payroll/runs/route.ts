@@ -13,6 +13,7 @@ import { canAccessPayroll, canCreatePayroll, validatePayrollAccess, getAccessibl
 import { generateRunNumber, validatePayrollDays } from '@/lib/payroll-calculations';
 import { normalizeBranchName } from '@/lib/branch-access';
 import { getAllEmployees } from '@/lib/data';
+import { getApprovedCashAdvanceAmount, getPayrollCashAdvanceCutoffLabel } from '@/lib/payroll-cash-advances';
 
 // GET /api/payroll/runs - List payroll runs
 export async function GET(request: NextRequest) {
@@ -232,16 +233,18 @@ export async function POST(request: NextRequest) {
                     branch,
                     payroll_period_start,
                     payroll_period_end,
+                    period_start,
+                    period_end,
                     cutoff_day,
                     default_payroll_days,
                     status,
                     created_by,
                     workflow_stage,
                     current_reviewer_role
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                 RETURNING *
             `, [
-                runNumber, branch, periodStart, periodEnd,
+                runNumber, branch, periodStart, periodEnd, periodStart, periodEnd,
                 cutoffDay, 15.00, 'Draft', user.id, 0, 'Payroll Preparer'
             ]);
             payrollRun = runResult.rows[0];
@@ -254,12 +257,14 @@ export async function POST(request: NextRequest) {
                     branch,
                     payroll_period_start,
                     payroll_period_end,
+                    period_start,
+                    period_end,
                     cutoff_day,
                     status,
                     created_by
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                 RETURNING *
-            `, [runNumber, branch, periodStart, periodEnd, cutoffDay, 'draft', user.id]);
+            `, [runNumber, branch, periodStart, periodEnd, periodStart, periodEnd, cutoffDay, 'draft', user.id]);
             payrollRun = runResult.rows[0];
         }
 
@@ -268,6 +273,7 @@ export async function POST(request: NextRequest) {
             `SELECT * FROM sss_contribution_table WHERE effectivity_year = 2025`
         );
         const sssTable = sssTableRes.rows;
+        const cashAdvanceCutoffLabel = getPayrollCashAdvanceCutoffLabel(payrollRun);
 
 
         // Use getAllEmployees() — the SAME function as the employee list page (Step 2 in wizard)
@@ -410,7 +416,8 @@ export async function POST(request: NextRequest) {
 
             // Common Deductions
             let companyLoan = getSalaryVal(deductionsInfo.company_loan?.amortization || deductionsInfo.company_loan);
-            let cashAdvance = getSalaryVal(deductionsInfo.cash_advance);
+            const approvedCashAdvance = await getApprovedCashAdvanceAmount(Number(employee.id), cashAdvanceCutoffLabel);
+            let cashAdvance = approvedCashAdvance || getSalaryVal(deductionsInfo.cash_advance);
 
             // Other deductions (sum of array)
             let otherDeductions = 0;

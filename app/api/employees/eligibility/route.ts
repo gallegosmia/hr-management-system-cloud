@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getEmployeeLoanBalance, getLoanConfig, getEmployeeById } from '@/lib/data';
 import { validateBranchRequest } from '@/lib/middleware/branch-auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
     try {
         const validation = await validateBranchRequest(request);

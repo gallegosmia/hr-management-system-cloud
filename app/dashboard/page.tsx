@@ -6,9 +6,42 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import CriticalAttendance from '@/components/CriticalAttendance';
 
+interface DashboardStats {
+    totalEmployees: number;
+    totalDepartments: number;
+    todayPresents: number;
+    todayAbsents: number;
+    upcomingBirthdays?: Array<{
+        id?: number;
+        name?: string;
+        date?: string;
+        daysUntil?: number;
+    }>;
+}
+
+function parseStoredJson<T>(key: string): T | null {
+    if (typeof window === 'undefined') return null;
+
+    const storedValue = localStorage.getItem(key);
+    if (!storedValue) return null;
+
+    try {
+        return JSON.parse(storedValue) as T;
+    } catch (error) {
+        console.warn(`Invalid JSON found in localStorage for "${key}"`, error);
+        localStorage.removeItem(key);
+        return null;
+    }
+}
+
+function getInitials(firstName?: string, lastName?: string) {
+    const initials = `${firstName?.trim()?.charAt(0) || ''}${lastName?.trim()?.charAt(0) || ''}`.trim();
+    return initials || '--';
+}
+
 export default function DashboardPage() {
     const router = useRouter();
-    const [stats, setStats] = useState<any>(null);
+    const [stats, setStats] = useState<DashboardStats | null>(null);
     const [leaves, setLeaves] = useState<any[]>([]);
     const [employees, setEmployees] = useState<any[]>([]);
     const [attendance, setAttendance] = useState<any[]>([]);
@@ -19,19 +52,22 @@ export default function DashboardPage() {
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
-        const userData = localStorage.getItem('user');
-        if (userData) {
-            setUser(JSON.parse(userData));
+        const storedUser = parseStoredJson<any>('user');
+        if (storedUser) {
+            if (storedUser.role === 'Employee') {
+                router.push('/profile');
+                return;
+            }
+            setUser(storedUser);
         }
         fetchDashboardData();
-    }, []);
+    }, [router]);
 
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
             const sessionId = localStorage.getItem('sessionId');
-            const userData = localStorage.getItem('user');
-            const userParsed = userData ? JSON.parse(userData) : null;
+            const userParsed = parseStoredJson<any>('user');
             const userBranch = userParsed?.username === 'superadmin' ? 'All' : (userParsed?.assigned_branch || 'All');
 
             const headers: any = { 'x-session-id': sessionId || '' };
@@ -50,12 +86,14 @@ export default function DashboardPage() {
                 return;
             }
 
-            const statsData = await statsRes.json();
-            const leavesData = await leavesRes.json();
-            const empData = await empRes.json();
-            const annData = await annRes.json();
-            const alertsData = await alertsRes.json();
-            const attData = await attRes.json();
+            const [statsData, leavesData, empData, annData, alertsData, attData] = await Promise.all([
+                statsRes.ok ? statsRes.json() : Promise.resolve(null),
+                leavesRes.ok ? leavesRes.json() : Promise.resolve([]),
+                empRes.ok ? empRes.json() : Promise.resolve([]),
+                annRes.ok ? annRes.json() : Promise.resolve([]),
+                alertsRes.ok ? alertsRes.json() : Promise.resolve({ alerts: [] }),
+                attRes.ok ? attRes.json() : Promise.resolve([])
+            ]);
 
             setStats(statsData);
             setLeaves(Array.isArray(leavesData) ? leavesData : []);
@@ -69,6 +107,7 @@ export default function DashboardPage() {
             }
 
             const recentlyHired = (Array.isArray(empData) ? empData : [])
+                .filter((emp: any) => emp?.date_hired)
                 .sort((a: any, b: any) => new Date(b.date_hired).getTime() - new Date(a.date_hired).getTime())
                 .slice(0, 4);
             setOnboarding(recentlyHired);
@@ -79,6 +118,11 @@ export default function DashboardPage() {
             setLoading(false);
         }
     };
+
+    const upcomingBirthdays = Array.isArray(stats?.upcomingBirthdays)
+        ? stats.upcomingBirthdays.filter((bday) => Boolean(bday?.name && bday?.date)).slice(0, 3)
+        : [];
+    const canAddEmployee = user?.role === 'HR' || user?.role === 'Admin' || user?.username === 'superadmin';
 
     if (loading) {
         return (
@@ -104,7 +148,7 @@ export default function DashboardPage() {
 
                 {/* Mobile Quick Actions - visible only on phones */}
                 <div className="mobile-quick-actions">
-                    {(user?.role === 'HR' || user?.role === 'Admin' || user?.username === 'superadmin') && (
+                    {canAddEmployee && (
                         <button onClick={() => router.push('/employees/add')} className="m-quick-btn add-emp">
                             <span className="icon">+</span>
                             <span>Add Employee</span>
@@ -137,7 +181,9 @@ export default function DashboardPage() {
                     {/* Metrics Row */}
                     <div className="metrics-grid">
                         <div className="metric-card">
-                            <div className="metric-icon blue">👥</div>
+                            <div className="metric-icon blue">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                            </div>
                             <div className="metric-info">
                                 <span className="label">Total Employees</span>
                                 <span className="value">{stats?.totalEmployees || 0}</span>
@@ -145,7 +191,9 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="metric-card">
-                            <div className="metric-icon purple">🏢</div>
+                            <div className="metric-icon purple">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+                            </div>
                             <div className="metric-info">
                                 <span className="label">Departments</span>
                                 <span className="value">{stats?.totalDepartments || 0}</span>
@@ -153,7 +201,9 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="metric-card">
-                            <div className="metric-icon green">✅</div>
+                            <div className="metric-icon green">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                            </div>
                             <div className="metric-info">
                                 <span className="label">Present Today</span>
                                 <span className="value">{stats?.todayPresents || 0}</span>
@@ -161,7 +211,9 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="metric-card">
-                            <div className="metric-icon orange">❌</div>
+                            <div className="metric-icon orange">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+                            </div>
                             <div className="metric-info">
                                 <span className="label">Absent Today</span>
                                 <span className="value">{stats?.todayAbsents || 0}</span>
@@ -223,12 +275,12 @@ export default function DashboardPage() {
                                 <div className="hires-list">
                                     {onboarding.length > 0 ? onboarding.map((emp, i) => (
                                         <div key={i} className="hire-item">
-                                            <div className="avatar small" style={{ background: `hsl(${emp.id * 50 % 360}, 60%, 90%)` }}>
-                                                {emp.first_name[0]}{emp.last_name[0]}
+                                            <div className="avatar small" style={{ background: `hsl(${emp.id * 50 % 360}, 60%, 90%)`, color: `hsl(${emp.id * 50 % 360}, 60%, 40%)` }}>
+                                                {getInitials(emp.first_name, emp.last_name)}
                                             </div>
                                             <div className="hire-info">
-                                                <div className="name">{emp.first_name} {emp.last_name}</div>
-                                                <div className="role">{emp.position}</div>
+                                                <div className="name">{[emp.first_name, emp.last_name].filter(Boolean).join(' ').toUpperCase() || 'UNNAMED EMPLOYEE'}</div>
+                                                <div className="role">{emp.position || 'No position assigned'}</div>
                                             </div>
                                             <div className="date">{new Date(emp.date_hired).toLocaleDateString()}</div>
                                         </div>
@@ -244,17 +296,23 @@ export default function DashboardPage() {
                             <div className="card quick-actions-card">
                                 <h3>Quick Actions</h3>
                                 <div className="actions-grid">
-                                    <button onClick={() => router.push('/employees/add')} className="action-btn">
-                                        <span>👤</span> Add Emp
-                                    </button>
+                                    {canAddEmployee && (
+                                        <button onClick={() => router.push('/employees/add')} className="action-btn">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                                            <span>Add Emp</span>
+                                        </button>
+                                    )}
                                     <button onClick={() => router.push('/reports')} className="action-btn">
-                                        <span>📄</span> Reports
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><rect x="7" y="10" width="4" height="7"/><rect x="15" y="4" width="4" height="13"/></svg>
+                                        <span>Reports</span>
                                     </button>
                                     <button onClick={() => router.push('/leave')} className="action-btn">
-                                        <span>🏖️</span> Leaves
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><line x1="9" y1="15" x2="15" y2="15"></line><line x1="12" y1="12" x2="12" y2="18"></line></svg>
+                                        <span>Leaves</span>
                                     </button>
                                     <button onClick={() => router.push('/attendance')} className="action-btn">
-                                        <span>⏰</span> Attd.
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        <span>Attd.</span>
                                     </button>
                                 </div>
                             </div>
@@ -267,15 +325,18 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="announcements-list">
                                     {announcements.length > 0 ? announcements.map((ann, i) => (
-                                        <div key={i} className={`announcement-item ${ann.priority.toLowerCase()}`}>
+                                        <div key={i} className={`announcement-item ${(ann.priority || 'normal').toString().toLowerCase()}`}>
                                             <div className="ann-top">
-                                                <span className="badge">{ann.category}</span>
+                                                <span className="badge">{ann.category || 'Announcement'}</span>
                                                 <span className="date">{new Date(ann.created_at).toLocaleDateString()}</span>
                                             </div>
-                                            <h4>{ann.title}</h4>
-                                            <p>{ann.content}</p>
+                                            <h4>{ann.title || 'Untitled announcement'}</h4>
+                                            <p>{ann.content || 'No content available.'}</p>
                                         </div>
-                                    )) : <div className="no-data">No active announcements</div>}
+                                    )) : <div className="no-data flex flex-col items-center justify-center h-full text-slate-400 gap-2">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" className="opacity-50"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></svg>
+                                        No active announcements
+                                    </div>}
                                 </div>
                             </div>
 
@@ -283,18 +344,18 @@ export default function DashboardPage() {
                             <div className="card birthdays-card">
                                 <h3>Birthdays</h3>
                                 <div className="birthdays-list">
-                                    {stats?.upcomingBirthdays?.slice(0, 3).map((bday: any, i: number) => (
+                                    {upcomingBirthdays.length > 0 ? upcomingBirthdays.map((bday, i: number) => (
                                         <div key={i} className="birthday-item">
                                             <div className="avatar small" style={{ background: `hsl(${i * 120}, 70%, 85%)` }}>
-                                                {bday.name.charAt(0)}
+                                                {(bday.name || '?').charAt(0)}
                                             </div>
                                             <div className="bday-info">
-                                                <span className="name">{bday.name}</span>
-                                                <span className="date">{new Date(bday.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                                <span className="name">{bday.name?.toUpperCase()}</span>
+                                                <span className="date">{new Date(bday.date || '').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                                             </div>
                                             <span className="days-left">{bday.daysUntil === 0 ? 'Today' : `${bday.daysUntil}d`}</span>
                                         </div>
-                                    )) || <div className="no-data">No upcoming birthdays</div>}
+                                    )) : <div className="no-data">No upcoming birthdays</div>}
                                 </div>
                             </div>
 
@@ -306,11 +367,11 @@ export default function DashboardPage() {
             <style jsx>{`
                 .dashboard-container {
                     padding: 0 16px 16px 0;
-                    height: calc(100vh - 80px); /* Subtract approximate header height + padding */
+                    height: calc(100vh - 80px);
                     display: flex;
                     flex-direction: column;
                     font-family: 'Inter', sans-serif;
-                    overflow: hidden; /* Lock main scroll */
+                    overflow: hidden;
                 }
                 .dashboard-header {
                     margin-bottom: 12px;
@@ -332,49 +393,54 @@ export default function DashboardPage() {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
-                    gap: 12px;
-                    min-height: 0; /* Important for flex child scrolling */
+                    gap: 16px;
+                    min-height: 0;
                 }
 
                 .metrics-grid {
                     display: grid;
                     grid-template-columns: repeat(4, 1fr);
-                    gap: 12px;
+                    gap: 16px;
                     flex-shrink: 0;
                 }
                 .metric-card {
                     background: white;
-                    padding: 12px 16px;
+                    padding: 24px;
                     border-radius: 12px;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                    border: 1px solid #f1f5f9;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
                     display: flex;
                     align-items: center;
-                    gap: 12px;
+                    gap: 16px;
                 }
                 .metric-icon {
-                    width: 36px;
-                    height: 36px;
-                    border-radius: 10px;
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 12px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 1.1rem;
+                    font-size: 1.5rem;
                 }
-                .metric-icon.blue { background: #eff6ff; color: #3b82f6; }
-                .metric-icon.purple { background: #ede9fe; color: #7c3aed; }
-                .metric-icon.green { background: #ecfdf5; color: #10b981; }
-                .metric-icon.orange { background: #fff7ed; color: #f97316; }
+                .metric-icon.blue { background: #e0f2fe; color: #0284c7; }
+                .metric-icon.purple { background: #e0e7ff; color: #4f46e5; }
+                .metric-icon.green { background: #dcfce7; color: #16a34a; }
+                .metric-icon.orange { background: #fee2e2; color: #dc2626; }
 
                 .metric-info .label {
-                    font-size: 0.7rem;
-                    font-weight: 500;
+                    font-size: 0.75rem;
+                    font-weight: 600;
                     color: #64748b;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
                     display: block;
+                    margin-bottom: 4px;
                 }
                 .metric-info .value {
-                    font-size: 1.1rem;
+                    font-size: 1.75rem;
                     font-weight: 700;
                     color: #0f172a;
+                    line-height: 1;
                 }
 
                 .main-grid {
@@ -382,23 +448,23 @@ export default function DashboardPage() {
                     display: grid;
                     grid-template-columns: 2fr 1fr;
                     gap: 12px;
-                    min-height: 0; /* Enable internal scrolling */
+                    min-height: 0;
                 }
 
                 .left-column, .right-column {
                     display: flex;
                     flex-direction: column;
-                    gap: 12px;
+                    gap: 16px;
                     height: 100%;
                     min-height: 0;
                 }
 
-                /* Cards */
                 .card {
                     background: white;
                     border-radius: 12px;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-                    padding: 16px;
+                    border: 1px solid #f1f5f9;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+                    padding: 24px;
                     display: flex;
                     flex-direction: column;
                 }
@@ -410,7 +476,7 @@ export default function DashboardPage() {
                     flex-shrink: 0;
                 }
                 .card-header h3 {
-                    font-size: 0.85rem;
+                    font-size: 1rem;
                     font-weight: 700;
                     color: #0f172a;
                     margin: 0;
@@ -422,20 +488,18 @@ export default function DashboardPage() {
                     text-decoration: none;
                 }
 
-                /* Tracker Card */
                 .tracker-card {
                     flex: 3;
                     min-height: 0;
                     overflow: hidden;
-                    padding: 0; /* Remove padding to let component handle it */
-                    background: transparent; /* Component has its own logic/bg */
-                    box-shadow: none; /* Component handles it */
+                    padding: 0;
+                    background: transparent;
+                    box-shadow: none;
                 }
                 .critical-attendance-wrapper {
                     height: 100%;
                 }
 
-                /* Hires */
                 .recent-hires-card {
                     flex: 2; 
                     min-height: 0;
@@ -459,34 +523,42 @@ export default function DashboardPage() {
                 .hire-item .date { font-size: 0.65rem; color: #94a3b8; }
                 .avatar.small { width: 28px; height: 28px; font-size: 0.65rem; }
 
-                /* Right Column Items */
                 .quick-actions-card {
                     flex-shrink: 0;
+                    padding: 20px;
+                }
+                .quick-actions-card h3 {
+                    font-size: 1rem;
+                    font-weight: 700;
+                    margin-bottom: 16px;
+                    margin-top: 0;
                 }
                 .actions-grid {
                     display: grid;
                     grid-template-columns: 1fr 1fr;
-                    gap: 8px;
+                    gap: 12px;
                 }
                 .action-btn {
-                    padding: 8px;
-                    background: #f8fafc;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 8px;
+                    padding: 16px 12px;
+                    background: white;
+                    border: 1px solid #f1f5f9;
+                    border-radius: 12px;
                     font-weight: 600;
-                    color: #475569;
+                    color: #0f172a;
                     display: flex;
+                    flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    gap: 6px;
+                    gap: 12px;
                     cursor: pointer;
-                    font-size: 0.75rem;
+                    font-size: 0.8rem;
                     transition: all 0.2s;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
                 }
-                .action-btn:hover { background: #f1f5f9; color: #0f172a; }
+                .action-btn:hover { border-color: #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.04); }
 
                 .announcements-card {
-                    flex: 3; /* Takes variable space */
+                    flex: 3;
                     min-height: 0;
                     overflow: hidden;
                 }
@@ -496,7 +568,7 @@ export default function DashboardPage() {
                     display: flex;
                     flex-direction: column;
                     gap: 10px;
-                    padding-right: 4px; /* Space for scrollbar */
+                    padding-right: 4px;
                 }
                 .announcement-item {
                     border-left: 3px solid #cbd5e1;
@@ -529,27 +601,40 @@ export default function DashboardPage() {
                     flex: 2;
                     min-height: 0;
                     overflow: hidden;
+                    padding: 20px;
+                }
+                .birthdays-card h3 {
+                    font-size: 1rem;
+                    font-weight: 700;
+                    margin-bottom: 16px;
+                    margin-top: 0;
                 }
                 .birthdays-list {
                     display: flex;
                     flex-direction: column;
-                    gap: 6px;
+                    gap: 12px;
                     overflow-y: auto;
                 }
                 .birthday-item {
                     display: flex;
                     align-items: center;
-                    gap: 8px;
-                    padding: 4px 0;
-                    border-bottom: 1px solid #f1f5f9;
+                    gap: 12px;
+                    padding: 8px 0;
+                    border-bottom: 1px solid #f8fafc;
                 }
                 .birthday-item:last-child { border-bottom: none; }
                 .bday-info { flex: 1; display: flex; flex-direction: column; }
-                .bday-info .name { font-size: 0.75rem; font-weight: 600; color: #334155; }
-                .bday-info .date { font-size: 0.65rem; color: #94a3b8; }
-                .days-left { font-size: 0.65rem; font-weight: 600; color: #64748b; }
+                .bday-info .name { font-size: 0.8rem; font-weight: 700; color: #0f172a; }
+                .bday-info .date { font-size: 0.7rem; color: #64748b; margin-top: 2px; }
+                .days-left { 
+                    font-size: 0.7rem; 
+                    font-weight: 700; 
+                    color: #475569; 
+                    background: #f1f5f9;
+                    padding: 4px 8px;
+                    border-radius: 12px;
+                }
 
-                /* Custom Scrollbar Styles */
                 ::-webkit-scrollbar { width: 4px; height: 4px; }
                 ::-webkit-scrollbar-track { background: transparent; }
                 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }

@@ -204,7 +204,7 @@ const PATCHES = [
                 severity VARCHAR(20) DEFAULT 'medium',
                 link VARCHAR(500) DEFAULT '#',
                 is_read BOOLEAN DEFAULT FALSE,
-                reference_id INTEGER,
+                reference_id VARCHAR(255),
                 reference_type VARCHAR(50),
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )

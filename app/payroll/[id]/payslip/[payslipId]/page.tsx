@@ -181,7 +181,7 @@ export default function PayslipViewPage({ params }: { params: { id: string; pays
                             </div>
                             <div className="info-item">
                                 <span className="info-label">Payroll Days:</span>
-                                <span className="info-value">{payslip.payroll_days.toFixed(2)} days</span>
+                                <span className="info-value">{Number(payslip.payroll_days || 0).toFixed(2)} days</span>
                             </div>
                         </div>
                     </div>

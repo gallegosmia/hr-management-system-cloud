@@ -12,6 +12,7 @@ const customJestConfig = {
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/$1',
     },
+    modulePathIgnorePatterns: ['<rootDir>/mobile-kiosk-old/'],
     testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/', '<rootDir>/tests/e2e/'],
 }
 

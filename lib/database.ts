@@ -3,19 +3,15 @@ import fs from 'fs';
 import path from 'path';
 
 // Database configuration
-const DB_FILE = path.join(process.cwd(), 'data', 'database.json');
 let pool: Pool | null = null;
+let sqliteDb: any = null;
+let pgMigrationDone = false;
 
 function getPool(): Pool | null {
   if (pool) return pool;
 
   let url = process.env.DATABASE_URL;
 
-  // Cloud Fail-Safe: Force Neon connection if Vercel still has broken Supabase
-  if (url && url.includes('supabase.com')) {
-      console.log('🔄 Overriding broken Supabase URL with verified Neon Cloud URL');
-      url = 'postgresql://neondb_owner:npg_PslbEZF85iOH@ep-cold-dew-a1pzda3q.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
-  }
 
   if (!url && fs.existsSync(path.join(process.cwd(), '.env'))) {
     const env = fs.readFileSync(path.join(process.cwd(), '.env'), 'utf-8');
@@ -32,6 +28,13 @@ function getPool(): Pool | null {
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 5000,
       });
+      // Run migration once after pool is created
+      if (!pgMigrationDone) {
+        pgMigrationDone = true;
+        runPostgresMigration(pool).catch(e =>
+          console.error('[PG Migration] Error:', e.message)
+        );
+      }
       return pool;
     } catch (e) {
       console.error('Failed to create PG pool:', e);
@@ -41,71 +44,376 @@ function getPool(): Pool | null {
   return null;
 }
 
+async function runPostgresMigration(p: Pool) {
+  const cols = [
+    'other_earnings NUMERIC(12,2) DEFAULT 0',
+    'holiday_days NUMERIC(8,2) DEFAULT 0',
+    'holiday_pay NUMERIC(12,2) DEFAULT 0',
+    'regular_allowance NUMERIC(12,2) DEFAULT 0',
+    'special_allowance NUMERIC(12,2) DEFAULT 0',
+    'pagibig_loan NUMERIC(12,2) DEFAULT 0',
+    'company_funds NUMERIC(12,2) DEFAULT 0',
+    'sss_loan NUMERIC(12,2) DEFAULT 0',
+    'other_deductions NUMERIC(12,2) DEFAULT 0',
+    'daily_rate NUMERIC(12,2) DEFAULT 0',
+    'workflow_stage INTEGER DEFAULT 1',
+    'evp_review_status TEXT',
+    'evp_review_date TIMESTAMPTZ',
+    'return_remarks TEXT',
+    'current_reviewer_role TEXT',
+    'process_date TIMESTAMPTZ',
+    'approved_at TIMESTAMPTZ',
+  ];
+
+  const client = await p.connect();
+  try {
+    for (const colDef of cols) {
+      const colName = colDef.split(' ')[0];
+      // ADD COLUMN IF NOT EXISTS is safe â€” does nothing if column exists
+      try {
+        await client.query(
+          `ALTER TABLE payslips ADD COLUMN IF NOT EXISTS ${colDef}`
+        );
+      } catch (_) {}
+      try {
+        await client.query(
+          `ALTER TABLE payroll_runs ADD COLUMN IF NOT EXISTS ${colDef}`
+        );
+      } catch (_) {}
+    }
+    // Also ensure payroll_audit_log exists
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS payroll_audit_log (
+        id SERIAL PRIMARY KEY,
+        payroll_run_id INTEGER,
+        action TEXT,
+        performed_by INTEGER,
+        details JSONB,
+        performed_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    // Ensure cash_advances table exists
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cash_advances (
+        id SERIAL PRIMARY KEY,
+        employee_id INTEGER NOT NULL,
+        employee_name TEXT,
+        daily_rate NUMERIC(12,2) DEFAULT 0,
+        working_days NUMERIC(8,2) DEFAULT 0,
+        allowable_ca NUMERIC(12,2) DEFAULT 0,
+        requested_amount NUMERIC(12,2) NOT NULL,
+        approved_amount NUMERIC(12,2) DEFAULT 0,
+        status TEXT DEFAULT 'Pending',
+        date_requested TIMESTAMPTZ DEFAULT NOW(),
+        date_approved TIMESTAMPTZ,
+        approved_by INTEGER,
+        reason TEXT,
+        remarks TEXT,
+        branch TEXT,
+        cutoff_period TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    console.log('[PG Migration] âœ… Schema columns verified.');
+  } finally {
+    client.release();
+  }
+}
+
 export const isPostgres = () => !!getPool();
 
-// Ensure local directory exists
-if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
-  fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
-}
 
-// Local JSON Fallback Logic
-function loadDB() {
-  if (fs.existsSync(DB_FILE)) {
-    try {
-      return JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
-    } catch (e) {
-      console.error('Failed to parse database.json', e);
-    }
+// SQLite Fallback Logic
+async function getSqliteDB() {
+  if (sqliteDb) return sqliteDb;
+  try {
+      const sqlite3 = require('sqlite3').verbose();
+      const sqlite = require('sqlite');
+      
+      const dbPath = path.join(process.cwd(), 'data', 'database.sqlite');
+      
+      if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
+          fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
+      }
+
+      sqliteDb = await sqlite.open({
+          filename: dbPath,
+          driver: sqlite3.Database
+      });
+
+      // Proactively ensure all required tables and columns exist
+      await ensureSchema(sqliteDb);
+      
+      return sqliteDb;
+  } catch (e) {
+      console.error('\nâš ï¸ Failed to initialize SQLite fallback. Ensure you install dependencies:\n   npm install sqlite3 sqlite\n', e);
+      throw new Error('SQLite fallback is not installed.');
   }
-  return {
-    users: [],
-    employees: [],
-    settings: [],
-    attendance: [],
-    leave_requests: [],
-    documents: [],
-    audit_logs: [],
-    sessions: [],
-    education: [],
-    admin_approval_queue: [],
-    announcements: [],
-    emergency_loans: [],
-    notifications: [],
-    payroll_runs: [],
-    payslips: [],
-    payroll_audit_log: [],
-    employee_loans: [],
-    gov_contribution_reports: [],
-    gov_contribution_details: [],
-    gov_contribution_configs: [],
-    gov_contribution_config_logs: []
-  };
 }
 
-// Global Polyfill for BigInt JSON serialization
-if (typeof BigInt !== 'undefined' && !(BigInt.prototype as any).toJSON) {
-  (BigInt.prototype as any).toJSON = function () {
-    return this.toString();
+async function ensureSchema(db: any) {
+  const safeAdd = async (table: string, col: string, type = 'TEXT') => {
+    try { await db.run(`ALTER TABLE "${table}" ADD COLUMN "${col}" ${type}`); } catch (_) {}
   };
+
+  // Create core tables if missing
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS payroll_runs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, run_number TEXT, branch TEXT,
+      status TEXT DEFAULT 'Draft', payroll_period_start TEXT, payroll_period_end TEXT,
+      cutoff_day INTEGER, employee_count INTEGER DEFAULT 0,
+      total_net_pay REAL DEFAULT 0, total_gross_pay REAL DEFAULT 0,
+      created_by INTEGER, approved_by INTEGER, workflow_stage INTEGER DEFAULT 1,
+      evp_review_status TEXT, evp_review_date TEXT,
+      return_remarks TEXT, current_reviewer_role TEXT,
+      process_date TEXT, approved_at TEXT,
+      created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS payslips (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, payroll_run_id INTEGER, employee_id INTEGER,
+      daily_rate REAL DEFAULT 0, payroll_days REAL DEFAULT 0,
+      basic_pay REAL DEFAULT 0, regular_allowance REAL DEFAULT 0,
+      special_allowance REAL DEFAULT 0, holiday_pay REAL DEFAULT 0,
+      holiday_days REAL DEFAULT 0, other_earnings REAL DEFAULT 0,
+      gross_pay REAL DEFAULT 0,
+      phic REAL DEFAULT 0, pagibig REAL DEFAULT 0, pagibig_loan REAL DEFAULT 0,
+      company_funds REAL DEFAULT 0, sss REAL DEFAULT 0, sss_loan REAL DEFAULT 0,
+      company_loan REAL DEFAULT 0, cash_advance REAL DEFAULT 0,
+      other_deductions REAL DEFAULT 0, total_deductions REAL DEFAULT 0,
+      net_pay REAL DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS payroll_audit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, payroll_run_id INTEGER,
+      action TEXT, performed_by INTEGER, details TEXT,
+      performed_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL,
+        email TEXT,
+        employee_id INTEGER,
+        created_at TEXT DEFAULT (datetime('now')),
+        last_login TEXT,
+        is_active INTEGER DEFAULT 0,
+        assigned_branch TEXT,
+        hr_approval_status TEXT,
+        hr_approved_by INTEGER,
+        hr_approved_at TEXT,
+        status TEXT DEFAULT 'PENDING_APPROVAL',
+        reset_otp TEXT,
+        reset_otp_expires_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS sessions (
+        id TEXT PRIMARY KEY,
+        user_id INTEGER,
+        expires_at TEXT,
+        selected_branch TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS employees (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        employee_id TEXT UNIQUE NOT NULL,
+        last_name TEXT NOT NULL,
+        first_name TEXT NOT NULL,
+        middle_name TEXT,
+        department TEXT,
+        position TEXT,
+        branch TEXT,
+        employment_status TEXT,
+        date_hired TEXT,
+        date_of_birth TEXT,
+        date_separated TEXT,
+        contact_number TEXT,
+        email_address TEXT,
+        address TEXT,
+        sss_number TEXT,
+        philhealth_number TEXT,
+        pagibig_number TEXT,
+        tin TEXT,
+        civil_status TEXT,
+        salary_info TEXT,
+        personal_info_complete INTEGER DEFAULT 0,
+        preemployment_req_complete INTEGER DEFAULT 0,
+        government_docs_complete INTEGER DEFAULT 0,
+        employment_records_complete INTEGER DEFAULT 0,
+        attendance_records_complete INTEGER DEFAULT 0,
+        payroll_records_complete INTEGER DEFAULT 0,
+        disciplinary_records INTEGER DEFAULT 0,
+        training_records INTEGER DEFAULT 0,
+        separation_records INTEGER DEFAULT 0,
+        file_completion_status TEXT DEFAULT 'Incomplete',
+        last_updated TEXT DEFAULT (datetime('now')),
+        remarks TEXT,
+        training_details TEXT,
+        disciplinary_details TEXT,
+        profile_picture TEXT,
+        created_by INTEGER
+    );
+    CREATE TABLE IF NOT EXISTS cash_advances (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        employee_id INTEGER NOT NULL,
+        employee_name TEXT,
+        daily_rate REAL DEFAULT 0,
+        working_days REAL DEFAULT 0,
+        allowable_ca REAL DEFAULT 0,
+        requested_amount REAL NOT NULL,
+        approved_amount REAL DEFAULT 0,
+        status TEXT DEFAULT 'Pending',
+        date_requested TEXT DEFAULT (datetime('now')),
+        date_approved TEXT,
+        approved_by INTEGER,
+        reason TEXT,
+        remarks TEXT,
+        branch TEXT,
+        cutoff_period TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS gov_contribution_configs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        year_effective INTEGER NOT NULL,
+        config_data TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS gov_contribution_reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        branch_id TEXT,
+        payroll_period TEXT,
+        contribution_type TEXT,
+        total_er REAL DEFAULT 0,
+        total_ee REAL DEFAULT 0,
+        total_ec REAL DEFAULT 0,
+        total_loan REAL DEFAULT 0,
+        total_mpf_er REAL DEFAULT 0,
+        total_mpf_ee REAL DEFAULT 0,
+        service_charge REAL DEFAULT 0,
+        employee_count INTEGER DEFAULT 0,
+        status TEXT DEFAULT 'Draft',
+        created_by INTEGER,
+        approved_by INTEGER,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS gov_contribution_details (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        report_id INTEGER NOT NULL,
+        employee_id INTEGER,
+        government_number TEXT,
+        salary REAL DEFAULT 0,
+        er_share REAL DEFAULT 0,
+        ee_share REAL DEFAULT 0,
+        ec REAL DEFAULT 0,
+        mpf_er REAL DEFAULT 0,
+        mpf_ee REAL DEFAULT 0,
+        loan_deduction REAL DEFAULT 0,
+        config_id_used INTEGER,
+        rate_used TEXT,
+        computation_date TEXT DEFAULT (datetime('now')),
+        last_name TEXT,
+        first_name TEXT
+    );
+    CREATE TABLE IF NOT EXISTS sss_contribution_table (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        effectivity_year INTEGER,
+        salary_range_from REAL,
+        salary_range_to REAL,
+        employee_share REAL DEFAULT 0,
+        employer_share REAL DEFAULT 0,
+        ec_contribution REAL DEFAULT 0
+    );
+  `);
+
+
+  // Ensure every known column exists (safe: ALTER TABLE silently fails if column already present)
+  const payslipCols: [string, string][] = [
+    ['daily_rate','REAL'], ['payroll_days','REAL'], ['basic_pay','REAL'],
+    ['regular_allowance','REAL'], ['special_allowance','REAL'], ['holiday_pay','REAL'],
+    ['holiday_days','REAL'], ['other_earnings','REAL'], ['gross_pay','REAL'],
+    ['phic','REAL'], ['pagibig','REAL'], ['pagibig_loan','REAL'],
+    ['company_funds','REAL'], ['sss','REAL'], ['sss_loan','REAL'],
+    ['company_loan','REAL'], ['cash_advance','REAL'], ['other_deductions','REAL'],
+    ['total_deductions','REAL'], ['net_pay','REAL'],
+  ];
+  for (const [col, type] of payslipCols) await safeAdd('payslips', col, type);
+
+  const runCols: [string, string][] = [
+    ['workflow_stage','INTEGER'], ['evp_review_status','TEXT'], ['evp_review_date','TEXT'],
+    ['return_remarks','TEXT'], ['current_reviewer_role','TEXT'], ['process_date','TEXT'],
+    ['approved_at','TEXT'], ['total_net_pay','REAL'], ['total_gross_pay','REAL'],
+    ['employee_count','INTEGER'], ['cutoff_day','INTEGER'],
+    ['payroll_period_start','TEXT'], ['payroll_period_end','TEXT'],
+  ];
+  for (const [col, type] of runCols) await safeAdd('payroll_runs', col, type);
+
+  const govReportCols: [string, string][] = [
+    ['branch_id','TEXT'], ['payroll_period','TEXT'], ['contribution_type','TEXT'],
+    ['total_er','REAL'], ['total_ee','REAL'], ['total_ec','REAL'],
+    ['total_loan','REAL'], ['total_mpf_er','REAL'], ['total_mpf_ee','REAL'],
+    ['service_charge','REAL'], ['employee_count','INTEGER'], ['status','TEXT'],
+    ['created_by','INTEGER'], ['approved_by','INTEGER'], ['created_at','TEXT'],
+    ['updated_at','TEXT'],
+  ];
+  for (const [col, type] of govReportCols) await safeAdd('gov_contribution_reports', col, type);
+
+  const govDetailCols: [string, string][] = [
+    ['report_id','INTEGER'], ['employee_id','INTEGER'], ['government_number','TEXT'],
+    ['salary','REAL'], ['er_share','REAL'], ['ee_share','REAL'], ['ec','REAL'],
+    ['mpf_er','REAL'], ['mpf_ee','REAL'], ['loan_deduction','REAL'],
+    ['config_id_used','INTEGER'], ['rate_used','TEXT'], ['computation_date','TEXT'],
+  ];
+  for (const [col, type] of govDetailCols) await safeAdd('gov_contribution_details', col, type);
+
+  console.log('[SQLite] Schema verified.');
 }
+
 
 /**
- * Helper to make data JSON safe (handles BigInt)
+ * Helper to make data JSON safe (handles BigInt from PostgreSQL and extracts Strings from SQLite JSON)
  */
 function safeJson(data: any) {
   if (data === undefined || data === null) return data;
   try {
-    return JSON.parse(JSON.stringify(data));
+    return JSON.parse(JSON.stringify(data, (key, value) => {
+      if (typeof value === 'bigint') return value.toString();
+      return value;
+    }));
   } catch (e) {
     console.error('safeJson error:', e);
     return data;
   }
 }
 
-function saveDB(data: any) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, (key, value) =>
-    typeof value === 'bigint' ? value.toString() : value
-    , 2));
+/**
+ * Coerce SQLite TEXT columns that are numeric back to numbers.
+ * SQLite stores all non-declared types as TEXT, so "5000.00" comes back as a string.
+ */
+function coerceSqliteRow(row: any): any {
+  if (!row || typeof row !== 'object') return row;
+  const result: any = {};
+  for (const key of Object.keys(row)) {
+    const val = row[key];
+    // Convert numeric strings to numbers, and "NaN"/"null"/"undefined" strings to 0/null
+    if (typeof val === 'string') {
+      const trimmed = val.trim();
+      if (trimmed === 'NaN' || trimmed === 'undefined') {
+        result[key] = 0;
+      } else if (trimmed === 'null' || trimmed === '') {
+        result[key] = null;
+      } else if (!isNaN(Number(trimmed))) {
+        result[key] = Number(trimmed);
+      } else {
+        result[key] = val;
+      }
+    } else {
+      result[key] = val;
+    }
+  }
+  return result;
 }
 
 /**
@@ -124,19 +432,17 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
       const errorMsg = String(error.message || '').toLowerCase();
       const errorCode = String(error.code || '').toLowerCase();
 
-      // Better connection error detection (including AggregateError and explicit codes)
       const isConnectionError =
         errorMsg.includes('connection') ||
         errorMsg.includes('econnrefused') ||
         errorMsg.includes('etimedout') ||
-        errorMsg.includes('promise') || // AggregateError "All promises were rejected"
+        errorMsg.includes('promise') || 
         errorCode === 'econnrefused' ||
         errorCode === 'etimedout';
 
       if (isConnectionError) {
-        console.error('⚠ DATABASE CONNECTION ERROR. Falling back to local JSON database.', { msg: errorMsg, code: errorCode });
-        pool = null; // Clear the pool to trigger fallback for future queries
-        // Proceed to simulation logic below
+        console.error('âš  DATABASE CONNECTION ERROR. Falling back to local SQLite database.', { msg: errorMsg, code: errorCode });
+        pool = null; // Clear the pool to trigger fallback
       } else {
         console.error(`[PostgreSQL] Query Error: ${sql}`, error);
         throw error;
@@ -144,358 +450,135 @@ export async function query(sql: string, params: any[] = []): Promise<{ rows: an
     }
   }
 
-  // Fallback to Local JSON Simulation
-  const db = loadDB();
-  const normalizedSql = sql.trim().replace(/\s+/g, ' ');
+  // Fallback to SQLite Database
+  const db = await getSqliteDB();
+  
+  // Convert parameter syntax from PostgreSQL ($1, $2) to SQLite (?1, ?2)
+  let sqliteSql = sql.replace(/\$(\d+)/g, '?$1');
+  
+  // Convert basic Postgres Dialects to SQLite syntax
+  sqliteSql = sqliteSql.replace(/\bILIKE\b/gi, 'LIKE');
+  sqliteSql = sqliteSql.replace(/\bNOW\(\)/gi, "datetime('now')");
+  sqliteSql = sqliteSql.replace(/\bCURRENT_TIMESTAMP\b/gi, "datetime('now')");
+  sqliteSql = sqliteSql.replace(/SERIAL PRIMARY KEY/gi, 'INTEGER PRIMARY KEY AUTOINCREMENT');
+  sqliteSql = sqliteSql.replace(/TIMESTAMP WITH TIME ZONE/gi, 'DATETIME');
+  sqliteSql = sqliteSql.replace(/\bJSONB\b/gi, 'TEXT');
+  sqliteSql = sqliteSql.replace(/\bBYTEA\b/gi, 'BLOB');
+  sqliteSql = sqliteSql.replace(/\bCOALESCE\(/gi, 'COALESCE('); // SQLite supports COALESCE natively
+  
+  // Ensure objects in array are stringified for insertion into SQLite
+  const sqliteParams = params.map(p => {
+      if (typeof p === 'object' && p !== null && !(p instanceof Date)) {
+          return JSON.stringify(p);
+      }
+      if (typeof p === 'boolean') return p ? 1 : 0;
+      if (p instanceof Date) return p.toISOString();
+      return p;
+  });
+
+  async function executeWithAutoHeal(method: 'all' | 'run', sqlQuery: string, sqlParams: any[], maxRetries = 30) {
+      let retries = 0;
+      while (retries < maxRetries) {
+          try {
+              if (method === 'all') return await db.all(sqlQuery, ...sqlParams);
+              return await db.run(sqlQuery, ...sqlParams);
+          } catch (e: any) {
+              const msg = e.message || '';
+
+              // --- Auto-heal: Missing TABLE ---
+              const matchNoTable = msg.match(/no such table:\s*([a-zA-Z0-9_]+)/i);
+              if (matchNoTable) {
+                  const missingTable = matchNoTable[1];
+                  console.log(`[Auto-Heal] Creating missing table '${missingTable}'...`);
+                  try {
+                      // Extract column names from SET clause (UPDATE) or column list (INSERT/SELECT)
+                      const setCols = sqlQuery.match(/SET\s+([\s\S]+?)\s+WHERE/i);
+                      const insertCols = sqlQuery.match(/INSERT\s+(?:OR\s+REPLACE\s+)?INTO\s+[^\s(]+\s*\(([^)]+)\)/i);
+                      const selectCols = sqlQuery.match(/SELECT\s+([\s\S]+?)\s+FROM/i);
+
+                      let colDefs = 'id INTEGER PRIMARY KEY AUTOINCREMENT';
+                      if (setCols) {
+                          const cols = setCols[1].split(',').map((s: string) => s.trim().split(/\s*=\s*/)[0].replace(/"/g, '').trim()).filter((c: string) => c && c !== 'id');
+                          colDefs += cols.map((c: string) => `, "${c}" TEXT`).join('');
+                      } else if (insertCols) {
+                          const cols = insertCols[1].split(',').map((s: string) => s.trim().replace(/"/g, '')).filter((c: string) => c && c !== 'id');
+                          colDefs += cols.map((c: string) => `, "${c}" TEXT`).join('');
+                      } else if (selectCols && selectCols[1].trim() !== '*') {
+                          const cols = selectCols[1].split(',').map((s: string) => {
+                              const parts = s.trim().split(/\s+as\s+/i);
+                              return (parts[parts.length - 1] || '').replace(/"/g, '').trim();
+                          }).filter((c: string) => c && c !== '*' && c !== 'id' && !c.includes('.'));
+                          colDefs += cols.map((c: string) => `, "${c}" TEXT`).join('');
+                      }
+
+                      await db.exec(`CREATE TABLE IF NOT EXISTS "${missingTable}" (${colDefs})`);
+                      retries++;
+                      continue;
+                  } catch (createErr) {
+                      console.error(`[Auto-Heal] Failed to create table '${missingTable}':`, createErr);
+                  }
+              }
+
+              // --- Auto-heal: Missing COLUMN ---
+              const matchInsert = msg.match(/table\s+([a-zA-Z0-9_]+)\s+has\s+no\s+column\s+named\s+([a-zA-Z0-9_]+)/i);
+              const matchSelectUpdate = msg.match(/no such column:\s*([a-zA-Z0-9_]+)/i);
+              
+              let tableToAlter = '';
+              let colToAdd = '';
+
+              if (matchInsert) {
+                  tableToAlter = matchInsert[1];
+                  colToAdd = matchInsert[2];
+              } else if (matchSelectUpdate) {
+                  colToAdd = matchSelectUpdate[1];
+                  const updateMatch = sqlQuery.match(/UPDATE\s+"?([a-zA-Z0-9_]+)"?\s+SET/i);
+                  const insertMatch = sqlQuery.match(/INSERT\s+(?:OR\s+REPLACE\s+)?INTO\s+"?([a-zA-Z0-9_]+)"?/i);
+                  const selectMatch = sqlQuery.match(/FROM\s+"?([a-zA-Z0-9_]+)"?/i);
+                  if (updateMatch) tableToAlter = updateMatch[1];
+                  else if (insertMatch) tableToAlter = insertMatch[1];
+                  else if (selectMatch) tableToAlter = selectMatch[1];
+              }
+
+              if (tableToAlter && colToAdd) {
+                  console.log(`[Auto-Heal] Adding missing column '${colToAdd}' to table '${tableToAlter}'...`);
+                  try {
+                      await db.exec(`ALTER TABLE "${tableToAlter}" ADD COLUMN "${colToAdd}" TEXT`);
+                      retries++;
+                      continue;
+                  } catch (alterErr) {
+                      console.error(`[Auto-Heal] Failed to add column:`, alterErr);
+                  }
+              }
+
+              throw e;
+          }
+      }
+      throw new Error(`Auto-heal failed after ${maxRetries} retries for query: ${sqlQuery}`);
+  }
 
   try {
-    if (normalizedSql.match(/^SELECT NOW\(\)/i)) {
-      return { rows: [{ now: new Date().toISOString() }], rowCount: 1 };
+    const upperSql = sqliteSql.trim().toUpperCase();
+    const isSelect = upperSql.startsWith('SELECT');
+    const isReturning = upperSql.includes('RETURNING');
+
+    if (isSelect) {
+        const rows = await executeWithAutoHeal('all', sqliteSql, sqliteParams) as any[];
+        const coerced = rows.map(coerceSqliteRow);
+        return { rows: safeJson(coerced), rowCount: coerced.length };
+
+    } else if (isReturning) {
+        // INSERT/UPDATE ... RETURNING â€” sqlite returns rows like a SELECT
+        const rows = await executeWithAutoHeal('all', sqliteSql, sqliteParams) as any[];
+        const coerced = rows.map(coerceSqliteRow);
+        return { rows: safeJson(coerced), rowCount: coerced.length };
+
+    } else {
+        const result = await executeWithAutoHeal('run', sqliteSql, sqliteParams) as any;
+        return { rows: [], rowCount: result.changes || 0 };
     }
-
-    if (normalizedSql.match(/^SELECT/i)) {
-      // Improved main table detection: find the FROM that is not inside a subquery
-      // This is a naive heuristic but works for our standard queries
-      // We look for the 'FROM' that appears AFTER the outermost SELECT list
-      let mainFromMatch = normalizedSql.match(/\s+FROM\s+([a-z0-9_]+)/i);
-
-      // If there are subqueries in SELECT list, the first FROM might be wrong
-      // We try to find the one following a top-level SELECT pattern
-      const selectParts = normalizedSql.split(/\s+FROM\s+/i);
-      let table = '';
-      if (selectParts.length > 2) {
-        // Potential subqueries. Try to find the one after the balance point of parentheses
-        let parenLevel = 0;
-        let pos = 0;
-        const fromKeyword = ' FROM ';
-        const lowerSql = normalizedSql.toUpperCase();
-
-        while ((pos = lowerSql.indexOf(fromKeyword, pos)) !== -1) {
-          // Check paren level at this position
-          const beforeFrom = normalizedSql.substring(0, pos);
-          const opens = (beforeFrom.match(/\(/g) || []).length;
-          const closes = (beforeFrom.match(/\)/g) || []).length;
-          if (opens === closes) {
-            // Found a FROM at top level!
-            const afterFrom = normalizedSql.substring(pos + fromKeyword.length).trim();
-            const tMatch = afterFrom.match(/^([a-z0-9_]+)/i);
-            if (tMatch) {
-              table = tMatch[1].toLowerCase();
-              break;
-            }
-          }
-          pos += fromKeyword.length;
-        }
-      }
-
-      if (!table && mainFromMatch) {
-        table = mainFromMatch[1].toLowerCase();
-      }
-
-      if (!table || !db[table]) {
-        return { rows: [], rowCount: 0 };
-      }
-
-      let results = [];
-      // Also improve JOIN detection to skip joins inside subqueries
-      let isJoin: any = null;
-      let pos = 0;
-      const joinKeyword = ' JOIN ';
-      const lowerSql = normalizedSql.toUpperCase();
-      while ((pos = lowerSql.indexOf(joinKeyword, pos)) !== -1) {
-        const beforeJoin = normalizedSql.substring(0, pos);
-        const opens = (beforeJoin.match(/\(/g) || []).length;
-        const closes = (beforeJoin.match(/\)/g) || []).length;
-        if (opens === closes) {
-          // Capture table name and the ON clause
-          isJoin = normalizedSql.substring(pos).match(/JOIN\s+([a-z0-9_]+)(?:\s+[a-z0-9_]+)?\s+ON\s+(.+?)(?:\s+(?:WHERE|ORDER|LIMIT|GROUP)|$)/i);
-          if (isJoin) break;
-        }
-        pos += joinKeyword.length;
-      }
-
-      if (isJoin) {
-        const table1 = table;
-        const table2 = isJoin[1].toLowerCase();
-        const onClause = isJoin[2];
-
-        const data1 = db[table1] || [];
-        const data2 = db[table2] || [];
-
-        // Extract join columns from ON clause (e.g. pal.performed_by = u.id)
-        let col1 = '';
-        let col2 = '';
-        const onMatch = onClause.match(/([a-z0-9_\.]+)\s*=\s*([a-z0-9_\.]+)/i);
-        if (onMatch) {
-          const p1 = onMatch[1].includes('.') ? onMatch[1].split('.')[1] : onMatch[1];
-          const p2 = onMatch[2].includes('.') ? onMatch[2].split('.')[1] : onMatch[2];
-
-          // Determine which column belongs to which table by checking existing data
-          const testItem1 = data1[0] || {};
-          const testItem2 = data2[0] || {};
-
-          if (testItem1.hasOwnProperty(p1) && testItem2.hasOwnProperty(p2)) {
-            col1 = p1; col2 = p2;
-          } else if (testItem1.hasOwnProperty(p2) && testItem2.hasOwnProperty(p1)) {
-            col1 = p2; col2 = p1;
-          }
-        }
-
-        results = data1.map((item1: any) => {
-          const item2 = data2.find((i: any) => {
-            if (col1 && col2) {
-              return String(i[col2]) === String(item1[col1]);
-            }
-            // Fallback for legacy hardcoded cases
-            if (table2 === 'employees' && item1.employee_id) {
-              return String(i.id) === String(item1.employee_id);
-            }
-            if (table1 === 'employees' && i.employee_id) {
-              return String(i.employee_id) === String(item1.id);
-            }
-            return false;
-          });
-
-          if (item2) {
-            const merged = { ...item2, ...item1 };
-            if (table2 === 'employees' || table1 === 'employees') {
-              const emp = table2 === 'employees' ? item2 : item1;
-              (merged as any).employee_name = `${emp.first_name || ''} ${emp.last_name || ''}`.trim();
-              (merged as any).branch = emp.branch || (merged as any).branch;
-            }
-            return merged;
-          }
-          return item1;
-        });
-      } else {
-        results = [...(db[table] || [])];
-      }
-
-      const whereMatch = normalizedSql.match(/WHERE\s+(.+?)(?:ORDER BY|$)/i);
-      if (whereMatch) {
-        const conditions = whereMatch[1];
-        results = results.filter((row: any) => {
-          const parts = conditions.split(/\s+AND\s+/i);
-          return parts.every(part => {
-            let match;
-            if (match = part.match(/([a-z0-9_\.]+)\s*(>=|<=|=|>|<)\s*\$(\d+)/i)) {
-              const [_, fullCol, op, paramIdx] = match;
-              const col = fullCol.includes('.') ? fullCol.split('.')[1] : fullCol;
-              const colVal = row[col];
-              let paramVal = params[parseInt(paramIdx) - 1];
-
-              const matchResult = (op === '=') ? (colVal == paramVal) :
-                (op === '>=') ? (colVal >= paramVal) :
-                  (op === '<=') ? (colVal <= paramVal) :
-                    (op === '>') ? (colVal > paramVal) :
-                      (op === '<') ? (colVal < paramVal) : true;
-
-              return matchResult;
-            }
-            if (match = part.match(/([a-z0-9_]+)\s*=\s*'(.*?)'/i)) {
-              const [_, col, literal] = match;
-              return row[col] == literal;
-            }
-            if (match = part.match(/([a-z0-9_]+)\s+LIKE\s+\$(\d+)/i)) {
-              const [_, col, paramIdx] = match;
-              const val = params[parseInt(paramIdx) - 1];
-              if (!row[col]) return false;
-              const pattern = val.replace(/%/g, '.*');
-              return new RegExp(`^${pattern}$`, 'i').test(row[col]);
-            }
-            if (match = part.match(/([a-z0-9_]+)\s+IN\s+\((.*?)\)/i)) {
-              const [_, col, listStr] = match;
-              // Very basic parsing for IN ('a', 'b', ...)
-              let allowedValues: string[] = [];
-              if (listStr.includes("'")) {
-                const parts = listStr.split(',').map(s => s.trim());
-                allowedValues = parts.map(p => {
-                  if (p.startsWith("'") && p.endsWith("'")) return p.substring(1, p.length - 1);
-                  return p;
-                });
-              } else {
-                allowedValues = listStr.split(',').map(s => s.trim());
-              }
-              return allowedValues.includes(String(row[col]));
-            }
-            return true;
-          });
-        });
-      }
-
-      return {
-        rows: safeJson(results),
-        rowCount: results.length
-      };
-    }
-
-    if (normalizedSql.match(/^INSERT/i)) {
-      const tableMatch = normalizedSql.match(/INTO\s+([a-z_]+)/i);
-      const table = tableMatch![1];
-      if (!db[table]) db[table] = [];
-
-      const colsMatch = normalizedSql.match(/\((.+?)\)\s*VALUES/i);
-      const columns = colsMatch![1].split(',').map(s => s.trim());
-
-      // Find the VALUES part to extract literals vs params
-      // Support multiple tuples: VALUES (a, b), (c, d)
-      const valuesStrMatch = normalizedSql.match(/VALUES\s*(.+)$/i);
-      const valuesStr = valuesStrMatch![1];
-
-      // Match each (...) tuple exactly
-      const tupleMatches = [...valuesStr.matchAll(/\(([^()]+)\)/g)];
-
-      const newItems: any[] = [];
-      let maxId = db[table].reduce((max: number, item: any) => Math.max(max, item.id || 0), 0);
-
-      for (const tuple of tupleMatches) {
-        // Smarter split that handles commas inside quotes (like JSON strings)
-        const valRaw = tuple[1];
-        const valParts: string[] = [];
-        let currentPart = '';
-        let inQuote = false;
-        let quoteChar = '';
-        
-        for (let i = 0; i < valRaw.length; i++) {
-          const char = valRaw[i];
-          if ((char === "'" || char === '"') && valRaw[i-1] !== '\\') {
-            if (!inQuote) {
-              inQuote = true;
-              quoteChar = char;
-            } else if (char === quoteChar) {
-              inQuote = false;
-            }
-          }
-          
-          if (char === ',' && !inQuote) {
-            valParts.push(currentPart.trim());
-            currentPart = '';
-          } else {
-            currentPart += char;
-          }
-        }
-        valParts.push(currentPart.trim());
-
-        const newItem: any = {};
-        columns.forEach((col, idx) => {
-          const valPart = valParts[idx];
-          if (!valPart) {
-            newItem[col] = null;
-            return;
-          }
-          if (valPart.startsWith('$')) {
-            const paramIdx = parseInt(valPart.substring(1)) - 1;
-            newItem[col] = params[paramIdx];
-          } else if (valPart.match(/CURRENT_TIMESTAMP/i)) {
-            newItem[col] = new Date().toISOString();
-          } else if (valPart.startsWith("'") && valPart.endsWith("'")) {
-            newItem[col] = valPart.substring(1, valPart.length - 1);
-          } else {
-            newItem[col] = isNaN(Number(valPart)) ? valPart : Number(valPart);
-          }
-        });
-
-        if (!newItem.id) {
-          maxId++;
-          newItem.id = maxId;
-        }
-
-        newItems.push(newItem);
-      }
-
-      db[table].push(...newItems);
-      saveDB(db);
-      return { rows: safeJson(newItems), rowCount: newItems.length };
-    }
-
-    if (normalizedSql.match(/^UPDATE/i)) {
-      const tableMatch = normalizedSql.match(/UPDATE\s+([a-z_]+)/i);
-      const table = tableMatch![1];
-      const whereMatch = normalizedSql.match(/WHERE\s+(.+)$/i);
-      if (!whereMatch) throw new Error('UPDATE must have WHERE clause');
-
-      const conditions = whereMatch[1];
-      let updatedCount = 0;
-      const updatedRows: any[] = [];
-
-      if (!db[table]) return { rows: [], rowCount: 0 };
-
-      db[table] = db[table].map((row: any) => {
-        const parts = conditions.split(/\s+AND\s+/i);
-        const matches = parts.every(part => {
-          let m;
-          if (m = part.match(/([a-z0-9_]+)\s*=\s*\$(\d+)/i)) {
-            const [_, col, paramIdx] = m;
-            return row[col] == params[parseInt(paramIdx) - 1];
-          }
-          if (m = part.match(/([a-z0-9_]+)\s*=\s*'(.*?)'/i)) {
-            const [_, col, literal] = m;
-            return row[col] == literal;
-          }
-          return true;
-        });
-
-        if (matches) {
-          const setMatch = normalizedSql.match(/SET\s+(.+?)\s+WHERE/i);
-          if (setMatch) {
-            const setClauses = setMatch[1].split(',');
-            setClauses.forEach(clause => {
-              const [colRaw, valRaw] = clause.split('=');
-              if (colRaw && valRaw) {
-                const col = colRaw.trim();
-                const valPart = valRaw.trim();
-                if (valPart.startsWith('$')) {
-                  row[col] = params[parseInt(valPart.substring(1)) - 1];
-                } else if (valPart.match(/CURRENT_TIMESTAMP/i) || valPart.match(/NOW\(\)/i)) {
-                  row[col] = new Date().toISOString();
-                } else if (valPart.startsWith("'") && valPart.endsWith("'")) {
-                  row[col] = valPart.substring(1, valPart.length - 1);
-                } else {
-                  row[col] = isNaN(Number(valPart)) ? valPart : Number(valPart);
-                }
-              }
-            });
-          }
-          updatedCount++;
-          updatedRows.push(row);
-        }
-        return row;
-      });
-
-      if (updatedCount > 0) saveDB(db);
-      return { rows: safeJson(updatedRows), rowCount: updatedCount };
-    }
-
-    if (normalizedSql.match(/^DELETE/i)) {
-      const tableMatch = normalizedSql.match(/FROM\s+([a-z_]+)/i);
-      const table = tableMatch![1];
-      
-      if (!db[table]) return { rows: [], rowCount: 0 };
-
-      const whereMatch = normalizedSql.match(/WHERE\s+(.+)$/i);
-      if (whereMatch) {
-        const initialLen = db[table].length;
-        const conditions = whereMatch[1];
-        db[table] = db[table].filter((row: any) => {
-          const parts = conditions.split(/\s+AND\s+/i);
-          return !parts.every(part => {
-            let m;
-            if (m = part.match(/([a-z0-9_]+)\s*=\s*\$(\d+)/i)) {
-              const [_, col, paramIdx] = m;
-              return row[col] == params[parseInt(paramIdx) - 1];
-            }
-            return true;
-          });
-        });
-        saveDB(db);
-        return { rows: [], rowCount: initialLen - db[table].length };
-      }
-    }
-
-    return { rows: [], rowCount: 0 };
-  } catch (e: any) {
-    console.error(`[LocalDB] Query Error: ${sql}`, e);
-    throw e;
+  } catch (error: any) {
+    console.error(`[SQLite] Query Error: ${sqliteSql}`, error);
+    throw error;
   }
 }
 
@@ -514,11 +597,7 @@ export async function insert(table: string, data: any): Promise<number> {
   const values = Object.values(data);
   const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
 
-  const activePool = getPool();
-  const sql = activePool
-    ? `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders}) RETURNING id`
-    : `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
-
+  const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders}) RETURNING id`;
   const res = await query(sql, values);
   return res.rows[0]?.id;
 }
@@ -538,10 +617,16 @@ export async function remove(table: string, id: number | string): Promise<void> 
 export async function initializeDatabase() {
   const activePool = getPool();
   if (activePool) {
-    console.log('✅ PostgreSQL Database connected');
+    console.log('âœ… PostgreSQL Database connected');
     return;
   }
-  console.log('✅ Local JSON Database initialized');
+  
+  try {
+    await getSqliteDB();
+    console.log('âœ… Local SQLite Database initialized');
+  } catch (e) {
+    console.error('âŒ Local SQLite Fallback missing dependencies.');
+  }
 }
 
 export async function resetTableSequence(table: string) {
@@ -555,6 +640,9 @@ export async function resetTableSequence(table: string) {
     } catch (e) {
       console.error(`Failed to reset sequence for ${table}:`, e);
     }
+  } else {
+      // Internal SQLite reset (sqlite_sequence table handles this automatically usually)
+      console.log(`No sequence reset required for SQLite (${table})`);
   }
 }
 

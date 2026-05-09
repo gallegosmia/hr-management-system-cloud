@@ -18,6 +18,7 @@ import { requireBranchAuth } from '@/lib/middleware/branch-auth';
 import { canAccessPayroll, validatePayrollAccess } from '@/lib/payroll-access';
 import { sendEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
+import { syncApprovedCashAdvancesForPayrollRun } from '@/lib/payroll-cash-advances';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/payroll/runs/[id]
@@ -74,6 +75,10 @@ export async function GET(
             console.warn(`[GET] Access denied for user ${user.username} to branch ${payrollRun.branch}`);
             return NextResponse.json({ error: 'Access denied' }, { status: 403 });
         }
+
+        await syncApprovedCashAdvancesForPayrollRun(payrollRunId);
+        const syncedRun = await query(`SELECT * FROM payroll_runs WHERE id = $1`, [payrollRunId]);
+        if (syncedRun.rows.length > 0) payrollRun = { ...payrollRun, ...syncedRun.rows[0] };
 
         // AUTO-CORRECTION: if Released but lacking EVP approval, revert
         if (payrollRun.status === 'Released' && (payrollRun.workflow_stage < 5 || payrollRun.evp_review_status !== 'Approved')) {
@@ -346,7 +351,7 @@ export async function PATCH(
             const isSuper  = user.role === 'Super Admin';
 
             // Stage 2: Branch Manager
-            if (payrollRun.workflow_stage === 2 || payrollRun.status === 'Under Review - Branch Manager') {
+            if (payrollRun.workflow_stage === 2 || payrollRun.status === 'Under Review - Branch Manager' || payrollRun.status === 'Returned to Branch Manager') {
                 if (!isManager && !isSuper) {
                     return NextResponse.json({ error: 'Only the Branch Manager can approve at this stage' }, { status: 403 });
                 }
@@ -389,7 +394,7 @@ export async function PATCH(
             }
 
             // Stage 3: Operations Manager
-            if (payrollRun.workflow_stage === 3 || payrollRun.status === 'Under Review - Operations Manager') {
+            if (payrollRun.workflow_stage === 3 || payrollRun.status === 'Under Review - Operations Manager' || payrollRun.status === 'Returned to Operations Manager') {
                 if (!isOps && !isSuper) {
                     return NextResponse.json({ error: 'Only the Operations Manager can approve at this stage' }, { status: 403 });
                 }
@@ -438,7 +443,7 @@ export async function PATCH(
         // ACTION: final_approve  (EVP -> Stage 5: For Release)
         // ──────────────────────────────────────────────────────────────
         if (action === 'final_approve') {
-            if (!['Vice President', 'Executive Vice President', 'Super Admin'].includes(user.role)) {
+            if (!['Vice President', 'Executive Vice President', 'President', 'Super Admin'].includes(user.role)) {
                 return NextResponse.json({ error: 'Only the Executive Vice President can perform final approval' }, { status: 403 });
             }
             if (payrollRun.status === 'For Release' || payrollRun.workflow_stage === 5) {
@@ -534,12 +539,12 @@ export async function PATCH(
             let auditAction = '';
             let targetRole = '';
 
-            if (payrollRun.status === 'Under Review - Branch Manager') {
+            if (payrollRun.status === 'Under Review - Branch Manager' || payrollRun.status === 'Returned to Branch Manager') {
                 if (user.role !== 'Manager' && user.role !== 'Super Admin') return NextResponse.json({ error: 'Unauthorized return' }, { status: 403 });
                 newStatus = 'Returned to HR';
                 auditAction = 'RETURNED_TO_HR';
                 targetRole = 'HR';
-            } else if (payrollRun.status === 'Under Review - Operations Manager') {
+            } else if (payrollRun.status === 'Under Review - Operations Manager' || payrollRun.status === 'Returned to Operations Manager') {
                 if (user.role !== 'Operations Manager' && user.role !== 'Super Admin') return NextResponse.json({ error: 'Unauthorized return' }, { status: 403 });
                 newStatus = 'Returned to Branch Manager';
                 auditAction = 'RETURNED_TO_BRANCH_MANAGER';

@@ -317,8 +317,12 @@ export async function PUT(request: NextRequest) {
 
         // Clean data: convert empty strings to null
         const cleanData: any = {};
+        const ignoredKeys = ['id', 'created_at', 'updated_at'];
+        
         Object.entries(data).forEach(([key, value]) => {
-            cleanData[key] = value === '' ? null : value;
+            if (oldEmployee && key in oldEmployee && !ignoredKeys.includes(key)) {
+                cleanData[key] = value === '' ? null : value;
+            }
         });
 
         await updateEmployee(id, cleanData);

@@ -438,6 +438,91 @@ export default function GovContributionsTracker() {
                     </div>
                 </div>
 
+                {/* ── All Generated Reports (flat list) ─────────────────── */}
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                    <div className="p-5 border-b border-slate-100 flex justify-between items-center">
+                        <div>
+                            <h2 className="text-base font-bold text-slate-900">All Generated Reports</h2>
+                            <p className="text-[12px] text-slate-400 mt-0.5">All contribution reports across all periods and branches</p>
+                        </div>
+                        <button onClick={fetchReports} className="px-3 py-1.5 text-[12px] font-bold text-[#1d4ed8] bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition flex items-center gap-1">
+                            ↻ Refresh
+                        </button>
+                    </div>
+                    {loading ? (
+                        <div className="p-12 text-center text-slate-400 text-sm">Loading reports...</div>
+                    ) : reports.length === 0 ? (
+                        <div className="p-12 text-center">
+                            <div className="text-4xl mb-3">📋</div>
+                            <div className="text-slate-700 font-bold text-base mb-1">No reports generated yet</div>
+                            <div className="text-slate-400 text-sm mb-4">Use the Generate page to create your first contribution report.</div>
+                            <Link href="/gov-contributions/generate" className="inline-flex items-center gap-2 bg-[#1d4ed8] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#1e40af] transition">
+                                ➤ Go to Generate Page
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 border-b border-slate-100">
+                                    <tr>
+                                        <th className="py-3 px-5 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Type</th>
+                                        <th className="py-3 px-5 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Branch</th>
+                                        <th className="py-3 px-5 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Period</th>
+                                        <th className="py-3 px-5 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Employees</th>
+                                        <th className="py-3 px-5 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Total Amount</th>
+                                        <th className="py-3 px-5 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
+                                        <th className="py-3 px-5 text-[11px] font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {reports.map(rep => {
+                                        const total = Number(rep.total_ee) + Number(rep.total_er) + Number(rep.total_ec) + Number(rep.total_loan) + Number((rep as any).service_charge || 0);
+                                        const typeColors: Record<string, string> = {
+                                            'SSS': 'bg-blue-100 text-blue-700',
+                                            'PhilHealth': 'bg-red-100 text-red-700',
+                                            'Pag-IBIG': 'bg-orange-100 text-orange-700',
+                                        };
+                                        const statusColors: Record<string, string> = {
+                                            'Draft': 'bg-slate-100 border-slate-200 text-slate-600',
+                                            'Pending': 'bg-amber-50 border-amber-200 text-amber-700',
+                                            'Approved': 'bg-emerald-50 border-emerald-200 text-emerald-700',
+                                            'Rejected': 'bg-red-50 border-red-200 text-red-700',
+                                        };
+                                        return (
+                                            <tr key={rep.id} className="hover:bg-slate-50 transition-colors">
+                                                <td className="py-4 px-5">
+                                                    <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${typeColors[rep.contribution_type] || 'bg-slate-100 text-slate-600'}`}>
+                                                        {rep.contribution_type}
+                                                    </span>
+                                                </td>
+                                                <td className="py-4 px-5 font-semibold text-[13px] text-slate-800">{rep.branch_id}</td>
+                                                <td className="py-4 px-5 text-[13px] text-slate-600">{rep.payroll_period}</td>
+                                                <td className="py-4 px-5 text-[13px] text-slate-600">{Number((rep as any).employee_count) || 0}</td>
+                                                <td className="py-4 px-5 font-bold text-[13px] text-slate-900">₱{formatMoney(total)}</td>
+                                                <td className="py-4 px-5">
+                                                    <span className={`px-2.5 py-0.5 text-[11px] font-bold rounded-full border ${statusColors[rep.status] || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                                                        {rep.status}
+                                                    </span>
+                                                </td>
+                                                <td className="py-4 px-5 text-right">
+                                                    <div className="flex items-center justify-end gap-3">
+                                                        <Link href={`/gov-contributions/${rep.id}`} className="text-[#1d4ed8] hover:text-[#1e40af] text-[12px] font-bold">
+                                                            Open →
+                                                        </Link>
+                                                        <button onClick={() => handleDelete(rep.id)} className="text-rose-500 hover:text-rose-700 text-[12px] font-bold">
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
                 {/* Bottom Summaries */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Deadline Card */}

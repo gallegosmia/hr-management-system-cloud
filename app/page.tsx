@@ -31,7 +31,12 @@ export default function LoginPage() {
                 // Store session
                 localStorage.setItem('sessionId', data.sessionId);
                 localStorage.setItem('user', JSON.stringify(data.user));
-                router.push('/dashboard');
+                
+                if (data.user.role === 'Employee') {
+                    router.push('/profile');
+                } else {
+                    router.push('/dashboard');
+                }
             } else {
                 setError(data.error || 'Login failed');
             }

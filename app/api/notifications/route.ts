@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { getRequestSession } from '@/lib/middleware/branch-auth';
+import { ensureUserNotificationsTable } from '@/lib/notification-schema';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +19,7 @@ async function ensureNotificationsTable() {
                 severity VARCHAR(20) DEFAULT 'medium',
                 link VARCHAR(500) DEFAULT '#',
                 is_read BOOLEAN DEFAULT FALSE,
-                reference_id INTEGER,
+                reference_id VARCHAR(255),
                 reference_type VARCHAR(50),
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
@@ -35,18 +36,19 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        await ensureNotificationsTable();
+        await ensureUserNotificationsTable();
 
         const { searchParams } = new URL(request.url);
         const limit = parseInt(searchParams.get('limit') || '50');
         const offset = parseInt(searchParams.get('offset') || '0');
         const unreadOnly = searchParams.get('unread') === 'true';
+        const unreadPredicate = `COALESCE(LOWER(CAST(is_read AS TEXT)), 'false') NOT IN ('true', '1', 't', 'yes')`;
 
         let sql = `SELECT * FROM user_notifications WHERE user_id = $1`;
         const params: any[] = [session.user.id];
 
         if (unreadOnly) {
-            sql += ` AND is_read = FALSE`;
+            sql += ` AND ${unreadPredicate}`;
         }
 
         sql += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
@@ -54,13 +56,18 @@ export async function GET(request: NextRequest) {
 
         const result = await query(sql, params);
         const countResult = await query(
-            `SELECT COUNT(*) as count FROM user_notifications WHERE user_id = $1 AND is_read = FALSE`,
+            `SELECT COUNT(*) as count FROM user_notifications WHERE user_id = $1 AND ${unreadPredicate}`,
+            [session.user.id]
+        );
+        const referenceResult = await query(
+            `SELECT reference_id FROM user_notifications WHERE user_id = $1 AND reference_id IS NOT NULL`,
             [session.user.id]
         );
 
         return NextResponse.json({
             notifications: result.rows,
-            unreadCount: parseInt(countResult.rows[0]?.count || '0')
+            unreadCount: parseInt(countResult.rows[0]?.count || '0'),
+            referenceIds: referenceResult.rows.map((row: any) => row.reference_id?.toString()).filter(Boolean)
         });
 
     } catch (error: any) {
@@ -77,7 +84,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        await ensureNotificationsTable();
+        await ensureUserNotificationsTable();
 
         const body = await request.json();
         const { title, message, type, severity, link, reference_id } = body;

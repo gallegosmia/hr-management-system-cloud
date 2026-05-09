@@ -105,8 +105,13 @@ export default function LeavePage() {
                 }
             });
             const data = await response.json();
-            // Ensure data is always an array
-            setEmployees(Array.isArray(data) ? data : []);
+            
+            // Filter out inactive employees
+            const activeEmployees = Array.isArray(data)
+                ? data.filter((emp: any) => !['Resigned', 'Terminated', 'AWOL'].includes(emp.employment_status))
+                : [];
+                
+            setEmployees(activeEmployees);
         } catch (error) {
             console.error('Failed to fetch employees:', error);
             setEmployees([]); // Set to empty array on error

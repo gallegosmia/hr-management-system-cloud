@@ -71,6 +71,8 @@
   --bg-primary: #ffffff;
   --bg-secondary: var(--gray-50);
   --bg-tertiary: var(--gray-100);
+  --surface-elevated: #ffffff;
+  --surface-muted: #f8fafc;
   --text-primary: var(--gray-900);
   --text-secondary: var(--gray-600);
   --text-tertiary: var(--gray-500);
@@ -126,6 +128,28 @@
   --font-display: 'Poppins', var(--font-sans);
 }
 
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg-primary: #111827;
+  --bg-secondary: #020617;
+  --bg-tertiary: #1e293b;
+  --surface-elevated: #172033;
+  --surface-muted: #1f2937;
+  --text-primary: #f8fafc;
+  --text-secondary: #d8e1ee;
+  --text-tertiary: #b6c2d1;
+  --border-color: #3f5168;
+  --border-focus: #60a5fa;
+  --dashboard-bg: linear-gradient(135deg, #020617 0%, #052e2b 52%, #111827 100%);
+  --glass-bg: rgba(17, 24, 39, 0.88);
+  --glass-border: rgba(203, 213, 225, 0.2);
+  --glass-shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 18px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 14px 28px rgba(0, 0, 0, 0.38);
+  --shadow-xl: 0 22px 42px rgba(0, 0, 0, 0.42);
+}
+
 .glass-effect {
   background: var(--glass-bg);
   backdrop-filter: blur(12px);
@@ -157,6 +181,172 @@ body {
   background: var(--bg-secondary);
   line-height: 1.6;
   overflow-x: hidden;
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
+html[data-theme='dark'],
+html[data-theme='dark'] body {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme='dark'] .dashboard-content,
+[data-theme='dark'] .content-area,
+[data-theme='dark'] .dashboard-container {
+  color: var(--text-primary);
+}
+
+[data-theme='dark'] .card,
+[data-theme='dark'] .metric-card,
+[data-theme='dark'] .quick-action-card,
+[data-theme='dark'] .announcement-card,
+[data-theme='dark'] .birthday-card,
+[data-theme='dark'] .recent-hires-card,
+[data-theme='dark'] .tracker-card,
+[data-theme='dark'] .table,
+[data-theme='dark'] .modal,
+[data-theme='dark'] .print-batch-header {
+  background: var(--surface-elevated) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme='dark'] .card-header,
+[data-theme='dark'] .card-footer,
+[data-theme='dark'] .table thead {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme='dark'] .dashboard-content [style*="background: white"],
+[data-theme='dark'] .dashboard-content [style*="background: #fff"],
+[data-theme='dark'] .dashboard-content [style*="background:#fff"],
+[data-theme='dark'] .dashboard-content [style*="background-color: white"],
+[data-theme='dark'] .dashboard-content [style*="background-color: #fff"] {
+  background: var(--surface-elevated) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme='dark'] .dashboard-content [style*="color: #0f172a"],
+[data-theme='dark'] .dashboard-content [style*="color:#0f172a"],
+[data-theme='dark'] .dashboard-content [style*="color: #1e293b"],
+[data-theme='dark'] .dashboard-content [style*="color:#1e293b"],
+[data-theme='dark'] .dashboard-content [style*="color: #334155"],
+[data-theme='dark'] .dashboard-content [style*="color:#334155"],
+[data-theme='dark'] .dashboard-content [style*="color: #475569"],
+[data-theme='dark'] .dashboard-content [style*="color:#475569"] {
+  color: var(--text-primary) !important;
+}
+
+[data-theme='dark'] .dashboard-content [style*="color: #64748b"],
+[data-theme='dark'] .dashboard-content [style*="color:#64748b"],
+[data-theme='dark'] .dashboard-content [style*="color: #94a3b8"],
+[data-theme='dark'] .dashboard-content [style*="color:#94a3b8"] {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme='dark'] .dashboard-content [style*="background: #f8fafc"],
+[data-theme='dark'] .dashboard-content [style*="background:#f8fafc"],
+[data-theme='dark'] .dashboard-content [style*="background: #f1f5f9"],
+[data-theme='dark'] .dashboard-content [style*="background:#f1f5f9"],
+[data-theme='dark'] .dashboard-content [style*="background: #eff6ff"],
+[data-theme='dark'] .dashboard-content [style*="background:#eff6ff"],
+[data-theme='dark'] .dashboard-content [style*="background: #dbeafe"],
+[data-theme='dark'] .dashboard-content [style*="background:#dbeafe"],
+[data-theme='dark'] .dashboard-content [style*="background: #fdfbc8"],
+[data-theme='dark'] .dashboard-content [style*="background:#fdfbc8"] {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme='dark'] .dashboard-content [style*="linear-gradient(135deg, #eff6ff"],
+[data-theme='dark'] .dashboard-content [style*="linear-gradient(135deg,#eff6ff"] {
+  background: linear-gradient(135deg, #172554 0%, #1e3a8a 100%) !important;
+  border-color: #3b82f6 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .metric-icon.blue {
+  background: #0c4a6e !important;
+  color: #e0f2fe !important;
+}
+
+[data-theme='dark'] .metric-icon.purple {
+  background: #3730a3 !important;
+  color: #e0e7ff !important;
+}
+
+[data-theme='dark'] .metric-icon.green {
+  background: #14532d !important;
+  color: #dcfce7 !important;
+}
+
+[data-theme='dark'] .metric-icon.orange {
+  background: #7f1d1d !important;
+  color: #fee2e2 !important;
+}
+
+[data-theme='dark'] .badge,
+[data-theme='dark'] .badge-secondary,
+[data-theme='dark'] .badge-gray,
+[data-theme='dark'] .days-left {
+  background: #263449 !important;
+  color: #e2e8f0 !important;
+  border-color: #475569 !important;
+}
+
+[data-theme='dark'] .badge-primary,
+[data-theme='dark'] .badge-info,
+[data-theme='dark'] .status-badge.regular {
+  background: #1e3a8a !important;
+  color: #dbeafe !important;
+}
+
+[data-theme='dark'] .badge-success {
+  background: #14532d !important;
+  color: #dcfce7 !important;
+}
+
+[data-theme='dark'] .badge-warning,
+[data-theme='dark'] .status-badge.probationary {
+  background: #713f12 !important;
+  color: #fef3c7 !important;
+}
+
+[data-theme='dark'] .badge-danger,
+[data-theme='dark'] .status-badge.contractual {
+  background: #7f1d1d !important;
+  color: #fee2e2 !important;
+}
+
+[data-theme='dark'] .form-input,
+[data-theme='dark'] .form-select,
+[data-theme='dark'] .form-textarea,
+[data-theme='dark'] input,
+[data-theme='dark'] select,
+[data-theme='dark'] textarea {
+  background: #0f172a;
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme='dark'] ::placeholder {
+  color: var(--text-tertiary);
+  opacity: 1;
+}
+
+[data-theme='dark'] .dashboard-header h1,
+[data-theme='dark'] .dashboard-header p,
+[data-theme='dark'] .metric-info .value,
+[data-theme='dark'] .metric-info .label,
+[data-theme='dark'] .hire-info .name,
+[data-theme='dark'] .hire-info .role,
+[data-theme='dark'] .birthday-item,
+[data-theme='dark'] .announcement-item,
+[data-theme='dark'] .table th,
+[data-theme='dark'] .table td {
+  color: inherit;
 }
 
 h1,
@@ -310,7 +500,7 @@ a:hover {
 }
 
 .topbar {
-  background: white;
+  background: var(--bg-primary);
   padding: 0.75rem 1.5rem;
   box-shadow: var(--shadow-sm);
   display: flex;
@@ -404,7 +594,7 @@ a:hover {
    =================================== */
 
 .card {
-  background: white;
+  background: var(--bg-primary);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
@@ -459,7 +649,7 @@ a:hover {
 }
 
 .stat-card {
-  background: white;
+  background: var(--bg-primary);
   padding: var(--spacing-xl);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
@@ -674,7 +864,7 @@ a:hover {
   font-size: 0.875rem;
   font-family: var(--font-sans);
   color: var(--text-primary);
-  background: white;
+  background: var(--bg-primary);
   border: 2px solid var(--border-color);
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
@@ -746,11 +936,11 @@ a:hover {
 .table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: var(--bg-primary);
 }
 
 .table thead {
-  background: linear-gradient(180deg, var(--gray-50), var(--gray-100));
+  background: linear-gradient(180deg, var(--bg-secondary), var(--bg-tertiary));
   border-bottom: 2px solid var(--border-color);
 }
 
@@ -1087,7 +1277,7 @@ a:hover {
 }
 
 .modal {
-  background: white;
+  background: var(--bg-primary);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-2xl);
   max-width: 600px;
@@ -2107,4 +2297,4 @@ a:hover {
     height: 100%;
     /* Fill the grid cell height */
   }
-}
+}

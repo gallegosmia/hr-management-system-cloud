@@ -2,8 +2,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { getRequestSession } from '@/lib/middleware/branch-auth';
+import { ensureUserNotificationsTable } from '@/lib/notification-schema';
 
 export const dynamic = 'force-dynamic';
+
+// Auto-create user_notifications table if it doesn't exist
+async function ensureNotificationsTable() {
+    try {
+        await query(`
+            CREATE TABLE IF NOT EXISTS user_notifications (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                type VARCHAR(50) NOT NULL DEFAULT 'system',
+                title VARCHAR(255) NOT NULL,
+                message TEXT,
+                severity VARCHAR(20) DEFAULT 'medium',
+                link VARCHAR(500) DEFAULT '#',
+                is_read BOOLEAN DEFAULT FALSE,
+                reference_id VARCHAR(255),
+                reference_type VARCHAR(50),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+    } catch (e) {
+        // Table may already exist — ignore
+    }
+}
 
 export async function PATCH(
     request: NextRequest,
@@ -15,9 +39,11 @@ export async function PATCH(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        await ensureUserNotificationsTable();
+
         const notificationId = params.id;
         const body = await request.json();
-        const { is_read, title, message, type, severity, link } = body;
+        const { is_read, title, message, type, severity, link, reference_id, timestamp } = body;
 
         // Check if the notificationId exists strictly as a DB primary key (numeric)
         // AND check if the request explicitly flagged this as a DB ID vs Reference ID.
@@ -58,7 +84,7 @@ export async function PATCH(
             // Update existing record (read/unread toggling)
             await query(
                 `UPDATE user_notifications 
-                 SET is_read = $1, read_at = CURRENT_TIMESTAMP 
+                 SET is_read = $1 
                  WHERE id = $2 AND user_id = $3`,
                 [is_read, existingRecord.id, session.user.id]
             );
@@ -69,8 +95,8 @@ export async function PATCH(
             // We must insert it into the DB marked as read.
             await query(
                 `INSERT INTO user_notifications 
-                 (user_id, title, message, type, severity, link, reference_id, is_read, read_at) 
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
+                 (user_id, title, message, type, severity, link, reference_id, is_read, created_at) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
                 [
                     session.user.id,
                     title || 'Notification',
@@ -78,8 +104,9 @@ export async function PATCH(
                     type || 'system',
                     severity || 'low',
                     link || '#',
-                    notificationId, // Use the dynamic ID as reference_id
-                    is_read // true or false
+                    reference_id || notificationId,
+                    is_read, // true or false
+                    timestamp || new Date().toISOString()
                 ]
             );
             return NextResponse.json({ success: true, created: true });

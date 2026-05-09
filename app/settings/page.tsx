@@ -3,6 +3,101 @@
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 
+// --- Components ---
+const TabButton = ({ id, label, activeTab, onClick }: { id: string, label: string, activeTab: string, onClick: (id: string) => void }) => (
+    <button
+        onClick={() => onClick(id)}
+        style={{
+            padding: '0.6rem 1.5rem',
+            borderRadius: '9999px',
+            border: 'none',
+            background: activeTab === id ? '#3b82f6' : '#f1f5f9',
+            color: activeTab === id ? 'white' : '#4b5563',
+            fontWeight: 600,
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            whiteSpace: 'nowrap'
+        }}
+    >
+        {label}
+    </button>
+);
+
+const SettingsField = ({ label, value, onChange, type = 'text', icon, helpText }: any) => (
+    <div style={{ marginBottom: '1.25rem' }}>
+        <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            padding: '0.75rem 1rem',
+            border: '1px solid #e2e8f0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            position: 'relative'
+        }}>
+            <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 600, color: '#3b82f6', marginBottom: '0.1rem' }}>{label}</label>
+                <input
+                    type={type}
+                    value={value || ''}
+                    onChange={onChange}
+                    style={{
+                        width: '100%',
+                        border: 'none',
+                        outline: 'none',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        color: '#1f2937',
+                        padding: 0,
+                        background: 'transparent'
+                    }}
+                />
+            </div>
+            {icon && <div style={{ color: '#94a3b8' }}>{icon}</div>}
+        </div>
+        {helpText && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem', paddingLeft: '0.5rem', paddingRight: '0.5rem' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>{helpText}</span>
+            </div>
+        )}
+    </div>
+);
+
+const ToggleSwitch = ({ label, checked, onChange }: { label: string, checked: boolean, onChange?: (val: boolean) => void }) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 0' }}>
+        <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#1f2937' }}>{label}</span>
+        <div 
+            onClick={() => onChange && onChange(!checked)}
+            style={{
+                width: '50px',
+                height: '26px',
+                background: checked ? '#3b82f6' : '#e2e8f0',
+                borderRadius: '13px',
+                position: 'relative',
+                cursor: 'pointer',
+                transition: 'background 0.2s'
+            }}>
+            <div style={{
+                position: 'absolute',
+                top: '3px',
+                left: checked ? '27px' : '3px',
+                width: '20px',
+                height: '20px',
+                background: 'white',
+                borderRadius: '50%',
+                transition: 'left 0.2s',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            }}></div>
+        </div>
+    </div>
+);
+
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('general');
     const [settings, setSettings] = useState<any>({});
@@ -65,7 +160,25 @@ export default function SettingsPage() {
 
             setSettings(settingsData);
             if (settingsData.leave_config) {
-                setLeaveSettings(settingsData.leave_config);
+                let parsedConfig = settingsData.leave_config;
+                if (typeof parsedConfig === 'string') {
+                    try {
+                        parsedConfig = JSON.parse(parsedConfig);
+                    } catch (e) {
+                        console.error('Failed to parse leave_config:', e);
+                    }
+                }
+                
+                if (parsedConfig && typeof parsedConfig === 'object') {
+                    setLeaveSettings(prev => ({
+                        ...prev,
+                        ...parsedConfig,
+                        approval_levels: {
+                            ...prev.approval_levels,
+                            ...(parsedConfig.approval_levels || {})
+                        }
+                    }));
+                }
             }
             setUsers(usersData);
             setEmployees(Array.isArray(employeesData) ? employeesData : []);
@@ -77,98 +190,7 @@ export default function SettingsPage() {
         }
     };
 
-    // --- Components ---
-    const TabButton = ({ id, label }: { id: string, label: string }) => (
-        <button
-            onClick={() => setActiveTab(id)}
-            style={{
-                padding: '0.6rem 1.5rem',
-                borderRadius: '9999px',
-                border: 'none',
-                background: activeTab === id ? '#3b82f6' : '#f1f5f9',
-                color: activeTab === id ? 'white' : '#4b5563',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                whiteSpace: 'nowrap'
-            }}
-        >
-            {label}
-        </button>
-    );
 
-    const SettingsField = ({ label, value, onChange, type = 'text', icon, helpText }: any) => (
-        <div style={{ marginBottom: '1.25rem' }}>
-            <div style={{
-                background: 'white',
-                borderRadius: '16px',
-                padding: '0.75rem 1rem',
-                border: '1px solid #e2e8f0',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                position: 'relative'
-            }}>
-                <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 600, color: '#3b82f6', marginBottom: '0.1rem' }}>{label}</label>
-                    <input
-                        type={type}
-                        value={value}
-                        onChange={onChange}
-                        style={{
-                            width: '100%',
-                            border: 'none',
-                            outline: 'none',
-                            fontSize: '1rem',
-                            fontWeight: 600,
-                            color: '#1f2937',
-                            padding: 0,
-                            background: 'transparent'
-                        }}
-                    />
-                </div>
-                {icon && <div style={{ color: '#94a3b8' }}>{icon}</div>}
-            </div>
-            {helpText && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem', paddingLeft: '0.5rem', paddingRight: '0.5rem' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                    </svg>
-                    <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>{helpText}</span>
-                </div>
-            )}
-        </div>
-    );
-
-    const ToggleSwitch = ({ label, checked }: { label: string, checked: boolean }) => (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 0' }}>
-            <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#1f2937' }}>{label}</span>
-            <div style={{
-                width: '50px',
-                height: '26px',
-                background: checked ? '#3b82f6' : '#e2e8f0',
-                borderRadius: '13px',
-                position: 'relative',
-                cursor: 'pointer',
-                transition: 'background 0.2s'
-            }}>
-                <div style={{
-                    position: 'absolute',
-                    top: '3px',
-                    left: checked ? '27px' : '3px',
-                    width: '20px',
-                    height: '20px',
-                    background: 'white',
-                    borderRadius: '50%',
-                    transition: 'left 0.2s',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                }}></div>
-            </div>
-        </div>
-    );
 
     const handleSaveLeaveSettings = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -341,9 +363,9 @@ export default function SettingsPage() {
 
                 {/* Navigation Scroll */}
                 <div style={{ overflowX: 'auto', padding: '0.5rem 1.5rem 1.5rem', display: 'flex', gap: '0.75rem', WebkitOverflowScrolling: 'touch' }}>
-                    <TabButton id="general" label="General Settings" />
-                    <TabButton id="leave" label="Leave Configuration" />
-                    <TabButton id="backup" label="Backup & Restore" />
+                    <TabButton id="general" label="General Settings" activeTab={activeTab} onClick={setActiveTab} />
+                    <TabButton id="leave" label="Leave Configuration" activeTab={activeTab} onClick={setActiveTab} />
+                    <TabButton id="backup" label="Backup & Restore" activeTab={activeTab} onClick={setActiveTab} />
                 </div>
 
                 <div style={{ padding: '0 1.5rem' }}>
@@ -442,7 +464,7 @@ export default function SettingsPage() {
                                                     type="checkbox"
                                                     id="level1"
                                                     className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                                                    checked={leaveSettings.approval_levels.level1_enabled}
+                                                    checked={!!leaveSettings.approval_levels?.level1_enabled}
                                                     onChange={e => setLeaveSettings({
                                                         ...leaveSettings,
                                                         approval_levels: { ...leaveSettings.approval_levels, level1_enabled: e.target.checked }
@@ -457,7 +479,7 @@ export default function SettingsPage() {
                                                     type="checkbox"
                                                     id="level2"
                                                     className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                                                    checked={leaveSettings.approval_levels.level2_enabled}
+                                                    checked={!!leaveSettings.approval_levels?.level2_enabled}
                                                     onChange={e => setLeaveSettings({
                                                         ...leaveSettings,
                                                         approval_levels: { ...leaveSettings.approval_levels, level2_enabled: e.target.checked }
@@ -472,7 +494,7 @@ export default function SettingsPage() {
                                                     type="checkbox"
                                                     id="level3"
                                                     className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                                                    checked={leaveSettings.approval_levels.level3_enabled}
+                                                    checked={!!leaveSettings.approval_levels?.level3_enabled}
                                                     onChange={e => setLeaveSettings({
                                                         ...leaveSettings,
                                                         approval_levels: { ...leaveSettings.approval_levels, level3_enabled: e.target.checked }

@@ -1,6 +1,73 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 
+function toAmount(value: any): number {
+    const amount = Number(value);
+    return Number.isFinite(amount) ? amount : 0;
+}
+
+function parseSalaryInfo(rawSalaryInfo: any): any {
+    if (!rawSalaryInfo) return {};
+    if (typeof rawSalaryInfo === 'object') return rawSalaryInfo;
+    if (typeof rawSalaryInfo !== 'string') return {};
+
+    try {
+        return JSON.parse(rawSalaryInfo);
+    } catch {
+        return {};
+    }
+}
+
+async function recalculateReportTotals(reportId: string | number) {
+    const sumRes = await query(`
+        SELECT 
+            COALESCE(SUM(ee_share), 0) as total_ee, 
+            COALESCE(SUM(er_share), 0) as total_er, 
+            COALESCE(SUM(ec), 0) as total_ec, 
+            COALESCE(SUM(mpf_er), 0) as total_mpf_er,
+            COALESCE(SUM(mpf_ee), 0) as total_mpf_ee,
+            COALESCE(SUM(loan_deduction), 0) as total_loan,
+            COUNT(*) as employee_count
+        FROM gov_contribution_details
+        WHERE report_id = $1
+    `, [reportId]);
+
+    const totals = sumRes.rows[0] || {};
+    const newTotals = {
+        total_ee: toAmount(totals.total_ee),
+        total_er: toAmount(totals.total_er),
+        total_ec: toAmount(totals.total_ec),
+        total_mpf_er: toAmount(totals.total_mpf_er),
+        total_mpf_ee: toAmount(totals.total_mpf_ee),
+        total_loan: toAmount(totals.total_loan),
+        employee_count: Number(totals.employee_count || 0)
+    };
+
+    await query(`
+        UPDATE gov_contribution_reports
+        SET total_ee = $1,
+            total_er = $2,
+            total_ec = $3,
+            total_loan = $4,
+            total_mpf_er = $5,
+            total_mpf_ee = $6,
+            employee_count = $7,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $8
+    `, [
+        newTotals.total_ee,
+        newTotals.total_er,
+        newTotals.total_ec,
+        newTotals.total_loan,
+        newTotals.total_mpf_er,
+        newTotals.total_mpf_ee,
+        newTotals.employee_count,
+        reportId
+    ]);
+
+    return newTotals;
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
     try {
         const sessionId = req.headers.get('x-session-id');
@@ -11,7 +78,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
         const detailId = params.id;
         const body = await req.json();
-        const { ee_share, er_share, ec, mpf_er } = body;
+        const { ee_share, er_share, ec, mpf_er, loan_deduction } = body;
 
         // 1. Get the current detail record to find the parent report and employee
         const detailRes = await query(`
@@ -31,74 +98,39 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         }
 
         // 2. Update the specific detail record
-        if (ec !== undefined || mpf_er !== undefined) {
-            await query(`
-                UPDATE gov_contribution_details 
-                SET ee_share = $1, er_share = $2, ec = $4, mpf_er = $5
-                WHERE id = $3
-            `, [ee_share, er_share, detailId, ec ?? 0, mpf_er ?? 0]);
-        } else {
-            await query(`
-                UPDATE gov_contribution_details 
-                SET ee_share = $1, er_share = $2
-                WHERE id = $3
-            `, [ee_share, er_share, detailId]);
-        }
+        await query(`
+            UPDATE gov_contribution_details 
+            SET ee_share = $1, er_share = $2, ec = $4, mpf_er = $5, loan_deduction = $6
+            WHERE id = $3
+        `, [
+            toAmount(ee_share),
+            toAmount(er_share),
+            detailId, 
+            toAmount(ec),
+            toAmount(mpf_er),
+            toAmount(loan_deduction)
+        ]);
 
         // 3. Recalculate the master report totals
-        const sumRes = await query(`
-            SELECT COALESCE(SUM(ee_share), 0) as total_ee, COALESCE(SUM(er_share), 0) as total_er, COALESCE(SUM(ec), 0) as total_ec, COALESCE(SUM(mpf_er), 0) as total_mpf_er
-            FROM gov_contribution_details
-            WHERE report_id = $1
-        `, [report_id]);
-
-        let newTotalEE = 0;
-        let newTotalER = 0;
-        let newTotalEC = 0;
-        let newTotalMpfEr = 0;
-
-        if (sumRes.rows.length > 0 && typeof sumRes.rows[0].total_ee !== 'undefined') {
-            newTotalEE = Number(sumRes.rows[0].total_ee) || 0;
-            newTotalER = Number(sumRes.rows[0].total_er) || 0;
-            newTotalEC = Number(sumRes.rows[0].total_ec) || 0;
-            newTotalMpfEr = Number(sumRes.rows[0].total_mpf_er) || 0;
-        } else {
-            // Local DB Fallback (Doesn't support native SQL SUM grouping)
-            newTotalEE = sumRes.rows.reduce((sum, r) => sum + Number(r.ee_share || 0), 0);
-            newTotalER = sumRes.rows.reduce((sum, r) => sum + Number(r.er_share || 0), 0);
-            newTotalEC = sumRes.rows.reduce((sum, r) => sum + Number(r.ec || 0), 0);
-            newTotalMpfEr = sumRes.rows.reduce((sum, r) => sum + Number(r.mpf_er || 0), 0);
-        }
-
-        /* 
-           Not updating mpf_er directly on gov_contribution_reports yet unless we know 
-           it exists as a column. We will at least update total_ee, total_er, total_ec. 
-           We can safely omit mpf_er from the master table UPDATE statement to prevent 
-           SQL crashes on missing columns, as the frontend calculates it live from details anyway.
-        */
-        await query(`
-            UPDATE gov_contribution_reports
-            SET total_ee = $1, total_er = $2, total_ec = $4
-            WHERE id = $3
-        `, [newTotalEE, newTotalER, report_id, newTotalEC]);
+        const newTotals = await recalculateReportTotals(report_id);
 
         // 4. Sync to Employee's Compensation & Benefits profile (non-critical — don't fail if this errors)
         try {
             const empRes = await query("SELECT salary_info FROM employees WHERE id = $1", [employee_id]);
             if (empRes.rowCount > 0) {
-                let salaryInfo = empRes.rows[0].salary_info || {};
+                const salaryInfo = parseSalaryInfo(empRes.rows[0].salary_info);
 
                 if (!salaryInfo.deductions) salaryInfo.deductions = {};
 
                 // Map the report type to the json deduction keys
                 if (contribution_type === 'SSS') {
-                    salaryInfo.deductions.sss = Number(ee_share);
+                    salaryInfo.deductions.sss = toAmount(ee_share);
                 } else if (contribution_type === 'PhilHealth') {
-                    salaryInfo.deductions.phic = Number(ee_share);
-                    salaryInfo.deductions.phic_er = Number(er_share);
+                    salaryInfo.deductions.phic = toAmount(ee_share);
+                    salaryInfo.deductions.phic_er = toAmount(er_share);
                 } else if (contribution_type === 'Pag-IBIG') {
-                    salaryInfo.deductions.pagibig = Number(ee_share);
-                    salaryInfo.deductions.pagibig_er = Number(er_share);
+                    salaryInfo.deductions.pagibig = toAmount(ee_share);
+                    salaryInfo.deductions.pagibig_er = toAmount(er_share);
                 }
 
                 // Save back to employee
@@ -109,7 +141,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             console.warn('Non-critical: Could not sync contribution to employee salary_info:', syncErr);
         }
 
-        return NextResponse.json({ success: true, total_ee: newTotalEE, total_er: newTotalER });
+        return NextResponse.json({ success: true, ...newTotals });
 
     } catch (error) {
         console.error('API Error [GovContribDetails PATCH]:', error);
@@ -146,21 +178,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         // Delete the record
         await query('DELETE FROM gov_contribution_details WHERE id = $1', [detailId]);
 
-        // Recalculate master report totals
-        const sumRes = await query(`
-            SELECT COALESCE(SUM(ee_share), 0) as total_ee, COALESCE(SUM(er_share), 0) as total_er,
-                   COUNT(*) as employee_count
-            FROM gov_contribution_details
-            WHERE report_id = $1
-        `, [report_id]);
-
-        const { total_ee: newTotalEE, total_er: newTotalER, employee_count } = sumRes.rows[0];
-
-        await query(`
-            UPDATE gov_contribution_reports
-            SET total_ee = $1, total_er = $2, employee_count = $3
-            WHERE id = $4
-        `, [newTotalEE, newTotalER, employee_count, report_id]);
+        await recalculateReportTotals(report_id);
 
         return NextResponse.json({ success: true });
 

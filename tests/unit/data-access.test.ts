@@ -6,15 +6,18 @@ import {
     getNextEmployeeId,
     createEmployee,
     calculateCompletionStatus,
-    getLeaveSettings
+    getLeaveSettings,
+    getDashboardStats,
+    getEmployeeLoanBalance
 } from '@/lib/data';
-import { getAll, getById, query, insert } from '@/lib/database';
+import { getAll, getById, query, insert, isPostgres } from '@/lib/database';
 
 jest.mock('@/lib/database', () => ({
     getAll: jest.fn(),
     getById: jest.fn(),
     query: jest.fn(),
     insert: jest.fn(),
+    isPostgres: jest.fn(() => false),
     update: jest.fn(),
     remove: jest.fn()
 }));
@@ -54,6 +57,7 @@ describe('Data Access Layer', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        (isPostgres as jest.Mock).mockReturnValue(false);
     });
 
     describe('calculateCompletionStatus', () => {
@@ -166,14 +170,109 @@ describe('Data Access Layer', () => {
         it('getLeaveSettings should return default if not found', async () => {
             (query as jest.Mock).mockResolvedValue({ rows: [] });
             const result = await getLeaveSettings();
-            expect((result as any).payroll_cutoff_day).toBe(15);
+            expect(result).toEqual({
+                filing_cutoff_days: 3,
+                approval_levels: {
+                    level1_enabled: true,
+                    level2_enabled: true,
+                    level3_enabled: false
+                }
+            });
         });
 
         it('getLeaveSettings should return stored settings', async () => {
-            const stored = { payroll_cutoff_day: 20, filing_cutoff_days: 5, approval_levels: { level1_enabled: true } };
+            const stored = {
+                filing_cutoff_days: 5,
+                approval_levels: {
+                    level1_enabled: true,
+                    level2_enabled: false,
+                    level3_enabled: true
+                }
+            };
             (query as jest.Mock).mockResolvedValue({ rows: [{ value: stored }] });
             const result = await getLeaveSettings();
-            expect((result as any).payroll_cutoff_day).toBe(20);
+            expect(result).toEqual(stored);
+        });
+    });
+
+    describe('Loan balances', () => {
+        it('caps an active ledger balance at its original principal', async () => {
+            (getAll as jest.Mock).mockResolvedValue([
+                {
+                    employee_id: 15,
+                    principal: 18500,
+                    balance: 30500,
+                    status: 'Active'
+                }
+            ]);
+
+            await expect(getEmployeeLoanBalance(15)).resolves.toBe(18500);
+        });
+
+        it('sums reduced active balances without changing valid balances', async () => {
+            (getAll as jest.Mock).mockResolvedValue([
+                {
+                    employee_id: 15,
+                    principal: 18500,
+                    balance: 12000,
+                    status: 'Active'
+                },
+                {
+                    employee_id: 15,
+                    principal: 3000,
+                    balance: 3000,
+                    status: 'Approved'
+                },
+                {
+                    employee_id: 15,
+                    principal: 5000,
+                    balance: 5000,
+                    status: 'Paid'
+                }
+            ]);
+
+            await expect(getEmployeeLoanBalance(15)).resolves.toBe(15000);
+        });
+    });
+
+    describe('Dashboard stats', () => {
+        it('should handle incomplete records without crashing', async () => {
+            (getAll as jest.Mock).mockResolvedValue([
+                {
+                    ...mockEmployee,
+                    date_of_birth: '1990-05-01'
+                },
+                {
+                    ...mockEmployee,
+                    id: 2,
+                    first_name: 'Jane',
+                    last_name: 'Smith',
+                    department: null,
+                    employment_status: null,
+                    date_of_birth: 'not-a-date'
+                }
+            ]);
+
+            (query as jest.Mock)
+                .mockResolvedValueOnce({ rows: [{ count: '1' }] })
+                .mockResolvedValueOnce({ rows: [{ count: '2' }] })
+                .mockResolvedValueOnce({
+                    rows: [
+                        { status: null },
+                        { status: ' Late ' },
+                        { status: 'ABSENT' }
+                    ]
+                });
+
+            const stats = await getDashboardStats();
+
+            expect(stats.totalEmployees).toBe(2);
+            expect(stats.totalDepartments).toBe(2);
+            expect(stats.pendingLeaves).toBe(1);
+            expect(stats.pendingUsers).toBe(2);
+            expect(stats.todayPresents).toBe(1);
+            expect(stats.todayAbsents).toBe(1);
+            expect(Array.isArray(stats.upcomingBirthdays)).toBe(true);
         });
     });
 });

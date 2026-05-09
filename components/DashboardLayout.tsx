@@ -21,6 +21,12 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
     const [loadingStatus, setLoadingStatus] = useState('Preparing system...');
     const [selectedBranch, setSelectedBranch] = useState<string>('All');
     const [isUpdatingBranch, setIsUpdatingBranch] = useState(false);
+    const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+        if (typeof window === 'undefined') return 'light';
+        const savedTheme = window.localStorage.getItem('theme');
+        if (savedTheme === 'dark' || savedTheme === 'light') return savedTheme;
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    });
 
     // Search States
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -28,6 +34,11 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        document.documentElement.dataset.theme = theme;
+        localStorage.setItem('theme', theme);
+    }, [theme]);
 
     useEffect(() => {
         setLoadingStatus('Checking session...');
@@ -105,6 +116,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
         user?.role === 'President' ||
         user?.role === 'Vice President' ||
         user?.username === 'superadmin';
+    const canAddEmployee = user?.role === 'HR' || user?.role === 'Admin' || user?.username === 'superadmin';
 
     const handleLogout = async () => {
         const sessionId = localStorage.getItem('sessionId');
@@ -191,7 +203,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
     }
 
     const navigation = [
-        { name: 'Dashboard', href: '/dashboard', icon: '📊', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
+        { name: 'Dashboard', href: '/dashboard', icon: '📊', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'My Profile', href: '/profile', icon: '👤', roles: ['Employee', 'HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'TRACKER', href: '/tracker', icon: '🛰️', roles: ['Employee'] },
         { name: '201 Files', href: '/employees', icon: '📋', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
@@ -199,6 +211,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
         { name: 'Attendance', href: '/attendance', icon: '⏰', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Leave Requests', href: '/leave', icon: '🏖️', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Emergency Loans', href: '/loans', icon: '💰', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
+        { name: 'Cash Advance', href: '/cash-advance', icon: '💵', roles: ['HR', 'President', 'Vice President', 'Employee', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Employee Bonuses', href: '/bonuses', icon: '🎁', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'Payroll', href: '/payroll', icon: '💰', roles: ['HR', 'President', 'Vice President', 'Admin', 'Finance', 'Operations Manager', 'Manager'] },
         { name: 'Gov Contributions', href: '/gov-contributions', icon: '🏛️', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
@@ -209,6 +222,13 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
         { name: 'Settings', href: '/settings', icon: '⚙️', roles: ['HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager'] },
         { name: 'User Management', href: '/users', icon: '👥', roles: ['President', 'Vice President', 'Admin'] },
     ];
+
+    navigation.splice(navigation.length - 1, 0, {
+        name: 'Help',
+        href: '/help',
+        icon: '?',
+        roles: ['Employee', 'HR', 'President', 'Vice President', 'Admin', 'Manager', 'Operations Manager', 'Finance']
+    });
 
     const filteredNavigation = navigation.filter(item => {
         // User Management is ONLY for superadmin account
@@ -489,18 +509,36 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                                     </div>
                                 )}
 
-                                <div className="team-avatars">
-                                    <div className="avatar-group">
-                                        <div className="avatar-mini" style={{ background: '#f87171' }}>M</div>
-                                        <div className="avatar-mini" style={{ background: '#60a5fa' }}>E</div>
-                                        <div className="avatar-mini" style={{ background: '#fbbf24' }}>L</div>
-                                        <div className="avatar-count">+8</div>
-                                    </div>
-                                </div>
+                                {canAddEmployee && (
+                                    <Link href="/employees/add" className="add-employee-btn">
+                                        <span className="plus">+</span> Add Employee
+                                    </Link>
+                                )}
 
-                                <Link href="/employees/add" className="add-employee-btn">
-                                    <span className="plus">+</span> Add Employee
-                                </Link>
+                                <button
+                                    type="button"
+                                    className="theme-toggle"
+                                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                                    aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                                    aria-pressed={theme === 'dark'}
+                                    title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                                >
+                                    <span className="theme-toggle-track">
+                                        <span className="theme-toggle-thumb">
+                                            {theme === 'dark' ? (
+                                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5Z" />
+                                                </svg>
+                                            ) : (
+                                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                    <circle cx="12" cy="12" r="4" />
+                                                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+                                                </svg>
+                                            )}
+                                        </span>
+                                    </span>
+                                    <span className="theme-toggle-label">{theme === 'dark' ? 'Dark' : 'Light'}</span>
+                                </button>
 
                                 <div className="user-profile-widget">
                                     <div className="user-text">
@@ -528,6 +566,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     height: 100vh;
                     background: var(--dashboard-bg);
                     overflow: hidden;
+                    color: var(--text-primary);
                 }
 
                 .main-sidebar.original-sidebar {
@@ -609,7 +648,6 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     border: none;
                     cursor: pointer;
                     padding: 8px;
-                    display: flex;
                     flex-direction: column;
                     gap: 4px;
                 }
@@ -617,8 +655,9 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     display: block;
                     width: 24px;
                     height: 2px;
-                    background-color: #1e293b;
+                    background-color: var(--text-primary);
                     border-radius: 2px;
+                    transition: all 0.3s ease;
                 }
                 .mobile-sidebar-backdrop {
                     display: none;
@@ -631,7 +670,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
 
                 @media (max-width: 1024px) {
                     .mobile-hamburger-btn {
-                        display: flex;
+                        display: flex !important;
                     }
                     .main-sidebar {
                         position: fixed;
@@ -701,7 +740,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
 
                 .header-tabs {
                     display: flex;
-                    background: #f1f5f9;
+                    background: var(--bg-tertiary);
                     padding: 5px;
                     border-radius: 16px;
                 }
@@ -714,14 +753,14 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     gap: 8px;
                     font-size: 0.875rem;
                     font-weight: 500;
-                    color: #64748b;
+                    color: var(--text-secondary);
                     text-decoration: none;
                     transition: all 0.2s;
                 }
 
                 .header-tab.active {
-                    background: white;
-                    color: #1e293b;
+                    background: var(--bg-primary);
+                    color: var(--text-primary);
                     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
                 }
 
@@ -734,7 +773,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                 .search-wrapper {
                     display: flex;
                     align-items: center;
-                    background: #f1f5f9;
+                    background: var(--bg-tertiary);
                     border-radius: 12px;
                     padding: 4px;
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -746,7 +785,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                 .search-wrapper.open {
                     width: 100%;
                     max-width: 550px;
-                    background: white;
+                    background: var(--bg-primary);
                     border-color: #3b82f6;
                     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
                 }
@@ -764,7 +803,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
-                    color: #64748b;
+                    color: var(--text-secondary);
                     flex-shrink: 0;
                 }
 
@@ -775,7 +814,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     background: transparent;
                     padding: 0 10px;
                     font-size: 0.875rem;
-                    color: #1e293b;
+                    color: var(--text-primary);
                 }
 
                 .search-results-area {
@@ -798,7 +837,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     display: grid;
                     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
                     gap: 1px;
-                    background: #f1f5f9;
+                    background: var(--border-color);
                 }
 
                 .search-result-item {
@@ -807,13 +846,13 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     justify-content: space-between;
                     gap: 12px;
                     padding: 15px 20px;
-                    background: white;
+                    background: var(--bg-primary);
                     text-decoration: none;
                     transition: all 0.2s;
                 }
 
                 .search-result-item:hover {
-                    background: #f8fafc;
+                    background: var(--bg-secondary);
                     transform: translateX(5px);
                 }
 
@@ -833,8 +872,8 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                 .result-id {
                     font-size: 0.7rem;
                     font-weight: 700;
-                    color: #94a3b8;
-                    background: #f1f5f9;
+                    color: var(--text-tertiary);
+                    background: var(--bg-tertiary);
                     padding: 2px 6px;
                     border-radius: 4px;
                 }
@@ -919,12 +958,12 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     padding: 20px;
                     text-align: center;
                     font-size: 0.875rem;
-                    color: #94a3b8;
-                    background: white;
+                    color: var(--text-tertiary);
+                    background: var(--bg-primary);
                 }
 
                 .header-search {
-                    color: #64748b;
+                    color: var(--text-secondary);
                     cursor: pointer;
                 }
 
@@ -965,9 +1004,9 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
 
                 .add-employee-btn {
                     padding: 10px 18px;
-                    background: #f1f5f9;
+                    background: var(--bg-tertiary);
                     border-radius: 16px;
-                    color: #1e293b;
+                    color: var(--text-primary);
                     font-size: 0.875rem;
                     font-weight: 600;
                     display: flex;
@@ -981,16 +1020,16 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     display: flex;
                     align-items: center;
                     gap: 10px;
-                    background: #f8fafc;
+                    background: var(--bg-secondary);
                     padding: 6px 14px;
                     border-radius: 16px;
-                    border: 1px solid #e2e8f0;
+                    border: 1px solid var(--border-color);
                 }
 
                 .branch-label {
                     font-size: 0.75rem;
                     font-weight: 700;
-                    color: #64748b;
+                    color: var(--text-secondary);
                     text-transform: uppercase;
                     letter-spacing: 0.025em;
                 }
@@ -1000,7 +1039,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     border: none;
                     font-size: 0.875rem;
                     font-weight: 600;
-                    color: #1e293b;
+                    color: var(--text-primary);
                     outline: none;
                     cursor: pointer;
                     padding: 2px 4px;
@@ -1013,7 +1052,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                 .branch-read-only {
                     font-size: 0.875rem;
                     font-weight: 700;
-                    color: #0f172a;
+                    color: var(--text-primary);
                     display: flex;
                     align-items: center;
                     gap: 6px;
@@ -1027,6 +1066,47 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     font-size: 0.7rem;
                     color: #0284c7;
                 }
+
+                [data-theme='dark'] .search-wrapper.open,
+                [data-theme='dark'] .branch-context-selector,
+                [data-theme='dark'] .theme-toggle,
+                [data-theme='dark'] .theme-toggle-track {
+                    background: #172033;
+                    border-color: #475569;
+                    color: #f8fafc;
+                }
+
+                [data-theme='dark'] .branch-read-only {
+                    background: #0c4a6e;
+                    border-color: #38bdf8;
+                    color: #e0f2fe;
+                }
+
+                [data-theme='dark'] .branch-label,
+                [data-theme='dark'] .nav-branch-select,
+                [data-theme='dark'] .search-trigger,
+                [data-theme='dark'] .search-input,
+                [data-theme='dark'] .u-name {
+                    color: #f8fafc;
+                }
+
+                [data-theme='dark'] .search-results-area,
+                [data-theme='dark'] .search-result-item,
+                [data-theme='dark'] .search-status {
+                    background: #172033 !important;
+                    color: #f8fafc !important;
+                    border-color: #475569 !important;
+                }
+
+                [data-theme='dark'] .result-name,
+                [data-theme='dark'] .result-id,
+                [data-theme='dark'] .result-meta {
+                    color: #f8fafc;
+                }
+
+                [data-theme='dark'] .result-id {
+                    background: #263449;
+                }
                     font-weight: 500;
                     text-decoration: none;
                     display: flex;
@@ -1036,7 +1116,78 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                 }
 
                 .add-employee-btn:hover {
-                    background: #e2e8f0;
+                    background: var(--border-color);
+                }
+
+                .theme-toggle {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    min-height: 40px;
+                    padding: 4px 10px 4px 4px;
+                    border: 1px solid var(--border-color);
+                    border-radius: 999px;
+                    background: var(--bg-secondary);
+                    color: var(--text-primary);
+                    cursor: pointer;
+                    font-size: 0.8rem;
+                    font-weight: 700;
+                    transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+                }
+
+                .theme-toggle:hover {
+                    background: var(--bg-tertiary);
+                    border-color: var(--primary-300);
+                }
+
+                .theme-toggle:active {
+                    transform: scale(0.97);
+                }
+
+                .theme-toggle-track {
+                    width: 34px;
+                    height: 28px;
+                    border-radius: 999px;
+                    background: var(--bg-primary);
+                    border: 1px solid var(--border-color);
+                    display: flex;
+                    align-items: center;
+                    padding: 3px;
+                }
+
+                .theme-toggle-thumb {
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    background: var(--primary-600);
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transform: translateX(0);
+                    transition: transform 0.2s, background 0.2s;
+                }
+
+                [data-theme='dark'] .theme-toggle-thumb {
+                    transform: translateX(6px);
+                    background: #facc15;
+                    color: #111827;
+                }
+
+                .theme-toggle svg {
+                    width: 13px;
+                    height: 13px;
+                    fill: none;
+                    stroke: currentColor;
+                    stroke-width: 2;
+                    stroke-linecap: round;
+                    stroke-linejoin: round;
+                }
+
+                .theme-toggle svg circle,
+                [data-theme='dark'] .theme-toggle svg path {
+                    fill: currentColor;
+                    stroke: currentColor;
                 }
 
                 .user-profile-widget {
@@ -1044,14 +1195,14 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                     align-items: center;
                     gap: 15px;
                     padding-left: 20px;
-                    border-left: 1px solid #e2e8f0;
+                    border-left: 1px solid var(--border-color);
                     overflow: visible;
                 }
 
                 .u-name {
                     font-size: 0.875rem;
                     font-weight: 600;
-                    color: #1e293b;
+                    color: var(--text-primary);
                 }
 
                 .u-avatar {
@@ -1073,7 +1224,7 @@ export default function DashboardLayout({ children, hideSidebar = false, hideNav
                 }
 
                 .scroll-content::-webkit-scrollbar { width: 6px; }
-                .scroll-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+                .scroll-content::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 10px; }
 
                 .loading-screen {
                     height: 100vh;

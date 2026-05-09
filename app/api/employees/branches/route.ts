@@ -3,6 +3,8 @@ import { getBranches } from '@/lib/data';
 import { validateBranchRequest } from '@/lib/middleware/branch-auth';
 import { getAccessibleBranches } from '@/lib/branch-access';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
     try {
         const validation = await validateBranchRequest(request);

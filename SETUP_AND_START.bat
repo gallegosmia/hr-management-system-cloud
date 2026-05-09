@@ -42,7 +42,7 @@ if %errorlevel% neq 0 (
 echo.
 echo [Step 4/4] Starting the application...
 echo.
-echo Your HR Management System will start at: http://localhost:3001
+echo Your HR Management System will start at: http://localhost:3005
 echo.
 echo Press Ctrl+C to stop the server when done.
 echo.

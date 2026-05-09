@@ -152,7 +152,8 @@ export default function CriticalAttendance({ employees: initialEmployees, attend
             result = result.filter(e =>
                 e.first_name?.toLowerCase().includes(q) ||
                 e.last_name?.toLowerCase().includes(q) ||
-                e.role?.toLowerCase().includes(q)
+                e.role?.toLowerCase().includes(q) ||
+                e.position?.toLowerCase().includes(q)
             );
         }
 
@@ -224,32 +225,44 @@ export default function CriticalAttendance({ employees: initialEmployees, attend
     return (
         <div className={`flex flex-col h-full space-y-4 ${className || ''}`}>
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4">
                 <div>
-                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                         <span className="text-red-500">
-                            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2L1 21h22L12 2zm0 3.8l7.5 13.2H4.5L12 5.8zM11 10v4h2v-4h-2zm0 5v2h2v-2h-2z" />
                             </svg>
                         </span>
                         Critical Attendance Limits
                     </h2>
-                    <p className="text-slate-500 text-sm mt-1">
-                        Found {filteredCount} employees exceeding or approaching attendance thresholds.
-                    </p>
                 </div>
 
                 {/* Search */}
                 <div className="flex items-center gap-3 w-full md:w-auto">
                     <div className="relative flex-1 md:w-64">
-                        <input
-                            type="text"
-                            placeholder="Search employee..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-600"
-                        />
-                        <svg className="absolute left-3 top-2.5 text-slate-400 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                            <input
+                                type="text"
+                                placeholder="Search employee..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-10 py-2 bg-[#f8fafc] border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition-all font-medium text-slate-600"
+                            />
+                            <button 
+                                className="absolute left-3 top-2.5 text-slate-400 hover:text-blue-500 transition-colors"
+                                onClick={() => document.querySelector<HTMLInputElement>('input[placeholder="Search employee..."]')?.focus()}
+                                title="Search"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                            </button>
+                            {searchQuery && (
+                                <button 
+                                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition-colors"
+                                    onClick={() => setSearchQuery('')}
+                                    title="Clear search"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            )}
                     </div>
                 </div>
             </div>
@@ -263,12 +276,16 @@ export default function CriticalAttendance({ employees: initialEmployees, attend
                         ))}
                     </div>
                 ) : filteredEmployees.length === 0 ? (
-                    <div className="text-center py-16 bg-white rounded-[16px] border border-dashed border-slate-200">
-                        <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <svg className="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <div className="text-center py-24 bg-white">
+                        <div className="w-20 h-20 bg-[#eff6ff] rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg className="w-10 h-10 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2l2.4 2.3 3.3-.2.8 3.2 3.1 1.4-1.2 3 1.2 3-3.1 1.4-.8 3.2-3.3-.2L12 22l-2.4-2.3-3.3.2-.8-3.2-3.1-1.4 1.2-3-1.2-3 3.1-1.4.8-3.2 3.3.2L12 2zm-.5 13.5l6-6-1.4-1.4-4.6 4.6-2.6-2.6-1.4 1.4 4 4z"/>
+                            </svg>
                         </div>
-                        <h3 className="text-base font-bold text-slate-800">All Good!</h3>
-                        <p className="text-sm text-slate-500">No employees have reached critical attendance levels.</p>
+                        <h3 className="text-xl font-bold text-slate-800 mb-3">All Good!</h3>
+                        <p className="text-sm text-slate-500 max-w-[280px] mx-auto leading-relaxed">
+                            Found {filteredCount} employees exceeding or approaching attendance thresholds. No critical attention is required at this moment.
+                        </p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

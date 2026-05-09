@@ -109,7 +109,6 @@ function FileList({ employeeId, showAlert, showConfirm, refreshTrigger }: {
     };
 
     if (loading) return <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Loading files...</p>;
-    if (files.length === 0) return <p style={{ fontSize: '0.875rem', color: '#9ca3af', fontStyle: 'italic' }}>No documents uploaded yet.</p>;
 
     return (
         <div>
@@ -194,7 +193,9 @@ function FileList({ employeeId, showAlert, showConfirm, refreshTrigger }: {
             </div>
 
             <div style={{ display: 'grid', gap: '0.75rem' }}>
-                {filteredFiles.map((file) => (
+                {filteredFiles.length === 0 ? (
+                    <p style={{ fontSize: '0.875rem', color: '#9ca3af', fontStyle: 'italic', textAlign: 'center', padding: '2rem 0' }}>No documents uploaded yet.</p>
+                ) : filteredFiles.map((file) => (
                     <div
                         key={file.filename}
                         style={{

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { format, isToday, isYesterday, subDays } from 'date-fns';
 
@@ -16,6 +16,15 @@ interface Notification {
     secondaryActionLabel?: string;
     is_read?: boolean;
     reference_id?: string;
+    source?: 'db' | 'dynamic';
+}
+
+function isReadValue(value: any): boolean {
+    if (value === true || value === 1) return true;
+    if (typeof value === 'string') {
+        return ['1', 'true', 't', 'yes'].includes(value.trim().toLowerCase());
+    }
+    return false;
 }
 
 export default function NotificationDropdown() {
@@ -27,6 +36,7 @@ export default function NotificationDropdown() {
     // Track unread count separately to ensure it matches DB
     const [unreadCount, setUnreadCount] = useState(0);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const fetchRequestIdRef = useRef(0);
 
     // Initial load user
     useEffect(() => {
@@ -40,15 +50,14 @@ export default function NotificationDropdown() {
         }
     }, []);
 
-    const fetchNotifications = async () => {
-        // Optimization: if closed and we have data, don't spam.
-        // But if empty, we MUST fetch.
-        if (!isOpen && notifications.length > 0) return;
-
+    const fetchNotifications = useCallback(async ({ showLoading = true }: { showLoading?: boolean } = {}) => {
         const sessionId = localStorage.getItem('sessionId');
         if (!sessionId) return;
 
-        setLoading(true);
+        const requestId = fetchRequestIdRef.current + 1;
+        fetchRequestIdRef.current = requestId;
+
+        if (showLoading) setLoading(true);
         try {
             // Use current user from state to get branch
             const userBranch = user?.username === 'superadmin' ? 'All' : (user?.assigned_branch || 'All');
@@ -71,16 +80,27 @@ export default function NotificationDropdown() {
 
             const announcementUrl = `/api/announcements?is_active=true&branch=${encodeURIComponent(userBranch)}${user?.employee_id ? `&employee_id=${user.employee_id}` : ''}`;
 
-            const [alertsData, leavesData, annData, notifData, loansData] = await Promise.all([
+            const [alertsData, leavesData, annData, notifData, loansData, cashAdvancesData, govReportsData] = await Promise.all([
                 fetchSource('/api/alerts'),
                 fetchSource('/api/leave?limit=50'),
                 fetchSource(announcementUrl),
                 fetchSource('/api/notifications?limit=50'),
-                fetchSource('/api/loans')
+                fetchSource('/api/loans'),
+                fetchSource('/api/cash-advance'),
+                fetchSource('/api/gov-contributions')
             ]);
 
             const combined: Notification[] = [];
             const readReferenceIds = new Set<string>();
+            if (notifData && Array.isArray(notifData.referenceIds)) {
+                notifData.referenceIds.forEach((ref: any) => {
+                    if (ref !== undefined && ref !== null) {
+                        readReferenceIds.add(String(ref));
+                    }
+                });
+            }
+            const hasReadReference = (...refs: Array<string | number | undefined | null>) =>
+                refs.filter(ref => ref !== undefined && ref !== null).some(ref => readReferenceIds.has(String(ref)));
 
             // 1. Process DB Notifications first
             if (notifData && Array.isArray(notifData.notifications)) {
@@ -95,17 +115,26 @@ export default function NotificationDropdown() {
                         severity: n.severity || 'medium',
                         url: n.link || '#',
                         timestamp: n.created_at,
-                        is_read: n.is_read,
-                        reference_id: n.reference_id
+                        is_read: isReadValue(n.is_read),
+                        reference_id: n.reference_id,
+                        source: 'db'
                     };
                     combined.push(notifItem);
 
                     if (n.reference_id) {
-                        readReferenceIds.add(n.reference_id);
+                        readReferenceIds.add(n.reference_id.toString());
                     }
 
                     if (n.type?.startsWith('PAYROLL_')) {
                         notifItem.actionLabel = 'View Payroll';
+                    } else if (n.type?.startsWith('CASH_ADVANCE_')) {
+                        notifItem.actionLabel = 'View Cash Advance';
+                    } else if (n.type?.startsWith('GOV_CONTRIBUTION_')) {
+                        notifItem.actionLabel = 'View Contributions';
+                    } else if (n.type?.startsWith('LEAVE_')) {
+                        notifItem.actionLabel = 'View Leave';
+                    } else if (n.type?.startsWith('LOAN_')) {
+                        notifItem.actionLabel = 'View Loan';
                     }
                 });
             }
@@ -140,10 +169,16 @@ export default function NotificationDropdown() {
                         notifMsg = `${leave.employee_name}'s ${leave.leave_type} was approved.`;
                         actionLabel = 'View Leave';
                         type = 'info';
+                    } else if (leave.status === 'Rejected' && isOwner) {
+                        refId = `leave-rejected-owner-${leave.id}`;
+                        notifTitle = 'Leave Request Rejected';
+                        notifMsg = `Your ${leave.leave_type} request has been rejected.`;
+                        actionLabel = 'View Leave';
+                        type = 'alert';
                     }
 
                     // Only add if not already in DB notifications (persisted)
-                    if (notifTitle && refId && !readReferenceIds.has(refId)) {
+                    if (notifTitle && refId && !hasReadReference(refId)) {
                         combined.push({
                             id: refId,
                             title: notifTitle,
@@ -153,7 +188,8 @@ export default function NotificationDropdown() {
                             url: '/leave',
                             timestamp: leave.updated_at || leave.created_at || new Date().toISOString(),
                             actionLabel: actionLabel,
-                            is_read: false
+                            is_read: false,
+                            source: 'dynamic'
                         });
                     }
                 });
@@ -162,9 +198,9 @@ export default function NotificationDropdown() {
             // 3. Add Alerts (Dynamic)
             if (alertsData && Array.isArray(alertsData.alerts)) {
                 alertsData.alerts.forEach((alert: any) => {
-                    const refId = alert.id;
+                    const refId = String(alert.id);
                     // Only add if not already in DB notifications
-                    if (!readReferenceIds.has(refId)) {
+                    if (!hasReadReference(refId)) {
                         let type: any = 'alert';
                         if (alert.type?.includes('INFO')) type = 'info';
 
@@ -176,7 +212,8 @@ export default function NotificationDropdown() {
                             severity: alert.severity,
                             url: alert.type === 'NEW_USER_REGISTRATION' ? '/users' : `/employees/${alert.employee_id}`,
                             timestamp: alert.created_at || new Date().toISOString(),
-                            is_read: false
+                            is_read: false,
+                            source: 'dynamic'
                         });
                     }
                 });
@@ -186,7 +223,7 @@ export default function NotificationDropdown() {
             if (Array.isArray(annData)) {
                 annData.forEach((ann: any) => {
                     const refId = `ann-${ann.id}`;
-                    if (!readReferenceIds.has(refId)) {
+                    if (!hasReadReference(refId)) {
                         combined.push({
                             id: refId,
                             title: ann.title,
@@ -196,7 +233,8 @@ export default function NotificationDropdown() {
                             url: '/announcements',
                             timestamp: ann.created_at,
                             actionLabel: 'View Announcement',
-                            is_read: false
+                            is_read: false,
+                            source: 'dynamic'
                         });
                     }
                 });
@@ -233,7 +271,7 @@ export default function NotificationDropdown() {
                         actionLabel = 'View Loan';
                     }
 
-                    if (notifTitle && refId && !readReferenceIds.has(refId)) {
+                    if (notifTitle && refId && !hasReadReference(refId)) {
                         combined.push({
                             id: refId,
                             title: notifTitle,
@@ -243,13 +281,105 @@ export default function NotificationDropdown() {
                             url: `/loans/${loan.id}`,
                             timestamp: loan.updated_at || loan.created_at || new Date().toISOString(),
                             actionLabel: actionLabel,
-                            is_read: false
+                            is_read: false,
+                            source: 'dynamic'
                         });
                     }
                 });
             }
 
-            // 6. Transportation Allowance Reminder
+            // 6. Add Cash Advances (Dynamic)
+            if (Array.isArray(cashAdvancesData)) {
+                cashAdvancesData.forEach((ca: any) => {
+                    const isOwner = user?.employee_id === ca.employee_id;
+                    const isBranchReviewer = (user?.role === 'Manager' || user?.role === 'Admin') &&
+                        (ca.status === 'For Branch Manager Review' || ca.status === 'Pending');
+                    const isExecutiveReviewer = (user?.role === 'President' || user?.role === 'Vice President' || user?.username === 'superadmin') &&
+                        ca.status === 'For EVP Approval';
+
+                    let notifTitle = '';
+                    let notifMsg = '';
+                    let actionLabel = '';
+                    let refId = '';
+
+                    if (isBranchReviewer) {
+                        refId = `cash-advance-${ca.id}-bm-review`;
+                        notifTitle = 'Cash Advance Pending Review';
+                        notifMsg = `${ca.employee_name} requested a cash advance.`;
+                        actionLabel = 'Review Request';
+                    } else if (isExecutiveReviewer) {
+                        refId = `cash-advance-${ca.id}-evp-review`;
+                        notifTitle = 'Cash Advance Pending EVP Approval';
+                        notifMsg = `${ca.employee_name} has a cash advance request awaiting final approval.`;
+                        actionLabel = 'Final Review';
+                    } else if (isOwner && (ca.status === 'Approved' || ca.status === 'Rejected')) {
+                        refId = `cash-advance-${ca.id}-${ca.status.toLowerCase()}`;
+                        notifTitle = ca.status === 'Approved' ? 'Cash Advance Approved' : 'Cash Advance Rejected';
+                        notifMsg = `Your cash advance request was ${ca.status.toLowerCase()}.`;
+                        actionLabel = 'View Request';
+                    }
+
+                    if (notifTitle && refId && !hasReadReference(refId)) {
+                        combined.push({
+                            id: refId,
+                            title: notifTitle,
+                            message: notifMsg,
+                            type: 'info',
+                            severity: 'medium',
+                            url: `/cash-advance/${ca.id}`,
+                            timestamp: ca.updated_at || ca.date_requested || new Date().toISOString(),
+                            actionLabel,
+                            is_read: false,
+                            source: 'dynamic'
+                        });
+                    }
+                });
+            }
+
+            // 7. Add Government Contribution Reports (Dynamic)
+            if (Array.isArray(govReportsData)) {
+                govReportsData.forEach((report: any) => {
+                    const canReview = ['Manager', 'Operations Manager', 'President', 'Vice President', 'Admin'].includes(user?.role) &&
+                        report.status === 'Pending';
+                    const isCreator = user?.id && Number(user.id) === Number(report.created_by);
+
+                    let notifTitle = '';
+                    let notifMsg = '';
+                    let actionLabel = '';
+                    let refId = '';
+
+                    if (canReview) {
+                        refId = `gov-contribution-${report.id}-review`;
+                        notifTitle = 'Government Contribution Pending Review';
+                        notifMsg = `${report.contribution_type} contributions for ${report.payroll_period} are waiting for review.`;
+                        actionLabel = 'Review Report';
+                    } else if (isCreator && (report.status === 'Approved' || report.status === 'Rejected')) {
+                        refId = `gov-contribution-${report.id}-${report.status.toLowerCase()}`;
+                        notifTitle = report.status === 'Approved'
+                            ? 'Government Contribution Approved'
+                            : 'Government Contribution Rejected';
+                        notifMsg = `${report.contribution_type} contributions for ${report.payroll_period} were ${report.status.toLowerCase()}.`;
+                        actionLabel = 'View Report';
+                    }
+
+                    if (notifTitle && refId && !hasReadReference(refId)) {
+                        combined.push({
+                            id: refId,
+                            title: notifTitle,
+                            message: notifMsg,
+                            type: 'info',
+                            severity: report.status === 'Pending' ? 'high' : 'medium',
+                            url: `/gov-contributions/${report.id}`,
+                            timestamp: report.updated_at || report.created_at || new Date().toISOString(),
+                            actionLabel,
+                            is_read: false,
+                            source: 'dynamic'
+                        });
+                    }
+                });
+            }
+
+            // 8. Transportation Allowance Reminder
             const today = new Date();
             if (today.getDate() === 10 && (user?.role === 'Admin' || user?.role === 'HR')) {
                 const monthYear = `${today.getFullYear()}-${today.getMonth() + 1}`;
@@ -265,7 +395,8 @@ export default function NotificationDropdown() {
                         url: `/transportation`,
                         timestamp: new Date().toISOString(),
                         actionLabel: 'Process Allowance',
-                        is_read: false
+                        is_read: false,
+                        source: 'dynamic'
                     });
                 }
             }
@@ -277,6 +408,8 @@ export default function NotificationDropdown() {
                 return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
             });
 
+            if (requestId !== fetchRequestIdRef.current) return;
+
             // Update local state
             setNotifications(combined);
 
@@ -287,22 +420,22 @@ export default function NotificationDropdown() {
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
         } finally {
-            setLoading(false);
+            if (showLoading && requestId === fetchRequestIdRef.current) setLoading(false);
         }
-    };
+    }, [user]);
 
     useEffect(() => {
         if (isOpen) {
             fetchNotifications();
         }
-    }, [isOpen]);
+    }, [isOpen, fetchNotifications]);
 
     // Re-fetch when user is loaded or on interval
     useEffect(() => {
-        fetchNotifications();
-        const interval = setInterval(fetchNotifications, 60000);
+        fetchNotifications({ showLoading: false });
+        const interval = setInterval(() => fetchNotifications({ showLoading: false }), 60000);
         return () => clearInterval(interval);
-    }, [user]);
+    }, [fetchNotifications]);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -315,26 +448,27 @@ export default function NotificationDropdown() {
     }, []);
 
     const markAsRead = async (id: string, notif: Notification) => {
+        const wasUnread = !notif.is_read;
+
         // Optimistic update
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        if (wasUnread) setUnreadCount(prev => Math.max(0, prev - 1));
 
         try {
             const sessionId = localStorage.getItem('sessionId');
 
-            // Allow passing extra data for dynamic alerts to be persisted
             const body = {
                 is_read: true,
                 title: notif.title,
                 message: notif.message,
                 type: notif.type,
                 severity: notif.severity,
-                link: notif.url
+                link: notif.url,
+                reference_id: notif.reference_id || notif.id,
+                timestamp: notif.timestamp
             };
 
-            // If it's a dynamic alert (string ID), we send the ID as param
-            // Our backend will handle "upsert" for dynamic string IDs
-            await fetch(`/api/notifications/${id}`, {
+            const res = await fetch(`/api/notifications/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'x-session-id': sessionId || '',
@@ -343,13 +477,17 @@ export default function NotificationDropdown() {
                 body: JSON.stringify(body)
             });
 
-            // Refresh to ensure everything is consistent
-            // fetchNotifications(); 
+            if (!res.ok) {
+                throw new Error(`Server returned ${res.status}`);
+            }
+
+            // Refresh from DB to ensure state is in sync
+            await fetchNotifications();
         } catch (error) {
             console.error('Failed to mark as read:', error);
-            // Revert on error
-            setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: false } : n));
-            setUnreadCount(prev => prev + 1);
+            // Revert optimistic update on error
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: notif.is_read } : n));
+            if (wasUnread) setUnreadCount(prev => prev + 1);
         }
     };
 
@@ -358,7 +496,7 @@ export default function NotificationDropdown() {
 
         // Optimistic update
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: newStatus } : n));
-        setUnreadCount(prev => newStatus ? prev - 1 : prev + 1);
+        setUnreadCount(prev => newStatus ? Math.max(0, prev - 1) : prev + 1);
 
         try {
             const sessionId = localStorage.getItem('sessionId');
@@ -369,10 +507,12 @@ export default function NotificationDropdown() {
                 message: notif.message,
                 type: notif.type,
                 severity: notif.severity,
-                link: notif.url
+                link: notif.url,
+                reference_id: notif.reference_id || notif.id,
+                timestamp: notif.timestamp
             };
 
-            await fetch(`/api/notifications/${id}`, {
+            const res = await fetch(`/api/notifications/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'x-session-id': sessionId || '',
@@ -380,17 +520,27 @@ export default function NotificationDropdown() {
                 },
                 body: JSON.stringify(body)
             });
+
+            if (!res.ok) {
+                throw new Error(`Server returned ${res.status}`);
+            }
+
+            // Refresh from DB to ensure state is in sync
+            await fetchNotifications();
         } catch (error) {
             console.error('Failed to toggle read status:', error);
-            // Revert
+            // Revert optimistic update on error
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: !newStatus } : n));
-            setUnreadCount(prev => !newStatus ? prev - 1 : prev + 1);
+            setUnreadCount(prev => !newStatus ? Math.max(0, prev - 1) : prev + 1);
         }
     };
 
     const markAllAsRead = async () => {
+        fetchRequestIdRef.current += 1;
+
         // Collect all currently unread notifications (including dynamic ones)
         const unreadNotifs = notifications.filter(n => !n.is_read);
+        const dynamicUnreadNotifs = unreadNotifs.filter(n => n.source !== 'db');
 
         // Optimistic update
         setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
@@ -398,14 +548,18 @@ export default function NotificationDropdown() {
 
         try {
             const sessionId = localStorage.getItem('sessionId');
-            await fetch('/api/notifications/mark-all-read', {
+            const res = await fetch('/api/notifications/mark-all-read', {
                 method: 'POST',
                 headers: {
                     'x-session-id': sessionId || '',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ dynamicNotifs: unreadNotifs })
+                body: JSON.stringify({ dynamicNotifs: dynamicUnreadNotifs })
             });
+            if (!res.ok) {
+                throw new Error(`Server returned ${res.status}`);
+            }
+            await fetchNotifications({ showLoading: false });
         } catch (error) {
             console.error('Failed to mark all as read:', error);
             fetchNotifications(); // Revert by fetching

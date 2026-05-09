@@ -71,10 +71,11 @@ export async function GET(request: NextRequest) {
         }
 
         return NextResponse.json(filtered);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Get attendance error:', error);
+        require('fs').appendFileSync('error.log', new Date().toISOString() + ' GET ERROR: ' + (error.stack || error.message || String(error)) + '\n');
         return NextResponse.json(
-            { error: 'Failed to fetch attendance' },
+            { error: 'Failed to fetch attendance', details: error.message },
             { status: 500 }
         );
     }
@@ -115,10 +116,115 @@ export async function DELETE(request: NextRequest) {
 
         await query("DELETE FROM attendance WHERE id = $1", [parseInt(id)]);
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Delete attendance error:', error);
         return NextResponse.json(
             { error: 'Failed to delete record' },
+            { status: 500 }
+        );
+    }
+}
+
+export async function PUT(request: NextRequest) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
+
+        if (!id) {
+            return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+        }
+
+        const { date, status, remarks, morning_in, morning_out, afternoon_in, afternoon_out, time_in, time_out, total_hours } = await request.json();
+
+        // Check if record exists
+        const recordRes = await query("SELECT * FROM attendance WHERE id = $1", [parseInt(id)]);
+        const record = recordRes.rows[0];
+
+        if (!record) {
+            return NextResponse.json({ error: 'Record not found' }, { status: 404 });
+        }
+
+        let hrUser = 'System';
+        try {
+            const authResult = await requireBranchAuth(request);
+            if (!(authResult instanceof NextResponse)) {
+                hrUser = authResult[0].username;
+            }
+        } catch (e) {}
+
+        const updateFields = [];
+        const updateParams = [];
+        let paramIdx = 1;
+
+        if (date !== undefined) {
+            updateFields.push(`date = $${paramIdx++}`);
+            updateParams.push(date);
+        }
+        if (status !== undefined) {
+            updateFields.push(`status = $${paramIdx++}`);
+            updateParams.push(status);
+        }
+        if (remarks !== undefined) {
+            updateFields.push(`remarks = $${paramIdx++}`);
+            updateParams.push(remarks);
+        }
+        if (morning_in !== undefined) {
+            updateFields.push(`morning_in = $${paramIdx++}`);
+            updateParams.push(morning_in || null);
+        }
+        if (morning_out !== undefined) {
+            updateFields.push(`morning_out = $${paramIdx++}`);
+            updateParams.push(morning_out || null);
+        }
+        if (afternoon_in !== undefined) {
+            updateFields.push(`afternoon_in = $${paramIdx++}`);
+            updateParams.push(afternoon_in || null);
+        }
+        if (afternoon_out !== undefined) {
+            updateFields.push(`afternoon_out = $${paramIdx++}`);
+            updateParams.push(afternoon_out || null);
+        }
+        if (time_in !== undefined) {
+            updateFields.push(`time_in = $${paramIdx++}`);
+            updateParams.push(time_in || null);
+        }
+        if (time_out !== undefined) {
+            updateFields.push(`time_out = $${paramIdx++}`);
+            updateParams.push(time_out || null);
+        }
+        if (total_hours !== undefined) {
+            updateFields.push(`total_hours = $${paramIdx++}`);
+            updateParams.push(total_hours);
+        }
+
+        if (updateFields.length > 0) {
+            updateParams.push(parseInt(id));
+            const queryStr = `UPDATE attendance SET ${updateFields.join(', ')} WHERE id = $${paramIdx}`;
+            await query(queryStr, updateParams);
+        }
+
+        try {
+            await query(`
+                INSERT INTO audit_logs (hr_user, employee_id, action, details)
+                VALUES ($1, $2, $3, $4)
+            `, [hrUser, record.employee_id, 'ATTENDANCE_UPDATED', `Updated record ID ${id}: ${JSON.stringify({ date, status, remarks })}`]);
+        } catch (auditError) {
+            console.warn("Audit Log insert failed:", auditError);
+        }
+
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        console.error('Update attendance error:', error);
+        
+        if (error.code === '23505') { // PostgreSQL unique violation error code
+            return NextResponse.json(
+                { error: 'An attendance or leave record already exists for this date.' },
+                { status: 409 }
+            );
+        }
+
+        return NextResponse.json(
+            { error: 'Failed to update record', details: error.message },
             { status: 500 }
         );
     }
@@ -175,8 +281,8 @@ export async function POST(request: NextRequest) {
                         }
 
                     } else {
-                        // Enforce LWOP if no credits
-                        record.status = 'Leave Without Pay';
+                        // Enforce Absent if no credits
+                        record.status = 'Absent';
                     }
                 }
             }
@@ -200,8 +306,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true, count: records.length });
     } catch (error: any) {
         console.error('Save attendance error:', error);
+        require('fs').appendFileSync('error.log', new Date().toISOString() + ' POST ERROR: ' + (error.stack || error.message || String(error)) + '\n');
         return NextResponse.json(
-            { error: `Failed to save attendance: ${error.message || String(error)}` },
+            { error: `Failed to save attendance: ${error.message || String(error)}`, details: error.message },
             { status: 500 }
         );
     }

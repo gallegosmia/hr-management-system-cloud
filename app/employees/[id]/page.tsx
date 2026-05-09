@@ -381,6 +381,9 @@ export default function EmployeeProfileDashboard() {
                                                 <button onClick={() => { setEditSection('emergency'); setEditModalOpen(true); }} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="Edit Emergency Contact">
                                                     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                                                 </button>
+                                                <button onClick={() => { setEditSection('ids'); setEditModalOpen(true); }} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="Edit Government IDs">
+                                                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                                                </button>
                                             </div>
                                         </div>
 
@@ -392,6 +395,22 @@ export default function EmployeeProfileDashboard() {
                                             <div>
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Mobile Phone</p>
                                                 <p className="text-sm font-semibold text-slate-800">{employee.contact_number || '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">SSS Number</p>
+                                                <p className="text-sm font-semibold text-slate-800">{employee.sss_number || '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pag-IBIG Number</p>
+                                                <p className="text-sm font-semibold text-slate-800">{employee.pagibig_number || '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">PhilHealth Number</p>
+                                                <p className="text-sm font-semibold text-slate-800">{employee.philhealth_number || '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">TIN</p>
+                                                <p className="text-sm font-semibold text-slate-800">{employee.tin || '-'}</p>
                                             </div>
                                             <div className="col-span-2 bg-[#EFF6FF] p-5 rounded-xl border border-[#DBEAFE] relative group/emergency">
                                                 <button
@@ -474,7 +493,7 @@ export default function EmployeeProfileDashboard() {
                                                     <p className="text-sm font-bold text-[#0F172A] truncate">Employment Contract.pdf</p>
                                                     <p className="text-[10px] text-[#22C55E] font-bold uppercase mt-0.5">Verified</p>
                                                 </div>
-                                                <button className="text-slate-300 hover:text-[#1D4ED8]"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z" /></svg></button>
+                                                <button className="text-slate-300 hover:text-[#1D4ED8]"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" /></svg></button>
                                             </div>
                                             <div className="flex items-center p-4 rounded-xl border border-gray-100 bg-white hover:bg-slate-50 transition-colors group">
                                                 <div className="w-8 h-8 rounded bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shrink-0">
@@ -541,7 +560,7 @@ export default function EmployeeProfileDashboard() {
 
 
                             {activeTab === 'Attendance & Leaves' && (
-                                <AttendanceAndLeaveTab employeeId={employee.id} />
+                                <AttendanceAndLeaveTab employeeId={employee.id} employeeName={`${employee.first_name} ${employee.last_name}`} />
                             )}
 
                             {/* Hidden/Direct Access for File Management Full View */}

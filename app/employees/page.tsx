@@ -284,6 +284,7 @@ export default function EmployeesPage() {
 
     const activeCount = employees.filter(e => e.employment_status !== 'Resigned' && e.employment_status !== 'Terminated').length;
     const inactiveCount = employees.length - activeCount;
+    const canAddEmployee = currentUser?.role === 'HR' || currentUser?.role === 'Admin' || currentUser?.username === 'superadmin';
 
     if (loading) {
         return (
@@ -376,22 +377,24 @@ export default function EmployeesPage() {
                             }}>
                                 <span>📄</span> Export
                             </button>
-                            <Link href="/employees/add" style={{
-                                padding: '8px 16px',
-                                borderRadius: '8px',
-                                background: '#3b82f6',
-                                color: '#ffffff',
-                                border: '1px solid #2563eb',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                textDecoration: 'none',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                            }}>
-                                <span>+</span> Add Employee
-                            </Link>
+                            {canAddEmployee && (
+                                <Link href="/employees/add" style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '8px',
+                                    background: '#3b82f6',
+                                    color: '#ffffff',
+                                    border: '1px solid #2563eb',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    textDecoration: 'none',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                }}>
+                                    <span>+</span> Add Employee
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>

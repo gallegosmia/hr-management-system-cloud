@@ -318,13 +318,15 @@ function roundToTwo(num: number): number {
 /**
  * Format currency for display
  */
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: any): string {
+    const num = parseFloat(amount);
+    const safe = isNaN(num) ? 0 : num;
     return new Intl.NumberFormat('en-PH', {
         style: 'currency',
         currency: 'PHP',
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-    }).format(amount);
+    }).format(safe);
 }
 
 /**

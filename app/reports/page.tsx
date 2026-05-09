@@ -166,14 +166,53 @@ export default function ReportsPage() {
 
     const filterData = (rows: any[]) => {
         if (!rows) return [];
-        const normalize = (b: string | undefined | null) => (b || '').replace(/\s*branch\s*$/i, '').trim().toUpperCase();
-        const normalizedConfigBranch = normalize(config.branch);
+        
+        // Use a consistent normalization logic that matches the backend/access layers
+        const normalize = (b: string | undefined | null) => {
+            if (!b) return '';
+            // Match 'Naval' with 'Naval Branch' or 'NAVAL'
+            return b.toString().replace(/\s*branch\s*$/i, '').trim().toUpperCase();
+        };
 
-        return rows.filter(row => {
-            const deptMatch = config.department === 'All Departments' || row.department === config.department;
-            const branchMatch = config.branch === 'All Branches' || normalize(row.branch) === normalizedConfigBranch;
-            const employeeMatch = config.employeeId === 'All Employees' || String(row.id) === String(config.employeeId) || String(row.employee_id) === String(config.employeeId);
+        const configBranchNormalized = normalize(config.branch);
+        const isAllBranches = config.branch === 'All Branches' || config.branch === 'All' || !config.branch;
+        const isAllDepts = config.department === 'All Departments' || config.department === 'All' || !config.department;
+        const isAllEmployees = config.employeeId === 'All Employees' || !config.employeeId;
+
+        const filtered = rows.filter(row => {
+            const rowBranchNormalized = normalize(row.branch);
+            
+            // Branch matching logic
+            const branchMatch = isAllBranches || rowBranchNormalized === configBranchNormalized;
+            
+            // Department matching logic
+            const deptMatch = isAllDepts || row.department === config.department;
+            
+            // Employee matching logic (handles both numeric ID and employee_id string like '2024-001')
+            const employeeMatch = isAllEmployees || 
+                String(row.id) === String(config.employeeId) || 
+                String(row.employee_id) === String(config.employeeId);
+            
             return deptMatch && branchMatch && employeeMatch;
+        });
+
+        // Apply Sorting
+        return filtered.sort((a, b) => {
+            const valA = (a.name || '').toString().toLowerCase();
+            const valB = (b.name || '').toString().toLowerCase();
+
+            if (config.sortBy === 'Employee Name (A-Z)' || config.sortBy === 'Name') {
+                return valA.localeCompare(valB);
+            } else if (config.sortBy === 'Employee Name (Z-A)') {
+                return valB.localeCompare(valA);
+            } else if (config.sortBy === 'Department') {
+                return (a.department || '').localeCompare(b.department || '');
+            } else if (config.sortBy === 'Staff ID') {
+                const idA = String(a.employee_id || a.id || '');
+                const idB = String(b.employee_id || b.id || '');
+                return idA.localeCompare(idB);
+            }
+            return 0;
         });
     };
 
@@ -897,9 +936,9 @@ export default function ReportsPage() {
                     minHeight: '60px',
                     flex: 1,
                     transition: 'all 0.2s',
-                    cursor: 'text'
+                    cursor: 'pointer'
                 }}
-                onClick={() => inputRef.current?.focus()}
+                onClick={() => inputRef.current?.showPicker?.()}
             >
                 <label style={{
                     display: 'block',
@@ -910,7 +949,7 @@ export default function ReportsPage() {
                     marginBottom: '2px',
                     pointerEvents: 'none'
                 }}>{label}</label>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
                     <input
                         ref={inputRef}
                         type="date"
@@ -920,7 +959,6 @@ export default function ReportsPage() {
                             onChange(e);
                         }}
                         onBlur={handleBlur}
-                        onClick={(e) => e.stopPropagation()}
                         style={{
                             border: 'none',
                             outline: 'none',
@@ -931,14 +969,11 @@ export default function ReportsPage() {
                             width: '100%',
                             padding: '4px 0',
                             fontFamily: 'inherit',
+                            cursor: 'pointer'
                         }}
                     />
                     <div
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            inputRef.current?.showPicker?.();
-                        }}
-                        style={{ color: '#94a3b8', cursor: 'pointer', display: 'flex', gap: '4px', opacity: 0.8 }}
+                        style={{ color: '#94a3b8', display: 'flex', gap: '4px', opacity: 0.8, pointerEvents: 'none' }}
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                     </div>
@@ -950,6 +985,20 @@ export default function ReportsPage() {
 
     return (
         <DashboardLayout>
+            <style>{`
+                input[type="date"]::-webkit-calendar-picker-indicator {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    width: 100%;
+                    height: 100%;
+                    opacity: 0;
+                    cursor: pointer;
+                    z-index: 10;
+                }
+            `}</style>
             <div style={{ background: '#f8fafc', minHeight: '100vh', paddingBottom: '100px' }}>
                 {/* Header */}
                 <div style={{ background: 'white', padding: '1.25rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid #f1f5f9' }}>

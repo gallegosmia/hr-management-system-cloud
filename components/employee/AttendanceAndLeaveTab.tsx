@@ -6,9 +6,10 @@ import LeaveHistoryTab from './LeaveHistoryTab';
 
 interface CombinedTabProps {
     employeeId: number;
+    employeeName: string;
 }
 
-export default function AttendanceAndLeaveTab({ employeeId }: CombinedTabProps) {
+export default function AttendanceAndLeaveTab({ employeeId, employeeName }: CombinedTabProps) {
     const [subTab, setSubTab] = useState<'Attendance' | 'Leave'>('Attendance');
 
     return (
@@ -35,7 +36,7 @@ export default function AttendanceAndLeaveTab({ employeeId }: CombinedTabProps) 
 
             <div className="animate-in fade-in duration-300">
                 {subTab === 'Attendance' ? (
-                    <AttendanceTab employeeId={employeeId} />
+                    <AttendanceTab employeeId={employeeId} employeeName={employeeName} />
                 ) : (
                     <LeaveHistoryTab employeeId={employeeId} />
                 )}

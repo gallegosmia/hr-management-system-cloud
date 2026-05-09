@@ -179,7 +179,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
 
             if (data.user) {
                 setUser(data.user);
-                const canEdit = ['Super Admin', 'Admin', 'HR', 'President', 'Vice President', 'Operations Manager'].includes(data.user.role);
+                const canEdit = ['Super Admin', 'Admin', 'HR', 'Manager', 'President', 'Vice President', 'Operations Manager'].includes(data.user.role);
                 const canApprove = ['Super Admin', 'President', 'Vice President', 'Operations Manager', 'Manager'].includes(data.user.role);
                 const canLock = ['Super Admin', 'President', 'Vice President', 'Operations Manager'].includes(data.user.role);
                 const canDelete = data.user.role === 'Super Admin';
@@ -234,9 +234,9 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                 updateData.payrollDays = newValue;
             } else if (editingCell.field === 'holiday_days') {
                 updateData.allowances = { holiday_days: newValue };
-            } else if (['regular_allowance', 'special_allowance', 'holiday_pay'].includes(editingCell.field)) {
+            } else if (['regular_allowance', 'special_allowance', 'holiday_pay', 'other_earnings'].includes(editingCell.field)) {
                 updateData.allowances = {
-                    [editingCell.field.replace('_allowance', '').replace('holiday_pay', 'holiday')]: newValue
+                    [editingCell.field.replace('_allowance', '').replace('holiday_pay', 'holiday').replace('other_earnings', 'other')]: newValue
                 };
             } else {
                 // Deductions
@@ -273,11 +273,11 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                     p.id === editingCell.payslipId ? { ...p, ...data.payslip } : p
                 ));
             } else {
-                alert(`Error: ${data.error}`);
+                alert(`Save failed (${response.status}): ${data.error}\n${data.details || ''}`);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error updating payslip:', error);
-            alert('Failed to update payslip');
+            alert(`Network error: ${error.message}`);
         }
 
         setEditingCell(null);
@@ -634,12 +634,13 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
     };
 
     // Calculate totals for all columns
-    const totalDays = filteredPayslips.reduce((sum, p) => sum + (p.payroll_days || 0), 0);
+    const totalDays = filteredPayslips.reduce((sum, p) => sum + Number(p.payroll_days || 0), 0);
     const totalBasicPay = filteredPayslips.reduce((sum, p) => sum + (p.basic_pay || 0), 0);
     const totalRegAllow = filteredPayslips.reduce((sum, p) => sum + (p.regular_allowance || 0), 0);
     const totalSpclAllow = filteredPayslips.reduce((sum, p) => sum + (p.special_allowance || 0), 0);
-    const totalHolidayDays = filteredPayslips.reduce((sum, p) => sum + (p.holiday_days || 0), 0);
+    const totalHolidayDays = filteredPayslips.reduce((sum, p) => sum + Number(p.holiday_days || 0), 0);
     const totalHolidayPay = filteredPayslips.reduce((sum, p) => sum + (p.holiday_pay || 0), 0);
+    const totalOtherEarnings = filteredPayslips.reduce((sum, p) => sum + (p.other_earnings || 0), 0);
     // existing totals
     const totalEmployees = filteredPayslips.length;
     const totalGrossPay = filteredPayslips.reduce((sum, p) => sum + (p.gross_pay || 0), 0);
@@ -837,11 +838,11 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                     <div className="step-header">
                                         <span className="step-name">Branch Manager</span>
                                         <span className={`status-badge ${(payrollRun.workflow_stage || 0) >= 3 ? 'completed' :
-                                            payrollRun.status.includes('Returned') && payrollRun.status.includes('Branch Manager') ? 'returned' :
+                                            payrollRun.status === 'Returned to Branch Manager' ? 'returned' :
                                                 (payrollRun.workflow_stage || 0) === 2 ? 'in-review' : 'pending'
                                             }`}>
                                             {(payrollRun.workflow_stage || 0) >= 3 ? 'Approved' :
-                                                payrollRun.status.includes('Returned') && payrollRun.status.includes('Branch Manager') ? 'Returned' :
+                                                payrollRun.status === 'Returned to Branch Manager' ? 'Needs Correction' :
                                                     (payrollRun.workflow_stage || 0) === 2 ? 'In Review' : 'Pending'}
                                         </span>
                                     </div>
@@ -893,11 +894,11 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                     <div className="step-header">
                                         <span className="step-name">Operations Manager</span>
                                         <span className={`status-badge ${(payrollRun.workflow_stage || 0) >= 4 ? 'completed' :
-                                            payrollRun.status.includes('Returned') ? 'returned' :
+                                            payrollRun.status === 'Returned to Operations Manager' ? 'returned' :
                                                 (payrollRun.workflow_stage || 0) === 3 ? 'in-review' : 'pending'
                                             }`}>
                                             {(payrollRun.workflow_stage || 0) >= 4 ? 'Approved' :
-                                                payrollRun.status.includes('Returned') ? 'Returned' :
+                                                payrollRun.status === 'Returned to Operations Manager' ? 'Needs Correction' :
                                                     (payrollRun.workflow_stage || 0) === 3 ? 'In Review' : 'Pending'}
                                         </span>
                                     </div>
@@ -1058,6 +1059,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                             <th className="th-center" style={{ width: '60px' }}>HOLIDAY<br />DAYS</th>
                                             <th className="th-right" style={{ width: '60px' }}>HOLIDAY<br />PAY</th>
                                             <th className="th-right" style={{ width: '60px' }}>SPCL.<br />ALW.</th>
+                                            <th className="th-right" style={{ width: '60px' }}>OTHER</th>
                                             <th className="th-right text-green-600" style={{ width: '90px' }}>GROSS<br />PAY</th>
                                             {getDeductionColumns().map(col => (
                                                 <th key={col.key} className="th-right th-deduction" style={{ width: '70px' }}>{col.label}</th>
@@ -1100,7 +1102,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                                             className="cell-input"
                                                         />
                                                     ) : (
-                                                        <span className="font-medium">{(payslip.payroll_days || 0).toFixed(2)}</span>
+                                                        <span className="font-medium">{Number(payslip.payroll_days || 0).toFixed(2)}</span>
                                                     )}
                                                 </td>
 
@@ -1122,7 +1124,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                                             className="cell-input"
                                                         />
                                                     ) : (
-                                                        <span className="font-medium">{(payslip.holiday_days || 0).toFixed(2)}</span>
+                                                        <span className="font-medium">{Number(payslip.holiday_days || 0).toFixed(2)}</span>
                                                     )}
                                                 </td>
 
@@ -1165,6 +1167,26 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                                         />
                                                     ) : (
                                                         formatCurrency(payslip.special_allowance || 0).replace('₱', '')
+                                                    )}
+                                                </td>
+
+                                                {/* Other Earnings */}
+                                                <td
+                                                    className="td-right td-editable"
+                                                    onClick={() => handleCellClick(payslip.id, 'other_earnings', payslip.other_earnings)}
+                                                >
+                                                    {editingCell?.payslipId === payslip.id && editingCell?.field === 'other_earnings' ? (
+                                                        <input
+                                                            type="number"
+                                                            value={editValue}
+                                                            onChange={(e) => setEditValue(e.target.value)}
+                                                            onBlur={handleCellBlur}
+                                                            onKeyDown={(e) => e.key === 'Enter' && handleCellBlur()}
+                                                            autoFocus
+                                                            className="cell-input"
+                                                        />
+                                                    ) : (
+                                                        formatCurrency(payslip.other_earnings || 0).replace('₱', '')
                                                     )}
                                                 </td>
 
@@ -1214,7 +1236,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                             </tr>
                                         )) : (
                                             <tr>
-                                                <td colSpan={15} style={{ padding: '48px 32px', textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>
+                                                <td colSpan={16} style={{ padding: '48px 32px', textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>
                                                     <div style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600' }}>
                                                         {searchTerm ? 'No matching employees found' : 'No employee records found'}
                                                     </div>
@@ -1245,6 +1267,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                             <td className="td-center font-bold">{totalHolidayDays.toFixed(2)}</td>
                                             <td className="td-right font-bold">{formatCurrency(totalHolidayPay).replace('₱', '')}</td>
                                             <td className="td-right font-bold">{formatCurrency(totalSpclAllow).replace('₱', '')}</td>
+                                            <td className="td-right font-bold">{formatCurrency(totalOtherEarnings).replace('₱', '')}</td>
                                             <td className="td-right font-bold text-green-600">{formatCurrency(totalGrossPay).replace('₱', '')}</td>
                                             {getDeductionColumns().map(col => (
                                                 <td key={col.key} className="td-right font-bold text-gray-600">
@@ -1305,27 +1328,27 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                                         {/* HR Finalize Button */}
                                         {/* HR Finalize Button Removed (Moved to bottom) */}
 
-                                        {/* Operations Manager Approve/Return */}
-                                        {payrollRun.status === 'Under Review - Branch Manager' &&
+                                        {/* Branch Manager Approve/Return */}
+                                        {(payrollRun.status === 'Under Review - Branch Manager' || payrollRun.status === 'Returned to Branch Manager') &&
                                             (user?.role === 'Manager' || user?.role === 'Admin' || user?.role === 'Super Admin' || user?.role === 'President') && (
                                                 <>
                                                     <button onClick={handleApprove} className="approve-btn" disabled={processing}>
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                                        APPROVE PAYROLL
+                                                        {payrollRun.status === 'Returned to Branch Manager' ? 'FORWARD TO OPS MANAGER' : 'APPROVE PAYROLL'}
                                                     </button>
                                                     <button onClick={() => setShowReturnModal(true)} className="return-btn" disabled={processing}>
-                                                        Return to Branch Manager
+                                                        Return to HR
                                                     </button>
                                                 </>
                                             )}
                                         
                                         {/* Operations Manager Approve/Return */}
-                                        {payrollRun.status === 'Under Review - Operations Manager' &&
+                                        {(payrollRun.status === 'Under Review - Operations Manager' || payrollRun.status === 'Returned to Operations Manager') &&
                                             (user?.role === 'Admin' || user?.role === 'Operations Manager' || user?.role === 'Super Admin') && (
                                                 <>
                                                     <button onClick={handleApprove} className="approve-btn" disabled={processing}>
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                                        APPROVE PAYROLL
+                                                        {payrollRun.status === 'Returned to Operations Manager' ? 'FORWARD TO VP' : 'APPROVE PAYROLL'}
                                                     </button>
                                                     <button onClick={() => setShowReturnModal(true)} className="return-btn" disabled={processing}>
                                                         Return to Branch Manager
@@ -1335,7 +1358,7 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
 
                                         {/* VP Final Approve/Return */}
                                         {(payrollRun.status === 'Under Review - Executive Vice President' || payrollRun.workflow_stage === 4) &&
-                                            (user?.role === 'Vice President' || user?.role === 'Executive Vice President' || user?.role === 'Super Admin') && (
+                                            (user?.role === 'Vice President' || user?.role === 'Executive Vice President' || user?.role === 'President' || user?.role === 'Super Admin') && (
                                                 <>
                                                     <button onClick={handleFinalApprove} className="approve-btn" disabled={processing}>
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -1897,13 +1920,32 @@ export default function PayrollRunDetailsPage({ params }: { params: { id: string
                 }
                 .th-center, .td-center { text-align: center; }
                 .th-right, .td-right { text-align: right; }
+                .table-container-new {
+                    overflow-x: auto;
+                    overflow-y: auto;
+                    max-height: 70vh; /* slightly increased */
+                    padding: 0; /* removed horizontal padding for sticky consistency */
+                    border-bottom: 1px solid #f3f4f6;
+                    border-left: 1px solid #e2e8f0;
+                    border-right: 1px solid #e2e8f0;
+                    margin: 0 24px;
+                    border-radius: 8px 8px 0 0;
+                }
                 .th-employee, .td-employee { 
                     text-align: left; 
-                    position: sticky;
-                    left: 0;
-                    z-index: 11;
-                    background: white;
-                    box-shadow: 2px 0 5px -2px rgba(0,0,0,0.05); /* Optional subtle shadow to distinguish sticky column */
+                    position: sticky !important;
+                    left: 0 !important;
+                    z-index: 15 !important;
+                    background: white !important;
+                    box-shadow: 4px 0 10px -2px rgba(0,0,0,0.1); 
+                }
+                .payroll-table thead .th-employee {
+                    z-index: 30 !important;
+                    background: #f9fafb !important;
+                }
+                .payroll-table tfoot .td-employee {
+                    z-index: 30 !important;
+                    background: #f8fafc !important;
                 }
                 .payroll-table thead .th-employee {
                     z-index: 12;

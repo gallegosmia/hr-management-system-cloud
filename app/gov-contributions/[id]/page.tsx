@@ -25,6 +25,7 @@ export default function GovContributionReportView() {
     const [editER, setEditER] = useState<string>('');
     const [editEC, setEditEC] = useState<string>('');
     const [editMpfEr, setEditMpfEr] = useState<string>('');
+    const [editLoan, setEditLoan] = useState<string>('');
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -44,35 +45,7 @@ export default function GovContributionReportView() {
                 const data = await res.json();
 
                 const reportData = data.report;
-                let mappedDetails = data.details || [];
-
-                mappedDetails = mappedDetails.map((empMatch: any) => {
-                    let d = { ...empMatch };
-                    if (d.salary_info) {
-                        let parsedSalary: any = {};
-                        try {
-                            parsedSalary = typeof d.salary_info === 'string' ? JSON.parse(d.salary_info) : d.salary_info;
-                        } catch (e) { }
-
-                        const deds = parsedSalary.deductions || {};
-                        const getVal = (v: any) => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
-
-                        if (reportData.contribution_type === 'Pag-IBIG' || reportData.contribution_type === 'PagIBIG') {
-                            const pb15 = getVal(deds.pagibig_loan_15th);
-                            const pb30 = getVal(deds.pagibig_loan_30th);
-                            let pbLegacy = 0;
-                            if (!pb15 && deds.pagibig_loan && !pb30) {
-                                pbLegacy = getVal(deds.pagibig_loan?.amortization || deds.pagibig_loan);
-                            }
-                            const pbTotal = pb15 + pb30 + pbLegacy;
-                            d.loan_deduction = Math.max(Number(d.loan_deduction || 0), pbTotal);
-                        } else if (reportData.contribution_type === 'SSS') {
-                            const sssLoan = getVal(deds.sss_loan?.amortization || deds.sss_loan);
-                            d.loan_deduction = Math.max(Number(d.loan_deduction || 0), sssLoan);
-                        }
-                    }
-                    return d;
-                });
+                const mappedDetails = data.details || [];
 
                 setReport(reportData);
                 setDetails(mappedDetails);
@@ -121,6 +94,7 @@ export default function GovContributionReportView() {
         setEditER(detail.er_share?.toString() || '0');
         setEditEC(detail.ec?.toString() || '0');
         setEditMpfEr(detail.mpf_er?.toString() || '0');
+        setEditLoan(detail.loan_deduction?.toString() || '0');
     };
 
     const handleSaveEdit = async (detailId: number) => {
@@ -130,7 +104,13 @@ export default function GovContributionReportView() {
             const res = await fetch(`/api/gov-contributions/details/${detailId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json', 'x-session-id': sessionId || '' },
-                body: JSON.stringify({ ee_share: editEE, er_share: editER, ec: editEC, mpf_er: editMpfEr })
+                body: JSON.stringify({ 
+                    ee_share: editEE, 
+                    er_share: editER, 
+                    ec: editEC, 
+                    mpf_er: editMpfEr,
+                    loan_deduction: editLoan 
+                })
             });
 
             if (res.ok) {
@@ -194,14 +174,33 @@ export default function GovContributionReportView() {
     const serviceCharge = Number(report.service_charge || 0);
     const totalLoans = details.reduce((sum, d) => sum + Number(d.loan_deduction || 0), 0);
 
-    const isPagibig = report.contribution_type === 'Pag-IBIG';
-    const extraEE = isPagibig ? 200 : 0;
-    const extraER = isPagibig ? 200 : 0;
-    const extraTotal = extraEE + extraER;
+    const isPagibig = report.contribution_type === 'Pag-IBIG' || report.contribution_type === 'PagIBIG';
+    
+    // Management/Extra fixed entries logic
+    const getExtraEntries = () => {
+        if (isSss) {
+            return [
+                { name: 'Rodriguez, Anna Liza', total: 5250, ee: 0, er: 0, ec: 0, mpf: 0 },
+                { name: 'Rodriguez, Lindsay', total: 1500, ee: 0, er: 0, ec: 0, mpf: 0 },
+                { name: 'Agcang, Melanie', total: 760, ee: 0, er: 0, ec: 0, mpf: 0 },
+                { name: 'Masicampo, Ma. Rodelyn', total: 750, ee: 0, er: 0, ec: 0, mpf: 0 },
+                { name: 'Reloba, Hans Cyril', total: 750, ee: 0, er: 0, ec: 0, mpf: 0 },
+            ];
+        }
+        // Default for Pag-IBIG / PhilHealth (keeping previous request logic)
+        return [
+            { name: 'Reloba, Hans Cyril', total: 500, ee: 250, er: 250, ec: 0, mpf: 0 },
+            { name: 'Rodriguez, Anna Liza', total: 1000, ee: 500, er: 500, ec: 0, mpf: 0 },
+        ];
+    };
+
+    const extraEntries = getExtraEntries();
+    const extraEE = extraEntries.reduce((sum, e) => sum + e.ee, 0);
+    const extraER = extraEntries.reduce((sum, e) => sum + e.er, 0);
+    const extraTotal = extraEntries.reduce((sum, e) => sum + e.total, 0);
 
     // Derived Totals based on rules
-    // Total Contribution varies by type: PhilHealth shows EE+ER, Pag-IBIG shows EE+ER+Loan
-    const totalContributionOnly = isPhic ? (totalEE + totalER) : (totalEE + totalER + totalEC + totalMpfEr + extraTotal);
+    const totalContributionOnly = totalEE + totalER + totalEC + totalMpfEr + extraTotal;
     const grandTotalRemittance = totalContributionOnly + totalLoans + serviceCharge;
 
     const loanDetails = details.filter(d => Number(d.loan_deduction) > 0);
@@ -231,12 +230,33 @@ export default function GovContributionReportView() {
 
         const footRows: any[] = [
             isSss ?
-                ['Sub-total (Contribution)', formatMoney(totalEE), formatMoney(totalER), formatMoney(totalEC), formatMoney(totalMpfEr), formatMoney(totalEE + totalER + totalEC + totalMpfEr)] :
-                ['Sub-total (Contribution)', formatMoney(totalEE), formatMoney(totalER + totalEC), formatMoney(isPhic ? totalEE + totalER : totalEE + totalER + totalEC)],
+                ['SUB-TOTAL (CONTRIBUTION)', formatMoney(totalEE), formatMoney(totalER), formatMoney(totalEC), formatMoney(totalMpfEr), formatMoney(totalEE + totalER + totalEC + totalMpfEr)] :
+                ['SUB-TOTAL (CONTRIBUTION)', formatMoney(totalEE), formatMoney(totalER + totalEC), formatMoney(isPhic ? totalEE + totalER : totalEE + totalER + totalEC)],
         ];
-        if (isPagibig) {
-            footRows.push(['Anna Liza Rodriguez', '200.00', '200.00', '400.00']);
-            footRows.push(['TOTAL CONTRIBUTION', formatMoney(totalEE + extraEE), formatMoney(totalER + totalEC + extraER), formatMoney(totalEE + totalER + totalEC + extraTotal)]);
+        if (true) { // Show for all contribution types as requested for the module
+            extraEntries.forEach(ee => {
+                const row = [ee.name, formatMoney(ee.ee), formatMoney(ee.er)];
+                if (isSss) {
+                    row.push(formatMoney(ee.ec));
+                    row.push(formatMoney(ee.mpf));
+                }
+                row.push(formatMoney(ee.total));
+                
+                // For SSS, if ee/er are 0, hide them as requested ("put directly to TOTAL Column")
+                if (isSss && ee.ee === 0 && ee.er === 0) {
+                    row[1] = '';
+                    row[2] = '';
+                }
+                
+                footRows.push(row);
+            });
+
+            // Management Subtotal for SSS
+            if (isSss) {
+                footRows.push(['SUB-TOTAL (MANAGEMENT)', '', '', '0.00', '0.00', formatMoney(extraTotal)]);
+            }
+            
+            footRows.push(['TOTAL CONTRIBUTION', formatMoney(totalEE + extraEE), formatMoney(totalER + totalEC + extraER + (isSss ? 0 : 0)), formatMoney(isSss ? totalEC : 0), formatMoney(isSss ? totalMpfEr : 0), formatMoney(totalEE + totalER + totalEC + totalMpfEr + extraTotal)].filter((_, i) => isSss || i < 3 || i === 5));
         }
         if (isPagibig || isSss) {
             if (totalLoans > 0) {
@@ -309,12 +329,29 @@ export default function GovContributionReportView() {
                 <tbody>${rows}</tbody>
                 <tfoot>
                     ${isSss ? `
-                    <tr><td><strong>Sub-total (Contribution)</strong></td><td style="text-align:right">${formatMoney(totalEE)}</td><td style="text-align:right">${formatMoney(totalER)}</td><td style="text-align:right">${formatMoney(totalEC)}</td><td style="text-align:right">${formatMoney(totalMpfEr)}</td><td style="text-align:right">${formatMoney(totalEE + totalER + totalEC + totalMpfEr)}</td></tr>
+                    <tr style="background-color: #eff6ff; font-size: 15px;"><td><strong style="color: #1d4ed8;">SUB-TOTAL (CONTRIBUTION)</strong></td><td style="text-align:right; color: #1d4ed8;"><strong>${formatMoney(totalEE)}</strong></td><td style="text-align:right; color: #1d4ed8;"><strong>${formatMoney(totalER)}</strong></td><td style="text-align:right; color: #1d4ed8;"><strong>${formatMoney(totalEC)}</strong></td><td style="text-align:right; color: #1d4ed8;"><strong>${formatMoney(totalMpfEr)}</strong></td><td style="text-align:right; color: #1d4ed8;"><strong>${formatMoney(totalEE + totalER + totalEC + totalMpfEr)}</strong></td></tr>
                     ` : `
-                    <tr><td><strong>Sub-total (Contribution)</strong></td><td style="text-align:right">${formatMoney(totalEE)}</td><td style="text-align:right">${formatMoney(totalER + totalEC)}</td><td style="text-align:right">${formatMoney(isPhic ? totalEE + totalER : totalEE + totalER + totalEC)}</td></tr>
+                    <tr style="background-color: #eff6ff; font-size: 15px;"><td><strong style="color: #1d4ed8;">SUB-TOTAL (CONTRIBUTION)</strong></td><td style="text-align:right; color: #1d4ed8;"><strong>${formatMoney(totalEE)}</strong></td><td style="text-align:right; color: #1d4ed8;"><strong>${formatMoney(totalER + totalEC)}</strong></td><td style="text-align:right; color: #1d4ed8;"><strong>${formatMoney(isPhic ? totalEE + totalER : totalEE + totalER + totalEC)}</strong></td></tr>
                     `}
-                    ${isPagibig ? `<tr><td><strong>Anna Liza Rodriguez</strong></td><td style="text-align:right">200.00</td><td style="text-align:right">200.00</td><td style="text-align:right"><strong>400.00</strong></td></tr>` : ''}
-                    ${isPagibig ? `<tr><td style="color:#dc2626; font-weight:900;">TOTAL CONTRIBUTION</td><td style="text-align:right; color:#dc2626; font-weight:900;">${formatMoney(totalEE + extraEE)}</td><td style="text-align:right; color:#dc2626; font-weight:900;">${formatMoney(totalER + totalEC + extraER)}</td><td style="text-align:right; color:#dc2626; font-weight:900;">${formatMoney(totalEE + totalER + totalEC + extraTotal)}</td></tr>` : ''}
+                    ${extraEntries.map(ee => `
+                    <tr>
+                        <td>${ee.name}</td>
+                        <td style="text-align:right">${isSss && ee.ee === 0 ? '' : formatMoney(ee.ee)}</td>
+                        <td style="text-align:right">${isSss && ee.er === 0 ? '' : formatMoney(ee.er)}</td>
+                        ${isSss ? `<td style="text-align:right"></td><td style="text-align:right"></td>` : ''}
+                        <td style="text-align:right">${formatMoney(ee.total)}</td>
+                    </tr>`).join('')}
+                    ${isSss ? `
+                    <tr style="background-color: #f8fafc; font-size: 14px;">
+                        <td><strong>SUB-TOTAL (MANAGEMENT)</strong></td>
+                        <td></td>
+                        <td></td>
+                        <td>0.00</td>
+                        <td>0.00</td>
+                        <td style="text-align:right"><strong>${formatMoney(extraTotal)}</strong></td>
+                    </tr>
+                    ` : ''}
+                    <tr><td style="color:#dc2626; font-weight:900;">TOTAL CONTRIBUTION</td><td style="text-align:right; color:#dc2626; font-weight:900;">${formatMoney(totalEE + extraEE)}</td><td style="text-align:right; color:#dc2626; font-weight:900;">${formatMoney(totalER + totalEC + extraER)}</td>${isSss ? `<td style="text-align:right; color:#dc2626; font-weight:900;">${formatMoney(totalEC)}</td><td style="text-align:right; color:#dc2626; font-weight:900;">${formatMoney(totalMpfEr)}</td>` : ''}<td style="text-align:right; color:#dc2626; font-weight:900;">${formatMoney(totalEE + totalER + totalEC + totalMpfEr + extraTotal)}</td></tr>
                     ${(isPagibig || isSss) && totalLoans > 0 ? loanDetails.map((ld: any) => `<tr><td style="color:#4b5563;">${ld.last_name}, ${ld.first_name} (Loan)</td><td></td><td></td>${isSss ? '<td></td><td></td>' : ''}<td style="text-align:right;color:#4b5563;">${formatMoney(Number(ld.loan_deduction))}</td></tr>`).join('') : ''}
                     ${(isPagibig || isSss) && totalLoans > 0 ? `<tr><td style="color:#dc2626; font-weight:900; text-transform:uppercase;">SUB-TOTAL (LOANS)</td><td></td><td></td>${isSss ? '<td></td><td></td>' : ''}<td style="text-align:right; color:#dc2626; font-weight:900;">${formatMoney(totalLoans)}</td></tr>` : ''}
                     ${serviceCharge > 0 ? `<tr><td>Service Charge</td><td></td><td></td>${isSss ? '<td></td><td></td>' : ''}<td style="text-align:right">${formatMoney(serviceCharge)}</td></tr>` : ''}
@@ -349,6 +386,21 @@ export default function GovContributionReportView() {
                     .print-break { page-break-inside: avoid; }
                 }
                 .blue-card { background-color: #2563EB !important; color: white !important; }
+                .sticky-col {
+                    position: sticky !important;
+                    left: 0;
+                    z-index: 20 !important;
+                    background-color: white !important;
+                    box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);
+                }
+                thead .sticky-col {
+                    z-index: 30 !important;
+                    background-color: #f9fafb !important;
+                }
+                tfoot .sticky-col {
+                    z-index: 30 !important;
+                    background-color: white !important;
+                }
             `}</style>
 
             <div className="p-4 md:p-8 max-w-7xl mx-auto font-sans bg-[#FAFAFA] min-h-screen">
@@ -460,9 +512,9 @@ export default function GovContributionReportView() {
 
                         <div className="overflow-auto max-h-[600px] min-h-[350px]">
                             <table className="w-full text-sm">
-                                <thead className="sticky top-0 z-10 bg-white drop-shadow-sm box-border after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:border-b after:border-slate-200">
+                                <thead className="bg-white drop-shadow-sm box-border after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:border-b after:border-slate-200">
                                     <tr className="text-left bg-white">
-                                        <th className="py-4 px-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[40%]">EMPLOYEE NAME</th>
+                                        <th className="py-4 px-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[40%] sticky-col">EMPLOYEE NAME</th>
                                         <th className="py-4 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">EE</th>
                                         <th className="py-4 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">ER</th>
                                         {isSss && (
@@ -478,7 +530,7 @@ export default function GovContributionReportView() {
                                 <tbody className="divide-y divide-slate-100 bg-white">
                                     {details.map((d) => (
                                         <tr key={d.id} className="hover:bg-slate-50 transition text-slate-800">
-                                            <td className="py-3.5 px-5 text-[13px] font-medium">
+                                            <td className="py-3.5 px-5 text-[13px] font-medium sticky-col">
                                                 {d.last_name}, {d.first_name}
                                             </td>
                                             <td className="py-3.5 px-3 text-right font-mono text-[13px] text-slate-600">
@@ -528,38 +580,63 @@ export default function GovContributionReportView() {
                                         </tr>
                                     ))}
                                 </tbody>
-                                <tfoot className="sticky bottom-0 z-10 shadow-[0_-1px_0_0_#e2e8f0]">
-                                    <tr className="border-t border-slate-200 bg-white">
-                                        <td className="py-4 px-5 text-[13px] font-bold text-slate-900 border-b border-slate-100">Sub-total (Contribution)</td>
-                                        <td className="py-4 px-3 text-right font-mono font-bold text-[13px] text-slate-900 border-b border-slate-100">{formatMoney(totalEE)}</td>
-                                        <td className="py-4 px-3 text-right font-mono font-bold text-[13px] text-slate-900 border-b border-slate-100">{formatMoney(isSss ? totalER : totalER + totalEC)}</td>
+                                <tfoot className="z-10">
+                                    <tr className="border-t-2 border-blue-200 bg-blue-50">
+                                        <td className="py-4 px-5 text-[15px] font-black text-blue-700 border-b border-blue-100 uppercase tracking-wide sticky-col bg-blue-50">SUB-TOTAL (CONTRIBUTION)</td>
+                                        <td className="py-4 px-3 text-right font-mono font-black text-[15px] text-blue-700 border-b border-blue-100">{formatMoney(totalEE)}</td>
+                                        <td className="py-4 px-3 text-right font-mono font-black text-[15px] text-blue-700 border-b border-blue-100">{formatMoney(isSss ? totalER : totalER + totalEC)}</td>
                                         {isSss && (
                                             <>
-                                                <td className="py-4 px-3 text-right font-mono font-bold text-[13px] text-slate-900 border-b border-slate-100">{formatMoney(totalEC)}</td>
-                                                <td className="py-4 px-3 text-right font-mono font-bold text-[13px] text-slate-900 border-b border-slate-100">{formatMoney(totalMpfEr)}</td>
+                                                <td className="py-4 px-3 text-right font-mono font-black text-[15px] text-blue-700 border-b border-blue-100">{formatMoney(totalEC)}</td>
+                                                <td className="py-4 px-3 text-right font-mono font-black text-[15px] text-blue-700 border-b border-blue-100">{formatMoney(totalMpfEr)}</td>
                                             </>
                                         )}
-                                        <td className="py-4 px-5 text-right font-mono font-bold text-[13px] text-blue-600 border-b border-slate-100">{formatMoney(isPhic ? totalEE + totalER : totalEE + totalER + totalEC + totalMpfEr)}</td>
-                                        <td className="py-4 px-5 border-b border-slate-100 bg-white"></td>
+                                        <td className="py-4 px-5 text-right font-mono font-black text-[16px] text-blue-800 border-b border-blue-100">{formatMoney(isPhic ? totalEE + totalER : totalEE + totalER + totalEC + totalMpfEr)}</td>
+                                        <td className="py-4 px-5 border-b border-slate-100 bg-blue-50"></td>
                                     </tr>
-                                    {isPagibig && (
-                                        <>
-                                            <tr className="bg-[#F8FAFC]">
-                                                <td className="py-3 px-5 font-bold text-[12px] text-slate-800 uppercase tracking-wide border-b border-slate-100">Anna Liza Rodriguez</td>
-                                                <td className="py-3 px-3 text-right font-mono font-medium text-[13px] text-slate-800 border-b border-slate-100">200.00</td>
-                                                <td className="py-3 px-3 text-right font-mono font-medium text-[13px] text-slate-800 border-b border-slate-100">200.00</td>
-                                                <td className="py-3 px-5 text-right font-mono font-bold text-[13px] text-blue-600 border-b border-slate-100">400.00</td>
-                                                <td className="border-b border-slate-100"></td>
-                                            </tr>
-                                            <tr className="bg-white">
-                                                <td className="py-3 px-5 font-bold text-[12px] text-red-600 uppercase tracking-wide border-b border-slate-100">TOTAL CONTRIBUTION</td>
-                                                <td className="py-3 px-3 text-right font-mono font-bold text-[13px] text-red-600 border-b border-slate-100">{formatMoney(totalEE + extraEE)}</td>
-                                                <td className="py-3 px-3 text-right font-mono font-bold text-[13px] text-red-600 border-b border-slate-100">{formatMoney(totalER + totalEC + extraER)}</td>
-                                                <td className="py-3 px-5 text-right font-mono font-extrabold text-[13px] text-red-600 border-b border-slate-100">{formatMoney(totalEE + totalER + totalEC + extraTotal)}</td>
-                                                <td className="border-b border-slate-100"></td>
-                                            </tr>
-                                        </>
+                                    {extraEntries.map((ee, idx) => (
+                                        <tr key={`extra-${idx}`} className="bg-[#F8FAFC]">
+                                            <td className="py-3 px-5 font-medium text-[12px] text-slate-800 uppercase tracking-wide border-b border-slate-100 sticky-col">{ee.name}</td>
+                                            <td className="py-3 px-3 text-right font-mono text-[13px] text-slate-800 border-b border-slate-100">
+                                                {isSss && ee.ee === 0 ? '' : formatMoney(ee.ee)}
+                                            </td>
+                                            <td className="py-3 px-3 text-right font-mono text-[13px] text-slate-800 border-b border-slate-100">
+                                                {isSss && ee.er === 0 ? '' : formatMoney(ee.er)}
+                                            </td>
+                                            {isSss && (
+                                                <>
+                                                    <td className="py-3 px-3 text-right font-mono text-[13px] text-slate-800 border-b border-slate-100"></td>
+                                                    <td className="py-3 px-3 text-right font-mono text-[13px] text-slate-800 border-b border-slate-100"></td>
+                                                </>
+                                            )}
+                                            <td className="py-3 px-5 text-right font-mono font-medium text-[13px] text-blue-600 border-b border-slate-100 sticky-col">{formatMoney(ee.total)}</td>
+                                            <td className="border-b border-slate-100 bg-[#F8FAFC]"></td>
+                                        </tr>
+                                    ))}
+                                    {isSss && (
+                                        <tr className="bg-slate-50">
+                                            <td className="py-3 px-5 font-bold text-[13px] text-slate-700 uppercase tracking-wide border-b border-slate-200 sticky-col bg-slate-50">SUB-TOTAL (MANAGEMENT)</td>
+                                            <td className="py-3 px-3 text-right font-mono text-[13px] text-slate-700 border-b border-slate-200"></td>
+                                            <td className="py-3 px-3 text-right font-mono text-[13px] text-slate-700 border-b border-slate-200"></td>
+                                            <td className="py-3 px-3 text-right font-mono text-[13px] text-slate-700 border-b border-slate-200">0.00</td>
+                                            <td className="py-3 px-3 text-right font-mono text-[13px] text-slate-700 border-b border-slate-200">0.00</td>
+                                            <td className="py-3 px-5 text-right font-mono font-bold text-[14px] text-slate-900 border-b border-slate-200 sticky-col bg-slate-50">{formatMoney(extraTotal)}</td>
+                                            <td className="border-b border-slate-200 bg-slate-50"></td>
+                                        </tr>
                                     )}
+                                    <tr className="bg-white">
+                                        <td className="py-3 px-5 font-bold text-[12px] text-red-600 uppercase tracking-wide border-b border-slate-100 sticky-col">TOTAL CONTRIBUTION</td>
+                                        <td className="py-3 px-3 text-right font-mono font-bold text-[13px] text-red-600 border-b border-slate-100">{formatMoney(totalEE + extraEE)}</td>
+                                        <td className="py-3 px-3 text-right font-mono font-bold text-[13px] text-red-600 border-b border-slate-100">{formatMoney(isSss ? totalER : totalER + totalEC + extraER)}</td>
+                                        {isSss && (
+                                            <>
+                                                <td className="py-3 px-3 text-right font-mono font-bold text-[13px] text-red-600 border-b border-slate-100">{formatMoney(totalEC)}</td>
+                                                <td className="py-3 px-3 text-right font-mono font-bold text-[13px] text-red-600 border-b border-slate-100">{formatMoney(totalMpfEr)}</td>
+                                            </>
+                                        )}
+                                        <td className="py-3 px-5 text-right font-mono font-extrabold text-[13px] text-red-600 border-b border-slate-100 sticky-col">{formatMoney(totalEE + totalER + totalEC + totalMpfEr + extraTotal)}</td>
+                                        <td className="border-b border-slate-100 bg-white"></td>
+                                    </tr>
                                 </tfoot>
                             </table>
                         </div>
@@ -637,10 +714,31 @@ export default function GovContributionReportView() {
                                                     {d.last_name}, {d.first_name}
                                                 </td>
                                                 <td className="py-3.5 px-3 text-right font-mono text-[13px] text-slate-800">
-                                                    {formatMoney(Number(d.loan_deduction))}
+                                                    {editingId === d.id ? (
+                                                        <input 
+                                                            type="number" 
+                                                            value={editLoan} 
+                                                            onChange={(e) => setEditLoan(e.target.value)} 
+                                                            className="w-24 text-right border border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-2 py-1 text-[13px]" 
+                                                        />
+                                                    ) : formatMoney(Number(d.loan_deduction))}
                                                 </td>
-                                                <td className="py-3.5 px-5 text-right w-12">
-                                                    <div className="w-5 h-5 rounded-full bg-slate-200 text-white flex items-center justify-center ml-auto font-serif italic text-xs">i</div>
+                                                <td className="py-3.5 px-5 text-right">
+                                                    {report.status !== 'Approved' && (
+                                                        <div className="flex gap-2 justify-end">
+                                                            {editingId === d.id ? (
+                                                                <>
+                                                                    <button onClick={() => handleSaveEdit(d.id)} className="text-blue-600 font-bold text-[12px] hover:underline" disabled={actionLoading}>Save</button>
+                                                                    <button onClick={() => setEditingId(null)} className="text-slate-400 font-bold text-[12px] hover:underline" disabled={actionLoading}>Cancel</button>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <button onClick={() => handleEditClick(d)} className="bg-blue-50 text-blue-600 px-3 py-1 rounded text-[11px] font-bold hover:bg-blue-100 transition whitespace-nowrap">EDIT</button>
+                                                                    <div className="w-5 h-5 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-serif italic text-[10px] cursor-help" title="View historical breakdown">i</div>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))}

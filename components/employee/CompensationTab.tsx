@@ -61,7 +61,7 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
                 sss: info.deductions?.sss || 0,
                 sss_loan: info.deductions?.sss_loan || 0,
                 company_loan: info.deductions?.company_loan || 0,
-                company_loan_balance: info.deductions?.company_loan_balance || 0,
+                company_loan_balance: info.deductions?.company_loan_balance || employee?.ledger_balance || 0,
                 cash_advance: info.deductions?.cash_advance || 0,
                 other_deductions: info.deductions?.other_deductions || 0
             }
@@ -477,11 +477,8 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
                                 {editing ? (
                                     <input
                                         type="number"
-                                        value={key === 'company_loan_balance' ? (employee?.ledger_balance || 0) : ((salaryInfo.deductions as any)?.[key] || 0)}
-                                        disabled={key === 'company_loan_balance'}
-                                        readOnly={key === 'company_loan_balance'}
+                                        value={(salaryInfo.deductions as any)?.[key] || 0}
                                         onChange={(e) => {
-                                            if (key === 'company_loan_balance') return;
                                             setSalaryInfo({
                                                 ...salaryInfo,
                                                 deductions: {
@@ -496,14 +493,14 @@ export default function CompensationTab({ employeeId, employee, onUpdate }: Comp
                                             border: '1px solid #d1d5db',
                                             borderRadius: '6px',
                                             fontSize: '14px',
-                                            backgroundColor: key === 'company_loan_balance' ? '#f3f4f6' : 'white',
-                                            color: key === 'company_loan_balance' ? '#9ca3af' : 'inherit',
-                                            cursor: key === 'company_loan_balance' ? 'not-allowed' : 'text'
+                                            backgroundColor: 'white',
+                                            color: 'inherit',
+                                            cursor: 'text'
                                         }}
                                     />
                                 ) : (
                                     <div style={{ fontSize: '15px', fontWeight: 500, color: '#ef4444' }}>
-                                        {formatCurrency(key === 'company_loan_balance' ? (employee?.ledger_balance || 0) : ((salaryInfo.deductions as any)?.[key] || 0))}
+                                        {formatCurrency((salaryInfo.deductions as any)?.[key] || 0)}
                                     </div>
                                 )}
                             </div>

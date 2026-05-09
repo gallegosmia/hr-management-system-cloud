@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import {
+    createNotification,
+    createNotificationsForUsers,
+    getNotificationRecipientIds,
+} from '@/lib/notifications';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
     try {
@@ -78,21 +83,22 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             await query("UPDATE gov_contribution_reports SET status = 'Pending', updated_at = CURRENT_TIMESTAMP WHERE id = $1", [reportId]);
 
             try {
-                // Create a notification for the branch managers
                 const reportTypeRes = await query("SELECT contribution_type, payroll_period FROM gov_contribution_reports WHERE id = $1", [reportId]);
                 const cType = reportTypeRes.rows[0]?.contribution_type;
                 const cPeriod = reportTypeRes.rows[0]?.payroll_period;
+                const recipients = await getNotificationRecipientIds({
+                    roles: ['Manager', 'Operations Manager'],
+                    branch: reportBranch,
+                });
 
-                const branchManagers = await query(`SELECT id FROM users WHERE (role = 'Manager' OR role = 'Operations Manager') AND (branch = $1 OR branch = 'All')`, [reportBranch]);
-
-                if (branchManagers.rowCount > 0) {
-                    await query(`
-                        INSERT INTO notifications (user_id, message, type, link)
-                        SELECT id, $1, 'System', $2
-                        FROM users 
-                        WHERE (role = 'Manager' OR role = 'Operations Manager') AND (branch = $3 OR branch = 'All')
-                    `, [`HR submitted ${cType} Contributions for ${cPeriod} for your review.`, `/gov-contributions/${reportId}`, reportBranch]);
-                }
+                await createNotificationsForUsers(recipients, {
+                    type: 'GOV_CONTRIBUTION_SUBMITTED',
+                    title: 'Government Contribution Pending Review',
+                    message: `HR submitted ${cType} contributions for ${cPeriod} for your review.`,
+                    link: `/gov-contributions/${reportId}`,
+                    referenceId: `gov-contribution-${reportId}-review`,
+                    severity: 'high',
+                });
             } catch (notifyErr) {
                 console.warn('Failed to send notification (manager might not exist):', notifyErr);
             }
@@ -112,6 +118,30 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             }
 
             await query("UPDATE gov_contribution_reports SET status = $1, approved_by = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3", [status, userId, reportId]);
+
+            try {
+                const reportTypeRes = await query("SELECT contribution_type, payroll_period, created_by FROM gov_contribution_reports WHERE id = $1", [reportId]);
+                const report = reportTypeRes.rows[0];
+                const cType = report?.contribution_type;
+                const cPeriod = report?.payroll_period;
+                const title = status === 'Approved'
+                    ? 'Government Contribution Approved'
+                    : 'Government Contribution Rejected';
+
+                if (report?.created_by) {
+                    await createNotification({
+                        userId: Number(report.created_by),
+                        type: status === 'Approved' ? 'GOV_CONTRIBUTION_APPROVED' : 'GOV_CONTRIBUTION_REJECTED',
+                        title,
+                        message: `${cType} contributions for ${cPeriod} were ${status.toLowerCase()}.`,
+                        link: `/gov-contributions/${reportId}`,
+                        referenceId: `gov-contribution-${reportId}-${status.toLowerCase()}`,
+                        severity: status === 'Approved' ? 'medium' : 'high',
+                    });
+                }
+            } catch (notifyErr) {
+                console.warn('Failed to send contribution status notification:', notifyErr);
+            }
         }
         else {
             return NextResponse.json({ error: 'Invalid status transition' }, { status: 400 });

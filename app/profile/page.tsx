@@ -28,6 +28,54 @@ export default function ProfilePage() {
         }
     }, [router]);
 
+    if (status === 'This account is not linked to an employee record. Please contact HR.') {
+        return (
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100vh',
+                background: '#f8fafc',
+                gap: '1.5rem',
+                textAlign: 'center',
+                padding: '2rem'
+            }}>
+                <div style={{
+                    width: '64px',
+                    height: '64px',
+                    background: '#fee2e2',
+                    color: '#ef4444',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '32px'
+                }}>⚠️</div>
+                <h2 style={{ color: '#1e293b', fontWeight: 700, fontSize: '1.5rem' }}>Account Not Linked</h2>
+                <p style={{ color: '#64748b', maxWidth: '400px' }}>{status}</p>
+                <button 
+                    onClick={() => {
+                        localStorage.removeItem('sessionId');
+                        localStorage.removeItem('user');
+                        router.push('/');
+                    }}
+                    style={{
+                        padding: '10px 20px',
+                        background: '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontWeight: '600'
+                    }}
+                >
+                    Return to Login
+                </button>
+            </div>
+        );
+    }
+
     return (
         <DashboardLayout>
             <div style={{

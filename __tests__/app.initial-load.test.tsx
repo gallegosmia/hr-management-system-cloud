@@ -66,7 +66,7 @@ describe('Initial App Loading - Login Page', () => {
 
         it('should render password input field', () => {
             render(<LoginPage />);
-            const passwordInput = screen.getByLabelText(/Password/i);
+            const passwordInput = screen.getByLabelText(/^Password$/i);
             expect(passwordInput).toBeInTheDocument();
             expect(passwordInput).toHaveAttribute('type', 'password');
         });
@@ -101,7 +101,7 @@ describe('Initial App Loading - Login Page', () => {
         it('should have empty username and password fields initially', () => {
             render(<LoginPage />);
             const usernameInput = screen.getByLabelText(/Username or Email/i) as HTMLInputElement;
-            const passwordInput = screen.getByLabelText(/Password/i) as HTMLInputElement;
+            const passwordInput = screen.getByLabelText(/^Password$/i) as HTMLInputElement;
 
             expect(usernameInput.value).toBe('');
             expect(passwordInput.value).toBe('');
@@ -115,7 +115,7 @@ describe('Initial App Loading - Login Page', () => {
 
         it('should have password field masked by default', () => {
             render(<LoginPage />);
-            const passwordInput = screen.getByLabelText(/Password/i);
+            const passwordInput = screen.getByLabelText(/^Password$/i);
             expect(passwordInput).toHaveAttribute('type', 'password');
         });
 
@@ -150,13 +150,13 @@ describe('Initial App Loading - Login Page', () => {
         it('should have proper form labels', () => {
             render(<LoginPage />);
             expect(screen.getByLabelText(/Username or Email/i)).toBeInTheDocument();
-            expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
+            expect(screen.getByLabelText(/^Password$/i)).toBeInTheDocument();
         });
 
         it('should have required attributes on input fields', () => {
             render(<LoginPage />);
             const usernameInput = screen.getByLabelText(/Username or Email/i);
-            const passwordInput = screen.getByLabelText(/Password/i);
+            const passwordInput = screen.getByLabelText(/^Password$/i);
 
             expect(usernameInput).toBeRequired();
             expect(passwordInput).toBeRequired();
@@ -178,7 +178,7 @@ describe('Initial App Loading - Login Page', () => {
 
         it('should display company name in footer', () => {
             render(<LoginPage />);
-            expect(screen.getByText(/Melann Lending Investor Corp./i)).toBeInTheDocument();
+            expect(screen.getAllByText(/Melann Lending Investor Corp./i).length).toBeGreaterThan(0);
         });
     });
 
